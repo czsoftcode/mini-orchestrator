@@ -1,4 +1,7 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { askClaude } from '../claude/ask.js';
+import { GRAPH_FILE } from '../graph/buildGraph.js';
 import { buildNextPhasePrompt } from '../prompts/nextPhase.js';
 import { resolveModel } from '../state/models.js';
 import { exists, load, readProject, save } from '../state/store.js';
@@ -60,7 +63,8 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
     userHint = hint as string;
   }
 
-  const prompt = buildNextPhasePrompt(projectMd, state, userHint);
+  const graphMd = await readGraphIfExists(cwd);
+  const prompt = buildNextPhasePrompt(projectMd, state, { userHint, graphMd });
 
   log.dim(userHint ? 'Rozpracovávám tvůj nápad…' : 'Přemýšlím nad další fází…');
 
@@ -199,6 +203,14 @@ async function commitPhase(
     }
   }
   return { ok: true };
+}
+
+async function readGraphIfExists(cwd: string): Promise<string | undefined> {
+  try {
+    return await readFile(join(cwd, GRAPH_FILE), 'utf-8');
+  } catch {
+    return undefined;
+  }
 }
 
 export function parseSuggestion(text: string): ParsedSuggestion | null {

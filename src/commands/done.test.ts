@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { advanceToNextPhase, buildPhaseCommitMessage, done } from './done.js';
@@ -1084,4 +1084,106 @@ steps:
     expect(calledPhase.id).toBe(5);
   });
 
+});
+
+describe('done({ auto: true }) — graph regeneration', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-graph-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() nesmí být v auto módu zavoláno');
+    });
+    isGitRepoMock.mockReset();
+    isGitRepoMock.mockResolvedValue(false);
+    hasChangesMock.mockReset();
+    hasChangesMock.mockResolvedValue(false);
+    commitAllMock.mockReset();
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('regeneruje .mini/graph.md po finalizaci fáze v TS projektu', async () => {
+    await writeFile(join(cwd, 'tsconfig.json'), '{}', 'utf-8');
+    await writeFile(join(cwd, 'a.ts'), 'export const a = 1;', 'utf-8');
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'F',
+            status: 'doing',
+            steps: [{ title: 'k1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "k1"
+    status: done
+---
+`,
+    );
+
+    await done({ auto: true });
+
+    const graph = await readFile(join(cwd, '.mini', 'graph.md'), 'utf-8');
+    expect(graph).toContain('## a.ts');
+    expect(graph).toContain('const a');
+  });
+
+  it('přeskočí regeneraci v non-TS projektu', async () => {
+    await writeFile(join(cwd, 'package.json'), '{}', 'utf-8');
+    await writeFile(join(cwd, 'main.js'), 'module.exports = {};', 'utf-8');
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'F',
+            status: 'doing',
+            steps: [{ title: 'k1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "k1"
+    status: done
+---
+`,
+    );
+
+    await done({ auto: true });
+
+    await expect(access(join(cwd, '.mini', 'graph.md'))).rejects.toThrow();
+  });
 });

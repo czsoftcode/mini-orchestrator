@@ -101,6 +101,12 @@ describe('buildNextPhasePrompt', () => {
     expect(out).not.toContain('"""\n  chci');
   });
 
+  it('accepts options object form for userHint', () => {
+    const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), { userHint: 'dark mode' });
+    expect(out).toContain('# Nápad uživatele');
+    expect(out).toContain('dark mode');
+  });
+
   it('omits hint block when userHint is empty or whitespace', () => {
     const out1 = buildNextPhasePrompt(PROJECT_MD, emptyState(), '');
     const out2 = buildNextPhasePrompt(PROJECT_MD, emptyState(), '   \n\t  ');
@@ -109,6 +115,35 @@ describe('buildNextPhasePrompt', () => {
     expect(out1).not.toContain('# Nápad uživatele');
     expect(out2).not.toContain('# Nápad uživatele');
     expect(out3).not.toContain('# Nápad uživatele');
+  });
+
+  it('includes graph block when graphMd is provided', () => {
+    const graphMd = '# Graf projektu\n\n## src/a.ts\n\nExports:\n- function a(): number\n';
+    const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), { graphMd });
+
+    expect(out).toContain('# Mapa projektu');
+    expect(out).toContain('## src/a.ts');
+    expect(out).toContain('function a(): number');
+  });
+
+  it('omits graph block when graphMd is empty or whitespace', () => {
+    const out1 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { graphMd: '' });
+    const out2 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { graphMd: '   \n  ' });
+
+    expect(out1).not.toContain('# Mapa projektu');
+    expect(out2).not.toContain('# Mapa projektu');
+  });
+
+  it('combines graph and user hint together', () => {
+    const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), {
+      userHint: 'přidej tmavý režim',
+      graphMd: '# Graf projektu\n\n## src/ui.ts\n',
+    });
+    expect(out).toContain('# Mapa projektu');
+    expect(out).toContain('# Nápad uživatele');
+    expect(out).toContain('přidej tmavý režim');
+    // pořadí: mapa pak nápad
+    expect(out.indexOf('# Mapa projektu')).toBeLessThan(out.indexOf('# Nápad uživatele'));
   });
 
   it('uses všech pět štítků fází', () => {

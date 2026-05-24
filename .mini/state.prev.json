@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 13,
+  "currentPhaseId": 14,
   "phases": [
     {
       "id": 1,
@@ -323,40 +323,69 @@
       "id": 13,
       "title": "Záznam paměti po fázi",
       "goal": "Po dokončení fáze přes `mini done` (i `mini auto`) se do `.mini/memory/phase-{id}-{timestamp}.md` zapíše stručné shrnutí hotové práce a `.mini/last-memory.md` ukazuje (symlink) na poslední záznam.",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Přidat `memory` scope do ProjectModels a `mini model`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Vytvořit prompt builder writeMemory.ts + snapshot test",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Implementovat writePhaseMemory se zápisem souboru a symlinkem",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Sloučit commit+memory do finalizePhaseSideEffects v done.ts",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Doplnit testy do done.test.ts (volá se jen u done)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Aktualizovat README o memory soubory a scope",
-          "status": "todo"
+          "status": "done"
         }
       ],
-      "startedAt": "2026-05-24T13:56:09.282Z"
+      "startedAt": "2026-05-24T13:56:09.282Z",
+      "completedAt": "2026-05-24T14:15:12.998Z"
+    },
+    {
+      "id": 14,
+      "title": "Mapování projektu do grafu znalostí",
+      "goal": "Namapovat projekt podle graphify tak, aby se neodesílali celé soubory, ale jenom jejich mapa. Buď se napíše vlastní kód nebo využije stávající systém na https://github.com/safishamsi/graphify",
+      "status": "planned",
+      "steps": [
+        {
+          "title": "TS mapper extrahuje exporty, importy, signatury z fixture souboru",
+          "status": "todo"
+        },
+        {
+          "title": "buildGraph.ts zapíše .mini/graph.md ze zdrojových souborů projektu",
+          "status": "todo"
+        },
+        {
+          "title": "`mini map` příkaz v CLI spustí regeneraci a vypíše počet souborů",
+          "status": "todo"
+        },
+        {
+          "title": "buildNextPhasePrompt vloží blok s grafem pokud .mini/graph.md existuje",
+          "status": "todo"
+        },
+        {
+          "title": "finalizePhaseSideEffects volá regeneraci grafu po auto-commitu",
+          "status": "todo"
+        }
+      ]
     }
   ],
   "models": {
     "do": "opus",
-    "next": "opus",
-    "plan": "opus",
-    "default": "opus"
+    "next": "sonnet",
+    "plan": "sonnet",
+    "default": "sonnet"
   }
 }

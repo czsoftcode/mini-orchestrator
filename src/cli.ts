@@ -108,6 +108,14 @@ program
   });
 
 program
+  .command('map')
+  .description('Přegeneruje strojovou mapu projektu (.mini/graph.md) — exporty, importy a signatury TS/TSX souborů.')
+  .action(async () => {
+    const { map } = await import('./commands/map.js');
+    await map();
+  });
+
+program
   .command('model [scope] [name]')
   .description('Model pro projekt. Příklady: "mini model" (interaktivně), "mini model show", "mini model sonnet" (default), "mini model do opus", "mini model do default" (zruší override), "mini model reset".')
   .action(async (scope?: string, name?: string) => {

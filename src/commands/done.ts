@@ -1,4 +1,5 @@
 import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
+import { buildGraph, GRAPH_FILE, isTypeScriptProject } from '../graph/buildGraph.js';
 import {
   RunReportParseError,
   readRunReport,
@@ -195,6 +196,8 @@ export function buildPhaseCommitMessage(phase: Phase): string {
  * 1. **Auto-commit** práce fáze (`commitPhaseWork`) — zapíše `phase.autoCommit`.
  * 2. **Memory záznam** (`writePhaseMemory`) — vytvoří `.mini/memory/phase-{id}-{ts}.md`
  *    a aktualizuje symlink `.mini/last-memory.md`.
+ * 3. **Přegenerování grafu** (`regenerateGraph`) — aktualizuje `.mini/graph.md`
+ *    podle nového stavu zdrojáků (po commitu).
  *
  * Společné místo, aby se nezapomnělo zavolat z žádné ze tří finalizačních
  * cest v `done.ts` (`applyAutoReport`, `collectNotesAndSave`, `finalizePhase`).
@@ -202,8 +205,8 @@ export function buildPhaseCommitMessage(phase: Phase): string {
  * U `skipped` fáze se tahle funkce nevolá — commit ani memory nedávají smysl.
  *
  * Žádný side-effect nikdy nehází — chyby se logují jako warning a workflow
- * pokračuje. Memory soubor je záměrně **mimo commit** (commit už proběhl);
- * uživatel ho commitne ručně v dalším commitu.
+ * pokračuje. Memory soubor i graf jsou záměrně **mimo commit** (commit už
+ * proběhl); uživatel je commitne ručně v dalším commitu.
  */
 async function finalizePhaseSideEffects(
   phase: Phase,
@@ -212,6 +215,25 @@ async function finalizePhaseSideEffects(
 ): Promise<void> {
   await commitPhaseWork(phase, cwd);
   await writePhaseMemory(phase, state, cwd, { hasAutoCommit: phase.autoCommit !== undefined });
+  await regenerateGraph(cwd);
+}
+
+/**
+ * Best-effort regenerace `.mini/graph.md` po hotové fázi. Nikdy nehází —
+ * při chybě jen zalogujeme warning a pokračujeme. Pokud projekt není TypeScript,
+ * tiše přeskočíme (vlastní mapper umí jen TS, jiný jazyk řeší `/graphify`).
+ */
+async function regenerateGraph(cwd: string): Promise<void> {
+  try {
+    if (!(await isTypeScriptProject(cwd))) {
+      return;
+    }
+    const result = await buildGraph(cwd);
+    const word = result.fileCount === 1 ? 'soubor' : result.fileCount < 5 ? 'soubory' : 'souborů';
+    log.dim(`${GRAPH_FILE}: regenerováno (${result.fileCount} ${word}).`);
+  } catch (err) {
+    log.warn(`Mapu projektu se nepodařilo přegenerovat: ${(err as Error).message}`);
+  }
 }
 
 /**

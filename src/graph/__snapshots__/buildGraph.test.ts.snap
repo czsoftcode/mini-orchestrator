@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderGraphMarkdown > renders all the kinds with deterministic output 1`] = `
+"# Graf projektu
+
+Strojově generovaný přehled TS/TSX souborů (exporty, importy, signatury). Neupravuj ručně — \`mini map\` ho přegeneruje.
+
+## src/a.ts
+
+Imports:
+- { readFile } from "node:fs"
+- { default } from "./b.js"
+- { * } from "./c.js"
+- side-effect "./side-effect.js"
+- type { Foo } from "./only-types.js"
+
+Exports:
+- function foo(x: number): number
+- class Bar
+  - run(): void
+  - static make(): Bar
+- enum Mode
+- interface Greeter
+- type Result
+- const VERSION
+- function main(): number (default)
+"
+`;
