@@ -1,6 +1,6 @@
 # Graf projektu
 
-Strojově generovaný přehled TS/TSX souborů (exporty, importy, signatury). Neupravuj ručně — `mini map` ho přegeneruje.
+Strojově generovaný přehled zdrojových souborů (TS/TSX, PHP, Rust) — exporty, importy, signatury. Neupravuj ručně — `mini map` ho přegeneruje.
 
 ## src/claude/ask.ts
 
@@ -108,9 +108,10 @@ Exports:
 ## src/commands/discuss.ts
 
 Imports:
-- { access, mkdir } from "node:fs/promises"
+- { access, mkdir, readFile } from "node:fs/promises"
 - { join } from "node:path"
 - { workWithClaude } from "../claude/work.js"
+- { GRAPH_FILE } from "../graph/buildGraph.js"
 - { buildDiscussPhasePrompt } from "../prompts/discussPhase.js"
 - { exists, load, readProject, save } from "../state/store.js"
 - type { Phase } from "../state/types.js"
@@ -499,7 +500,8 @@ Imports:
 - type { Phase, Step, StepStatus } from "../state/types.js"
 
 Exports:
-- function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string
+- interface BuildDiscussPhaseOptions
+- function buildDiscussPhasePrompt(projectMd: string, phase: Phase, options: BuildDiscussPhaseOptions): string
 
 ## src/prompts/doPhase.test.ts
 

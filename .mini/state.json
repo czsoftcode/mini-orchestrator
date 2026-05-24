@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 16,
+  "currentPhaseId": 17,
   "phases": [
     {
       "id": 1,
@@ -431,30 +431,69 @@
       "id": 16,
       "title": "Discuss vloží graph.md místo projectMd",
       "goal": "`buildDiscussPhasePrompt` přijme volitelný `graphMd` parametr a pokud `.mini/graph.md` existuje, vloží ho do promptu místo celého `projectMd`; `discuss.ts` ho načte a předá, snapshot testy se aktualizují.",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Přidat volitelný `graphMd` parametr do `buildDiscussPhasePrompt`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Použít `graphMd` v promptu místo `projectMd`, pokud je předán",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "V `discuss.ts` načíst `.mini/graph.md` a předat ho do prompt builderu",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Přidat snapshot test pro případ s `graphMd`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Aktualizovat existující snapshoty (`vitest -u`)",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-24T18:20:27.615Z",
+      "completedAt": "2026-05-24T18:31:00.534Z",
+      "autoCommit": {
+        "preSha": "c56bbeb152ebde47f9590c007f54429c4538f194",
+        "sha": "ed4a5f1089acc40b0b0dd1b4231a6b51bb0e8f9a",
+        "subject": "Fáze 16: Discuss vloží graph.md místo projectMd"
+      }
+    },
+    {
+      "id": 17,
+      "title": "Paměť fáze bez Claude API",
+      "goal": "`writePhaseMemory` vygeneruje `.mini/memory/phase-{id}.md` přímo z šablony v TypeScriptu (title, goal, kroky a jejich stav, případně obsah run reportu) bez volání Claude API — Claude se zavolá jen pokud je explicitně zapnutý přes model scope `memory`.",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Přečíst discuss a run soubory do řetězce (nebo prázdný string)",
+          "status": "todo"
+        },
+        {
+          "title": "Sestavit markdown z Phase objektu bez Claude (id, title, goal, kroky+statusy, humanNotes, autoCommit)",
+          "status": "todo"
+        },
+        {
+          "title": "Přidat discuss a run obsah jako sekce do markdown",
+          "status": "todo"
+        },
+        {
+          "title": "Zapsat soubor přes `fs.writeFile` místo `askClaude`",
+          "status": "todo"
+        },
+        {
+          "title": "Zachovat volání Claude pokud `state.models?.memory != null`",
+          "status": "todo"
+        },
+        {
+          "title": "Smazat `MEMORY_ALLOWED_TOOLS`, `MEMORY_TIMEOUT_MS` a import `buildWriteMemoryPrompt` pokud se nepoužívají",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-24T18:20:27.615Z"
+      "startedAt": "2026-05-24T18:55:33.731Z"
     }
   ],
   "models": {
