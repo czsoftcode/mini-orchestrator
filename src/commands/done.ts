@@ -1,5 +1,5 @@
 import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
-import { buildGraph, GRAPH_FILE, isTypeScriptProject } from '../graph/buildGraph.js';
+import { buildGraph, GRAPH_FILE, hasMappableProject } from '../graph/buildGraph.js';
 import {
   RunReportParseError,
   readRunReport,
@@ -220,12 +220,13 @@ async function finalizePhaseSideEffects(
 
 /**
  * Best-effort regenerace `.mini/graph.md` po hotové fázi. Nikdy nehází —
- * při chybě jen zalogujeme warning a pokračujeme. Pokud projekt není TypeScript,
- * tiše přeskočíme (vlastní mapper umí jen TS, jiný jazyk řeší `/graphify`).
+ * při chybě jen zalogujeme warning a pokračujeme. Pokud projekt nemá co
+ * mapovat (žádné TS/PHP/Rust soubory), tiše přeskočíme — jiné jazyky řeší
+ * `/graphify`.
  */
 async function regenerateGraph(cwd: string): Promise<void> {
   try {
-    if (!(await isTypeScriptProject(cwd))) {
+    if (!(await hasMappableProject(cwd))) {
       return;
     }
     const result = await buildGraph(cwd);

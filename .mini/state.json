@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 14,
+  "currentPhaseId": 15,
   "phases": [
     {
       "id": 1,
@@ -357,30 +357,69 @@
       "id": 14,
       "title": "Mapování projektu do grafu znalostí",
       "goal": "Namapovat projekt podle graphify tak, aby se neodesílali celé soubory, ale jenom jejich mapa. Buď se napíše vlastní kód nebo využije stávající systém na https://github.com/safishamsi/graphify",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "TS mapper extrahuje exporty, importy, signatury z fixture souboru",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "buildGraph.ts zapíše .mini/graph.md ze zdrojových souborů projektu",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "`mini map` příkaz v CLI spustí regeneraci a vypíše počet souborů",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "buildNextPhasePrompt vloží blok s grafem pokud .mini/graph.md existuje",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "finalizePhaseSideEffects volá regeneraci grafu po auto-commitu",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-24T14:55:28.338Z",
+      "completedAt": "2026-05-24T15:26:15.209Z",
+      "autoCommit": {
+        "preSha": "6e45cebfc98b63ca6fb9eb2fb4a0bc29075555d1",
+        "sha": "77ed2e87b92395b26117649d3951090b6642c0e1",
+        "subject": "Fáze 14: Mapování projektu do grafu znalostí"
+      }
+    },
+    {
+      "id": 15,
+      "title": "mini map pro PHP a Rust",
+      "goal": "`mini map` rozpozná `.php` a `.rs` soubory a zahrne je do `.mini/graph.md` — PHP mapper extrahuje třídy, funkce a `use` importy, Rust mapper extrahuje `pub fn`, `pub struct/enum/trait` a `use` importy; výstup má stejný formát jako TS sekce a prochází unit testy.",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Rozšířit `ExportKind` v `types.ts` o `struct` a `trait`",
+          "status": "todo"
+        },
+        {
+          "title": "Napsat `mapPhpFile` s regex extraktorem do `src/graph/phpMapper.ts`",
+          "status": "todo"
+        },
+        {
+          "title": "Napsat `mapRustFile` s regex extraktorem do `src/graph/rustMapper.ts`",
+          "status": "todo"
+        },
+        {
+          "title": "Upravit `buildGraph.ts` — sbírat `.php` a `.rs` soubory, volat příslušné mappery",
+          "status": "todo"
+        },
+        {
+          "title": "Zobecnit detekci jazyka a hlášky v `map.ts` a `renderGraphMarkdown`",
+          "status": "todo"
+        },
+        {
+          "title": "Unit testy pro PHP a Rust mappery (včetně negativních fixtur s komentáři)",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-24T14:55:28.338Z"
+      "startedAt": "2026-05-24T17:54:55.335Z"
     }
   ],
   "models": {

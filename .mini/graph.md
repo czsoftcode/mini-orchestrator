@@ -1,6 +1,6 @@
 # Graf projektu
 
-Strojově generovaný přehled TS/TSX souborů (exporty, importy, signatury). Neupravuj ručně — `mini map` ho přegeneruje.
+Strojově generovaný přehled zdrojových souborů (TS/TSX, PHP, Rust) — exporty, importy, signatury. Neupravuj ručně — `mini map` ho přegeneruje.
 
 ## src/claude/ask.ts
 
@@ -162,7 +162,7 @@ Imports:
 
 Imports:
 - { commitAll, hasChanges, headSha, isGitRepo } from "../git.js"
-- { buildGraph, GRAPH_FILE, isTypeScriptProject } from "../graph/buildGraph.js"
+- { buildGraph, GRAPH_FILE, hasMappableProject } from "../graph/buildGraph.js"
 - { RunReportParseError, readRunReport, runReportPath, RunReport } from "../state/runReport.js"
 - { exists, load, save } from "../state/store.js"
 - type { Phase, ProjectState, Step } from "../state/types.js"
@@ -217,7 +217,7 @@ Imports:
 ## src/commands/map.ts
 
 Imports:
-- { buildGraph, GRAPH_FILE, isTypeScriptProject } from "../graph/buildGraph.js"
+- { buildGraph, GRAPH_FILE, hasMappableProject } from "../graph/buildGraph.js"
 - { exists } from "../state/store.js"
 - { log } from "../ui/log.js"
 - type { StepOutcome } from "./types.js"
@@ -383,7 +383,7 @@ Imports:
 - { tmpdir } from "node:os"
 - { join } from "node:path"
 - { afterEach, beforeEach, describe, expect, it } from "vitest"
-- { buildGraph, GRAPH_FILE, isTypeScriptProject, renderGraphMarkdown } from "./buildGraph.js"
+- { buildGraph, GRAPH_FILE, hasMappableProject, renderGraphMarkdown } from "./buildGraph.js"
 
 ## src/graph/buildGraph.ts
 
@@ -391,6 +391,8 @@ Imports:
 - { access, mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises"
 - { join, posix, relative, sep } from "node:path"
 - { mapFile } from "./mapper.js"
+- { mapPhpFile } from "./phpMapper.js"
+- { mapRustFile } from "./rustMapper.js"
 - type { ExportInfo, FileGraph, ImportInfo } from "./types.js"
 
 Exports:
@@ -398,7 +400,7 @@ Exports:
 - interface BuildGraphResult
 - interface BuildGraphOptions
 - function buildGraph(cwd: string, options: BuildGraphOptions): Promise<BuildGraphResult>
-- function isTypeScriptProject(cwd: string): Promise<boolean>
+- function hasMappableProject(cwd: string): Promise<boolean>
 - function renderGraphMarkdown(files: FileGraph[]): string
 
 ## src/graph/mapper.test.ts
@@ -415,6 +417,34 @@ Imports:
 
 Exports:
 - function mapFile(content: string, relPath: string): FileGraph
+
+## src/graph/phpMapper.test.ts
+
+Imports:
+- { describe, expect, it } from "vitest"
+- { mapPhpFile } from "./phpMapper.js"
+
+## src/graph/phpMapper.ts
+
+Imports:
+- type { ExportInfo, FileGraph, FunctionSignature, ImportInfo, MethodSignature, Parameter } from "./types.js"
+
+Exports:
+- function mapPhpFile(content: string, relPath: string): FileGraph
+
+## src/graph/rustMapper.test.ts
+
+Imports:
+- { describe, expect, it } from "vitest"
+- { mapRustFile } from "./rustMapper.js"
+
+## src/graph/rustMapper.ts
+
+Imports:
+- type { ExportInfo, FileGraph, FunctionSignature, ImportInfo, Parameter } from "./types.js"
+
+Exports:
+- function mapRustFile(content: string, relPath: string): FileGraph
 
 ## src/graph/types.ts
 

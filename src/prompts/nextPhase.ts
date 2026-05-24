@@ -56,7 +56,7 @@ export function buildNextPhasePrompt(
 
   const graph = graphMd?.trim();
   const graphBlock = graph
-    ? `# Mapa projektu\nNíž je strojově vygenerovaná mapa TS/TSX souborů (exporty, importy, signatury). Použij ji místo otevírání jednotlivých souborů přes Read — máš tu kompaktní přehled struktury.\n"""\n${graph}\n"""\n\n`
+    ? `# Mapa projektu\nNíž je strojově vygenerovaná mapa zdrojových souborů (TS/TSX, PHP, Rust) — exporty, importy, signatury. Použij ji místo otevírání jednotlivých souborů přes Read — máš tu kompaktní přehled struktury.\n"""\n${graph}\n"""\n\n`
     : '';
 
   return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně po malých fázích.

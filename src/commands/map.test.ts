@@ -36,11 +36,11 @@ describe('map command', () => {
     expect(result).toEqual({ ok: false, reason: 'no-project' });
   });
 
-  it('warns when project is not TypeScript', async () => {
+  it('warns when project has no mappable sources', async () => {
     await writeFile(join(root, 'package.json'), '{}', 'utf-8');
     await writeFile(join(root, 'index.js'), 'module.exports = {};', 'utf-8');
     const result = await map();
-    expect(result).toEqual({ ok: false, reason: 'not-typescript' });
+    expect(result).toEqual({ ok: false, reason: 'not-mappable' });
   });
 
   it('generates .mini/graph.md and reports the file count', async () => {

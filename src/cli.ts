@@ -109,7 +109,7 @@ program
 
 program
   .command('map')
-  .description('Přegeneruje strojovou mapu projektu (.mini/graph.md) — exporty, importy a signatury TS/TSX souborů.')
+  .description('Přegeneruje strojovou mapu projektu (.mini/graph.md) — exporty, importy a signatury TS/PHP/Rust souborů.')
   .action(async () => {
     const { map } = await import('./commands/map.js');
     await map();

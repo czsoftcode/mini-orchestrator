@@ -3,7 +3,7 @@
 exports[`renderGraphMarkdown > renders all the kinds with deterministic output 1`] = `
 "# Graf projektu
 
-Strojově generovaný přehled TS/TSX souborů (exporty, importy, signatury). Neupravuj ručně — \`mini map\` ho přegeneruje.
+Strojově generovaný přehled zdrojových souborů (TS/TSX, PHP, Rust) — exporty, importy, signatury. Neupravuj ručně — \`mini map\` ho přegeneruje.
 
 ## src/a.ts
 

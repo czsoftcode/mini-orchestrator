@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildGraph, GRAPH_FILE, isTypeScriptProject, renderGraphMarkdown } from './buildGraph.js';
+import { buildGraph, GRAPH_FILE, hasMappableProject, renderGraphMarkdown } from './buildGraph.js';
 
 async function makeTempProject(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'mini-graph-'));
@@ -50,7 +50,7 @@ describe('buildGraph', () => {
     expect(written).not.toContain('src/c.d.ts');
   });
 
-  it('handles empty project (no TS files)', async () => {
+  it('handles empty project (no mapovatelné soubory)', async () => {
     await writeFixture(root, 'README.md', `hello\n`);
 
     const result = await buildGraph(root);
@@ -58,23 +58,51 @@ describe('buildGraph', () => {
 
     const written = await readFile(join(root, GRAPH_FILE), 'utf-8');
     expect(written).toContain('# Graf projektu');
-    expect(written).toContain('_(žádné TS/TSX soubory)_');
+    expect(written).toContain('_(žádné mapovatelné soubory)_');
   });
 
-  it('isTypeScriptProject returns true when tsconfig exists', async () => {
+  it('mapuje i .php a .rs soubory vedle TS/TSX', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await writeFixture(root, 'src/lib.rs', `pub fn run() -> u32 { 0 }\n`);
+    await writeFixture(root, 'app/Service.php', `<?php\nclass Service {}\n`);
+    await writeFixture(root, 'vendor/x.php', `<?php\nclass Vendor {}\n`);
+    await writeFixture(root, 'target/y.rs', `pub fn ignored() {}\n`);
+
+    const result = await buildGraph(root);
+    const paths = result.files.map((f) => f.path);
+    expect(paths).toEqual(['app/Service.php', 'src/a.ts', 'src/lib.rs']);
+
+    const written = await readFile(join(root, GRAPH_FILE), 'utf-8');
+    expect(written).toContain('## app/Service.php');
+    expect(written).toContain('## src/lib.rs');
+    expect(written).not.toContain('vendor/x.php');
+    expect(written).not.toContain('target/y.rs');
+  });
+
+  it('hasMappableProject returns true when tsconfig exists', async () => {
     await writeFixture(root, 'tsconfig.json', '{}');
-    expect(await isTypeScriptProject(root)).toBe(true);
+    expect(await hasMappableProject(root)).toBe(true);
   });
 
-  it('isTypeScriptProject returns true when at least one .ts file exists', async () => {
+  it('hasMappableProject returns true when at least one .ts file exists', async () => {
     await writeFixture(root, 'src/x.ts', 'export const x = 1;');
-    expect(await isTypeScriptProject(root)).toBe(true);
+    expect(await hasMappableProject(root)).toBe(true);
   });
 
-  it('isTypeScriptProject returns false for a non-TS project', async () => {
+  it('hasMappableProject returns true when only .php exists', async () => {
+    await writeFixture(root, 'app/Foo.php', '<?php class Foo {}');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns true when only .rs exists', async () => {
+    await writeFixture(root, 'src/main.rs', 'pub fn main() {}');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns false for projekt bez TS/PHP/Rust', async () => {
     await writeFixture(root, 'package.json', '{}');
     await writeFixture(root, 'src/x.js', 'module.exports = {};');
-    expect(await isTypeScriptProject(root)).toBe(false);
+    expect(await hasMappableProject(root)).toBe(false);
   });
 });
 

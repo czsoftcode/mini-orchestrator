@@ -1,4 +1,4 @@
-import { buildGraph, GRAPH_FILE, isTypeScriptProject } from '../graph/buildGraph.js';
+import { buildGraph, GRAPH_FILE, hasMappableProject } from '../graph/buildGraph.js';
 import { exists } from '../state/store.js';
 import { log } from '../ui/log.js';
 import type { StepOutcome } from './types.js';
@@ -6,9 +6,9 @@ import type { StepOutcome } from './types.js';
 /**
  * `mini map` — přegeneruje strojovou mapu projektu (`.mini/graph.md`).
  *
- * Detekuje TS projekt (tsconfig.json nebo aspoň jeden `.ts`/`.tsx` soubor)
- * a v ostatních případech jen tipne uživateli, ať si pustí `/graphify`
- * v Claude session (vlastní mapper umí jen TS).
+ * Detekuje mapovatelný projekt (tsconfig.json/Cargo.toml/composer.json nebo
+ * aspoň jeden `.ts`/`.tsx`/`.php`/`.rs` soubor) a v ostatních případech jen
+ * tipne uživateli, ať si pustí `/graphify` v Claude session.
  */
 export async function map(): Promise<StepOutcome> {
   const cwd = process.cwd();
@@ -19,17 +19,17 @@ export async function map(): Promise<StepOutcome> {
     return { ok: false, reason: 'no-project' };
   }
 
-  if (!(await isTypeScriptProject(cwd))) {
-    log.warn('Tohle není TypeScript projekt — vlastní TS mapper nemá co mapovat.');
+  if (!(await hasMappableProject(cwd))) {
+    log.warn('V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs).');
     log.hint('Pro jiné jazyky zkus v Claude session: /graphify');
-    return { ok: false, reason: 'not-typescript' };
+    return { ok: false, reason: 'not-mappable' };
   }
 
-  log.dim('Mapuji TS/TSX soubory…');
+  log.dim('Mapuji TS/PHP/Rust soubory…');
   const result = await buildGraph(cwd);
 
   if (result.fileCount === 0) {
-    log.warn(`${GRAPH_FILE} zapsán, ale žádné TS/TSX soubory nebyly nalezeny.`);
+    log.warn(`${GRAPH_FILE} zapsán, ale žádné mapovatelné soubory nebyly nalezeny.`);
     return { ok: true };
   }
 

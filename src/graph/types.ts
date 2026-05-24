@@ -9,7 +9,9 @@ export type ExportKind =
   | 'const'
   | 'interface'
   | 'enum'
-  | 'variable';
+  | 'variable'
+  | 'struct'
+  | 'trait';
 
 export interface Parameter {
   name: string;
