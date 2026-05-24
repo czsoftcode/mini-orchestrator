@@ -1,0 +1,15 @@
+# Závislosti
+node_modules/
+
+# Build výstup
+dist/
+
+# Logy
+*.log
+npm-debug.log*
+
+# OS / editor metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

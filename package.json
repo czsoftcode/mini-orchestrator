@@ -1,0 +1,37 @@
+{
+  "name": "mini",
+  "version": "0.1.0",
+  "description": "Mini orchestrator nad Claude Code — drží stav projektu a posílá Claudovi jen to nejnutnější.",
+  "type": "module",
+  "bin": {
+    "mini": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "install-local": "bash scripts/install-local.sh",
+    "uninstall-local": "rm -f ~/.local/bin/mini && rm -rf ~/.local/share/mini"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/prompts": "^2.4.9",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.7"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

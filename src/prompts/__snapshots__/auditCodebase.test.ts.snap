@@ -1,0 +1,63 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildAuditCodebasePrompt > renders project section and references codebase file path 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+Právě probíhá **audit existujícího kódu** — NEIMPLEMENTUJ žádné nové featury,
+nic nerefaktoruj, neupravuj zdrojový kód projektu. Tvým jediným výstupem je
+soubor \`.mini/codebase.md\`.
+
+# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Tvůj úkol
+Projdi existující kód v aktuálním adresáři a sestav (nebo aktualizuj) přehled
+projektu pro pozdější použití orchestrátorem v souboru \`.mini/codebase.md\`.
+Tento soubor slouží **tobě samotnému v dalších sessionech** (\`do\`/\`plan\`/\`next\`)
+jako rychlý přehled — místo opakovaného procházení \`src/\` si můžeš přečíst tenhle
+souhrn. Tomu odpovídá i tone: cesty, názvy modulů, technologie, krátké odrážky.
+Žádná dlouhá prosa pro člověka.
+
+## Pokud \`.mini/codebase.md\` už existuje
+1. **Tvoje úplně první akce** musí být \`Read\` na \`.mini/codebase.md\` — projdi
+   stávající obsah, ať víš, co už je popsané a co tam přidal ručně uživatel.
+2. **NEPŘEPISUJ celý soubor.** Použij \`Edit\`, ne \`Write\`. Opravuj jen sekce,
+   které neodpovídají reálnému stavu kódu.
+3. Ruční poznámky uživatele (komentáře, dodatky, sekce nad rámec šablony) **musíš
+   zachovat** — i kdyby na první pohled vypadaly nadbytečně. Když si nejsi jist,
+   nech je být.
+
+## Pokud \`.mini/codebase.md\` neexistuje
+Vytvoř ho přes \`Write\` s následující strukturou (názvy sekcí jsou fixní;
+sekci smíš nechat prázdnou, pokud k ní není co napsat):
+
+\`\`\`
+# {název projektu} — přehled kódu
+
+## Přehled
+(2-4 věty: co projekt dělá technicky — runtime, vstup/výstup, hlavní use case)
+
+## Adresářová struktura
+(stromem nebo odrážkami: top-level adresáře a jejich role)
+
+## Klíčové moduly
+(odrážky: cesta + jednovětý popis. Příklad: \`src/cli.ts\` — entrypoint, parsuje argumenty.)
+
+## Technologie
+(odrážky: jazyk, framework, knihovny, build tooling, test runner — co je relevantní)
+\`\`\`
+
+## Jak postupovat
+- Začni od \`package.json\` / \`pyproject.toml\` / ekvivalentu — z toho zjistíš jazyk,
+  závislosti a entrypointy.
+- Pak projdi top-level adresáře (\`Glob\`, \`LS\`) a hlavní zdrojové soubory (\`Read\`).
+- Drž se faktů. Nehádej účel modulu, když je z kódu nejasný — radši ho v
+  \`Klíčové moduly\` vynech nebo napiš poctivě "(neidentifikováno)".
+- Soubory typu \`node_modules/\`, \`dist/\`, \`.git/\`, \`coverage/\` a podobné build
+  artefakty ignoruj.
+
+# Smíš použít
+\`Read\`, \`Grep\`, \`Glob\`, \`LS\` na čtení, \`Write\` na založení nového
+\`.mini/codebase.md\` a \`Edit\` na inkrementální update. Jiné nástroje nepotřebuješ.
+"
+`;

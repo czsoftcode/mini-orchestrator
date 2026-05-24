@@ -1,0 +1,88 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildPlanPhasePrompt > falls back to (nezadán) when phase has no goal 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+
+# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Fáze, kterou rozmenujeme
+**Fáze 7: Refactor CLI**
+Cíl: (nezadán)
+
+# Tvůj úkol
+Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
+
+Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory (Read/Glob/Grep). Nezapisuj nic.
+
+Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
+
+STEP: <stručný popis kroku, max 8 slov>
+STEP: <další krok>
+...
+
+Nic jiného nepiš.
+"
+`;
+
+exports[`buildPlanPhasePrompt > inserts discuss notes block when notes are provided 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+
+# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Fáze, kterou rozmenujeme
+**Fáze 8: Poznámky z diskuze**
+Cíl: plan a do čtou notes
+
+# Poznámky k fázi (z diskuse)
+# Fáze 8 — Poznámky z diskuze
+
+## Záměr
+shrnout diskusi do souboru
+
+## Klíčová rozhodnutí
+- soubor je markdown bez schématu
+
+# Tvůj úkol
+Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
+
+Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory (Read/Glob/Grep). Nezapisuj nic.
+
+Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
+
+STEP: <stručný popis kroku, max 8 slov>
+STEP: <další krok>
+...
+
+Nic jiného nepiš.
+"
+`;
+
+exports[`buildPlanPhasePrompt > renders phase with explicit goal 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+
+# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Fáze, kterou rozmenujeme
+**Fáze 2: Snapshot testy**
+Cíl: src/prompts/*.ts mají snapshot testy a npm test prochází
+
+# Tvůj úkol
+Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
+
+Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory (Read/Glob/Grep). Nezapisuj nic.
+
+Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
+
+STEP: <stručný popis kroku, max 8 slov>
+STEP: <další krok>
+...
+
+Nic jiného nepiš.
+"
+`;

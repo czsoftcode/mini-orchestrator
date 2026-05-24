@@ -1,0 +1,629 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { advanceToNextPhase, done } from './done.js';
+import { ensureRunDir, runReportPath } from '../state/runReport.js';
+import { load, save } from '../state/store.js';
+import type { Phase, ProjectState } from '../state/types.js';
+import { ask } from '../ui/ask.js';
+
+// `ask` nahrazujeme `vi.fn`, ať můžeme v testech přepínat implementaci —
+// většinou má vyhodit (auto mód se ho nesmí dotknout), ale fallback testy
+// si přepnou vlastní odpověď.
+vi.mock('../ui/ask.js', () => ({
+  ask: vi.fn(async () => {
+    throw new Error('ask() nesmí být v auto módu zavoláno');
+  }),
+  nonEmpty: () => () => true as const,
+  trim: (v: string) => v.trim(),
+}));
+
+const askMock = vi.mocked(ask);
+
+async function writeRunReport(cwd: string, phaseId: number, body: string): Promise<void> {
+  await ensureRunDir(cwd);
+  await writeFile(runReportPath(cwd, phaseId), body, 'utf-8');
+}
+
+function makeState(phases: Phase[], currentPhaseId: number | null): ProjectState {
+  return {
+    version: 1,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    currentPhaseId,
+    phases,
+  };
+}
+
+describe('advanceToNextPhase', () => {
+  it('moves to the first proposed phase after the current one is finished', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'done' },
+        { id: 2, title: 'B', status: 'proposed' },
+      ],
+      1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next).not.toBeNull();
+    expect(next?.id).toBe(2);
+    expect(state.currentPhaseId).toBe(2);
+  });
+
+  it('moves to the first planned phase as well', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'done' },
+        { id: 2, title: 'B', status: 'planned', steps: [] },
+      ],
+      1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next?.id).toBe(2);
+    expect(state.currentPhaseId).toBe(2);
+  });
+
+  it('picks the first candidate in phase order, not by id', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'done' },
+        { id: 5, title: 'E', status: 'planned' },
+        { id: 3, title: 'C', status: 'proposed' },
+      ],
+      1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    // 5 comes before 3 in the array, so it wins even though its id is higher.
+    expect(next?.id).toBe(5);
+    expect(state.currentPhaseId).toBe(5);
+  });
+
+  it('skips the current phase even if it is still proposed/planned', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'planned' },
+        { id: 2, title: 'B', status: 'proposed' },
+      ],
+      1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next?.id).toBe(2);
+    expect(state.currentPhaseId).toBe(2);
+  });
+
+  it('ignores done/doing/skipped phases as candidates', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'done' },
+        { id: 2, title: 'B', status: 'doing' },
+        { id: 3, title: 'C', status: 'skipped' },
+        { id: 4, title: 'D', status: 'planned' },
+      ],
+      1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next?.id).toBe(4);
+    expect(state.currentPhaseId).toBe(4);
+  });
+
+  it('returns null and clears currentPhaseId when no next phase exists', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'done' },
+        { id: 2, title: 'B', status: 'skipped' },
+      ],
+      1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next).toBeNull();
+    expect(state.currentPhaseId).toBeNull();
+  });
+
+  it('returns null on an empty project', () => {
+    const state = makeState([], null);
+
+    const next = advanceToNextPhase(state);
+
+    expect(next).toBeNull();
+    expect(state.currentPhaseId).toBeNull();
+  });
+
+  it('finds a candidate even when currentPhaseId is null (e.g. resume from finished project)', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'done' },
+        { id: 2, title: 'B', status: 'proposed' },
+      ],
+      null,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next?.id).toBe(2);
+    expect(state.currentPhaseId).toBe(2);
+  });
+
+  it('picks the very first proposed phase when multiple candidates exist', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'done' },
+        { id: 2, title: 'B', status: 'proposed' },
+        { id: 3, title: 'C', status: 'proposed' },
+        { id: 4, title: 'D', status: 'planned' },
+      ],
+      1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next?.id).toBe(2);
+    expect(state.currentPhaseId).toBe(2);
+  });
+});
+
+describe('done({ auto: true })', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-auto-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() nesmí být v auto módu zavoláno');
+    });
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('returns no-project when there is no .mini state', async () => {
+    const r = await done({ auto: true });
+    expect(r).toEqual({ ok: false, reason: 'no-project' });
+  });
+
+  it('returns no-current-phase when currentPhaseId is null', async () => {
+    await save(makeState([], null), cwd);
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: false, reason: 'no-current-phase' });
+  });
+
+  it('returns inconsistent-state when currentPhaseId references a missing phase', async () => {
+    await save(makeState([{ id: 1, title: 'A', status: 'doing' }], 99), cwd);
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: false, reason: 'inconsistent-state' });
+  });
+
+  it('returns phase-done when the current phase is already finished', async () => {
+    await save(makeState([{ id: 1, title: 'A', status: 'done' }], 1), cwd);
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: false, reason: 'phase-done' });
+  });
+
+  it('aplikuje statusy z reportu a nechá fázi doing, když report má todo krok', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [
+              { title: 'krok 1', status: 'doing' },
+              { title: 'krok 2', status: 'todo' },
+            ],
+          },
+          { id: 2, title: 'B', status: 'proposed' },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: partial
+steps:
+  - title: "krok 1"
+    status: done
+  - title: "krok 2"
+    status: todo
+---
+
+Krok 2 nestihl jsem.
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true });
+    const loaded = await load(cwd);
+    const phase = loaded.phases.find((p) => p.id === 1);
+    expect(phase?.status).toBe('doing');
+    expect(phase?.completedAt).toBeUndefined();
+    expect(phase?.steps?.[0]?.status).toBe('done');
+    expect(phase?.steps?.[1]?.status).toBe('todo');
+    expect(loaded.currentPhaseId).toBe(1);
+  });
+
+  it('finalizuje fázi a posune se dál, když report označí všechny kroky jako done', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [
+              { title: 'krok 1', status: 'done' },
+              { title: 'krok 2', status: 'doing' },
+            ],
+          },
+          { id: 2, title: 'B', status: 'proposed' },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+  - title: "krok 2"
+    status: done
+---
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 2 });
+    const loaded = await load(cwd);
+    const phase1 = loaded.phases.find((p) => p.id === 1);
+    expect(phase1?.status).toBe('done');
+    expect(phase1?.completedAt).toBeTypeOf('string');
+    expect(phase1?.steps?.[1]?.status).toBe('done');
+    expect(phase1?.humanNotes).toBeUndefined();
+    expect(loaded.currentPhaseId).toBe(2);
+  });
+
+  it('akceptuje skipped kroky v reportu a finalizuje fázi, když nezbude nic neuzavřeného', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [
+              { title: 'krok 1', status: 'done' },
+              { title: 'krok 2', status: 'todo' },
+              { title: 'krok 3', status: 'todo' },
+            ],
+          },
+          { id: 2, title: 'B', status: 'proposed' },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+  - title: "krok 2"
+    status: skipped
+  - title: "krok 3"
+    status: skipped
+---
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 2 });
+    const loaded = await load(cwd);
+    const phase1 = loaded.phases.find((p) => p.id === 1);
+    expect(phase1?.status).toBe('done');
+    expect(phase1?.completedAt).toBeTypeOf('string');
+    expect(phase1?.steps?.[1]?.status).toBe('skipped');
+    expect(phase1?.steps?.[2]?.status).toBe('skipped');
+    expect(loaded.currentPhaseId).toBe(2);
+  });
+
+  it('blocked status v reportu drží krok jako todo a fázi nezavírá', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [
+              { title: 'krok 1', status: 'done' },
+              { title: 'krok 2', status: 'doing' },
+            ],
+          },
+          { id: 2, title: 'B', status: 'proposed' },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: blocked
+steps:
+  - title: "krok 1"
+    status: done
+  - title: "krok 2"
+    status: blocked
+---
+
+Krok 2 vyžaduje API klíč, který nemám.
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true });
+    const loaded = await load(cwd);
+    const phase = loaded.phases.find((p) => p.id === 1);
+    expect(phase?.status).toBe('doing');
+    expect(phase?.completedAt).toBeUndefined();
+    expect(phase?.steps?.[0]?.status).toBe('done');
+    expect(phase?.steps?.[1]?.status).toBe('todo');
+    expect(loaded.currentPhaseId).toBe(1);
+  });
+
+  it('finalizuje fázi bez kroků, když report má verdict=done', async () => {
+    await save(
+      makeState(
+        [
+          { id: 1, title: 'A', status: 'doing' },
+          { id: 2, title: 'B', status: 'proposed' },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps: []
+---
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 2 });
+    const loaded = await load(cwd);
+    const phase1 = loaded.phases.find((p) => p.id === 1);
+    expect(phase1?.status).toBe('done');
+    expect(phase1?.completedAt).toBeTypeOf('string');
+    expect(loaded.currentPhaseId).toBe(2);
+  });
+
+  it('fázi bez kroků nezavírá, když report má verdict=partial', async () => {
+    await save(
+      makeState(
+        [{ id: 1, title: 'A', status: 'doing' }],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: partial
+steps: []
+---
+
+Nestihl jsem.
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true });
+    const loaded = await load(cwd);
+    expect(loaded.phases[0]?.status).toBe('doing');
+    expect(loaded.currentPhaseId).toBe(1);
+  });
+
+  it('vynuluje currentPhaseId, když po finalizaci není další fáze', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+---
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: null });
+    const loaded = await load(cwd);
+    expect(loaded.phases[0]?.status).toBe('done');
+    expect(loaded.currentPhaseId).toBeNull();
+  });
+
+  it('perzistuje stav na disk, aby ho další load viděl', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+          { id: 2, title: 'B', status: 'proposed' },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+---
+`,
+    );
+
+    await done({ auto: true });
+
+    const reloaded = await load(cwd);
+    expect(reloaded.phases.find((p) => p.id === 1)?.status).toBe('done');
+    expect(reloaded.currentPhaseId).toBe(2);
+  });
+});
+
+describe('done({ auto: true }) — fallback do interaktivního módu', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-auto-fallback-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('chybějící report → interaktivní fallback (uživatel rozhoduje per krok)', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [
+              { title: 'krok 1', status: 'doing' },
+              { title: 'krok 2', status: 'todo' },
+            ],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+
+    // Interaktivní done() s doing krokem a zbylými todo: zeptá se jen na
+    // outcome doingu (1 ask) a vrátí se s hintem na `mini do`.
+    askMock.mockResolvedValueOnce({ outcome: 'done' });
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true });
+    expect(askMock).toHaveBeenCalledTimes(1);
+    const loaded = await load(cwd);
+    const phase = loaded.phases.find((p) => p.id === 1);
+    expect(phase?.steps?.[0]?.status).toBe('done');
+    expect(phase?.steps?.[1]?.status).toBe('todo');
+    expect(phase?.status).toBe('doing');
+  });
+
+  it('poškozený report → interaktivní fallback, nic neoznačuje naslepo', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'A',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(cwd, 1, 'tohle není validní report\n');
+
+    // outcome u "doing" kroku → "done", protože byl poslední, finalizace fáze (notes prázdné).
+    askMock
+      .mockResolvedValueOnce({ outcome: 'done' })
+      .mockResolvedValueOnce({ outcome: 'done' })
+      .mockResolvedValueOnce({ notes: '' });
+
+    const r = await done({ auto: true });
+
+    expect(r.ok).toBe(true);
+    expect(askMock.mock.calls.length).toBeGreaterThanOrEqual(2);
+    const loaded = await load(cwd);
+    expect(loaded.phases[0]?.status).toBe('done');
+  });
+});

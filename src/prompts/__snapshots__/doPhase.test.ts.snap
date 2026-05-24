@@ -1,0 +1,64 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildDoPhasePrompt > handles a phase that has no steps (works on whole phase) 1`] = `
+"# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Aktuální fáze
+**Fáze 1: Bootstrap**
+Cíl: CLI vrací --version
+
+(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)
+
+# Tvůj úkol
+Implementuj celou fázi tak, aby splňovala cíl.
+
+Soubory si přečti sám podle potřeby — nepředávám ti je předem.
+Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+"
+`;
+
+exports[`buildDoPhasePrompt > renders steps with a focus marker on the focused step only 1`] = `
+"# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Aktuální fáze
+**Fáze 3: Snapshot testy**
+Cíl: prompty mají testy
+
+Kroky:
+- [hotovo] rozhodnout framework
+- [dělá se] napsat snapshoty   ← pracuj na tomhle
+- [čeká] spustit npm test
+- [odloženo] starý nápad
+
+# Tvůj úkol
+Implementuj krok: "napsat snapshoty".
+
+Soubory si přečti sám podle potřeby — nepředávám ti je předem.
+Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+"
+`;
+
+exports[`buildDoPhasePrompt > renders steps without any focus marker when focusedStep is null 1`] = `
+"# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Aktuální fáze
+**Fáze 4: Cleanup**
+Cíl: tests projdou
+
+Kroky:
+- [čeká] odstranit dead code
+- [čeká] aktualizovat README
+
+# Tvůj úkol
+Implementuj celou fázi tak, aby splňovala cíl.
+
+Soubory si přečti sám podle potřeby — nepředávám ti je předem.
+Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+"
+`;

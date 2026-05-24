@@ -1,0 +1,66 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildNextPhasePrompt > renders history block with goals, human notes and steps when phases exist 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně po malých fázích.
+
+# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Dosavadní postup
+- [hotovo] 1. Bootstrap
+    Cíl: CLI vrací --version
+    Kroky: init package (hotovo), přidat commander (hotovo)
+- [hotovo] 2. Stav v JSON
+    Cíl: state.json se ukládá atomicky
+    Poznámka: málem jsme přepsali stav, viz incident
+- [dělá se] 3. Snapshot testy
+    Cíl: prompty mají testy
+    Kroky: rozhodnout framework (hotovo), napsat snapshoty (dělá se), spustit npm test (čeká)
+- [návrh] 4. Refactor
+- [odloženo] 5. Experiment
+    Poznámka: odloženo, nepotřebné
+
+# Tvůj úkol
+Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
+Není to roadmap — jen jedna věc, co dává smysl udělat hned.
+
+Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory v projektu (Read/Glob/Grep). Nezapisuj nic.
+
+Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
+
+TITLE: <stručný název, max 5 slov>
+GOAL: <1 věta o tom, kdy je fáze "hotová" — co konkrétně bude fungovat>
+
+Pokud projekt považuješ za dokončený, odpověz:
+TITLE: -
+GOAL: -
+"
+`;
+
+exports[`buildNextPhasePrompt > uses čerstvě-založený copy when there are no phases 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně po malých fázích.
+
+# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Postup
+Projekt je čerstvě založený, žádné fáze ještě nebyly.
+
+# Tvůj úkol
+Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
+Není to roadmap — jen jedna věc, co dává smysl udělat hned.
+
+Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory v projektu (Read/Glob/Grep). Nezapisuj nic.
+
+Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
+
+TITLE: <stručný název, max 5 slov>
+GOAL: <1 věta o tom, kdy je fáze "hotová" — co konkrétně bude fungovat>
+
+Pokud projekt považuješ za dokončený, odpověz:
+TITLE: -
+GOAL: -
+"
+`;
