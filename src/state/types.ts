@@ -8,6 +8,22 @@ export interface Step {
   notes?: string;
 }
 
+/**
+ * Záznam o auto-commitu, který `mini done` vytvořil po finalizaci fáze.
+ *
+ * Slouží `mini undo` k bezpečnému soft resetu: ověříme, že HEAD pořád sedí
+ * na `sha` a pracovní strom je čistý, a teprve pak nabídneme revert. Subject
+ * je tu pro lidsky čitelnou nabídku v UI.
+ */
+export interface PhaseAutoCommit {
+  /** SHA HEAD před auto-commitem — cíl soft resetu. */
+  preSha: string;
+  /** SHA auto-commitu samotného. */
+  sha: string;
+  /** Subject (první řádek) commit message. */
+  subject: string;
+}
+
 export interface Phase {
   id: number;
   title: string;
@@ -17,6 +33,7 @@ export interface Phase {
   humanNotes?: string;
   startedAt?: string;
   completedAt?: string;
+  autoCommit?: PhaseAutoCommit;
 }
 
 export interface ProjectModels {

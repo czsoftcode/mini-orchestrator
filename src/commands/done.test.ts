@@ -2,11 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { advanceToNextPhase, done } from './done.js';
+import { advanceToNextPhase, buildPhaseCommitMessage, done } from './done.js';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import { load, save } from '../state/store.js';
 import type { Phase, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
+import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
 
 // `ask` nahrazujeme `vi.fn`, ať můžeme v testech přepínat implementaci —
 // většinou má vyhodit (auto mód se ho nesmí dotknout), ale fallback testy
@@ -19,7 +20,25 @@ vi.mock('../ui/ask.js', () => ({
   trim: (v: string) => v.trim(),
 }));
 
+// Git modul mockujeme — defaultně se chová jako „nejsme v gitovém repu",
+// takže existující testy (běžící v `tmpdir`) commit logiku neaktivují.
+// Konkrétní testy si gitové funkce přepnou přes `mockResolvedValueOnce`.
+vi.mock('../git.js', () => ({
+  isGitRepo: vi.fn(async () => false),
+  hasChanges: vi.fn(async () => false),
+  commitAll: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
+  currentBranch: vi.fn(async () => null),
+  headSha: vi.fn(async () => null),
+  headSubject: vi.fn(async () => null),
+  isCleanWorkingTree: vi.fn(async () => true),
+  softResetTo: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
+}));
+
 const askMock = vi.mocked(ask);
+const isGitRepoMock = vi.mocked(isGitRepo);
+const hasChangesMock = vi.mocked(hasChanges);
+const commitAllMock = vi.mocked(commitAll);
+const headShaMock = vi.mocked(headSha);
 
 async function writeRunReport(cwd: string, phaseId: number, body: string): Promise<void> {
   await ensureRunDir(cwd);
@@ -185,6 +204,14 @@ describe('done({ auto: true })', () => {
     askMock.mockImplementation(async () => {
       throw new Error('ask() nesmí být v auto módu zavoláno');
     });
+    isGitRepoMock.mockReset();
+    isGitRepoMock.mockResolvedValue(false);
+    hasChangesMock.mockReset();
+    hasChangesMock.mockResolvedValue(false);
+    commitAllMock.mockReset();
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
   });
 
   afterEach(async () => {
@@ -555,6 +582,14 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
     cwd = await mkdtemp(join(tmpdir(), 'mini-done-auto-fallback-'));
     process.chdir(cwd);
     askMock.mockReset();
+    isGitRepoMock.mockReset();
+    isGitRepoMock.mockResolvedValue(false);
+    hasChangesMock.mockReset();
+    hasChangesMock.mockResolvedValue(false);
+    commitAllMock.mockReset();
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
   });
 
   afterEach(async () => {
@@ -625,5 +660,242 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
     expect(askMock.mock.calls.length).toBeGreaterThanOrEqual(2);
     const loaded = await load(cwd);
     expect(loaded.phases[0]?.status).toBe('done');
+  });
+});
+
+describe('buildPhaseCommitMessage', () => {
+  it('subject obsahuje id i title', () => {
+    const msg = buildPhaseCommitMessage({ id: 7, title: 'Něco hotového', status: 'done' });
+    expect(msg).toBe('Fáze 7: Něco hotového');
+  });
+
+  it('přidá tělo s humanNotes, pokud existuje', () => {
+    const msg = buildPhaseCommitMessage({
+      id: 3,
+      title: 'S poznámkami',
+      status: 'done',
+      humanNotes: 'Funguje, ale plán by se měl ještě zjednodušit.',
+    });
+    expect(msg).toBe(
+      'Fáze 3: S poznámkami\n\nFunguje, ale plán by se měl ještě zjednodušit.\n',
+    );
+  });
+
+  it('ignoruje prázdné / whitespace humanNotes', () => {
+    const msg = buildPhaseCommitMessage({
+      id: 1,
+      title: 'Bez poznámek',
+      status: 'done',
+      humanNotes: '   \n  ',
+    });
+    expect(msg).toBe('Fáze 1: Bez poznámek');
+  });
+});
+
+describe('commit po finalizaci fáze', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-commit-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() nesmí být v auto módu zavoláno');
+    });
+    isGitRepoMock.mockReset();
+    hasChangesMock.mockReset();
+    commitAllMock.mockReset();
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  async function setupDoneAutoPhase(): Promise<void> {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'Fáze ke commitu',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+---
+`,
+    );
+  }
+
+  it('commitne fázi, když je `done`, je git repo a jsou změny', async () => {
+    await setupDoneAutoPhase();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+
+    const r = await done({ auto: true });
+
+    expect(r.ok).toBe(true);
+    expect(commitAllMock).toHaveBeenCalledTimes(1);
+    const [calledCwd, msg] = commitAllMock.mock.calls[0]!;
+    expect(calledCwd).toBe(cwd);
+    expect(msg).toBe('Fáze 1: Fáze ke commitu');
+  });
+
+  it('uloží `phase.autoCommit` (preSha, sha, subject) po úspěšném commitu', async () => {
+    await setupDoneAutoPhase();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    // headSha se volá 2× — před commitem (pre) a po commitu (post).
+    headShaMock
+      .mockResolvedValueOnce('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+      .mockResolvedValueOnce('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+
+    const r = await done({ auto: true });
+
+    expect(r.ok).toBe(true);
+    const reloaded = await load(cwd);
+    const phase = reloaded.phases[0];
+    expect(phase?.autoCommit).toEqual({
+      preSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      subject: 'Fáze 1: Fáze ke commitu',
+    });
+  });
+
+  it('selhání commitu nezapíše `phase.autoCommit`', async () => {
+    await setupDoneAutoPhase();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    commitAllMock.mockResolvedValue({ ok: false, stdout: '', stderr: 'fail' });
+    headShaMock.mockResolvedValue('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+
+    await done({ auto: true });
+
+    const reloaded = await load(cwd);
+    expect(reloaded.phases[0]?.autoCommit).toBeUndefined();
+  });
+
+  it('commit přeskočí, když cwd není git repo', async () => {
+    await setupDoneAutoPhase();
+    isGitRepoMock.mockResolvedValue(false);
+
+    const r = await done({ auto: true });
+
+    expect(r.ok).toBe(true);
+    expect(commitAllMock).not.toHaveBeenCalled();
+  });
+
+  it('commit přeskočí, když nejsou žádné změny', async () => {
+    await setupDoneAutoPhase();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(false);
+
+    const r = await done({ auto: true });
+
+    expect(r.ok).toBe(true);
+    expect(commitAllMock).not.toHaveBeenCalled();
+  });
+
+  it('selhání commitu (`ok: false`) neshodí done — stav je už uložený', async () => {
+    await setupDoneAutoPhase();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    commitAllMock.mockResolvedValue({
+      ok: false,
+      stdout: '',
+      stderr: 'fatal: chyba commitu',
+    });
+
+    const r = await done({ auto: true });
+
+    expect(r.ok).toBe(true);
+    expect(commitAllMock).toHaveBeenCalledTimes(1);
+    // stav fáze je i tak posunutý — uživatel si commit dotáhne ručně
+    const reloaded = await load(cwd);
+    expect(reloaded.phases[0]?.status).toBe('done');
+  });
+
+  it('skipped fáze se necommituje', async () => {
+    // Setup: jediný krok je `doing`, ale interaktivní done volíme `skip`.
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'Odkládaná fáze',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    // 1. ask: krok → "skip", 2. ask: fáze → "skip", 3. ask: notes → ''
+    // (skip kroku finalizuje krok, pak run dorazí k finalizePhase, kde
+    //  outcome=skip a notes nejsou potřeba, ale done si je vyžádá tak jako tak)
+    askMock
+      .mockResolvedValueOnce({ outcome: 'skip' })
+      .mockResolvedValueOnce({ outcome: 'skip' })
+      .mockResolvedValueOnce({ notes: '' });
+
+    await done();
+
+    expect(commitAllMock).not.toHaveBeenCalled();
+  });
+
+  it('interaktivní force-done volí commit s humanNotes v těle', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 2,
+            title: 'Fáze s poznámkou',
+            status: 'doing',
+            steps: [
+              { title: 'krok 1', status: 'done' },
+              { title: 'krok 2', status: 'todo' },
+            ],
+          },
+        ],
+        2,
+      ),
+      cwd,
+    );
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    askMock
+      // done() vidí remainingSteps > 0 → vyzve k "decision"; volíme force-done
+      .mockResolvedValueOnce({ decision: 'force-done' })
+      // collectNotesAndSave si pak vyžádá poznámku
+      .mockResolvedValueOnce({ notes: 'Tohle si nech.' });
+
+    await done();
+
+    expect(commitAllMock).toHaveBeenCalledTimes(1);
+    const [, msg] = commitAllMock.mock.calls[0]!;
+    expect(msg).toBe('Fáze 2: Fáze s poznámkou\n\nTohle si nech.\n');
   });
 });

@@ -1,3 +1,4 @@
+import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
 import {
   RunReportParseError,
   readRunReport,
@@ -158,6 +159,9 @@ async function collectNotesAndSave(
   }
   const next = advanceToNextPhase(state);
   logNextPhase(next);
+  if (outcome === 'done') {
+    await commitPhaseWork(phase, cwd);
+  }
   await save(state, cwd);
   return next;
 }
@@ -167,6 +171,61 @@ function logNextPhase(next: Phase | null): void {
     log.hint(`Pokračuje se fází ${next.id}: ${next.title}. Spusť: mini do`);
   } else {
     log.hint('Žádná další fáze v plánu. Spusť: mini next');
+  }
+}
+
+/**
+ * Sestaví commit message pro hotovou fázi. Subject je krátký a jednoznačný,
+ * tělo (pokud existuje) přidává `humanNotes`, které uživatel zapsal v `done`.
+ * `goal` ze stavu do těla záměrně nedáváme — duplikuje se s `.mini/state.json`.
+ */
+export function buildPhaseCommitMessage(phase: Phase): string {
+  const subject = `Fáze ${phase.id}: ${phase.title}`;
+  const body = phase.humanNotes?.trim();
+  if (body) {
+    return `${subject}\n\n${body}\n`;
+  }
+  return subject;
+}
+
+/**
+ * Auto-commit po finalizaci fáze (`phase.status === 'done'`). Nikdy nehází —
+ * gitové chyby jenom zalogujeme jako varování, aby přerušený commit nezablokoval
+ * `mini done` (uživatel může commitnout ručně). Push záměrně nepouštíme —
+ * fáze 11 explicitně říká „push se pak dělá na požádání".
+ *
+ * Pre-commit HEAD si pamatujeme přímo na `phase.autoCommit`, aby `mini undo`
+ * mohl bezpečně udělat soft reset zpět. Volající musí po této funkci ještě
+ * uložit state — autoCommit info pak skončí v `state.json`.
+ */
+async function commitPhaseWork(phase: Phase, cwd: string): Promise<void> {
+  if (!(await isGitRepo(cwd))) {
+    log.dim('Git repozitář nenalezen — commit přeskočen.');
+    return;
+  }
+  if (!(await hasChanges(cwd))) {
+    log.dim('Žádné změny v gitu — commit přeskočen.');
+    return;
+  }
+
+  const preSha = await headSha(cwd);
+
+  const message = buildPhaseCommitMessage(phase);
+  const r = await commitAll(cwd, message);
+  if (!r.ok) {
+    log.warn('Git commit selhal.');
+    const detail = r.stderr.trim() || r.stdout.trim();
+    if (detail) log.dim(detail);
+    log.hint('Commit můžeš dokončit ručně: git add -A && git commit');
+    return;
+  }
+  const subject = message.split('\n')[0] ?? message;
+  log.success(`Commit: ${subject}`);
+  log.hint('Pro nahrání na remote spusť: git push');
+
+  const postSha = await headSha(cwd);
+  if (preSha && postSha) {
+    phase.autoCommit = { preSha, sha: postSha, subject };
   }
 }
 
@@ -291,6 +350,7 @@ async function applyAutoReport(
   log.success(`Fáze ${phase.id} (${phase.title}) hotová.`);
   const nextPhase = advanceToNextPhase(state);
   logNextPhase(nextPhase);
+  await commitPhaseWork(phase, cwd);
   await save(state, cwd);
   return {
     handled: true,
@@ -350,6 +410,9 @@ async function finalizePhase(
 
   const next = advanceToNextPhase(state);
   logNextPhase(next);
+  if (phase.status === 'done') {
+    await commitPhaseWork(phase, cwd);
+  }
   await save(state, cwd);
   return { ok: true, phaseAdvanced: true, nextPhaseId: next?.id ?? null };
 }

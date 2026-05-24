@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 10,
+  "currentPhaseId": 12,
   "phases": [
     {
       "id": 1,
@@ -239,38 +239,84 @@
       "id": 10,
       "title": "Příkaz mini audit a úprava init",
       "goal": "`mini audit` spustí Claude Code session, která projde existující kód projektu a vytvoří (nebo aktualizuje proti aktuálnímu stavu) `.mini/codebase.md` s přehledem projektu pro pozdější použití orchestrátorem; soubor se neposílá automaticky do žádného jiného promptu.",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Vytvořit utilitu brownfield detekce (sdílená init+audit)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Přidat scope 'audit' do ProjectModels a models.ts",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Napsat prompt builder auditCodebase.ts + snapshot test",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Implementovat příkaz mini audit (greenfield warning, Claude session, tokens summary)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Zaregistrovat audit v cli.ts",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Upravit init — v brownfieldu nabídnout spustit audit",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Doplnit README (tabulka příkazů, .mini/codebase.md, zmínka v init)",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-24T07:42:51.941Z",
+      "completedAt": "2026-05-24T07:49:41.499Z"
+    },
+    {
+      "id": 11,
+      "title": "Commit po mini done",
+      "goal": "Po ukončení fáze při závěrečném mini done se commitne práce; push se pak dělá na požádání.",
+      "status": "done",
+      "startedAt": "2026-05-24T08:20:27.474Z",
+      "completedAt": "2026-05-24T08:30:25.827Z"
+    },
+    {
+      "id": 12,
+      "title": "Undo respektuje auto-commit",
+      "goal": "Po fázi, kterou `mini done` automaticky commitnul, `mini undo` nabídne i revert posledního commitu (soft reset na předchozí HEAD, pokud je auto-commit HEAD a v pracovním stromu nejsou nové změny); state.json a git zůstanou v konzistentním stavu, jinak undo jen vrátí state a vypíše, co s commitem řešit ručně.",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Helper v git.ts pro HEAD SHA a subject",
+          "status": "todo"
+        },
+        {
+          "title": "Helper pro detekci čistého pracovního stromu",
+          "status": "todo"
+        },
+        {
+          "title": "Helper pro soft reset na předchozí commit",
+          "status": "todo"
+        },
+        {
+          "title": "Uložit pre-commit HEAD do state před auto-commitem",
+          "status": "todo"
+        },
+        {
+          "title": "Undo detekuje auto-commit a nabídne revert",
+          "status": "todo"
+        },
+        {
+          "title": "Při neshodě jen vrátit state a vypsat hint",
+          "status": "todo"
+        },
+        {
+          "title": "Testy pro nové git helpery a undo větve",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-24T07:42:51.941Z"
+      "startedAt": "2026-05-24T12:39:38.319Z"
     }
   ],
   "models": {

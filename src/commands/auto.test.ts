@@ -34,6 +34,20 @@ vi.mock('../claude/stream.js', () => ({
   streamWithClaude: (...args: unknown[]) => streamWithClaudeMock(...args),
 }));
 
+// Auto kompletuje fáze přes `done({ auto })`, který po finalizaci volá
+// `commitAll`. V testu běžíme v tmpdir mimo git repo, ale ať se subprocesy
+// `git` v testech nikdy nespouštějí, zatlučeme git modul nahrubo na „není repo".
+vi.mock('../git.js', () => ({
+  isGitRepo: vi.fn(async () => false),
+  hasChanges: vi.fn(async () => false),
+  commitAll: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
+  currentBranch: vi.fn(async () => null),
+  headSha: vi.fn(async () => null),
+  headSubject: vi.fn(async () => null),
+  isCleanWorkingTree: vi.fn(async () => true),
+  softResetTo: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
+}));
+
 // Po nastavení mocků importujeme `auto` — Vitest hoistí mocky nad importy
 // modulu pod testem.
 const { auto } = await import('./auto.js');
