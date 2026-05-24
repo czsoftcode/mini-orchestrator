@@ -160,3 +160,46 @@ Soubor musí mít tuto strukturu (názvy sekcí jsou fixní; jednotlivé sekce s
 Soubor slouží jako kontext pro následující kroky workflow (\`mini plan\`, \`mini do\`), které samotnou diskusi neuvidí. Piš věcně a stručně — jen to, co je pro další práci podstatné.
 "
 `;
+
+exports[`buildDiscussPhasePrompt > uses graphMd instead of projectMd when provided 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
+
+# Projekt
+# Graf projektu
+
+## src/a.ts
+
+Exports:
+- function a(): number
+
+# Fáze k diskusi
+**Fáze 8: Discuss s grafem**
+Cíl: diskuse vidí mapu projektu
+
+# Tvůj úkol
+Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
+- pochopit, co má fáze přesně řešit a proč
+- upozornit na nejasnosti, skryté předpoklady nebo rizika
+- navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
+
+Smíš číst soubory projektu (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+
+Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
+
+# Poznámky z diskuse
+Než session ukončíš, zapiš přes Write tool shrnutí diskuse do souboru \`.mini/discuss/phase-8.md\`. Teprve potom session ukonči.
+
+Soubor musí mít tuto strukturu (názvy sekcí jsou fixní; jednotlivé sekce smí být prázdné nebo úplně chybět, pokud k nim není co napsat):
+
+\`\`\`
+# Fáze 8 — Discuss s grafem
+
+## Záměr
+## Klíčová rozhodnutí
+## Pozor na
+\`\`\`
+
+Soubor slouží jako kontext pro následující kroky workflow (\`mini plan\`, \`mini do\`), které samotnou diskusi neuvidí. Piš věcně a stručně — jen to, co je pro další práci podstatné.
+"
+`;

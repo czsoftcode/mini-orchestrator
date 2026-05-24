@@ -1,6 +1,6 @@
 # Graf projektu
 
-Strojově generovaný přehled zdrojových souborů (TS/TSX, PHP, Rust) — exporty, importy, signatury. Neupravuj ručně — `mini map` ho přegeneruje.
+Strojově generovaný přehled TS/TSX souborů (exporty, importy, signatury). Neupravuj ručně — `mini map` ho přegeneruje.
 
 ## src/claude/ask.ts
 

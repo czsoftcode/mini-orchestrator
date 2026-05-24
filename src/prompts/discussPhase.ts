@@ -7,7 +7,20 @@ const STEP_WORD: Record<StepStatus, string> = {
   skipped: 'odloženo',
 };
 
-export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string {
+export interface BuildDiscussPhaseOptions {
+  /**
+   * Obsah `.mini/graph.md`, pokud existuje. Vloží se do sekce "# Projekt"
+   * místo `projectMd` — Claude dostane strojovou mapu projektu místo lidsky
+   * psaného popisu, což je pro diskusi o konkrétní fázi užitečnější.
+   */
+  graphMd?: string;
+}
+
+export function buildDiscussPhasePrompt(
+  projectMd: string,
+  phase: Phase,
+  options: BuildDiscussPhaseOptions = {},
+): string {
   let stepsBlock = '';
   if (phase.steps?.length) {
     const lines = (phase.steps as Step[]).map(
@@ -18,11 +31,14 @@ export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string
 
   const notesPath = `.mini/discuss/phase-${phase.id}.md`;
 
+  const graph = options.graphMd?.trim();
+  const projectBlock = graph || projectMd.trim();
+
   return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
 Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
 
 # Projekt
-${projectMd.trim()}
+${projectBlock}
 
 # Fáze k diskusi
 **Fáze ${phase.id}: ${phase.title}**

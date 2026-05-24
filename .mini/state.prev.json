@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 15,
+  "currentPhaseId": 16,
   "phases": [
     {
       "id": 1,
@@ -392,30 +392,65 @@
       "id": 15,
       "title": "mini map pro PHP a Rust",
       "goal": "`mini map` rozpozná `.php` a `.rs` soubory a zahrne je do `.mini/graph.md` — PHP mapper extrahuje třídy, funkce a `use` importy, Rust mapper extrahuje `pub fn`, `pub struct/enum/trait` a `use` importy; výstup má stejný formát jako TS sekce a prochází unit testy.",
-      "status": "planned",
+      "status": "done",
       "steps": [
         {
           "title": "Rozšířit `ExportKind` v `types.ts` o `struct` a `trait`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Napsat `mapPhpFile` s regex extraktorem do `src/graph/phpMapper.ts`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Napsat `mapRustFile` s regex extraktorem do `src/graph/rustMapper.ts`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Upravit `buildGraph.ts` — sbírat `.php` a `.rs` soubory, volat příslušné mappery",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Zobecnit detekci jazyka a hlášky v `map.ts` a `renderGraphMarkdown`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Unit testy pro PHP a Rust mappery (včetně negativních fixtur s komentáři)",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-24T17:54:55.335Z",
+      "completedAt": "2026-05-24T18:15:56.141Z",
+      "autoCommit": {
+        "preSha": "77ed2e87b92395b26117649d3951090b6642c0e1",
+        "sha": "c56bbeb152ebde47f9590c007f54429c4538f194",
+        "subject": "Fáze 15: mini map pro PHP a Rust"
+      }
+    },
+    {
+      "id": 16,
+      "title": "Discuss vloží graph.md místo projectMd",
+      "goal": "`buildDiscussPhasePrompt` přijme volitelný `graphMd` parametr a pokud `.mini/graph.md` existuje, vloží ho do promptu místo celého `projectMd`; `discuss.ts` ho načte a předá, snapshot testy se aktualizují.",
+      "status": "planned",
+      "steps": [
+        {
+          "title": "Přidat volitelný `graphMd` parametr do `buildDiscussPhasePrompt`",
+          "status": "todo"
+        },
+        {
+          "title": "Použít `graphMd` v promptu místo `projectMd`, pokud je předán",
+          "status": "todo"
+        },
+        {
+          "title": "V `discuss.ts` načíst `.mini/graph.md` a předat ho do prompt builderu",
+          "status": "todo"
+        },
+        {
+          "title": "Přidat snapshot test pro případ s `graphMd`",
+          "status": "todo"
+        },
+        {
+          "title": "Aktualizovat existující snapshoty (`vitest -u`)",
           "status": "todo"
         }
       ]

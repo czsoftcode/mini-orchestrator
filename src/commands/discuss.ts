@@ -1,6 +1,7 @@
-import { access, mkdir } from 'node:fs/promises';
+import { access, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { workWithClaude } from '../claude/work.js';
+import { GRAPH_FILE } from '../graph/buildGraph.js';
 import { buildDiscussPhasePrompt } from '../prompts/discussPhase.js';
 import { exists, load, readProject, save } from '../state/store.js';
 import type { Phase } from '../state/types.js';
@@ -34,7 +35,8 @@ export async function discuss(): Promise<StepOutcome> {
     return { ok: false, reason: 'inconsistent-state' };
   }
 
-  const prompt = buildDiscussPhasePrompt(projectMd, phase);
+  const graphMd = await readGraphIfExists(cwd);
+  const prompt = buildDiscussPhasePrompt(projectMd, phase, { graphMd });
 
   console.log();
   log.title('Tohle pošlu Claude Code jako první zprávu:');
@@ -166,5 +168,13 @@ async function offerPhaseEdit(phase: Phase, cwd: string): Promise<void> {
   }
   if (newGoal !== oldGoal) {
     log.dim(`  Cíl: ${oldGoal || '(prázdné)'} → ${newGoal}`);
+  }
+}
+
+async function readGraphIfExists(cwd: string): Promise<string | undefined> {
+  try {
+    return await readFile(join(cwd, GRAPH_FILE), 'utf-8');
+  } catch {
+    return undefined;
   }
 }

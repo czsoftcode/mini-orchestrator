@@ -80,4 +80,46 @@ describe('buildDiscussPhasePrompt', () => {
     expect(out).toContain(`# Projekt\n${PROJECT_MD}\n`);
     expect(out).not.toContain('# Projekt\n\n');
   });
+
+  it('uses graphMd instead of projectMd when provided', () => {
+    const phase: Phase = {
+      id: 8,
+      title: 'Discuss s grafem',
+      goal: 'diskuse vidí mapu projektu',
+      status: 'proposed',
+    };
+    const graphMd = '# Graf projektu\n\n## src/a.ts\n\nExports:\n- function a(): number\n';
+
+    const out = buildDiscussPhasePrompt(PROJECT_MD, phase, { graphMd });
+
+    expect(out).toContain('# Graf projektu');
+    expect(out).toContain('## src/a.ts');
+    expect(out).toContain('function a(): number');
+    expect(out).not.toContain('Stavím nástroj X pro Y.');
+    expect(out).toMatchSnapshot();
+  });
+
+  it('falls back to projectMd when graphMd is empty or whitespace', () => {
+    const phase: Phase = { id: 9, title: 'P9', goal: 'g', status: 'proposed' };
+
+    const out1 = buildDiscussPhasePrompt(PROJECT_MD, phase, { graphMd: '' });
+    const out2 = buildDiscussPhasePrompt(PROJECT_MD, phase, { graphMd: '   \n  ' });
+
+    expect(out1).toContain('Stavím nástroj X pro Y.');
+    expect(out1).not.toContain('# Graf projektu');
+    expect(out2).toContain('Stavím nástroj X pro Y.');
+    expect(out2).not.toContain('# Graf projektu');
+  });
+
+  it('trims graphMd whitespace', () => {
+    const phase: Phase = { id: 10, title: 'P10', status: 'proposed' };
+    const graphMd = '# Graf projektu\n\n## src/x.ts\n';
+
+    const out = buildDiscussPhasePrompt(PROJECT_MD, phase, {
+      graphMd: `\n\n  ${graphMd}  \n\n`,
+    });
+
+    expect(out).toContain(`# Projekt\n${graphMd}\n`);
+    expect(out).not.toContain('# Projekt\n\n');
+  });
 });
