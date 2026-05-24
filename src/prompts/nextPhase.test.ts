@@ -24,7 +24,7 @@ describe('buildNextPhasePrompt', () => {
     expect(out).toMatchSnapshot();
   });
 
-  it('renders history block with goals, human notes and steps when phases exist', () => {
+  it('renders one-line history per phase, without goals/notes/steps', () => {
     const state: ProjectState = {
       ...emptyState(),
       currentPhaseId: 3,
@@ -78,9 +78,10 @@ describe('buildNextPhasePrompt', () => {
     expect(out).toContain('- [dělá se] 3. Snapshot testy');
     expect(out).toContain('- [návrh] 4. Refactor');
     expect(out).toContain('- [odloženo] 5. Experiment');
-    expect(out).toContain('    Cíl: CLI vrací --version');
-    expect(out).toContain('    Poznámka: málem jsme přepsali stav, viz incident');
-    expect(out).toContain('    Kroky: init package (hotovo), přidat commander (hotovo)');
+    // historie je zkomprimovaná na jeden řádek na fázi — žádné cíle, poznámky ani kroky
+    expect(out).not.toContain('Cíl: CLI vrací --version');
+    expect(out).not.toContain('Poznámka:');
+    expect(out).not.toContain('Kroky:');
     expect(out).toContain('TITLE: <stručný název, max 5 slov>');
     expect(out).toMatchSnapshot();
   });
@@ -117,33 +118,33 @@ describe('buildNextPhasePrompt', () => {
     expect(out3).not.toContain('# Nápad uživatele');
   });
 
-  it('includes graph block when graphMd is provided', () => {
-    const graphMd = '# Graf projektu\n\n## src/a.ts\n\nExports:\n- function a(): number\n';
-    const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), { graphMd });
+  it('includes last memory block when lastMemoryMd is provided', () => {
+    const lastMemoryMd = '# Fáze 17 — Paměť\n\n## Co se udělalo\n- záznam paměti po fázi\n';
+    const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), { lastMemoryMd });
 
-    expect(out).toContain('# Mapa projektu');
-    expect(out).toContain('## src/a.ts');
-    expect(out).toContain('function a(): number');
+    expect(out).toContain('# Poslední fáze');
+    expect(out).toContain('## Co se udělalo');
+    expect(out).toContain('záznam paměti po fázi');
   });
 
-  it('omits graph block when graphMd is empty or whitespace', () => {
-    const out1 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { graphMd: '' });
-    const out2 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { graphMd: '   \n  ' });
+  it('omits last memory block when lastMemoryMd is empty or whitespace', () => {
+    const out1 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { lastMemoryMd: '' });
+    const out2 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { lastMemoryMd: '   \n  ' });
 
-    expect(out1).not.toContain('# Mapa projektu');
-    expect(out2).not.toContain('# Mapa projektu');
+    expect(out1).not.toContain('# Poslední fáze');
+    expect(out2).not.toContain('# Poslední fáze');
   });
 
-  it('combines graph and user hint together', () => {
+  it('combines last memory and user hint together', () => {
     const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), {
       userHint: 'přidej tmavý režim',
-      graphMd: '# Graf projektu\n\n## src/ui.ts\n',
+      lastMemoryMd: '# Fáze 17\n\n## Co se udělalo\n',
     });
-    expect(out).toContain('# Mapa projektu');
+    expect(out).toContain('# Poslední fáze');
     expect(out).toContain('# Nápad uživatele');
     expect(out).toContain('přidej tmavý režim');
-    // pořadí: mapa pak nápad
-    expect(out.indexOf('# Mapa projektu')).toBeLessThan(out.indexOf('# Nápad uživatele'));
+    // pořadí: poslední fáze pak nápad
+    expect(out.indexOf('# Poslední fáze')).toBeLessThan(out.indexOf('# Nápad uživatele'));
   });
 
   it('uses všech pět štítků fází', () => {

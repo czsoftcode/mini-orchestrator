@@ -7,20 +7,7 @@ const STEP_WORD: Record<StepStatus, string> = {
   skipped: 'odloženo',
 };
 
-export interface BuildDiscussPhaseOptions {
-  /**
-   * Obsah `.mini/graph.md`, pokud existuje. Vloží se do sekce "# Projekt"
-   * místo `projectMd` — Claude dostane strojovou mapu projektu místo lidsky
-   * psaného popisu, což je pro diskusi o konkrétní fázi užitečnější.
-   */
-  graphMd?: string;
-}
-
-export function buildDiscussPhasePrompt(
-  projectMd: string,
-  phase: Phase,
-  options: BuildDiscussPhaseOptions = {},
-): string {
+export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string {
   let stepsBlock = '';
   if (phase.steps?.length) {
     const lines = (phase.steps as Step[]).map(
@@ -31,14 +18,11 @@ export function buildDiscussPhasePrompt(
 
   const notesPath = `.mini/discuss/phase-${phase.id}.md`;
 
-  const graph = options.graphMd?.trim();
-  const projectBlock = graph || projectMd.trim();
-
   return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
 Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
 
 # Projekt
-${projectBlock}
+${projectMd.trim()}
 
 # Fáze k diskusi
 **Fáze ${phase.id}: ${phase.title}**
@@ -50,7 +34,7 @@ Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
 - upozornit na nejasnosti, skryté předpoklady nebo rizika
 - navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
 
-Smíš číst soubory projektu (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+Jako úplně první věc si přečti \`.mini/graph.md\` (Read) — je to strojová mapa projektu (exporty, importy, signatury) a dá ti rychlý přehled struktury. Teprve když mapa nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
 
 Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
 

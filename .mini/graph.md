@@ -331,21 +331,28 @@ Imports:
 Exports:
 - function undo(): Promise<void>
 
+## src/commands/writeMemory.test.ts
+
+Imports:
+- { describe, expect, it } from "vitest"
+- { buildPhaseMemoryMarkdown } from "./writeMemory.js"
+- type { Phase } from "../state/types.js"
+
 ## src/commands/writeMemory.ts
 
 Imports:
-- { access, copyFile, mkdir, symlink, unlink } from "node:fs/promises"
+- { access, copyFile, mkdir, readFile, symlink, unlink, writeFile } from "node:fs/promises"
 - { join, relative } from "node:path"
 - { askClaude } from "../claude/ask.js"
 - { buildWriteMemoryPrompt, LAST_MEMORY_FILE, MEMORY_DIR } from "../prompts/writeMemory.js"
-- { resolveModel } from "../state/models.js"
 - { readProject } from "../state/store.js"
-- type { Phase, ProjectState } from "../state/types.js"
+- type { Phase, ProjectState, StepStatus } from "../state/types.js"
 - { log } from "../ui/log.js"
 - { logUsage } from "../ui/usage.js"
 
 Exports:
 - function writePhaseMemory(phase: Phase, state: ProjectState, cwd: string, options: { hasAutoCommit: boolean; }): Promise<void>
+- function buildPhaseMemoryMarkdown(phase: Phase, discussContent: string, runContent: string): string
 - function fsSafeTimestamp(date: Date): string
 
 ## src/git.test.ts
