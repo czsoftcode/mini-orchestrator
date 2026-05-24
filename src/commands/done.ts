@@ -10,6 +10,7 @@ import type { Phase, ProjectState, Step } from '../state/types.js';
 import { ask } from '../ui/ask.js';
 import { log } from '../ui/log.js';
 import type { AutoOptions, StepOutcome } from './types.js';
+import { writePhaseMemory } from './writeMemory.js';
 
 export async function done(opts: AutoOptions = {}): Promise<StepOutcome> {
   const cwd = process.cwd();
@@ -160,7 +161,7 @@ async function collectNotesAndSave(
   const next = advanceToNextPhase(state);
   logNextPhase(next);
   if (outcome === 'done') {
-    await commitPhaseWork(phase, cwd);
+    await finalizePhaseSideEffects(phase, state, cwd);
   }
   await save(state, cwd);
   return next;
@@ -186,6 +187,31 @@ export function buildPhaseCommitMessage(phase: Phase): string {
     return `${subject}\n\n${body}\n`;
   }
   return subject;
+}
+
+/**
+ * Side-effecty, které proběhnou po finalizaci fáze jako `done`:
+ *
+ * 1. **Auto-commit** práce fáze (`commitPhaseWork`) — zapíše `phase.autoCommit`.
+ * 2. **Memory záznam** (`writePhaseMemory`) — vytvoří `.mini/memory/phase-{id}-{ts}.md`
+ *    a aktualizuje symlink `.mini/last-memory.md`.
+ *
+ * Společné místo, aby se nezapomnělo zavolat z žádné ze tří finalizačních
+ * cest v `done.ts` (`applyAutoReport`, `collectNotesAndSave`, `finalizePhase`).
+ *
+ * U `skipped` fáze se tahle funkce nevolá — commit ani memory nedávají smysl.
+ *
+ * Žádný side-effect nikdy nehází — chyby se logují jako warning a workflow
+ * pokračuje. Memory soubor je záměrně **mimo commit** (commit už proběhl);
+ * uživatel ho commitne ručně v dalším commitu.
+ */
+async function finalizePhaseSideEffects(
+  phase: Phase,
+  state: ProjectState,
+  cwd: string,
+): Promise<void> {
+  await commitPhaseWork(phase, cwd);
+  await writePhaseMemory(phase, state, cwd, { hasAutoCommit: phase.autoCommit !== undefined });
 }
 
 /**
@@ -350,7 +376,7 @@ async function applyAutoReport(
   log.success(`Fáze ${phase.id} (${phase.title}) hotová.`);
   const nextPhase = advanceToNextPhase(state);
   logNextPhase(nextPhase);
-  await commitPhaseWork(phase, cwd);
+  await finalizePhaseSideEffects(phase, state, cwd);
   await save(state, cwd);
   return {
     handled: true,
@@ -411,7 +437,7 @@ async function finalizePhase(
   const next = advanceToNextPhase(state);
   logNextPhase(next);
   if (phase.status === 'done') {
-    await commitPhaseWork(phase, cwd);
+    await finalizePhaseSideEffects(phase, state, cwd);
   }
   await save(state, cwd);
   return { ok: true, phaseAdvanced: true, nextPhaseId: next?.id ?? null };

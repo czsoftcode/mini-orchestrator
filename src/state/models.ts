@@ -2,7 +2,7 @@ import type { ProjectModels, ProjectState } from './types.js';
 
 export type ModelScope = keyof ProjectModels;
 
-export const MODEL_SCOPES: ModelScope[] = ['default', 'next', 'plan', 'do', 'importGsd', 'audit'];
+export const MODEL_SCOPES: ModelScope[] = ['default', 'next', 'plan', 'do', 'importGsd', 'audit', 'memory'];
 
 export const SCOPE_LABELS: Record<ModelScope, string> = {
   default: 'Default (pro vše, co nemá vlastní override)',
@@ -11,6 +11,7 @@ export const SCOPE_LABELS: Record<ModelScope, string> = {
   do: 'do (skutečná práce)',
   importGsd: 'import-gsd (import GSD projektu)',
   audit: 'audit (přehled kódu pro Clauda)',
+  memory: 'memory (zápis paměti po fázi)',
 };
 
 export function resolveModel(scope: Exclude<ModelScope, 'default'>, state: ProjectState): string | undefined {

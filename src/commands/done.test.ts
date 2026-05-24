@@ -8,6 +8,7 @@ import { load, save } from '../state/store.js';
 import type { Phase, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
 import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
+import { writePhaseMemory } from './writeMemory.js';
 
 // `ask` nahrazujeme `vi.fn`, ať můžeme v testech přepínat implementaci —
 // většinou má vyhodit (auto mód se ho nesmí dotknout), ale fallback testy
@@ -34,11 +35,18 @@ vi.mock('../git.js', () => ({
   softResetTo: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
 }));
 
+// Memory zápis mockujeme — testy nesmí spouštět skutečnou Claude session.
+// Defaultně no-op; konkrétní testy si ho spy-ují přes `writePhaseMemoryMock`.
+vi.mock('./writeMemory.js', () => ({
+  writePhaseMemory: vi.fn(async () => {}),
+}));
+
 const askMock = vi.mocked(ask);
 const isGitRepoMock = vi.mocked(isGitRepo);
 const hasChangesMock = vi.mocked(hasChanges);
 const commitAllMock = vi.mocked(commitAll);
 const headShaMock = vi.mocked(headSha);
+const writePhaseMemoryMock = vi.mocked(writePhaseMemory);
 
 async function writeRunReport(cwd: string, phaseId: number, body: string): Promise<void> {
   await ensureRunDir(cwd);
@@ -212,6 +220,8 @@ describe('done({ auto: true })', () => {
     commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
     headShaMock.mockReset();
     headShaMock.mockResolvedValue(null);
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
   });
 
   afterEach(async () => {
@@ -590,6 +600,8 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
     commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
     headShaMock.mockReset();
     headShaMock.mockResolvedValue(null);
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
   });
 
   afterEach(async () => {
@@ -709,6 +721,8 @@ describe('commit po finalizaci fáze', () => {
     commitAllMock.mockReset();
     headShaMock.mockReset();
     headShaMock.mockResolvedValue(null);
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
   });
 
   afterEach(async () => {
@@ -898,4 +912,176 @@ steps:
     const [, msg] = commitAllMock.mock.calls[0]!;
     expect(msg).toBe('Fáze 2: Fáze s poznámkou\n\nTohle si nech.\n');
   });
+});
+
+describe('memory zápis po finalizaci fáze', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-memory-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() nesmí být v auto módu zavoláno');
+    });
+    isGitRepoMock.mockReset();
+    isGitRepoMock.mockResolvedValue(false);
+    hasChangesMock.mockReset();
+    hasChangesMock.mockResolvedValue(false);
+    commitAllMock.mockReset();
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  async function setupDonePhaseViaAuto(): Promise<void> {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'Fáze do paměti',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+---
+`,
+    );
+  }
+
+  it('zavolá writePhaseMemory po finalizaci fáze v auto módu', async () => {
+    await setupDonePhaseViaAuto();
+
+    await done({ auto: true });
+
+    expect(writePhaseMemoryMock).toHaveBeenCalledTimes(1);
+    const [calledPhase, , calledCwd, calledOpts] = writePhaseMemoryMock.mock.calls[0]!;
+    expect(calledPhase.id).toBe(1);
+    expect(calledPhase.status).toBe('done');
+    expect(calledCwd).toBe(cwd);
+    expect(calledOpts).toEqual({ hasAutoCommit: false });
+  });
+
+  it('předá hasAutoCommit=true, když auto-commit proběhl', async () => {
+    await setupDonePhaseViaAuto();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    headShaMock
+      .mockResolvedValueOnce('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+      .mockResolvedValueOnce('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+
+    await done({ auto: true });
+
+    expect(writePhaseMemoryMock).toHaveBeenCalledTimes(1);
+    const [calledPhase, , , calledOpts] = writePhaseMemoryMock.mock.calls[0]!;
+    expect(calledPhase.autoCommit).toBeDefined();
+    expect(calledOpts).toEqual({ hasAutoCommit: true });
+  });
+
+  it('nezavolá writePhaseMemory u skipped fáze', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'Odložená fáze',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    // Interaktivní cesta: krok → skip, fáze → skip, notes → ''
+    askMock
+      .mockResolvedValueOnce({ outcome: 'skip' })
+      .mockResolvedValueOnce({ outcome: 'skip' })
+      .mockResolvedValueOnce({ notes: '' });
+
+    await done();
+
+    expect(writePhaseMemoryMock).not.toHaveBeenCalled();
+  });
+
+  it('zavolá writePhaseMemory i u interaktivní force-done cesty', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 4,
+            title: 'Force-done fáze',
+            status: 'doing',
+            steps: [
+              { title: 'krok 1', status: 'done' },
+              { title: 'krok 2', status: 'todo' },
+            ],
+          },
+        ],
+        4,
+      ),
+      cwd,
+    );
+    askMock
+      .mockResolvedValueOnce({ decision: 'force-done' })
+      .mockResolvedValueOnce({ notes: '' });
+
+    await done();
+
+    expect(writePhaseMemoryMock).toHaveBeenCalledTimes(1);
+    const [calledPhase] = writePhaseMemoryMock.mock.calls[0]!;
+    expect(calledPhase.id).toBe(4);
+    expect(calledPhase.status).toBe('done');
+  });
+
+  it('zavolá writePhaseMemory v interaktivní finalizePhase ("Hotová, funguje")', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 5,
+            title: 'Interaktivní done fáze',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'done' }],
+          },
+        ],
+        5,
+      ),
+      cwd,
+    );
+    // Žádné neuzavřené kroky → rovnou finalizePhase: outcome → done, notes → ''
+    askMock
+      .mockResolvedValueOnce({ outcome: 'done' })
+      .mockResolvedValueOnce({ notes: '' });
+
+    await done();
+
+    expect(writePhaseMemoryMock).toHaveBeenCalledTimes(1);
+    const [calledPhase] = writePhaseMemoryMock.mock.calls[0]!;
+    expect(calledPhase.id).toBe(5);
+  });
+
 });

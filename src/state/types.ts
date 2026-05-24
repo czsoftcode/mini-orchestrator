@@ -43,6 +43,7 @@ export interface ProjectModels {
   do?: string;
   importGsd?: string;
   audit?: string;
+  memory?: string;
 }
 
 export interface ProjectState {

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 12,
+  "currentPhaseId": 13,
   "phases": [
     {
       "id": 1,
@@ -285,38 +285,72 @@
       "id": 12,
       "title": "Undo respektuje auto-commit",
       "goal": "Po fázi, kterou `mini done` automaticky commitnul, `mini undo` nabídne i revert posledního commitu (soft reset na předchozí HEAD, pokud je auto-commit HEAD a v pracovním stromu nejsou nové změny); state.json a git zůstanou v konzistentním stavu, jinak undo jen vrátí state a vypíše, co s commitem řešit ručně.",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Helper v git.ts pro HEAD SHA a subject",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Helper pro detekci čistého pracovního stromu",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Helper pro soft reset na předchozí commit",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Uložit pre-commit HEAD do state před auto-commitem",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Undo detekuje auto-commit a nabídne revert",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Při neshodě jen vrátit state a vypsat hint",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Testy pro nové git helpery a undo větve",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-24T12:39:38.319Z",
+      "completedAt": "2026-05-24T13:03:55.704Z"
+    },
+    {
+      "id": 13,
+      "title": "Záznam paměti po fázi",
+      "goal": "Po dokončení fáze přes `mini done` (i `mini auto`) se do `.mini/memory/phase-{id}-{timestamp}.md` zapíše stručné shrnutí hotové práce a `.mini/last-memory.md` ukazuje (symlink) na poslední záznam.",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Přidat `memory` scope do ProjectModels a `mini model`",
+          "status": "todo"
+        },
+        {
+          "title": "Vytvořit prompt builder writeMemory.ts + snapshot test",
+          "status": "todo"
+        },
+        {
+          "title": "Implementovat writePhaseMemory se zápisem souboru a symlinkem",
+          "status": "todo"
+        },
+        {
+          "title": "Sloučit commit+memory do finalizePhaseSideEffects v done.ts",
+          "status": "todo"
+        },
+        {
+          "title": "Doplnit testy do done.test.ts (volá se jen u done)",
+          "status": "todo"
+        },
+        {
+          "title": "Aktualizovat README o memory soubory a scope",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-24T12:39:38.319Z"
+      "startedAt": "2026-05-24T13:56:09.282Z"
     }
   ],
   "models": {

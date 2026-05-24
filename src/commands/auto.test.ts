@@ -48,6 +48,13 @@ vi.mock('../git.js', () => ({
   softResetTo: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
 }));
 
+// Po finalizaci fáze `done({ auto })` spouští memory Claude session. Stejně
+// jako u jiných Claude volání ji v testech zatlučeme nahrubo, aby se
+// neletěly skutečné spawn(claude) volání.
+vi.mock('./writeMemory.js', () => ({
+  writePhaseMemory: vi.fn(async () => {}),
+}));
+
 // Po nastavení mocků importujeme `auto` — Vitest hoistí mocky nad importy
 // modulu pod testem.
 const { auto } = await import('./auto.js');

@@ -318,6 +318,40 @@
       ],
       "startedAt": "2026-05-24T12:39:38.319Z",
       "completedAt": "2026-05-24T13:03:55.704Z"
+    },
+    {
+      "id": 13,
+      "title": "Záznam paměti po fázi",
+      "goal": "Po dokončení fáze přes `mini done` (i `mini auto`) se do `.mini/memory/phase-{id}-{timestamp}.md` zapíše stručné shrnutí hotové práce a `.mini/last-memory.md` ukazuje (symlink) na poslední záznam.",
+      "status": "done",
+      "steps": [
+        {
+          "title": "Přidat `memory` scope do ProjectModels a `mini model`",
+          "status": "done"
+        },
+        {
+          "title": "Vytvořit prompt builder writeMemory.ts + snapshot test",
+          "status": "done"
+        },
+        {
+          "title": "Implementovat writePhaseMemory se zápisem souboru a symlinkem",
+          "status": "done"
+        },
+        {
+          "title": "Sloučit commit+memory do finalizePhaseSideEffects v done.ts",
+          "status": "done"
+        },
+        {
+          "title": "Doplnit testy do done.test.ts (volá se jen u done)",
+          "status": "done"
+        },
+        {
+          "title": "Aktualizovat README o memory soubory a scope",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-24T13:56:09.282Z",
+      "completedAt": "2026-05-24T14:15:12.998Z"
     }
   ],
   "models": {
