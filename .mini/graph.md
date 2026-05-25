@@ -108,10 +108,9 @@ Exports:
 ## src/commands/discuss.ts
 
 Imports:
-- { access, mkdir, readFile } from "node:fs/promises"
+- { access, mkdir } from "node:fs/promises"
 - { join } from "node:path"
 - { workWithClaude } from "../claude/work.js"
-- { GRAPH_FILE } from "../graph/buildGraph.js"
 - { buildDiscussPhasePrompt } from "../prompts/discussPhase.js"
 - { exists, load, readProject, save } from "../state/store.js"
 - type { Phase } from "../state/types.js"
@@ -250,8 +249,8 @@ Imports:
 - { readFile } from "node:fs/promises"
 - { join } from "node:path"
 - { askClaude } from "../claude/ask.js"
-- { GRAPH_FILE } from "../graph/buildGraph.js"
 - { buildNextPhasePrompt } from "../prompts/nextPhase.js"
+- { LAST_MEMORY_FILE } from "../prompts/writeMemory.js"
 - { resolveModel } from "../state/models.js"
 - { exists, load, readProject, save } from "../state/store.js"
 - type { Phase, ProjectState } from "../state/types.js"
@@ -507,8 +506,7 @@ Imports:
 - type { Phase, Step, StepStatus } from "../state/types.js"
 
 Exports:
-- interface BuildDiscussPhaseOptions
-- function buildDiscussPhasePrompt(projectMd: string, phase: Phase, options: BuildDiscussPhaseOptions): string
+- function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string
 
 ## src/prompts/doPhase.test.ts
 
@@ -547,7 +545,7 @@ Imports:
 ## src/prompts/nextPhase.ts
 
 Imports:
-- type { PhaseStatus, ProjectState, StepStatus } from "../state/types.js"
+- type { PhaseStatus, ProjectState } from "../state/types.js"
 
 Exports:
 - interface BuildNextPhaseOptions

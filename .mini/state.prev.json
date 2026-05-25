@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 18,
+  "currentPhaseId": 19,
   "phases": [
     {
       "id": 1,
@@ -505,39 +505,49 @@
       "id": 18,
       "title": "Zjednodušení workflow",
       "goal": "CO se dá ještě zjednodušit, aby se štřili tokeny a projekt zbytečně nebobtnal",
-      "status": "planned",
+      "status": "done",
       "steps": [
         {
           "title": "Zjednodušit historii fází v `nextPhase.ts` na jeden řádek",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Přidat `lastMemoryMd` do `buildNextPhasePrompt`, smazat `graphMd`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Aktualizovat `next.ts` — číst `last-memory.md`, smazat `readGraphIfExists`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Smazat `graphMd` z `buildDiscussPhasePrompt`, přidat instrukci k read",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Aktualizovat `discuss.ts` — smazat `readGraphIfExists` a volání grafu",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Přepsat testy `nextPhase.test.ts` a `discussPhase.test.ts`",
-          "status": "todo"
+          "status": "done"
         }
-      ]
+      ],
+      "startedAt": "2026-05-24T19:28:16.636Z",
+      "completedAt": "2026-05-24T19:33:44.042Z",
+      "autoCommit": {
+        "preSha": "dd458a662e0eac779f7e091e2c2e483016465e76",
+        "sha": "970405ef476d2e9375a1395b0972799610e055f2",
+        "subject": "Fáze 18: Zjednodušení workflow"
+      }
+    },
+    {
+      "id": 19,
+      "title": "Oprava snapshotu buildGraph",
+      "goal": "Snapshot v `src/graph/buildGraph.test.ts` se srovná s aktuálním headerem grafu („…zdrojových souborů (TS/TSX, PHP, Rust)\") a `npm test` projde celý zeleně (0 selhání).",
+      "status": "proposed"
     }
   ],
   "models": {
-    "do": "opus",
-    "next": "sonnet",
-    "plan": "sonnet",
-    "default": "sonnet"
+    "default": "opus"
   }
 }
