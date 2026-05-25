@@ -86,7 +86,7 @@ function renderStatus(entry: { label: string; color: (s: string) => string }): s
   return entry.color(entry.label.padEnd(STATUS_WIDTH));
 }
 
-function describeModels(state: ProjectState): string {
+export function describeModels(state: ProjectState): string {
   const parts: string[] = [];
   for (const scope of MODEL_SCOPES) {
     const value = state.models?.[scope] ?? (scope === 'default' ? state.model : undefined);
@@ -97,7 +97,7 @@ function describeModels(state: ProjectState): string {
   return parts.join(', ');
 }
 
-function nextActionHint(state: ProjectState): string {
+export function nextActionHint(state: ProjectState): string {
   if (state.currentPhaseId === null) {
     return 'Další: mini next (navrhne první fázi)';
   }

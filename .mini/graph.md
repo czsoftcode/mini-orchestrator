@@ -728,3 +728,11 @@ Imports:
 Exports:
 - function logUsage(response: AskResult): void
 - function logStreamSummary(result: StreamResult): void
+
+## vitest.config.ts
+
+Imports:
+- { defineConfig } from "vitest/config"
+
+Exports:
+- const default (default)
