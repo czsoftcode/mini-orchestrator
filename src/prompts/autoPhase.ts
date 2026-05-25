@@ -88,11 +88,12 @@ Než session ukončíš, **zapiš přes Write tool** report do souboru \`${repor
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
    - status každého kroku je právě jeden z: \`done\` (hotovo), \`skipped\` (vědomě vynecháno — vysvětli v textu), \`blocked\` (narazil jsi na blocker — popiš v textu), \`todo\` (zbývá udělat, např. nevyšel čas),
-   - \`verdict\` shrnuje celou fázi a je jeden z: \`done\` (všechno hotové), \`partial\` (něco zbývá, ale nic ti nebrání pokračovat), \`blocked\` (narazil jsi na blocker, který sám neumíš obejít).
+   - \`verdict\` shrnuje celou fázi a je jeden z: \`done\` (všechno hotové), \`partial\` (něco zbývá, ale nic ti nebrání pokračovat), \`blocked\` (narazil jsi na blocker, který sám neumíš obejít),
+   - volitelné pole \`verify\` — seznam věcí, které jsi **sám nedokázal ověřit** a potřebují lidský pohled (vizuální UI, UX flow, subjektivní dojem). Co jde ověřit strojově (curl, testy, build), **ověř sám** a do \`verify\` to nepiš. Každá položka má \`title\` (co má člověk ověřit, povinné) a volitelně \`detail\` (kontext — co a jak jsi (ne)ověřil). Když není co ověřovat člověkem, pole vynech.
 
 2) **Volný text** pod YAML blokem — krátké shrnutí pro člověka: co se povedlo, co ne, na co jsi narazil, otevřené otázky. Sem patří kontext, který by se do YAML statusu nevešel.
 
-Soubor musí začínat YAML blokem přesně v tomto tvaru (uprav statusy a doplň poznámky; názvy kroků a \`phase\` neměň):
+Soubor musí začínat YAML blokem přesně v tomto tvaru (uprav statusy a doplň poznámky; názvy kroků a \`phase\` neměň; \`verify\` přidej jen když je co ověřovat člověkem, jinak ho vynech):
 
 \`\`\`
 ---
@@ -100,6 +101,9 @@ phase: ${phase.id}
 verdict: done
 steps:
 ${sampleSteps}
+verify:   # volitelné — vynech, když Claude ověřil všechno sám
+  - title: "co má člověk ověřit (vizuální/UX věc, co nejde strojově)"
+    detail: "co a jak jsi (ne)ověřil"
 ---
 
 # Fáze ${phase.id} — report z auto session

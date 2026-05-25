@@ -198,6 +198,24 @@ describe('advanceToNextPhase', () => {
     expect(next?.id).toBe(2);
     expect(state.currentPhaseId).toBe(2);
   });
+
+  it('posune se na podfázi s float ID vloženou hned za rodiče', () => {
+    // Podfáze 21.1 stojí fyzicky za rodičem 21 (doing) a před fází 22.
+    // advanceToNextPhase ji musí vybrat jako první planned/proposed v pořadí.
+    const state = makeState(
+      [
+        { id: 21, title: 'Rodič', status: 'doing' },
+        { id: 21.1, title: 'Oprava', status: 'planned', steps: [] },
+        { id: 22, title: 'Další', status: 'planned' },
+      ],
+      21,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(next?.id).toBe(21.1);
+    expect(state.currentPhaseId).toBe(21.1);
+  });
 });
 
 describe('done({ auto: true })', () => {
@@ -1185,5 +1203,234 @@ steps:
     await done({ auto: true });
 
     await expect(access(join(cwd, '.mini', 'graph.md'))).rejects.toThrow();
+  });
+});
+
+describe('done({ auto: true }) — verify body', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-verify-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+    isGitRepoMock.mockReset();
+    isGitRepoMock.mockResolvedValue(false);
+    hasChangesMock.mockReset();
+    hasChangesMock.mockResolvedValue(false);
+    commitAllMock.mockReset();
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  async function setupPhaseWithVerify(verifyYaml: string): Promise<void> {
+    await save(
+      makeState(
+        [
+          {
+            id: 21,
+            title: 'Fáze s ověřením',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'done' }],
+          },
+          { id: 22, title: 'Další', status: 'proposed' },
+        ],
+        21,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      21,
+      `---
+phase: 21
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+${verifyYaml}---
+`,
+    );
+  }
+
+  it('pass na všech bodech → fáze se uzavře a posune dál', async () => {
+    await setupPhaseWithVerify(
+      `verify:
+  - title: Vizuální kontrola tlačítka
+  - title: UX flow
+`,
+    );
+    askMock
+      .mockResolvedValueOnce({ answer: 'pass' })
+      .mockResolvedValueOnce({ answer: 'pass' });
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 22 });
+    expect(askMock).toHaveBeenCalledTimes(2);
+    const loaded = await load(cwd);
+    expect(loaded.phases.find((p) => p.id === 21)?.status).toBe('done');
+    expect(loaded.currentPhaseId).toBe(22);
+  });
+
+  it('skip → fáze se uzavře (uživatel bere zodpovědnost na sebe)', async () => {
+    await setupPhaseWithVerify(
+      `verify:
+  - title: Vizuální kontrola
+`,
+    );
+    askMock.mockResolvedValueOnce({ answer: 'skip' });
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 22 });
+    const loaded = await load(cwd);
+    expect(loaded.phases.find((p) => p.id === 21)?.status).toBe('done');
+  });
+
+  it('issue → fázi nezavře, vrátí ok:false (uživatel opraví a zavře znovu)', async () => {
+    await setupPhaseWithVerify(
+      `verify:
+  - title: Tlačítko je křivě
+`,
+    );
+    askMock.mockResolvedValueOnce({ answer: 'issue' });
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: false, reason: 'verify-issue' });
+    const loaded = await load(cwd);
+    const phase = loaded.phases.find((p) => p.id === 21);
+    expect(phase?.status).toBe('doing');
+    expect(phase?.completedAt).toBeUndefined();
+    expect(loaded.currentPhaseId).toBe(21);
+    // žádná podfáze nevznikla
+    expect(loaded.phases.some((p) => p.id === 21.1)).toBe(false);
+  });
+
+  it('block → vytvoří opravnou podfázi s float ID a posune se na ni', async () => {
+    await setupPhaseWithVerify(
+      `verify:
+  - title: Stránka padá na mobilu
+    detail: Na desktopu OK, mobil neotestován
+  - title: Drobnost v textu
+`,
+    );
+    // 1. bod → block, 2. bod → issue (bloker má přednost)
+    askMock
+      .mockResolvedValueOnce({ answer: 'block' })
+      .mockResolvedValueOnce({ answer: 'issue' });
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 21.1 });
+    const loaded = await load(cwd);
+
+    // rodič se NEuzavřel
+    const parent = loaded.phases.find((p) => p.id === 21);
+    expect(parent?.status).toBe('doing');
+    expect(parent?.completedAt).toBeUndefined();
+
+    // podfáze 21.1 vznikla hned za rodičem
+    const idxParent = loaded.phases.findIndex((p) => p.id === 21);
+    const idxSub = loaded.phases.findIndex((p) => p.id === 21.1);
+    expect(idxSub).toBe(idxParent + 1);
+
+    const sub = loaded.phases[idxSub];
+    expect(sub?.status).toBe('planned');
+    expect(sub?.steps).toEqual([
+      { title: 'Stránka padá na mobilu', status: 'todo', notes: 'Na desktopu OK, mobil neotestován' },
+    ]);
+    expect(loaded.currentPhaseId).toBe(21.1);
+
+    // bloker nespustil commit ani memory (fáze se nezavřela)
+    expect(commitAllMock).not.toHaveBeenCalled();
+    expect(writePhaseMemoryMock).not.toHaveBeenCalled();
+  });
+
+  it('druhý bloker dostane ID 21.2, když 21.1 už existuje', async () => {
+    await save(
+      makeState(
+        [
+          {
+            id: 21,
+            title: 'Rodič',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'done' }],
+          },
+          { id: 21.1, title: 'Oprava: Rodič', status: 'done', steps: [] },
+        ],
+        21,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      21,
+      `---
+phase: 21
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+verify:
+  - title: Další bloker
+---
+`,
+    );
+    askMock.mockResolvedValueOnce({ answer: 'block' });
+
+    const r = await done({ auto: true });
+
+    const loaded = await load(cwd);
+    expect(loaded.phases.some((p) => p.id === 21.2)).toBe(true);
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 21.2 });
+  });
+
+  it('report bez verify pole projde uzavřením beze změny (ask se nevolá)', async () => {
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() se u reportu bez verify nesmí volat');
+    });
+    await save(
+      makeState(
+        [
+          {
+            id: 21,
+            title: 'Bez verify',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'done' }],
+          },
+          { id: 22, title: 'Další', status: 'proposed' },
+        ],
+        21,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      21,
+      `---
+phase: 21
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+---
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 22 });
+    expect(askMock).not.toHaveBeenCalled();
   });
 });

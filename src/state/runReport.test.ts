@@ -448,6 +448,95 @@ steps:
   });
 });
 
+describe('parseRunReport — pole verify', () => {
+  it('vrací prázdný seznam, když pole verify chybí (zpětná kompatibilita)', () => {
+    const text = `---
+phase: 1
+verdict: done
+steps:
+  - title: "Krok A"
+    status: done
+---
+`;
+
+    const report = parseRunReport(text, {
+      expectedPhaseId: 1,
+      expectedStepTitles: ['Krok A'],
+    });
+
+    expect(report.verify).toEqual([]);
+  });
+
+  it('naparsuje verify s title i detail', () => {
+    const text = `---
+phase: 2
+verdict: done
+steps: []
+verify:
+  - title: Ověř tlačítko na mobilu
+    detail: Testováno jen curl, vizuál neznámý
+  - title: Zkontroluj UX flow přihlášení
+---
+`;
+
+    const report = parseRunReport(text, {
+      expectedPhaseId: 2,
+      expectedStepTitles: [],
+    });
+
+    expect(report.verify).toEqual([
+      { title: 'Ověř tlačítko na mobilu', detail: 'Testováno jen curl, vizuál neznámý' },
+      { title: 'Zkontroluj UX flow přihlášení' },
+    ]);
+  });
+
+  it('akceptuje prázdný seznam verify ([])', () => {
+    const text = `---
+phase: 3
+verdict: done
+steps: []
+verify: []
+---
+`;
+
+    const report = parseRunReport(text, {
+      expectedPhaseId: 3,
+      expectedStepTitles: [],
+    });
+
+    expect(report.verify).toEqual([]);
+  });
+
+  it('hází, když verify není seznam', () => {
+    const text = `---
+phase: 1
+verdict: done
+steps: []
+verify: hotovo
+---
+`;
+
+    expect(() =>
+      parseRunReport(text, { expectedPhaseId: 1, expectedStepTitles: [] }),
+    ).toThrow(/verify/);
+  });
+
+  it('hází, když verify položka nemá title', () => {
+    const text = `---
+phase: 1
+verdict: done
+steps: []
+verify:
+  - detail: chybí mi title
+---
+`;
+
+    expect(() =>
+      parseRunReport(text, { expectedPhaseId: 1, expectedStepTitles: [] }),
+    ).toThrow(/title/);
+  });
+});
+
 describe('readRunReport — práce se souborem', () => {
   let cwd: string;
 

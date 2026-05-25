@@ -288,6 +288,13 @@ Exports:
 - function plan(opts: AutoOptions): Promise<StepOutcome>
 - function parseSteps(text: string): string[]
 
+## src/commands/status.test.ts
+
+Imports:
+- { describe, expect, it } from "vitest"
+- { describeModels, nextActionHint } from "./status.js"
+- type { Phase, ProjectState } from "../state/types.js"
+
 ## src/commands/status.ts
 
 Imports:
@@ -299,6 +306,8 @@ Imports:
 
 Exports:
 - function status(): Promise<void>
+- function describeModels(state: ProjectState): string
+- function nextActionHint(state: ProjectState): string
 
 ## src/commands/types.ts
 

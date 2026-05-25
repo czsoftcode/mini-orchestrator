@@ -56,9 +56,8 @@ describe('buildAutoPhasePrompt', () => {
     expect(out).toContain('**Fáze 1: Bootstrap**');
     expect(out).toContain('Cíl: CLI vrací --version');
     expect(out).toContain('(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)');
-    // V YAML vzorku musí být placeholder pro prázdný seznam, ne fiktivní položka.
-    expect(out).toContain('[]');
-    expect(out).not.toContain('- title:');
+    // V YAML vzorku musí mít sekce steps placeholder pro prázdný seznam, ne fiktivní položku.
+    expect(out).toContain('[]  # fáze nemá kroky — nech prázdný seznam');
     expect(out).toContain('`.mini/run/phase-1.md`');
     expect(out).toMatchSnapshot();
   });
@@ -183,6 +182,25 @@ auto má taky vidět diskusi
     // V YAML šabloně musí být escapované (Claude bude kopírovat tento tvar).
     expect(out).toContain('- title: "krok s \\"uvozovkami\\""');
     expect(out).toContain('- title: "krok s\\\\backslashem"');
+  });
+
+  it('obsahuje instrukce a vzor pro pole verify', () => {
+    const phase: Phase = {
+      id: 11,
+      title: 'Verify v promptu',
+      goal: 'Claude ví, co patří do verify',
+      status: 'doing',
+      steps: [{ title: 'krok', status: 'todo' }],
+    };
+
+    const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
+
+    // instrukce: verify = věci, co Claude sám neověřil (lidský pohled)
+    expect(out).toContain('verify');
+    expect(out).toContain('sám nedokázal ověřit');
+    // vzor v YAML šabloně má title i detail
+    expect(out).toContain('verify:');
+    expect(out).toContain('detail:');
   });
 
   it('falls back to (nezadán) when phase has no goal', () => {

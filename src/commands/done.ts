@@ -5,6 +5,7 @@ import {
   readRunReport,
   runReportPath,
   type RunReport,
+  type RunReportVerifyItem,
 } from '../state/runReport.js';
 import { exists, load, save } from '../state/store.js';
 import type { Phase, ProjectState, Step } from '../state/types.js';
@@ -394,6 +395,14 @@ async function applyAutoReport(
     return { handled: true, outcome: { ok: true } };
   }
 
+  // Body k ručnímu ověření zobrazíme až tady — všechny kroky jsou uzavřené a
+  // fázi bychom jinak rovnou zavřeli. I v auto módu se tu zastavíme a zeptáme
+  // se člověka (volání `ask()`); auto loop verify neobchází.
+  const verifyOutcome = await handleVerify(report.verify, phase, state, cwd);
+  if (verifyOutcome) {
+    return { handled: true, outcome: verifyOutcome };
+  }
+
   phase.status = 'done';
   phase.completedAt = new Date().toISOString();
   log.success(`Fáze ${phase.id} (${phase.title}) hotová.`);
@@ -405,6 +414,134 @@ async function applyAutoReport(
     handled: true,
     outcome: { ok: true, phaseAdvanced: true, nextPhaseId: nextPhase?.id ?? null },
   };
+}
+
+/**
+ * Projde body k ručnímu ověření (`verify` z reportu) s člověkem. Volá se až
+ * při uzavírání fáze, kdy jsou všechny kroky hotové. Vrací:
+ *
+ * - `null` — žádné verify body, nebo všechny `pass`/`skip`: fázi lze zavřít,
+ * - `{ ok: false, reason: 'verify-issue' }` — aspoň jeden `issue` (a žádný
+ *   blocker): fázi nezavíráme, uživatel ji po opravě zavře znovu (`mini done`),
+ * - `{ ok: true, phaseAdvanced: true, ... }` — aspoň jeden `block`: vytvoříme
+ *   opravnou podfázi (float ID) a posuneme se na ni.
+ *
+ * I v auto módu se tu volá `ask()` — verify se nikdy neobchází automaticky.
+ */
+async function handleVerify(
+  verify: RunReportVerifyItem[],
+  phase: Phase,
+  state: ProjectState,
+  cwd: string,
+): Promise<StepOutcome | null> {
+  if (verify.length === 0) {
+    return null;
+  }
+
+  const word = verify.length === 1 ? 'bod k ručnímu ověření' : 'bodů k ručnímu ověření';
+  log.info(`Fáze ${phase.id} (${phase.title}): ${verify.length} ${word} (Claude je sám neověřil):`);
+  console.log();
+
+  const blockers: RunReportVerifyItem[] = [];
+  const issues: RunReportVerifyItem[] = [];
+
+  for (let i = 0; i < verify.length; i++) {
+    const item = verify[i]!;
+    log.info(`  ${i + 1}. ${item.title}`);
+    if (item.detail) {
+      log.dim(`     ${item.detail}`);
+    }
+    const { answer } = await ask<'answer'>({
+      type: 'select',
+      name: 'answer',
+      message: 'Ověřeno?',
+      choices: [
+        { title: 'Ano, funguje (pass)', value: 'pass' },
+        { title: 'Přeskočit ověření, beru zodpovědnost na sebe (skip)', value: 'skip' },
+        { title: 'Drobný problém — chci ho opravit (issue)', value: 'issue' },
+        { title: 'Závažný bloker — vytvoř opravnou podfázi (block)', value: 'block' },
+      ],
+    });
+    if (answer === 'issue') {
+      issues.push(item);
+    } else if (answer === 'block') {
+      blockers.push(item);
+    }
+  }
+
+  // Bloker má přednost: založíme opravnou podfázi a posuneme se na ni.
+  if (blockers.length > 0) {
+    const sub = insertFixSubphase(state, phase, blockers);
+    log.warn(
+      `Fáze ${phase.id} se neuzavírá — našel se ${blockers.length === 1 ? 'bloker' : 'blokery'}. Vytvořil jsem opravnou podfázi ${sub.id}.`,
+    );
+    for (const s of sub.steps ?? []) {
+      log.dim(`  - ${s.title}`);
+    }
+    const next = advanceToNextPhase(state);
+    logNextPhase(next);
+    await save(state, cwd);
+    return { ok: true, phaseAdvanced: true, nextPhaseId: next?.id ?? null };
+  }
+
+  // Drobné problémy bez blokeru: fázi nezavřeme, uživatel ji po opravě zavře znovu.
+  if (issues.length > 0) {
+    log.warn(
+      `Fáze ${phase.id} se neuzavírá — ${issues.length === 1 ? 'bod má problém' : 'bodů má problém'}:`,
+    );
+    for (const it of issues) {
+      log.dim(`  - ${it.title}`);
+    }
+    log.hint('Oprav uvedené body (`mini do`) a pak fázi zavři znovu (`mini done`).');
+    await save(state, cwd);
+    return { ok: false, reason: 'verify-issue' };
+  }
+
+  // Všechny body pass/skip — fázi lze zavřít.
+  return null;
+}
+
+/**
+ * Vloží opravnou podfázi hned za mateřskou fázi v `phases` array. Float ID
+ * (21 → 21.1 → 21.2…), status `planned`, kroky mechanicky z blokerů (každý
+ * blocker → jeden krok). Fyzická pozice za rodičem je důležitá: `advanceToNextPhase`
+ * bere první `proposed/planned` fázi v pořadí pole, takže podfáze musí stát hned
+ * za rodičem, jinak by se přeskočila.
+ */
+function insertFixSubphase(
+  state: ProjectState,
+  parent: Phase,
+  blockers: RunReportVerifyItem[],
+): Phase {
+  const id = nextSubphaseId(state, parent.id);
+  const steps: Step[] = blockers.map((b) => ({
+    title: b.title,
+    status: 'todo' as const,
+    ...(b.detail ? { notes: b.detail } : {}),
+  }));
+  const sub: Phase = {
+    id,
+    title: `Oprava: ${parent.title}`,
+    goal: `Vyřešit blokery z ručního ověření fáze ${parent.id}.`,
+    status: 'planned',
+    steps,
+  };
+  const idx = state.phases.findIndex((p) => p.id === parent.id);
+  state.phases.splice(idx + 1, 0, sub);
+  return sub;
+}
+
+/**
+ * Další volné float ID podfáze pro daného rodiče. 21 bez podfází → 21.1,
+ * jinak nejvyšší existující + 0.1 (zaokrouhleno na jedno desetinné místo,
+ * aby float aritmetika nedala 21.200000000000003).
+ */
+function nextSubphaseId(state: ProjectState, parentId: number): number {
+  const subs = state.phases.filter(
+    (p) => Math.floor(p.id) === parentId && p.id !== parentId,
+  );
+  const base = subs.length === 0 ? parentId : Math.max(...subs.map((p) => p.id));
+  return Math.round((base + 0.1) * 10) / 10;
 }
 
 async function finalizePhase(

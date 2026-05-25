@@ -39,11 +39,28 @@ export interface RunReportStep {
   status: RunStepStatus;
 }
 
+/**
+ * Jeden bod k ručnímu ověření — věc, kterou Claude sám nedokázal ověřit
+ * (typicky vizuální UI, UX flow, subjektivní dojem). `mini done` je při
+ * uzavírání fáze projde s člověkem (pass/skip/issue/block).
+ */
+export interface RunReportVerifyItem {
+  /** Co má člověk ověřit (povinné). */
+  title: string;
+  /** Volitelný kontext — co a jak Claude (ne)ověřil. */
+  detail?: string;
+}
+
 export interface RunReport {
   /** ID fáze, ke které report patří. Musí sedět s aktuální `currentPhaseId`. */
   phase: number;
   verdict: RunVerdict;
   steps: RunReportStep[];
+  /**
+   * Body k ručnímu ověření. Volitelné pole — chybějící `verify` = prázdný
+   * seznam (zpětná kompatibilita se staršími reporty, workflow se nemění).
+   */
+  verify: RunReportVerifyItem[];
   /** Volný text pod YAML blokem (poznámky pro člověka). Bez YAML hlavičky. */
   body?: string;
 }
@@ -202,7 +219,52 @@ export function parseRunReport(text: string, ctx: ParseRunReportContext): RunRep
     );
   }
 
-  return { phase: phaseRaw, verdict: verdictRaw, steps, body };
+  const verify = parseVerify(data.verify);
+
+  return { phase: phaseRaw, verdict: verdictRaw, steps, verify, body };
+}
+
+/**
+ * Naparsuje volitelné pole `verify`. Chybějící/`null` = prázdný seznam
+ * (zpětná kompatibilita). Každá položka musí mít neprázdný `title`; `detail`
+ * je volitelný řetězec. Cokoli jiného je chyba — radši zařveme, než abychom
+ * tiše ztratili bod k ověření.
+ */
+function parseVerify(raw: unknown): RunReportVerifyItem[] {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw)) {
+    throw new RunReportParseError(
+      `Pole "verify" musí být seznam (je: ${formatValue(raw)}).`,
+    );
+  }
+  const items: RunReportVerifyItem[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i];
+    if (!isObject(item)) {
+      throw new RunReportParseError(
+        `verify[${i}] musí být objekt s polem "title" (je: ${formatValue(item)}).`,
+      );
+    }
+    const title = item.title;
+    if (typeof title !== 'string' || title.length === 0) {
+      throw new RunReportParseError(
+        `verify[${i}].title musí být neprázdný řetězec (je: ${formatValue(title)}).`,
+      );
+    }
+    const detailRaw = item.detail;
+    let detail: string | undefined;
+    if (detailRaw === undefined || detailRaw === null) {
+      detail = undefined;
+    } else if (typeof detailRaw === 'string') {
+      detail = detailRaw.length > 0 ? detailRaw : undefined;
+    } else {
+      throw new RunReportParseError(
+        `verify[${i}].detail u bodu "${title}" musí být řetězec (je: ${formatValue(detailRaw)}).`,
+      );
+    }
+    items.push(detail !== undefined ? { title, detail } : { title });
+  }
+  return items;
 }
 
 /**
