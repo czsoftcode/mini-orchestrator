@@ -163,7 +163,7 @@ Imports:
 Imports:
 - { commitAll, hasChanges, headSha, isGitRepo } from "../git.js"
 - { buildGraph, GRAPH_FILE, hasMappableProject } from "../graph/buildGraph.js"
-- { RunReportParseError, readRunReport, runReportPath, RunReport } from "../state/runReport.js"
+- { RunReportParseError, readRunReport, runReportPath, RunReport, RunReportVerifyItem } from "../state/runReport.js"
 - { exists, load, save } from "../state/store.js"
 - type { Phase, ProjectState, Step } from "../state/types.js"
 - { ask } from "../ui/ask.js"
@@ -645,6 +645,7 @@ Exports:
 - type RunStepStatus
 - type RunVerdict
 - interface RunReportStep
+- interface RunReportVerifyItem
 - interface RunReport
 - function runReportPath(cwd: string, phaseId: number): string
 - function previousRunReportPath(cwd: string, phaseId: number): string

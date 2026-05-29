@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 21,
+  "currentPhaseId": 22,
   "phases": [
     {
       "id": 1,
@@ -570,34 +570,73 @@
       "id": 21,
       "title": "Report označí změny k ručnímu ověření",
       "goal": "Report fáze umí pole `verify` (seznam bodů, které Claude sám neověřil — typicky UI/UX), a `mini done` tyto body před uzavřením fáze zobrazí a v auto módu si vyžádá potvrzení člověka, místo aby fázi rovnou označil za hotovou.",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "parseRunReport čte volitelné pole verify (title+detail)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "buildAutoPhasePrompt doplní instrukce a vzor verify",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "done.ts zobrazí verify body a ptá se pass/skip/issue/block",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "issue zastaví uzavření, block vytvoří podfázi s float ID",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "advanceToNextPhase korektně posune na vloženou podfázi",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Testy parseru verify, done flow a vložení podfáze",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-25T11:27:10.858Z",
+      "completedAt": "2026-05-25T11:35:52.915Z",
+      "autoCommit": {
+        "preSha": "65e2e64de2fcfc523f4f60ce434e0313fc2cefd5",
+        "sha": "e27fb6a7911ad16d21c0e56ee68b95c27ed67b89",
+        "subject": "Fáze 21: Report označí změny k ručnímu ověření"
+      }
+    },
+    {
+      "id": 22,
+      "title": "Návrh na vylepšení mini orchestrátoru",
+      "goal": "Sepiš, neimplementuj co by se dalo vylepšit v programu",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Sepsat nálezy ke správnosti workflow (osiřelá doing)",
+          "status": "todo"
+        },
+        {
+          "title": "Sepsat nálezy k mrtvému kódu a úklidu",
+          "status": "todo"
+        },
+        {
+          "title": "Sepsat nálezy k robustnosti a chybovým stavům",
+          "status": "todo"
+        },
+        {
+          "title": "Sepsat nálezy k DX a výstupu CLI",
+          "status": "todo"
+        },
+        {
+          "title": "Sloučit nálezy do .mini/improvements.md s prioritou/odhadem",
+          "status": "todo"
+        },
+        {
+          "title": "Ověřit idempotenci a akčnost položek backlogu",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-25T11:27:10.858Z"
+      "startedAt": "2026-05-29T19:37:49.092Z"
     }
   ],
   "models": {
