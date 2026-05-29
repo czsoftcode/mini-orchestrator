@@ -1,3 +1,5 @@
+import pc from 'picocolors';
+
 import type { AskResult } from '../claude/ask.js';
 import type { StreamResult } from '../claude/stream.js';
 import { log } from './log.js';
@@ -52,7 +54,10 @@ export function logStreamSummary(result: StreamResult): void {
   if (parts.length === 0) {
     return;
   }
-  log.dim(`Souhrn streamu: ${parts.join(' · ')}`);
+  // Souhrn musí jasně vystoupit z proudu akcí výše — proto bold label oddělený
+  // od (tlumených) metrik. Volající (`mini do --stream`) před tím tiskne prázdný
+  // řádek, takže blok je opticky oddělený od poslední akce.
+  console.log(`${pc.bold('Souhrn streamu')} ${pc.dim('·')} ${pc.dim(parts.join(' · '))}`);
 }
 
 function formatTokens(n: number): string {

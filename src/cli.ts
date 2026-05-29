@@ -60,7 +60,7 @@ program
 
 program
   .command('auto')
-  .description('Auto chain: next → plan → (do → done){pro každý krok}. Dokončí celou fázi bez promptu.')
+  .description('Auto chain: next → plan → (do → done){pro každý krok}. Fázi dotáhne sám, ale u bodů k ručnímu ověření (verify) se zastaví a zeptá člověka — není to plně bezobslužný běh.')
   .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v každé session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
   .action(async (opts: { maxTurns?: number }) => {
     const { auto } = await import('./commands/auto.js');

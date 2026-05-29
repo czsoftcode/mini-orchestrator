@@ -7,7 +7,9 @@ import {
   RunReportParseError,
   parseRunReport,
   readRunReport,
+  readRunReportSummary,
   runReportPath,
+  summarizeRunReportText,
 } from './runReport.js';
 
 describe('parseRunReport — happy path', () => {
@@ -589,5 +591,94 @@ ok
     await expect(
       readRunReport(cwd, { expectedPhaseId: 4, expectedStepTitles: [] }),
     ).rejects.toBeInstanceOf(RunReportParseError);
+  });
+});
+
+describe('summarizeRunReportText — tolerantní souhrn pro status', () => {
+  it('vytáhne verdikt a verify body bez validace kroků', () => {
+    const s = summarizeRunReportText(`---
+phase: 7
+verdict: partial
+steps:
+  - title: "Cokoli"
+    status: todo
+verify:
+  - title: "Ověř UI"
+    detail: "vizuální"
+  - title: "Ověř flow"
+---
+
+text
+`);
+    expect(s.unparseable).toBe(false);
+    expect(s.verdict).toBe('partial');
+    expect(s.verify).toEqual([
+      { title: 'Ověř UI', detail: 'vizuální' },
+      { title: 'Ověř flow' },
+    ]);
+  });
+
+  it('verdict je null u neznámé hodnoty, ale parse nepadne', () => {
+    const s = summarizeRunReportText(`---
+phase: 1
+verdict: nesmysl
+steps: []
+---
+`);
+    expect(s.unparseable).toBe(false);
+    expect(s.verdict).toBeNull();
+    expect(s.verify).toEqual([]);
+  });
+
+  it('označí report bez YAML hlavičky jako unparseable', () => {
+    const s = summarizeRunReportText('jen volný text bez hlavičky\n');
+    expect(s.unparseable).toBe(true);
+    expect(s.verdict).toBeNull();
+    expect(s.verify).toEqual([]);
+  });
+
+  it('chybné verify pole nezhatí celý souhrn (verdikt zůstane)', () => {
+    const s = summarizeRunReportText(`---
+phase: 1
+verdict: done
+verify: "tohle není seznam"
+---
+`);
+    expect(s.unparseable).toBe(false);
+    expect(s.verdict).toBe('done');
+    expect(s.verify).toEqual([]);
+  });
+});
+
+describe('readRunReportSummary — práce se souborem', () => {
+  let cwd: string;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'mini-run-summary-'));
+  });
+
+  afterEach(async () => {
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('vrátí null, když report neexistuje', async () => {
+    expect(await readRunReportSummary(cwd, 1)).toBeNull();
+  });
+
+  it('přečte a tolerantně shrne existující report', async () => {
+    await mkdir(join(cwd, RUN_DIR), { recursive: true });
+    await writeFile(
+      runReportPath(cwd, 3),
+      `---
+phase: 3
+verdict: blocked
+steps: []
+---
+`,
+      'utf-8',
+    );
+    const s = await readRunReportSummary(cwd, 3);
+    expect(s?.verdict).toBe('blocked');
+    expect(s?.unparseable).toBe(false);
   });
 });

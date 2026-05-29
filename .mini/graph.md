@@ -6,6 +6,7 @@ Strojově generovaný přehled zdrojových souborů (TS/TSX, PHP, Rust) — expo
 
 Imports:
 - { spawn } from "node:child_process"
+- { describeSpawnError } from "./spawnError.js"
 - type { PermissionMode } from "./work.js"
 
 Exports:
@@ -13,6 +14,18 @@ Exports:
 - interface AskUsage
 - interface AskResult
 - function askClaude(prompt: string, opts: AskOptions): Promise<AskResult>
+
+## src/claude/spawnError.test.ts
+
+Imports:
+- { describe, expect, it } from "vitest"
+- { CLAUDE_NOT_FOUND_MESSAGE, describeSpawnError } from "./spawnError.js"
+
+## src/claude/spawnError.ts
+
+Exports:
+- const CLAUDE_NOT_FOUND_MESSAGE
+- function describeSpawnError(err: NodeJS.ErrnoException): Error
 
 ## src/claude/stream.test.ts
 
@@ -25,6 +38,7 @@ Imports:
 
 Imports:
 - { spawn } from "node:child_process"
+- { describeSpawnError } from "./spawnError.js"
 - type { PermissionMode } from "./work.js"
 
 Exports:
@@ -48,6 +62,7 @@ Exports:
 
 Imports:
 - { spawn } from "node:child_process"
+- { describeSpawnError } from "./spawnError.js"
 
 Exports:
 - type PermissionMode
@@ -74,6 +89,16 @@ Imports:
 
 Exports:
 - function audit(): Promise<StepOutcome>
+
+## src/commands/auto.e2e.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it } from "vitest"
+- { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+- { tmpdir } from "node:os"
+- { delimiter, join } from "node:path"
+- { load, save, writeProject } from "../state/store.js"
+- type { ProjectState } from "../state/types.js"
 
 ## src/commands/auto.test.ts
 
@@ -120,6 +145,16 @@ Imports:
 
 Exports:
 - function discuss(): Promise<StepOutcome>
+
+## src/commands/do.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+- { mkdtemp, rm } from "node:fs/promises"
+- { tmpdir } from "node:os"
+- { join } from "node:path"
+- { save, writeProject } from "../state/store.js"
+- type { ProjectState } from "../state/types.js"
 
 ## src/commands/do.ts
 

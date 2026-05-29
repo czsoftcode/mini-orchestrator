@@ -289,6 +289,68 @@ export async function readRunReport(
   return parseRunReport(raw, ctx);
 }
 
+/**
+ * Lehký, tolerantní souhrn reportu pro `mini status`. Na rozdíl od
+ * `parseRunReport` nevaliduje kroky vůči stavu a nehází — když report nejde
+ * naparsovat, vrátí `unparseable: true`. Status totiž jen informuje, nesmí
+ * spadnout kvůli zastaralému nebo poškozenému reportu.
+ */
+export interface RunReportSummary {
+  /** Verdikt z reportu, nebo `null` když chybí/je neplatný. */
+  verdict: RunVerdict | null;
+  /** Body k ručnímu ověření (tolerantně; při chybě prázdné). */
+  verify: RunReportVerifyItem[];
+  /** `true`, když report existuje, ale nejde naparsovat (chybí YAML apod.). */
+  unparseable: boolean;
+}
+
+/**
+ * Vytáhne z textu reportu jen verdikt a verify body — bez tvrdé validace kroků.
+ * Určeno výhradně pro zobrazení v `mini status`.
+ */
+export function summarizeRunReportText(text: string): RunReportSummary {
+  try {
+    const normalized = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+    const match = /^---\s*\n([\s\S]*?)\n---[ \t]*(?:\n[\s\S]*)?$/.exec(normalized);
+    if (!match) {
+      return { verdict: null, verify: [], unparseable: true };
+    }
+    const data = parseSimpleYaml(match[1] ?? '');
+    const verdict =
+      typeof data.verdict === 'string' && isVerdict(data.verdict) ? data.verdict : null;
+    let verify: RunReportVerifyItem[];
+    try {
+      verify = parseVerify(data.verify);
+    } catch {
+      verify = [];
+    }
+    return { verdict, verify, unparseable: false };
+  } catch {
+    return { verdict: null, verify: [], unparseable: true };
+  }
+}
+
+/**
+ * Přečte `.mini/run/phase-{id}.md` a vrátí jeho tolerantní souhrn, nebo `null`
+ * když report neexistuje. Pro `mini status` — nikdy nehází kvůli obsahu reportu.
+ */
+export async function readRunReportSummary(
+  cwd: string,
+  phaseId: number,
+): Promise<RunReportSummary | null> {
+  const path = runReportPath(cwd, phaseId);
+  let raw: string;
+  try {
+    raw = await readFile(path, 'utf-8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null;
+    }
+    throw err;
+  }
+  return summarizeRunReportText(raw);
+}
+
 // --- minimální YAML parser pro náš omezený formát ---------------------------
 // Plnotučnou YAML knihovnu nepotřebujeme: report má pevnou strukturu
 // (top-level skaláry `phase`/`verdict` a seznam map `steps` se dvěma poli).

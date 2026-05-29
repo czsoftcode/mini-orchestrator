@@ -35,6 +35,8 @@ export function createStreamRenderer(): StreamRenderer {
           }
           const detail = parts.length > 0 ? ` (${parts.join(', ')})` : '';
           log.dim(`Claude session spuštěna${detail}.`);
+          // Prázdný řádek odděluje hlavičku session od proudu akcí, který následuje.
+          console.log();
           return;
         }
 

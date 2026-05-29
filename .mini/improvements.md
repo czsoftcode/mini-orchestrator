@@ -141,7 +141,7 @@
 
 ## 4. DX a výstup CLI
 
-### D1 — `mini status` neukazuje výsledek poslední auto session  · `M` · střední
+### ~~D1 — `mini status` neukazuje výsledek poslední auto session~~  · `M` · střední · **hotovo (fáze 26)**
 - **Oblast:** DX
 - **title:** `Rozšířit mini status o verdikt a body k ověření`
 - **goal:** `mini status u aktuální fáze ukáže, jestli existuje run report, jeho verdikt a počet otevřených verify bodů, a vizuálně odliší osiřelou doing fázi bez otevřených kroků.`
@@ -149,7 +149,7 @@
   že proběhla auto session, jak dopadla, ani že nějaká fáze uvízla v `doing`
   (viz W1). Člověk po `mini auto` nevidí stav bez ručního čtení `.mini/run/`.
 
-### D2 — Help text příkazu `auto` slibuje „bez promptu"  · `M` · malá
+### ~~D2 — Help text příkazu `auto` slibuje „bez promptu"~~  · `M` · malá · **hotovo (fáze 26)**
 - **Oblast:** DX
 - **title:** `Upřesnit popis příkazu auto ohledně verify`
 - **goal:** `Popis mini auto v --help jasně říká, že u bodů k ručnímu ověření se zastaví a zeptá člověka — neslibuje plně bezobslužný běh.`
@@ -157,14 +157,14 @@
   (`done.ts:431`) se u verify bodů ptá i v auto módu. Popis je zavádějící
   (souvisí s W3). Malá textová úprava, velký rozdíl v očekávání uživatele.
 
-### D3 — `--max-turns` u `do` v helpu slibuje funkci, co nejede  · `M` · malá
+### ~~D3 — `--max-turns` u `do` v helpu slibuje funkci, co nejede~~  · `M` · malá · **hotovo (fáze 26)**
 - **Oblast:** DX
 - **title:** `Sladit help mini do --max-turns se skutečným chováním`
 - **goal:** `Nápověda mini do --max-turns odpovídá realitě — po opravě R1 funguje, takže stačí ověřit, že help i chování sedí (žádný mrtvý slib).`
 - **Proč:** Přímo navázané na **R1** — dokud se `maxTurns` nepropojí, help
   popisuje neexistující chování. Po opravě R1 jen ověřit konzistenci.
 
-### D4 — Čitelnost streamovaného výstupu  · `L` · malá
+### ~~D4 — Čitelnost streamovaného výstupu~~  · `L` · malá · **hotovo (fáze 26)**
 - **Oblast:** DX
 - **title:** `Doladit čitelnost stream renderu mini do --stream`
 - **goal:** `Streamovaný výstup (mini do --stream) je přehledný — akce, nástroje a závěrečné shrnutí ceny/tokenů jsou vizuálně oddělené a snadno čitelné.`
@@ -186,3 +186,7 @@
 - **R2** — Chybějící e2e test auto smyčky (fáze 25): `commands/auto.e2e.test.ts` projede `next → plan → do → done` proti fake `claude` binárce v PATH (reálný spawn, zápis i parse reportu) bez mockování Claude modulů.
 - **R3** — Hláška při chybějícím `claude` (fáze 25): nový `claude/spawnError.ts` (`describeSpawnError`) sjednocuje ENOENT na návod na instalaci; volá ho `work.ts`, `stream.ts` i `ask.ts`.
 - **R4** — Retry `mini next` při neparsovatelné odpovědi (fáze 25): `parseSuggestion` je tolerantní k markdown dekoraci / velikosti písmen, navíc `next()` dá při neúspěchu jeden retry s upřesněním formátu, než vrátí `parse-failed`.
+- **D1** — `mini status` o výsledku auto session (fáze 26): nová tolerantní čtečka `summarizeRunReportText`/`readRunReportSummary` ve `state/runReport.ts`; `status.ts` u aktuální fáze vypíše verdikt run reportu a počet otevřených verify bodů (`openVerifyCount`) a žlutě odliší osiřelou `doing` fázi (`isOrphanedDoing`).
+- **D2** — Help příkazu `auto` (fáze 26): popis v `cli.ts` už neslibuje „bez promptu", jasně říká, že se u verify bodů zastaví a zeptá člověka.
+- **D3** — Konzistence helpu `do --max-turns` (fáze 26): po R1 je volba reálně propojená; help odpovídá chování a je konzistentní s `auto`. Ověřeno, beze změny kódu.
+- **D4** — Čitelnost streamu (fáze 26): `streamRender.ts` odděluje hlavičku session prázdným řádkem od proudu akcí, `usage.ts` dává závěrečnému „Souhrn streamu" bold label oddělený od metrik (+ nové testy `ui/streamRender.test.ts`, `ui/usage.test.ts`).

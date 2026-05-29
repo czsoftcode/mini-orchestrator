@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 25,
+  "currentPhaseId": 26,
   "phases": [
     {
       "id": 1,
@@ -720,38 +720,72 @@
       "id": 25,
       "title": "Bod 3. z .mini/improvements.md",
       "goal": "Fáze R1 - R4 budou vyřízené",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Propojit `--max-turns` z cli do `doPhase` (R1)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Test ověří, že `--max-turns` dorazí do Claude (R1)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Sjednotit ENOENT hlášku „claude\" s návodem na instalaci (R3)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Přidat `mini next` jeden retry při parse-failed (R4)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Test ověří retry i tolerantní formát v `next` (R4)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "E2e test auto smyčky proti fake claude binárce (R2)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "`tsc --noEmit` čistý a všechny testy zelené",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-29T20:35:43.312Z",
+      "completedAt": "2026-05-29T20:48:52.915Z"
+    },
+    {
+      "id": 26,
+      "title": "Bod 4. z .mini/improvements.md",
+      "goal": "Fáze D1 - D4 budou vyřízené",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "mini status zobrazí verdikt run reportu",
+          "status": "todo"
+        },
+        {
+          "title": "mini status ukáže počet otevřených verify bodů",
+          "status": "todo"
+        },
+        {
+          "title": "mini status vizuálně odliší osiřelou doing fázi",
+          "status": "todo"
+        },
+        {
+          "title": "Upravit help příkazu auto ohledně verify",
+          "status": "todo"
+        },
+        {
+          "title": "Ověřit konzistenci helpu do --max-turns",
+          "status": "todo"
+        },
+        {
+          "title": "Zpřehlednit stream render akcí a shrnutí",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-29T20:35:43.312Z"
+      "startedAt": "2026-05-29T20:51:21.820Z"
     }
   ],
   "models": {

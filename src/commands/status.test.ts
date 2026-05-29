@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { describeModels, nextActionHint } from './status.js';
+import {
+  describeModels,
+  isOrphanedDoing,
+  nextActionHint,
+  openVerifyCount,
+  runReportSummaryLines,
+} from './status.js';
+import type { RunReportSummary } from '../state/runReport.js';
 import type { Phase, ProjectState } from '../state/types.js';
 
 function makeState(overrides: Partial<ProjectState> = {}): ProjectState {
@@ -14,6 +21,10 @@ function makeState(overrides: Partial<ProjectState> = {}): ProjectState {
 
 function phase(id: number, status: Phase['status']): Phase {
   return { id, title: `Fáze ${id}`, status };
+}
+
+function summary(overrides: Partial<RunReportSummary> = {}): RunReportSummary {
+  return { verdict: 'done', verify: [], unparseable: false, ...overrides };
 }
 
 describe('nextActionHint', () => {
@@ -114,5 +125,99 @@ describe('describeModels', () => {
       models: { default: 'd', do: 'do-m' },
     });
     expect(describeModels(state)).toBe('default=d, do=do-m');
+  });
+});
+
+describe('openVerifyCount', () => {
+  it('vrátí 0, když nejsou žádné verify body', () => {
+    expect(openVerifyCount([], phase(1, 'doing'))).toBe(0);
+  });
+
+  it('spočítá body, které ještě nikdo neodbavil', () => {
+    const p: Phase = { ...phase(1, 'doing'), resolvedVerify: ['A'] };
+    expect(openVerifyCount([{ title: 'A' }, { title: 'B' }, { title: 'C' }], p)).toBe(2);
+  });
+
+  it('vrátí 0, když jsou všechny body vyřešené', () => {
+    const p: Phase = { ...phase(1, 'doing'), resolvedVerify: ['A', 'B'] };
+    expect(openVerifyCount([{ title: 'A' }, { title: 'B' }], p)).toBe(0);
+  });
+});
+
+describe('runReportSummaryLines', () => {
+  it('u poškozeného reportu vrátí jeden řádek o nečitelnosti', () => {
+    const lines = runReportSummaryLines(summary({ unparseable: true, verdict: null }), phase(1, 'doing'));
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('nejde přečíst');
+  });
+
+  it('ukáže verdikt a počet otevřených verify bodů', () => {
+    const lines = runReportSummaryLines(
+      summary({ verdict: 'partial', verify: [{ title: 'A' }, { title: 'B' }] }),
+      phase(1, 'doing'),
+    );
+    expect(lines[0]).toContain('verdikt');
+    expect(lines[0]).toContain('částečně');
+    expect(lines[0]).toContain('2 body k ověření čeká');
+  });
+
+  it('řekne „vše ověřeno", když report měl verify body, ale všechny jsou vyřešené', () => {
+    const p: Phase = { ...phase(1, 'doing'), resolvedVerify: ['A'] };
+    const lines = runReportSummaryLines(summary({ verdict: 'done', verify: [{ title: 'A' }] }), p);
+    expect(lines[0]).toContain('vše ověřeno');
+  });
+
+  it('řekne „bez bodů k ověření", když report žádné verify body neměl', () => {
+    const lines = runReportSummaryLines(summary({ verdict: 'done', verify: [] }), phase(1, 'doing'));
+    expect(lines[0]).toContain('bez bodů k ověření');
+  });
+
+  it('u chybějícího verdiktu vypíše „verdikt neznámý"', () => {
+    const lines = runReportSummaryLines(summary({ verdict: null }), phase(1, 'doing'));
+    expect(lines[0]).toContain('verdikt neznámý');
+  });
+});
+
+describe('isOrphanedDoing', () => {
+  it('není osiřelá, když fáze není doing', () => {
+    expect(isOrphanedDoing(phase(1, 'done'), [phase(1, 'done')])).toBe(false);
+  });
+
+  it('není osiřelá doing fáze bez kroků i bez podfází (čerstvě spuštěná)', () => {
+    expect(isOrphanedDoing(phase(1, 'doing'), [phase(1, 'doing')])).toBe(false);
+  });
+
+  it('je osiřelá, když má kroky a všechny jsou uzavřené', () => {
+    const p: Phase = {
+      ...phase(1, 'doing'),
+      steps: [
+        { title: 'a', status: 'done' },
+        { title: 'b', status: 'skipped' },
+      ],
+    };
+    expect(isOrphanedDoing(p, [p])).toBe(true);
+  });
+
+  it('není osiřelá, když některý krok ještě zbývá', () => {
+    const p: Phase = {
+      ...phase(1, 'doing'),
+      steps: [
+        { title: 'a', status: 'done' },
+        { title: 'b', status: 'todo' },
+      ],
+    };
+    expect(isOrphanedDoing(p, [p])).toBe(false);
+  });
+
+  it('je osiřelá, když má podfáze a všechny jsou uzavřené', () => {
+    const parent = phase(2, 'doing');
+    const sub = { ...phase(2, 'done'), id: 2.1 };
+    expect(isOrphanedDoing(parent, [parent, sub])).toBe(true);
+  });
+
+  it('není osiřelá, když je nějaká podfáze ještě otevřená', () => {
+    const parent = phase(2, 'doing');
+    const sub = { ...phase(2, 'doing'), id: 2.1 };
+    expect(isOrphanedDoing(parent, [parent, sub])).toBe(false);
   });
 });
