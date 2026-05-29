@@ -41,14 +41,34 @@ export async function hasPrev(cwd: string = process.cwd()): Promise<boolean> {
   }
 }
 
+/**
+ * Jednorázová migrace schématu stavu při čtení. Zatím řeší jen zastaralé pole
+ * `state.model` → `models.default`: starší stavy držely jediný model v
+ * `state.model`, dnes je vše v `models`. Když je `models.default` už nastaven,
+ * má přednost. Po migraci se `state.model` odstraní, takže fallbacky na něj
+ * jinde v kódu (models.ts, status.ts, …) nejsou potřeba.
+ */
+function migrate(state: ProjectState): ProjectState {
+  if (state.model != null) {
+    if (!state.models) {
+      state.models = {};
+    }
+    if (state.models.default == null) {
+      state.models.default = state.model;
+    }
+    delete state.model;
+  }
+  return state;
+}
+
 export async function load(cwd: string = process.cwd()): Promise<ProjectState> {
   const raw = await readFile(statePath(cwd), 'utf-8');
-  return JSON.parse(raw) as ProjectState;
+  return migrate(JSON.parse(raw) as ProjectState);
 }
 
 export async function loadPrev(cwd: string = process.cwd()): Promise<ProjectState> {
   const raw = await readFile(statePrevPath(cwd), 'utf-8');
-  return JSON.parse(raw) as ProjectState;
+  return migrate(JSON.parse(raw) as ProjectState);
 }
 
 export async function save(state: ProjectState, cwd: string = process.cwd()): Promise<void> {

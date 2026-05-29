@@ -155,6 +155,7 @@ Imports:
 - { load, save } from "../state/store.js"
 - type { Phase, ProjectState } from "../state/types.js"
 - { ask } from "../ui/ask.js"
+- { isInteractive } from "../ui/interactive.js"
 - { commitAll, hasChanges, headSha, isGitRepo } from "../git.js"
 - { writePhaseMemory } from "./writeMemory.js"
 
@@ -167,6 +168,7 @@ Imports:
 - { exists, load, save } from "../state/store.js"
 - type { Phase, ProjectState, Step } from "../state/types.js"
 - { ask } from "../ui/ask.js"
+- { isInteractive } from "../ui/interactive.js"
 - { log } from "../ui/log.js"
 - type { AutoOptions, StepOutcome } from "./types.js"
 - { writePhaseMemory } from "./writeMemory.js"
@@ -240,8 +242,14 @@ Exports:
 ## src/commands/next.test.ts
 
 Imports:
-- { describe, expect, it } from "vitest"
-- { parseSuggestion } from "./next.js"
+- { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+- { mkdtemp, rm } from "node:fs/promises"
+- { tmpdir } from "node:os"
+- { join } from "node:path"
+- { next, parseSuggestion } from "./next.js"
+- { askClaude } from "../claude/ask.js"
+- { load, save, writeProject } from "../state/store.js"
+- type { Phase, ProjectState } from "../state/types.js"
 
 ## src/commands/next.ts
 
@@ -708,6 +716,11 @@ Exports:
 - function ask(questions: PromptObject<T> | Array<PromptObject<T>>): Promise<Answers<T>>
 - function nonEmpty(label)
 - function trim(value: string): string
+
+## src/ui/interactive.ts
+
+Exports:
+- function isInteractive(): boolean
 
 ## src/ui/log.ts
 

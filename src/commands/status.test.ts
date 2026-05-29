@@ -82,17 +82,14 @@ describe('describeModels', () => {
     expect(describeModels(makeState())).toBe('');
   });
 
-  it('default scope čte z legacy pole `model`, když není models.default', () => {
-    const state = makeState({ model: 'claude-opus-4-7' });
+  it('vypíše default scope z models.default', () => {
+    const state = makeState({ models: { default: 'claude-opus-4-7' } });
     expect(describeModels(state)).toBe('default=claude-opus-4-7');
   });
 
-  it('models.default má přednost před legacy `model`', () => {
-    const state = makeState({
-      model: 'legacy-model',
-      models: { default: 'claude-opus-4-7' },
-    });
-    expect(describeModels(state)).toBe('default=claude-opus-4-7');
+  it('ignoruje zastaralé pole `model` (migraci řeší store.load, ne describeModels)', () => {
+    const state = makeState({ model: 'legacy-model' });
+    expect(describeModels(state)).toBe('');
   });
 
   it('vypíše scope-specifické override v pořadí MODEL_SCOPES', () => {
@@ -117,11 +114,5 @@ describe('describeModels', () => {
       models: { default: 'd', do: 'do-m' },
     });
     expect(describeModels(state)).toBe('default=d, do=do-m');
-  });
-
-  it('legacy `model` se nepromítne do non-default scopů', () => {
-    const state = makeState({ model: 'legacy-model' });
-    // jen default scope čerpá z legacy pole; ostatní zůstanou prázdné
-    expect(describeModels(state)).toBe('default=legacy-model');
   });
 });

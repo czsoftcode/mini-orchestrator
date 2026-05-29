@@ -11,6 +11,10 @@ import type { Phase, ProjectState, StepStatus } from '../state/types.js';
 import { log } from '../ui/log.js';
 import { logUsage } from '../ui/usage.js';
 
+// Živé konstanty explicitního memory režimu — používá je `writeViaClaude`,
+// když je scope `memory` ručně nastaven přes `mini model`. NEJSOU mrtvý kód:
+// krok z fáze 17 „smazat MEMORY_ALLOWED_TOOLS / MEMORY_TIMEOUT_MS / import
+// buildWriteMemoryPrompt" byl proto vědomě skipnut. Nemaž je.
 const MEMORY_ALLOWED_TOOLS = ['Read', 'Bash', 'Write'];
 const MEMORY_TIMEOUT_MS = 5 * 60 * 1000;
 

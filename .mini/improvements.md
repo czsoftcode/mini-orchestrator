@@ -67,7 +67,7 @@
 
 ## 2. Úklid a mrtvý kód
 
-### C1 — Doložit, že „mrtvý kód" z fáze 17 mrtvý NENÍ  · `L` · malá
+### ~~C1 — Doložit, že „mrtvý kód" z fáze 17 mrtvý NENÍ~~  · `L` · malá · **hotovo (fáze 24)**
 - **Oblast:** úklid
 - **title:** `Zrušit zavádějící TODO o smazání MEMORY_ALLOWED_TOOLS`
 - **goal:** `Žádný komentář/úkol netvrdí, že MEMORY_ALLOWED_TOOLS, MEMORY_TIMEOUT_MS a buildWriteMemoryPrompt jsou mrtvé — jsou živé (explicitní memory režim) a to je u nich krátce zdokumentováno.`
@@ -78,7 +78,7 @@
   `memory` ručně nastaven přes `mini model`. Tohle není dluh; jen je potřeba,
   aby budoucí čtenář nepokládal symboly za mrtvé a nesmazal je.
 
-### C2 — Migrovat deprecated `state.model` → `models.default`  · `L` · malá
+### ~~C2 — Migrovat deprecated `state.model` → `models.default`~~  · `L` · malá · **hotovo (fáze 24)**
 - **Oblast:** úklid
 - **title:** `Sjednotit konfiguraci modelu na models.default`
 - **goal:** `Pole state.model (označené @deprecated) se při load jednorázově zmigruje do models.default a fallbacky na něj v kódu zmizí.`
@@ -87,7 +87,7 @@
   `status.ts:92` v `describeModels`). Jednorázová migrace ve `store.load`
   by tenhle rozkročený fallback zrušila.
 
-### C3 — Prořezat nepoužívané `PermissionMode` hodnoty  · `L` · malá
+### ~~C3 — Prořezat nepoužívané `PermissionMode` hodnoty~~  · `L` · malá · **hotovo (fáze 24)**
 - **Oblast:** úklid
 - **title:** `Zúžit typ PermissionMode na skutečně používané hodnoty`
 - **goal:** `Typ PermissionMode obsahuje jen hodnoty, které mini reálně používá, nebo je u nepoužitých uveden důvod, proč v API zůstávají.`
@@ -179,3 +179,6 @@
 - **W2** — Desetinné ID po podfázi (fáze 23): `commitPhase` v `next.ts` používá `Math.floor(Math.max(...)) + 1`.
 - **W3** — Verify v auto módu bez TTY (fáze 23): nový `ui/interactive.ts` + `handleVerify` bez TTY nezavře fázi (`verify-needs-human`), verify nikdy tiše neprojde jako pass.
 - **W4** — Opakované přehrávání verify bodů (fáze 23): `Phase.resolvedVerify` drží už odbavené body, `handleVerify` je příště přeskočí.
+- **C1** — „Mrtvý kód" z fáze 17 (fáze 24): `MEMORY_ALLOWED_TOOLS`/`MEMORY_TIMEOUT_MS` ve `writeMemory.ts` označeny komentářem jako živé (explicitní memory režim); žádné zavádějící TODO v kódu nebylo.
+- **C2** — Migrace `state.model` → `models.default` (fáze 24): `migrate()` ve `store.load`/`loadPrev` přesune legacy pole; fallbacky zrušeny v `models.ts`, `status.ts`, `model.ts` i `import-gsd.ts`.
+- **C3** — Zúžení `PermissionMode` (fáze 24): typ ve `work.ts` zúžen na reálně používanou hodnotu `'acceptEdits'`.

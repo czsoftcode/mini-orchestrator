@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 23,
+  "currentPhaseId": 24,
   "phases": [
     {
       "id": 1,
@@ -648,30 +648,68 @@
       "id": 23,
       "title": "Práce podle .mini/improvements.md, bod 1.",
       "goal": "Hotové W1 až \u0017W4",
-      "status": "planned",
+      "status": "done",
       "steps": [
         {
           "title": "W1: osiřelou doing fázi po podfázi dozavřít",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "W2: Math.floor v commitPhase brání desetinnému ID",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "W3: verify v auto módu bez TTY bezpečně",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "W4: opakovaný done nepřehrává vyřešené verify body",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Doplnit testy pro W1–W4",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Zelené testy a čistý tsc --noEmit",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-29T19:52:44.114Z",
+      "completedAt": "2026-05-29T20:07:17.681Z"
+    },
+    {
+      "id": 24,
+      "title": "Bod 2. z .mini/improvements.md",
+      "goal": "Hotové fáze C1 - C3",
+      "status": "planned",
+      "steps": [
+        {
+          "title": "Zdokumentovat živé MEMORY_* symboly ve writeMemory.ts (C1)",
+          "status": "todo"
+        },
+        {
+          "title": "Odstranit zavádějící TODO o jejich smazání (C1)",
+          "status": "todo"
+        },
+        {
+          "title": "Přidat migraci state.model → models.default ve store.load (C2)",
+          "status": "todo"
+        },
+        {
+          "title": "Zrušit fallbacky na state.model v models.ts a status.ts (C2)",
+          "status": "todo"
+        },
+        {
+          "title": "Zúžit typ PermissionMode na reálně používané hodnoty (C3)",
+          "status": "todo"
+        },
+        {
+          "title": "Doplnit/upravit testy pro migraci a PermissionMode",
+          "status": "todo"
+        },
+        {
+          "title": "Ověřit zelené testy a čistý tsc --noEmit",
           "status": "todo"
         }
       ]

@@ -1,6 +1,12 @@
 import { spawn } from 'node:child_process';
 
-export type PermissionMode = 'acceptEdits' | 'auto' | 'bypassPermissions' | 'default' | 'dontAsk' | 'plan';
+/**
+ * mini řídí Claude jen v režimu `acceptEdits` (jinak nechá `permissionMode`
+ * nevyplněný = ptej se). CLI zná i další módy (`plan`, `bypassPermissions`,
+ * `default`, …), ale mini je nikdy nepředává, tak je typ zúžený na reálně
+ * používanou hodnotu. Až bude potřeba další, dopiš ji sem.
+ */
+export type PermissionMode = 'acceptEdits';
 
 export interface WorkOptions {
   cwd?: string;

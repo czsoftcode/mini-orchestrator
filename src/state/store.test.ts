@@ -113,3 +113,51 @@ describe('atomic write under failure', () => {
     expect(prevParsed.currentPhaseId).toBe(42);
   });
 });
+
+describe('migrace legacy `model` → `models.default`', () => {
+  it('přesune state.model do models.default a pole model odstraní', async () => {
+    const legacy: ProjectState = { ...newState(), model: 'claude-opus-4-7' };
+    await save(legacy, cwd);
+
+    const loaded = await load(cwd);
+
+    expect(loaded.models?.default).toBe('claude-opus-4-7');
+    expect(loaded.model).toBeUndefined();
+  });
+
+  it('existující models.default má přednost před legacy model', async () => {
+    const legacy: ProjectState = {
+      ...newState(),
+      model: 'legacy-model',
+      models: { default: 'claude-opus-4-7' },
+    };
+    await save(legacy, cwd);
+
+    const loaded = await load(cwd);
+
+    expect(loaded.models?.default).toBe('claude-opus-4-7');
+    expect(loaded.model).toBeUndefined();
+  });
+
+  it('stav bez legacy pole nechá beze změny', async () => {
+    const clean: ProjectState = { ...newState(), models: { default: 'claude-opus-4-7' } };
+    await save(clean, cwd);
+
+    const loaded = await load(cwd);
+
+    expect(loaded.models?.default).toBe('claude-opus-4-7');
+    expect(loaded.model).toBeUndefined();
+  });
+
+  it('migruje i state.prev.json přes loadPrev', async () => {
+    // první save (s legacy polem) ještě prev nevytvoří; druhý save z něj udělá prev
+    const legacy: ProjectState = { ...newState(), model: 'claude-opus-4-7' };
+    await save(legacy, cwd);
+    await save({ ...newState(), currentPhaseId: 1 }, cwd);
+
+    const prev = await loadPrev(cwd);
+
+    expect(prev.models?.default).toBe('claude-opus-4-7');
+    expect(prev.model).toBeUndefined();
+  });
+});

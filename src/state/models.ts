@@ -15,9 +15,9 @@ export const SCOPE_LABELS: Record<ModelScope, string> = {
 };
 
 export function resolveModel(scope: Exclude<ModelScope, 'default'>, state: ProjectState): string | undefined {
-  return state.models?.[scope] ?? state.models?.default ?? state.model;
+  return state.models?.[scope] ?? state.models?.default;
 }
 
 export function getDefaultModel(state: ProjectState): string | undefined {
-  return state.models?.default ?? state.model;
+  return state.models?.default;
 }

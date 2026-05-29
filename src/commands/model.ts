@@ -71,7 +71,7 @@ function showCurrent(state: ProjectState): void {
   const m = state.models ?? {};
   const lines: string[] = [];
   for (const scope of MODEL_SCOPES) {
-    const value = m[scope] ?? (scope === 'default' ? state.model : undefined);
+    const value = m[scope];
     if (value) {
       lines.push(`  ${scope.padEnd(11)} ${value}`);
     } else {

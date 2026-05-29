@@ -49,12 +49,10 @@ export async function importGsd(): Promise<void> {
   }
 
   let preservedModels: ProjectModels | undefined;
-  let preservedLegacyModel: string | undefined;
   let askModel: string | undefined;
   if (await exists(cwd)) {
     const oldState = await load(cwd);
     preservedModels = oldState.models;
-    preservedLegacyModel = oldState.model;
     askModel = resolveModel('importGsd', oldState);
     log.warn('V tomto adresáři už existuje mini projekt (.mini/state.json).');
     const { ow } = await ask<'ow'>({
@@ -167,9 +165,6 @@ ${parsed.constraints || '(žádné)'}
 
   if (preservedModels) {
     state.models = preservedModels;
-  }
-  if (preservedLegacyModel) {
-    state.model = preservedLegacyModel;
   }
 
   await writeProject(projectMd, cwd);

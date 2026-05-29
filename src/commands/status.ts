@@ -89,7 +89,7 @@ function renderStatus(entry: { label: string; color: (s: string) => string }): s
 export function describeModels(state: ProjectState): string {
   const parts: string[] = [];
   for (const scope of MODEL_SCOPES) {
-    const value = state.models?.[scope] ?? (scope === 'default' ? state.model : undefined);
+    const value = state.models?.[scope];
     if (value) {
       parts.push(`${scope}=${value}`);
     }
