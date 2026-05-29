@@ -178,7 +178,10 @@ async function commitPhase(
   goal: string,
   opts: AutoOptions,
 ): Promise<StepOutcome> {
-  const newId = Math.max(0, ...state.phases.map((p) => p.id)) + 1;
+  // `Math.floor` na maximu zahodí desetinnou část opravných podfází (21.1),
+  // jinak by nová top-level fáze dostala desetinné ID (22.1) a rozbila by
+  // číslování i pozdější `nextSubphaseId`.
+  const newId = Math.floor(Math.max(0, ...state.phases.map((p) => p.id))) + 1;
   const newPhase: Phase = {
     id: newId,
     title,

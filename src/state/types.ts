@@ -34,6 +34,13 @@ export interface Phase {
   startedAt?: string;
   completedAt?: string;
   autoCommit?: PhaseAutoCommit;
+  /**
+   * Doslovné názvy bodů k ručnímu ověření (`verify` z reportu), které člověk
+   * při verifikaci už vyřešil jako `pass`/`skip`. Slouží k tomu, aby opakovaný
+   * `mini done` nad neměnícím se reportem znovu nenabízel už odbavené body —
+   * `handleVerify` je při dalším průchodu přeskočí.
+   */
+  resolvedVerify?: string[];
 }
 
 export interface ProjectModels {

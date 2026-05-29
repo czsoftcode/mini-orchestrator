@@ -7,6 +7,7 @@ import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import { load, save } from '../state/store.js';
 import type { Phase, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
+import { isInteractive } from '../ui/interactive.js';
 import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
 import { writePhaseMemory } from './writeMemory.js';
 
@@ -19,6 +20,13 @@ vi.mock('../ui/ask.js', () => ({
   }),
   nonEmpty: () => () => true as const,
   trim: (v: string) => v.trim(),
+}));
+
+// Interaktivitu terminálu mockujeme — testy běží bez TTY, ale většina
+// verify testů ověřuje interaktivní cestu (ask), takže defaultně předstíráme
+// terminál. W3 test si přepne na false (neinteraktivní prostředí).
+vi.mock('../ui/interactive.js', () => ({
+  isInteractive: vi.fn(() => true),
 }));
 
 // Git modul mockujeme — defaultně se chová jako „nejsme v gitovém repu",
@@ -42,6 +50,7 @@ vi.mock('./writeMemory.js', () => ({
 }));
 
 const askMock = vi.mocked(ask);
+const isInteractiveMock = vi.mocked(isInteractive);
 const isGitRepoMock = vi.mocked(isGitRepo);
 const hasChangesMock = vi.mocked(hasChanges);
 const commitAllMock = vi.mocked(commitAll);
@@ -197,6 +206,58 @@ describe('advanceToNextPhase', () => {
 
     expect(next?.id).toBe(2);
     expect(state.currentPhaseId).toBe(2);
+  });
+
+  it('dozavře osiřelého doing rodiče, když je jeho podfáze hotová (W1)', () => {
+    // Rodič 21 uvázl v doing po block-verify; podfáze 21.1 je teď done.
+    // advanceToNextPhase musí rodiče dozavřít jako done a posunout se na 22.
+    const state = makeState(
+      [
+        { id: 21, title: 'Rodič', status: 'doing' },
+        { id: 21.1, title: 'Oprava', status: 'done', steps: [] },
+        { id: 22, title: 'Další', status: 'planned' },
+      ],
+      21.1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    const parent = state.phases.find((p) => p.id === 21);
+    expect(parent?.status).toBe('done');
+    expect(parent?.completedAt).toBeTypeOf('string');
+    expect(next?.id).toBe(22);
+    expect(state.currentPhaseId).toBe(22);
+  });
+
+  it('neuzavírá doing rodiče, dokud má neuzavřenou podfázi (W1)', () => {
+    const state = makeState(
+      [
+        { id: 21, title: 'Rodič', status: 'doing' },
+        { id: 21.1, title: 'Oprava A', status: 'done', steps: [] },
+        { id: 21.2, title: 'Oprava B', status: 'planned', steps: [] },
+      ],
+      21.1,
+    );
+
+    const next = advanceToNextPhase(state);
+
+    expect(state.phases.find((p) => p.id === 21)?.status).toBe('doing');
+    expect(next?.id).toBe(21.2);
+    expect(state.currentPhaseId).toBe(21.2);
+  });
+
+  it('neuzavírá běžnou doing fázi bez podfází', () => {
+    const state = makeState(
+      [
+        { id: 1, title: 'A', status: 'doing' },
+        { id: 2, title: 'B', status: 'planned' },
+      ],
+      1,
+    );
+
+    advanceToNextPhase(state);
+
+    expect(state.phases.find((p) => p.id === 1)?.status).toBe('doing');
   });
 
   it('posune se na podfázi s float ID vloženou hned za rodiče', () => {
@@ -1215,6 +1276,8 @@ describe('done({ auto: true }) — verify body', () => {
     cwd = await mkdtemp(join(tmpdir(), 'mini-done-verify-'));
     process.chdir(cwd);
     askMock.mockReset();
+    isInteractiveMock.mockReset();
+    isInteractiveMock.mockReturnValue(true);
     isGitRepoMock.mockReset();
     isGitRepoMock.mockResolvedValue(false);
     hasChangesMock.mockReset();
@@ -1433,4 +1496,61 @@ steps:
     expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 22 });
     expect(askMock).not.toHaveBeenCalled();
   });
+
+  it('bez TTY verify tiše neprojde — fázi nezavře a vrátí verify-needs-human (W3)', async () => {
+    isInteractiveMock.mockReturnValue(false);
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() se v neinteraktivním prostředí nesmí volat');
+    });
+    await setupPhaseWithVerify(
+      `verify:
+  - title: Vizuální kontrola tlačítka
+`,
+    );
+
+    const r = await done({ auto: true });
+
+    expect(r).toEqual({ ok: false, reason: 'verify-needs-human' });
+    expect(askMock).not.toHaveBeenCalled();
+    const loaded = await load(cwd);
+    const phase = loaded.phases.find((p) => p.id === 21);
+    expect(phase?.status).toBe('doing');
+    expect(phase?.completedAt).toBeUndefined();
+    expect(loaded.currentPhaseId).toBe(21);
+  });
+
+  it('opakovaný done nepřehrává už vyřešené verify body (W4)', async () => {
+    // 1. průchod: jeden bod pass, druhý issue → fáze se nezavře.
+    await setupPhaseWithVerify(
+      `verify:
+  - title: Vizuální kontrola
+  - title: Drobnost v textu
+`,
+    );
+    askMock
+      .mockResolvedValueOnce({ answer: 'pass' })
+      .mockResolvedValueOnce({ answer: 'issue' });
+
+    const r1 = await done({ auto: true });
+    expect(r1).toEqual({ ok: false, reason: 'verify-issue' });
+
+    const afterFirst = await load(cwd);
+    const phaseAfterFirst = afterFirst.phases.find((p) => p.id === 21);
+    expect(phaseAfterFirst?.status).toBe('doing');
+    expect(phaseAfterFirst?.resolvedVerify).toEqual(['Vizuální kontrola']);
+
+    // 2. průchod nad stejným reportem: už vyřešený bod se nenabízí, ptá se
+    // jen na zbývající (dříve issue, teď opravený → pass) → fáze se zavře.
+    askMock.mockReset();
+    askMock.mockResolvedValueOnce({ answer: 'pass' });
+
+    const r2 = await done({ auto: true });
+
+    expect(askMock).toHaveBeenCalledTimes(1);
+    expect(r2).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 22 });
+    const loaded = await load(cwd);
+    expect(loaded.phases.find((p) => p.id === 21)?.status).toBe('done');
+    expect(loaded.currentPhaseId).toBe(22);
+  });
+
 });

@@ -10,6 +10,7 @@ import {
 import { exists, load, save } from '../state/store.js';
 import type { Phase, ProjectState, Step } from '../state/types.js';
 import { ask } from '../ui/ask.js';
+import { isInteractive } from '../ui/interactive.js';
 import { log } from '../ui/log.js';
 import type { AutoOptions, StepOutcome } from './types.js';
 import { writePhaseMemory } from './writeMemory.js';
@@ -280,12 +281,39 @@ async function commitPhaseWork(phase: Phase, cwd: string): Promise<void> {
 }
 
 export function advanceToNextPhase(state: ProjectState): Phase | null {
+  closeOrphanedDoingParents(state);
   const nextPhase =
     state.phases.find(
       (p) => p.id !== state.currentPhaseId && (p.status === 'proposed' || p.status === 'planned'),
     ) ?? null;
   state.currentPhaseId = nextPhase ? nextPhase.id : null;
   return nextPhase;
+}
+
+/**
+ * Dozavře osiřelé rodičovské fáze. Po `block`-verify vznikne opravná podfáze
+ * (float ID) a `advanceToNextPhase` se na ni posune — rodič přitom zůstane ve
+ * stavu `doing` (nastaveno v `do.ts`) a sám se na něj už nikdy nevrátíme.
+ * Jakmile jsou všechny jeho podfáze uzavřené (`done`/`skipped`), je rodič
+ * hotový (všechny jeho kroky byly `done` už před vznikem podfáze, jinak by se
+ * verify nespustil) — uzavřeme ho jako `done`. Voláno z `advanceToNextPhase`,
+ * takže reconciliace proběhne po dokončení každé fáze.
+ *
+ * Top-level fázi, která se zrovna normálně dělá (a žádné podfáze nemá), se to
+ * netýká — bez podfází se nikdy neuzavře.
+ */
+function closeOrphanedDoingParents(state: ProjectState): void {
+  for (const parent of state.phases) {
+    if (parent.status !== 'doing') continue;
+    const subs = state.phases.filter(
+      (p) => p.id !== parent.id && Math.floor(p.id) === parent.id,
+    );
+    if (subs.length === 0) continue;
+    if (!subs.every((s) => s.status === 'done' || s.status === 'skipped')) continue;
+    parent.status = 'done';
+    parent.completedAt = new Date().toISOString();
+    log.success(`Fáze ${parent.id} (${parent.title}) uzavřena — opravná podfáze hotová.`);
+  }
 }
 
 async function finalizeStep(step: Step, moreStepsLeft: boolean, opts: AutoOptions = {}): Promise<void> {
@@ -427,6 +455,12 @@ async function applyAutoReport(
  *   opravnou podfázi (float ID) a posuneme se na ni.
  *
  * I v auto módu se tu volá `ask()` — verify se nikdy neobchází automaticky.
+ * Bez interaktivního terminálu (CI, pipe) se ale `ask()` nevolá vůbec: fázi
+ * nezavřeme a vrátíme `verify-needs-human`, aby verify tiše neprošlo jako pass.
+ *
+ * Body, které člověk v minulém průchodu už odbavil (`pass`/`skip`), si pamatuje
+ * `phase.resolvedVerify` — při opakovaném `mini done` nad stejným reportem se
+ * znovu nenabízejí.
  */
 async function handleVerify(
   verify: RunReportVerifyItem[],
@@ -434,19 +468,40 @@ async function handleVerify(
   state: ProjectState,
   cwd: string,
 ): Promise<StepOutcome | null> {
-  if (verify.length === 0) {
+  // Body vyřešené dřívějším průchodem (pass/skip) přeskočíme — opakovaný
+  // `mini done` nad neměnícím se reportem je nesmí přehrávat znovu (W4).
+  const alreadyResolved = new Set(phase.resolvedVerify ?? []);
+  const pending = verify.filter((v) => !alreadyResolved.has(v.title));
+  if (pending.length === 0) {
     return null;
   }
 
-  const word = verify.length === 1 ? 'bod k ručnímu ověření' : 'bodů k ručnímu ověření';
-  log.info(`Fáze ${phase.id} (${phase.title}): ${verify.length} ${word} (Claude je sám neověřil):`);
+  // Bez TTY se `ask()` nedá bezpečně použít (vrací undefined → tiše pass).
+  // Fázi proto nezavíráme a předáme štafetu člověku do interaktivního běhu.
+  if (!isInteractive()) {
+    const w =
+      pending.length === 1 ? 'bod k ručnímu ověření' : 'bodů k ručnímu ověření';
+    log.warn(
+      `Fáze ${phase.id} (${phase.title}): ${pending.length} ${w} vyžaduje člověka, ale běžím bez interaktivního terminálu — fázi nezavírám.`,
+    );
+    for (const it of pending) {
+      log.dim(`  - ${it.title}`);
+    }
+    log.hint('Spusť `mini done` (nebo `mini auto`) v terminálu a body ověř ručně.');
+    await save(state, cwd);
+    return { ok: false, reason: 'verify-needs-human' };
+  }
+
+  const word = pending.length === 1 ? 'bod k ručnímu ověření' : 'bodů k ručnímu ověření';
+  log.info(`Fáze ${phase.id} (${phase.title}): ${pending.length} ${word} (Claude je sám neověřil):`);
   console.log();
 
   const blockers: RunReportVerifyItem[] = [];
   const issues: RunReportVerifyItem[] = [];
+  const newlyResolved: string[] = [];
 
-  for (let i = 0; i < verify.length; i++) {
-    const item = verify[i]!;
+  for (let i = 0; i < pending.length; i++) {
+    const item = pending[i]!;
     log.info(`  ${i + 1}. ${item.title}`);
     if (item.detail) {
       log.dim(`     ${item.detail}`);
@@ -466,7 +521,14 @@ async function handleVerify(
       issues.push(item);
     } else if (answer === 'block') {
       blockers.push(item);
+    } else {
+      // pass | skip — bod je odbavený, ať se příště znovu nenabízí.
+      newlyResolved.push(item.title);
     }
+  }
+
+  if (newlyResolved.length > 0) {
+    phase.resolvedVerify = [...(phase.resolvedVerify ?? []), ...newlyResolved];
   }
 
   // Bloker má přednost: založíme opravnou podfázi a posuneme se na ni.

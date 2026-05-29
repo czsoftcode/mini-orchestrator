@@ -18,7 +18,7 @@
 
 ## 1. Správnost workflow
 
-### W1 — Osiřelá `doing` fáze po opravné podfázi  · `H` · malá
+### ~~W1 — Osiřelá `doing` fáze po opravné podfázi~~  · `H` · malá · **hotovo (fáze 23)**
 - **Oblast:** workflow
 - **title:** `Dozavřít rodičovskou fázi po opravné podfázi`
 - **goal:** `Po dokončení opravné podfáze (z block-verify) se rodičovská fáze, která uvázla ve stavu doing, automaticky znovu otevře k verifikaci nebo uzavře — nikdy nezůstane osiřelá.`
@@ -33,7 +33,7 @@
   s odkazem na podfázi, nebo zavést stav/`parentId` a `advanceToNextPhase`
   upravit, aby osiřelé `doing` bez otevřených podfází řešil.
 
-### W2 — `mini next` po podfázi tvoří desetinné ID  · `H` · malá
+### ~~W2 — `mini next` po podfázi tvoří desetinné ID~~  · `H` · malá · **hotovo (fáze 23)**
 - **Oblast:** workflow
 - **title:** `Opravit číslování nové fáze po opravné podfázi`
 - **goal:** `mini next přidělí nové top-level fázi celé číslo (22) i tehdy, když ve stavu existuje opravná podfáze s desetinným ID (21.1) — žádné fáze typu 22.1.`
@@ -43,7 +43,7 @@
   `nextSubphaseId`. Oprava: `Math.floor(Math.max(0, ...ids)) + 1`.
 - **Pozn.:** Drobná, ale tichá a snadno přehlédnutelná chyba dat ve `state.json`.
 
-### W3 — Auto mód se u verify tiše zastaví / přeskočí bez TTY  · `M` · střední
+### ~~W3 — Auto mód se u verify tiše zastaví / přeskočí bez TTY~~  · `M` · střední · **hotovo (fáze 23)**
 - **Oblast:** workflow / robustnost
 - **title:** `Vyřešit chování verify v auto módu bez interaktivního terminálu`
 - **goal:** `Auto mód u bodů k ručnímu ověření buď jasně oznámí, že čeká na člověka, nebo (bez TTY) detekuje neinteraktivní prostředí a zachová se bezpečně — nikdy verify tiše neprojde jako pass.`
@@ -54,7 +54,7 @@
   bez skutečného ověření. Zároveň label příkazu `auto` v `cli.ts:63`
   („Dokončí celou fázi bez promptu") tomuhle odporuje.
 
-### W4 — Opakovaný `mini done` znovu nabízí už vyřešené verify body  · `M` · malá
+### ~~W4 — Opakovaný `mini done` znovu nabízí už vyřešené verify body~~  · `M` · malá · **hotovo (fáze 23)**
 - **Oblast:** workflow / DX
 - **title:** `Nepřehrávat už vyřešené verify body při opakovaném mini done`
 - **goal:** `Po opravě issue a opětovném mini done se znovu nezobrazují tytéž verify body z neměnícího se reportu — buď se report aktualizuje, nebo se vyřešené body přeskočí.`
@@ -175,4 +175,7 @@
 
 ## Hotovo
 
-_(zatím prázdné — sem přesouvej dokončené položky při škrtání)_
+- **W1** — Osiřelá `doing` fáze po opravné podfázi (fáze 23): `closeOrphanedDoingParents` v `done.ts` dozavře rodiče, jakmile jsou všechny jeho podfáze uzavřené.
+- **W2** — Desetinné ID po podfázi (fáze 23): `commitPhase` v `next.ts` používá `Math.floor(Math.max(...)) + 1`.
+- **W3** — Verify v auto módu bez TTY (fáze 23): nový `ui/interactive.ts` + `handleVerify` bez TTY nezavře fázi (`verify-needs-human`), verify nikdy tiše neprojde jako pass.
+- **W4** — Opakované přehrávání verify bodů (fáze 23): `Phase.resolvedVerify` drží už odbavené body, `handleVerify` je příště přeskočí.

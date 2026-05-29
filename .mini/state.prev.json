@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 22,
+  "currentPhaseId": 23,
   "phases": [
     {
       "id": 1,
@@ -609,30 +609,69 @@
       "id": 22,
       "title": "Návrh na vylepšení mini orchestrátoru",
       "goal": "Sepiš, neimplementuj co by se dalo vylepšit v programu",
-      "status": "planned",
+      "status": "done",
       "steps": [
         {
           "title": "Sepsat nálezy ke správnosti workflow (osiřelá doing)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Sepsat nálezy k mrtvému kódu a úklidu",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Sepsat nálezy k robustnosti a chybovým stavům",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Sepsat nálezy k DX a výstupu CLI",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Sloučit nálezy do .mini/improvements.md s prioritou/odhadem",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Ověřit idempotenci a akčnost položek backlogu",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-29T19:37:49.092Z",
+      "completedAt": "2026-05-29T19:45:51.689Z",
+      "autoCommit": {
+        "preSha": "e27fb6a7911ad16d21c0e56ee68b95c27ed67b89",
+        "sha": "6924c30dd8e83d0119ee8b1fbdfb233f1aa402fc",
+        "subject": "Fáze 22: Návrh na vylepšení mini orchestrátoru"
+      }
+    },
+    {
+      "id": 23,
+      "title": "Práce podle .mini/improvements.md, bod 1.",
+      "goal": "Hotové W1 až \u0017W4",
+      "status": "planned",
+      "steps": [
+        {
+          "title": "W1: osiřelou doing fázi po podfázi dozavřít",
+          "status": "todo"
+        },
+        {
+          "title": "W2: Math.floor v commitPhase brání desetinnému ID",
+          "status": "todo"
+        },
+        {
+          "title": "W3: verify v auto módu bez TTY bezpečně",
+          "status": "todo"
+        },
+        {
+          "title": "W4: opakovaný done nepřehrává vyřešené verify body",
+          "status": "todo"
+        },
+        {
+          "title": "Doplnit testy pro W1–W4",
+          "status": "todo"
+        },
+        {
+          "title": "Zelené testy a čistý tsc --noEmit",
           "status": "todo"
         }
       ]

@@ -1,5 +1,27 @@
-import { describe, expect, it } from 'vitest';
-import { parseSuggestion } from './next.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { next, parseSuggestion } from './next.js';
+import { askClaude } from '../claude/ask.js';
+import { load, save, writeProject } from '../state/store.js';
+import type { Phase, ProjectState } from '../state/types.js';
+
+// Claude session nahrazujeme — auto next si jen vyžádá návrh fáze.
+vi.mock('../claude/ask.js', () => ({
+  askClaude: vi.fn(),
+}));
+
+const askClaudeMock = vi.mocked(askClaude);
+
+function makeState(phases: Phase[], currentPhaseId: number | null): ProjectState {
+  return {
+    version: 1,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    currentPhaseId,
+    phases,
+  };
+}
 
 describe('parseSuggestion', () => {
   it('parses TITLE + GOAL on consecutive lines', () => {
@@ -64,5 +86,48 @@ describe('parseSuggestion', () => {
     const text = 'TITLE: První\nGOAL: cíl A\nTITLE: Druhý\nGOAL: cíl B';
     const out = parseSuggestion(text);
     expect(out).toEqual({ title: 'První', goal: 'cíl A' });
+  });
+});
+
+describe('next({ auto: true }) — číslování fází (W2)', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-next-auto-'));
+    process.chdir(cwd);
+    askClaudeMock.mockReset();
+    askClaudeMock.mockResolvedValue({
+      text: 'TITLE: Nová fáze\nGOAL: něco hotového',
+    });
+    await writeProject('# Projekt', cwd);
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('přidělí celé ID, i když ve stavu existuje opravná podfáze (21.1)', async () => {
+    await save(
+      makeState(
+        [
+          { id: 21, title: 'Rodič', status: 'done' },
+          { id: 21.1, title: 'Oprava', status: 'done', steps: [] },
+        ],
+        null,
+      ),
+      cwd,
+    );
+
+    const r = await next({ auto: true });
+
+    expect(r.ok).toBe(true);
+    const loaded = await load(cwd);
+    const ids = loaded.phases.map((p) => p.id);
+    // Nová fáze musí být 22, ne 22.1 (Math.floor zahodí desetinnou část 21.1).
+    expect(ids).toContain(22);
+    expect(ids.some((id) => id === 22.1)).toBe(false);
   });
 });
