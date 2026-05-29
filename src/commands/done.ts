@@ -1,5 +1,6 @@
-import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
+import { commitAll, hasChanges, headSha, isGitRepo, push } from '../git.js';
 import { buildGraph, GRAPH_FILE, hasMappableProject } from '../graph/buildGraph.js';
+import { bumpPackageVersion } from '../version.js';
 import {
   RunReportParseError,
   readRunReport,
@@ -12,7 +13,7 @@ import type { Phase, ProjectState, Step } from '../state/types.js';
 import { ask } from '../ui/ask.js';
 import { isInteractive } from '../ui/interactive.js';
 import { log } from '../ui/log.js';
-import type { AutoOptions, StepOutcome } from './types.js';
+import type { AutoOptions, FinalizeOptions, StepOutcome } from './types.js';
 import { writePhaseMemory } from './writeMemory.js';
 
 export async function done(opts: AutoOptions = {}): Promise<StepOutcome> {
@@ -164,7 +165,7 @@ async function collectNotesAndSave(
   const next = advanceToNextPhase(state);
   logNextPhase(next);
   if (outcome === 'done') {
-    await finalizePhaseSideEffects(phase, state, cwd);
+    await finalizePhaseSideEffects(phase, state, cwd, { bump: opts.bump, push: opts.push });
   }
   await save(state, cwd);
   return next;
@@ -214,8 +215,9 @@ async function finalizePhaseSideEffects(
   phase: Phase,
   state: ProjectState,
   cwd: string,
+  finalizeOpts: FinalizeOptions = {},
 ): Promise<void> {
-  await commitPhaseWork(phase, cwd);
+  await commitPhaseWork(phase, cwd, finalizeOpts);
   await writePhaseMemory(phase, state, cwd, { hasAutoCommit: phase.autoCommit !== undefined });
   await regenerateGraph(cwd);
 }
@@ -242,18 +244,30 @@ async function regenerateGraph(cwd: string): Promise<void> {
 /**
  * Auto-commit po finalizaci fáze (`phase.status === 'done'`). Nikdy nehází —
  * gitové chyby jenom zalogujeme jako varování, aby přerušený commit nezablokoval
- * `mini done` (uživatel může commitnout ručně). Push záměrně nepouštíme —
- * fáze 11 explicitně říká „push se pak dělá na požádání".
+ * `mini done` (uživatel může commitnout ručně).
+ *
+ * Před commitem navýší verzi v `package.json` (default `patch`), aby ji `git
+ * add -A` pobral do commitu fáze. Push se pouští **jen** s `finalizeOpts.push`
+ * (opt-in) — jinak zůstává jako dosud jen hint `git push`.
  *
  * Pre-commit HEAD si pamatujeme přímo na `phase.autoCommit`, aby `mini undo`
  * mohl bezpečně udělat soft reset zpět. Volající musí po této funkci ještě
  * uložit state — autoCommit info pak skončí v `state.json`.
  */
-async function commitPhaseWork(phase: Phase, cwd: string): Promise<void> {
+async function commitPhaseWork(
+  phase: Phase,
+  cwd: string,
+  finalizeOpts: FinalizeOptions = {},
+): Promise<void> {
   if (!(await isGitRepo(cwd))) {
     log.dim('Git repozitář nenalezen — commit přeskočen.');
     return;
   }
+
+  // Bump verze ještě před `hasChanges`/commitem — patří do commitu fáze a sám
+  // o sobě je změnou, která má smysl commitnout (i kdyby jinak nic nebylo).
+  await bumpVersion(cwd, finalizeOpts.bump ?? 'patch');
+
   if (!(await hasChanges(cwd))) {
     log.dim('Žádné změny v gitu — commit přeskočen.');
     return;
@@ -272,11 +286,42 @@ async function commitPhaseWork(phase: Phase, cwd: string): Promise<void> {
   }
   const subject = message.split('\n')[0] ?? message;
   log.success(`Commit: ${subject}`);
-  log.hint('Pro nahrání na remote spusť: git push');
 
   const postSha = await headSha(cwd);
   if (preSha && postSha) {
     phase.autoCommit = { preSha, sha: postSha, subject };
+  }
+
+  // Push jen na vyžádání (opt-in). Best-effort: chybějící remote/upstream nebo
+  // odmítnutí jen zalogujeme, workflow nezablokujeme.
+  if (finalizeOpts.push) {
+    const pr = await push(cwd);
+    if (pr.ok) {
+      log.success('Pushnuto na remote.');
+    } else {
+      log.warn('Push selhal — práce zůstává commitnutá lokálně.');
+      const detail = pr.stderr.trim() || pr.stdout.trim();
+      if (detail) log.dim(detail);
+      log.hint('Zkus ručně: git push (případně nastav upstream přes git push -u).');
+    }
+  } else {
+    log.hint('Pro nahrání na remote spusť: git push (nebo mini done --push).');
+  }
+}
+
+/**
+ * Best-effort navýšení verze v `package.json` před commitem fáze. Když projekt
+ * `package.json` nemá (jiný jazyk), tiše přeskočí. Chybu při zápisu jen
+ * zalogujeme — nesmí zablokovat finalizaci.
+ */
+async function bumpVersion(cwd: string, level: NonNullable<FinalizeOptions['bump']>): Promise<void> {
+  try {
+    const r = await bumpPackageVersion(cwd, level);
+    if (r) {
+      log.dim(`Verze: ${r.from} → ${r.to} (${level}).`);
+    }
+  } catch (err) {
+    log.warn(`Navýšení verze selhalo: ${(err as Error).message}`);
   }
 }
 
@@ -358,7 +403,7 @@ type AutoApplyResult =
   | { handled: true; outcome: StepOutcome }
   | { handled: false };
 
-export interface ApplyReportOptions {
+export interface ApplyReportOptions extends FinalizeOptions {
   /**
    * Lidská verifikace (`verify` body) už proběhla mimo tenhle proces — typicky
    * v Claude session dotazem v chatu (`/mini:done`). Při `true` se pending
@@ -446,7 +491,7 @@ export async function applyAutoReport(
   log.success(`Fáze ${phase.id} (${phase.title}) hotová.`);
   const nextPhase = advanceToNextPhase(state);
   logNextPhase(nextPhase);
-  await finalizePhaseSideEffects(phase, state, cwd);
+  await finalizePhaseSideEffects(phase, state, cwd, { bump: applyOpts.bump, push: applyOpts.push });
   await save(state, cwd);
   return {
     handled: true,
@@ -678,7 +723,7 @@ async function finalizePhase(
   const next = advanceToNextPhase(state);
   logNextPhase(next);
   if (phase.status === 'done') {
-    await finalizePhaseSideEffects(phase, state, cwd);
+    await finalizePhaseSideEffects(phase, state, cwd, { bump: opts.bump, push: opts.push });
   }
   await save(state, cwd);
   return { ok: true, phaseAdvanced: true, nextPhaseId: next?.id ?? null };
@@ -727,6 +772,11 @@ export async function applyDone(
     log.error(`Report fáze ${phase.id} chybí nebo je poškozený — stav neumím posunout neinteraktivně.`);
     log.hint('Nejdřív spusť `/mini:do` (zapíše report), nebo stav posuň ručně přes `mini done`.');
     return { ok: false, reason: 'no-report' };
+  }
+  // Fáze se opravdu uzavřela (ne jen verify-needs-human apod.) → nabídni vyčištění
+  // kontextu. `/clear` musí napsat člověk, my ho jen připomeneme.
+  if (applied.outcome.ok && applied.outcome.phaseAdvanced) {
+    log.hint('Hotovo. Pro vyčištění kontextu Claude Code před další fází zvaž `/clear`.');
   }
   return applied.outcome;
 }

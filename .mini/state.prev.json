@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 29,
+  "currentPhaseId": 30,
   "phases": [
     {
       "id": 1,
@@ -880,7 +880,68 @@
       "id": 29,
       "title": "Průběžný zápis kroků v do",
       "goal": "Přidat neinteraktivní pod-příkaz (např. mini do --apply --step-done <název>), který během /mini:do označí jednotlivý krok za hotový rovnou ve state.json, a rozšířit do session prompt o instrukci volat ho po každém dokončeném kroku — aby po pádu Claude bylo vidět, kde se skončilo.",
-      "status": "proposed"
+      "status": "done",
+      "steps": [
+        {
+          "title": "Přidat applyStepDone(title, cwd) do do.ts — najde krok aktuální fáze podle názvu (tolerantně: trim, fallback case-insensitive), označí ho done a hned uloží state.json; chyba když fáze není doing nebo se krok nenajde",
+          "status": "done"
+        },
+        {
+          "title": "Zaregistrovat v cli.ts flag mini do --apply --step-done <název> — když je --step-done, volá applyStepDone, jinak stávající applyDoStart",
+          "status": "done"
+        },
+        {
+          "title": "Rozšířit do session prompt (buildAutoPhasePrompt) o instrukci volat mini do --apply --step-done <přesný název> po každém dokončeném kroku, ještě před finálním reportem",
+          "status": "done"
+        },
+        {
+          "title": "Testy v do.test.ts pro applyStepDone — úspěch, nenalezený krok, tolerantní matching; a test že prompt instrukci obsahuje",
+          "status": "done"
+        },
+        {
+          "title": "typecheck/build/test a e2e přes lokální build: plan → do --apply → --step-done → ověřit že status kroku ve state.json je done",
+          "status": "done"
+        }
+      ],
+      "completedAt": "2026-05-29T22:36:02.933Z",
+      "autoCommit": {
+        "preSha": "6bb46c52c1579824ea4f58e1e70753a3041be5fd",
+        "sha": "786dd33b525dd0ece9fce7d934006c0f45cb8924",
+        "subject": "Fáze 29: Průběžný zápis kroků v do"
+      }
+    },
+    {
+      "id": 30,
+      "title": "Done: verze, push a clear",
+      "goal": "Rozšířit mini done --apply tak, aby po finalizaci fáze navýšil verzi v package.json (patch), zahrnul ji do auto-commitu, nahrál na remote přes git push a na závěr vypsal nabídku spustit /clear pro vyčištění kontextu.",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Bump helper + testy: přidat bumpPackageVersion(cwd, level) v novém modulu src/version.ts — načte package.json, navýší semver dle level (patch/minor/major), zapíše zpět se zachováním formátu, chybějící package.json tiše vrátí null; unit testy pro patch/minor/major, chybějící soubor, zachování formátu",
+          "status": "done"
+        },
+        {
+          "title": "Push helper + test: přidat push(cwd) do git.ts (best-effort přes runGit(push), vrací GitResult); test že volá git push a chybu nehází",
+          "status": "done"
+        },
+        {
+          "title": "Zapojit do finalizace: rozšířit finalizePhaseSideEffects a commitPhaseWork o FinalizeOptions { bump, push } — bump verze před commitem (pobere ho add -A), po commitu push jen když push===true, vše best-effort; protáhnout options ze všech tří cest (applyAutoReport, collectNotesAndSave, finalizePhase)",
+          "status": "done"
+        },
+        {
+          "title": "CLI flagy: mini done [--apply] --bump <patch|minor|major> --push a mini auto --bump <...> --push (default patch); předat do finalizace",
+          "status": "done"
+        },
+        {
+          "title": "Nabídka /clear + session prompt: po úspěšné finalizaci vypsat hint na /clear; rozšířit buildDoneSessionPrompt (mini context done), ať Claude po uzavření navrhne /clear a zmíní možnost --push",
+          "status": "done"
+        },
+        {
+          "title": "Ověření: typecheck/build/test + e2e přes lokální build — verze povýšená a v commitu fáze, --push bez remote skončí jen warningem, /clear hint se vypíše",
+          "status": "todo"
+        }
+      ],
+      "startedAt": "2026-05-29T22:54:10.000Z"
     }
   ],
   "models": {

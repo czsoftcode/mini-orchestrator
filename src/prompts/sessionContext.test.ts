@@ -84,6 +84,13 @@ describe('buildDoneSessionPrompt', () => {
     expect(p).not.toContain('--accept-verify');
   });
 
+  it('zmíní /clear, opt-in --push a možnost --bump', () => {
+    const p = buildDoneSessionPrompt({ phase, reportExists: true, verify: [] });
+    expect(p).toContain('/clear');
+    expect(p).toContain('--push');
+    expect(p).toContain('--bump');
+  });
+
   it('s verify body vyžaduje --accept-verify a vypíše je', () => {
     const p = buildDoneSessionPrompt({
       phase,

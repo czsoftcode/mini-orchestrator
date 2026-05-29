@@ -193,8 +193,12 @@ ${bodyBlock}${verifyBlock}
 # Posun stavu
 ${applyHint}
 
-Stav fáze měň jen příkazem \`mini done --apply\` — nikdy needituj \`.mini/state.json\` ručně. \`mini done --apply\` přečte report, posune kroky, fázi uzavře, commitne práci a posune se na další fázi.
+Stav fáze měň jen příkazem \`mini done --apply\` — nikdy needituj \`.mini/state.json\` ručně. \`mini done --apply\` přečte report, posune kroky, fázi uzavře, navýší verzi v package.json (default patch) a commitne práci.
 
-Po uzavření napiš, že další na řadě je \`/mini:next\` (navrhnout další fázi).
+Verze a push:
+- Větší skok verze (po dohodě s uživatelem) přidej \`--bump minor\` nebo \`--bump major\`.
+- Nahrání na remote je opt-in: když to uživatel chce, přidej \`--push\` (jinak práce zůstane jen v lokálním commitu).
+
+Po uzavření napiš, že další na řadě je \`/mini:next\` (navrhnout další fázi), a **nabídni uživateli příkaz \`/clear\`** pro vyčištění kontextu Claude Code před další fází (\`/clear\` musí napsat on sám).
 `;
 }

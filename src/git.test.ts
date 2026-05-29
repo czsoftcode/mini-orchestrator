@@ -12,6 +12,7 @@ import {
   headSubject,
   isCleanWorkingTree,
   isGitRepo,
+  push,
   runGit,
   softResetTo,
 } from './git.js';
@@ -168,6 +169,38 @@ describe('git helpers', () => {
 
     it('false mimo git repo', async () => {
       expect(await isCleanWorkingTree(cwd)).toBe(false);
+    });
+  });
+
+  describe('push', () => {
+    it('nehází a vrátí ok=false, když není upstream', async () => {
+      await initRepo(cwd);
+      await writeFile(join(cwd, 'a.txt'), 'a\n', 'utf-8');
+      await commitAll(cwd, 'init');
+
+      const r = await push(cwd);
+      expect(r.ok).toBe(false);
+    });
+
+    it('vrátí ok=true při pushi na nastavený upstream', async () => {
+      const remote = await mkdtemp(join(tmpdir(), 'mini-remote-'));
+      try {
+        await execFileAsync('git', ['init', '--bare', '-b', 'main'], { cwd: remote });
+        await initRepo(cwd);
+        await writeFile(join(cwd, 'a.txt'), 'a\n', 'utf-8');
+        await commitAll(cwd, 'init');
+        await execFileAsync('git', ['remote', 'add', 'origin', remote], { cwd });
+        await execFileAsync('git', ['push', '-u', 'origin', 'main'], { cwd });
+
+        // další commit, ať má push co nahrát
+        await writeFile(join(cwd, 'b.txt'), 'b\n', 'utf-8');
+        await commitAll(cwd, 'second');
+
+        const r = await push(cwd);
+        expect(r.ok).toBe(true);
+      } finally {
+        await rm(remote, { recursive: true, force: true });
+      }
     });
   });
 

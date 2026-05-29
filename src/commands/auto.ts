@@ -92,7 +92,7 @@ export async function auto(opts: AutoOptions = {}): Promise<void> {
     }
 
     log.title(`[auto 4/4] Verifikace${labelSuffix}`);
-    const fr = await done({ auto: true });
+    const fr = await done({ auto: true, bump: opts.bump, push: opts.push });
     if (!fr.ok) {
       log.dim(`Auto skončil v done (${fr.reason}).`);
       return;

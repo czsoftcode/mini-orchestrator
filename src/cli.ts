@@ -11,6 +11,13 @@ function parseMaxTurns(value: string): number {
   return n;
 }
 
+function parseBumpLevel(value: string): 'patch' | 'minor' | 'major' {
+  if (value !== 'patch' && value !== 'minor' && value !== 'major') {
+    throw new InvalidArgumentError('Musí být patch, minor nebo major.');
+  }
+  return value;
+}
+
 /** Přečte celý stdin do řetězce. Pro neinteraktivní `--apply` příkazy. */
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
@@ -106,24 +113,32 @@ program
   .description('Lidská verifikace — zeptá se, jestli to funguje, a posune stav.')
   .option('--apply', 'Neinteraktivně posuň stav podle reportu (bez dotazů). Pro /mini:done.')
   .option('--accept-verify', 'S --apply: body k ručnímu ověření ber jako odsouhlasené (verifikace proběhla v chatu).')
-  .action(async (opts: { apply?: boolean; acceptVerify?: boolean }) => {
+  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: patch | minor | major (default patch).', parseBumpLevel)
+  .option('--push', 'Po commitu fáze pushnout na remote (git push).')
+  .action(async (opts: { apply?: boolean; acceptVerify?: boolean; bump?: 'patch' | 'minor' | 'major'; push?: boolean }) => {
     if (opts.apply) {
       const { applyDone } = await import('./commands/done.js');
-      const r = await applyDone(process.cwd(), { acceptVerify: opts.acceptVerify });
+      const r = await applyDone(process.cwd(), {
+        acceptVerify: opts.acceptVerify,
+        bump: opts.bump,
+        push: opts.push,
+      });
       if (!r.ok) process.exit(1);
       return;
     }
     const { done } = await import('./commands/done.js');
-    await done();
+    await done({ bump: opts.bump, push: opts.push });
   });
 
 program
   .command('auto')
   .description('Auto chain: next → plan → (do → done){pro každý krok}. Fázi dotáhne sám, ale u bodů k ručnímu ověření (verify) se zastaví a zeptá člověka — není to plně bezobslužný běh.')
   .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v každé session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
-  .action(async (opts: { maxTurns?: number }) => {
+  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: patch | minor | major (default patch).', parseBumpLevel)
+  .option('--push', 'Po commitu fáze pushnout na remote (git push).')
+  .action(async (opts: { maxTurns?: number; bump?: 'patch' | 'minor' | 'major'; push?: boolean }) => {
     const { auto } = await import('./commands/auto.js');
-    await auto({ maxTurns: opts.maxTurns });
+    await auto({ maxTurns: opts.maxTurns, bump: opts.bump, push: opts.push });
   });
 
 program

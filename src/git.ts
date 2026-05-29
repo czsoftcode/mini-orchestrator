@@ -51,6 +51,15 @@ export async function commitAll(cwd: string, message: string): Promise<GitResult
   return runGit(['commit', '-m', message], cwd);
 }
 
+/**
+ * `git push` na nakonfigurovaný upstream. Best-effort jako zbytek wrapperu —
+ * nikdy nehází: chybějící remote/upstream, odmítnutý push i absence gitu skončí
+ * jako `ok: false` se stderr ze gitu, ať to volající umí vypsat jako warning.
+ */
+export async function push(cwd: string): Promise<GitResult> {
+  return runGit(['push'], cwd);
+}
+
 export async function currentBranch(cwd: string): Promise<string | null> {
   const r = await runGit(['rev-parse', '--abbrev-ref', 'HEAD'], cwd);
   if (!r.ok) return null;

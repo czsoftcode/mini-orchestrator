@@ -203,7 +203,7 @@ Imports:
 - { mkdtemp, rm } from "node:fs/promises"
 - { tmpdir } from "node:os"
 - { join } from "node:path"
-- { save, writeProject } from "../state/store.js"
+- { load, save, writeProject } from "../state/store.js"
 - type { ProjectState } from "../state/types.js"
 
 ## src/commands/do.ts
@@ -228,6 +228,7 @@ Exports:
 - interface DoPhaseOptions
 - function doPhase(opts: DoPhaseOptions): Promise<StepOutcome>
 - function applyDoStart(cwd: string): Promise<StepOutcome>
+- function applyStepDone(title: string, cwd: string): Promise<StepOutcome>
 
 ## src/commands/done.test.ts
 
