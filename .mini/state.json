@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 26,
+  "currentPhaseId": 27,
   "phases": [
     {
       "id": 1,
@@ -758,34 +758,77 @@
       "id": 26,
       "title": "Bod 4. z .mini/improvements.md",
       "goal": "Fáze D1 - D4 budou vyřízené",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "mini status zobrazí verdikt run reportu",
-          "status": "doing"
+          "status": "done"
         },
         {
           "title": "mini status ukáže počet otevřených verify bodů",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "mini status vizuálně odliší osiřelou doing fázi",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Upravit help příkazu auto ohledně verify",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Ověřit konzistenci helpu do --max-turns",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Zpřehlednit stream render akcí a shrnutí",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-29T20:51:21.820Z",
+      "resolvedVerify": [
+        "Vizuální čitelnost streamovaného výstupu mini do --stream",
+        "Vizuální vykreslení markeru osiřelé doing fáze v mini status"
+      ],
+      "completedAt": "2026-05-29T21:08:28.158Z",
+      "autoCommit": {
+        "preSha": "4a288479586257ba22b688d83bb0895dcb44bc40",
+        "sha": "da6f24826c348193905b04f0f4f67ee4f1fc8d24",
+        "subject": "Fáze 26: Bod 4. z .mini/improvements.md"
+      }
+    },
+    {
+      "id": 27,
+      "title": "mini příkazi přímo v claude",
+      "goal": "Až bude možné příkazy mini spouštět přímo v claude pomocí /",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Pod-příkaz `mini context <cmd>` vypíše prompt na stdout",
+          "status": "todo"
+        },
+        {
+          "title": "Neinteraktivní stavové pod-příkazy s flagem `--apply`",
+          "status": "todo"
+        },
+        {
+          "title": "Příkaz `mini install-commands` generuje commandy idempotentně",
+          "status": "todo"
+        },
+        {
+          "title": "Vygenerovat `.claude/commands/mini/*.md` pro pět commandů",
+          "status": "todo"
+        },
+        {
+          "title": "Testy pro context, apply a install-commands",
+          "status": "todo"
+        },
+        {
+          "title": "Ověřit cyklus next→discuss→plan→do→done v session",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-29T20:51:21.820Z"
+      "startedAt": "2026-05-29T21:48:55.985Z"
     }
   ],
   "models": {

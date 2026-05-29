@@ -358,10 +358,20 @@ type AutoApplyResult =
   | { handled: true; outcome: StepOutcome }
   | { handled: false };
 
-async function applyAutoReport(
+export interface ApplyReportOptions {
+  /**
+   * Lidská verifikace (`verify` body) už proběhla mimo tenhle proces — typicky
+   * v Claude session dotazem v chatu (`/mini:done`). Při `true` se pending
+   * verify body neptají interaktivně, ale berou se jako odsouhlasené (pass).
+   */
+  acceptVerify?: boolean;
+}
+
+export async function applyAutoReport(
   phase: Phase,
   state: ProjectState,
   cwd: string,
+  applyOpts: ApplyReportOptions = {},
 ): Promise<AutoApplyResult> {
   const expectedStepTitles = (phase.steps ?? []).map((s) => s.title);
   const reportFile = runReportPath(cwd, phase.id);
@@ -426,7 +436,7 @@ async function applyAutoReport(
   // Body k ručnímu ověření zobrazíme až tady — všechny kroky jsou uzavřené a
   // fázi bychom jinak rovnou zavřeli. I v auto módu se tu zastavíme a zeptáme
   // se člověka (volání `ask()`); auto loop verify neobchází.
-  const verifyOutcome = await handleVerify(report.verify, phase, state, cwd);
+  const verifyOutcome = await handleVerify(report.verify, phase, state, cwd, applyOpts);
   if (verifyOutcome) {
     return { handled: true, outcome: verifyOutcome };
   }
@@ -467,12 +477,21 @@ async function handleVerify(
   phase: Phase,
   state: ProjectState,
   cwd: string,
+  applyOpts: ApplyReportOptions = {},
 ): Promise<StepOutcome | null> {
   // Body vyřešené dřívějším průchodem (pass/skip) přeskočíme — opakovaný
   // `mini done` nad neměnícím se reportem je nesmí přehrávat znovu (W4).
   const alreadyResolved = new Set(phase.resolvedVerify ?? []);
   const pending = verify.filter((v) => !alreadyResolved.has(v.title));
   if (pending.length === 0) {
+    return null;
+  }
+
+  // `/mini:done`: lidská verifikace proběhla v chatu, sem dorazil souhlas přes
+  // `--accept-verify`. Body bereme jako pass (zapamatujeme do resolvedVerify,
+  // ať se při opakování neptáme znovu) a fázi necháme zavřít.
+  if (applyOpts.acceptVerify) {
+    phase.resolvedVerify = [...(phase.resolvedVerify ?? []), ...pending.map((v) => v.title)];
     return null;
   }
 
@@ -663,4 +682,51 @@ async function finalizePhase(
   }
   await save(state, cwd);
   return { ok: true, phaseAdvanced: true, nextPhaseId: next?.id ?? null };
+}
+
+/**
+ * Neinteraktivní posun stavu podle reportu — pro `mini done --apply` (volá ho
+ * `/mini:done`, když uživatel v session potvrdil, že fáze funguje). Sdílí
+ * `applyAutoReport` s auto módem: přečte report, posune kroky, případně uzavře
+ * fázi (commit + memory + graf + posun na další). Na rozdíl od `done({auto})`
+ * **nepadá do interaktivního fallbacku** — když report chybí nebo je poškozený,
+ * vrátí chybu, ať Bash volání selže čistě místo zaseknutí na `ask()`.
+ */
+export async function applyDone(
+  cwd: string = process.cwd(),
+  opts: ApplyReportOptions = {},
+): Promise<StepOutcome> {
+  if (!(await exists(cwd))) {
+    log.warn('V tomto adresáři není projekt.');
+    log.hint('Začni: mini init');
+    return { ok: false, reason: 'no-project' };
+  }
+
+  const state = await load(cwd);
+
+  if (state.currentPhaseId === null) {
+    log.warn('Žádná aktuální fáze.');
+    log.hint('Spusť: mini next');
+    return { ok: false, reason: 'no-current-phase' };
+  }
+
+  const phase = state.phases.find((p) => p.id === state.currentPhaseId);
+  if (!phase) {
+    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    return { ok: false, reason: 'inconsistent-state' };
+  }
+
+  if (phase.status === 'done') {
+    log.info(`Fáze ${phase.id} (${phase.title}) už je hotová.`);
+    log.hint('Spusť: mini next');
+    return { ok: false, reason: 'phase-done' };
+  }
+
+  const applied = await applyAutoReport(phase, state, cwd, opts);
+  if (!applied.handled) {
+    log.error(`Report fáze ${phase.id} chybí nebo je poškozený — stav neumím posunout neinteraktivně.`);
+    log.hint('Nejdřív spusť `/mini:do` (zapíše report), nebo stav posuň ručně přes `mini done`.');
+    return { ok: false, reason: 'no-report' };
+  }
+  return applied.outcome;
 }

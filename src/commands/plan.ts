@@ -136,6 +136,76 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
   return { ok: true };
 }
 
+/**
+ * Neinteraktivní uložení kroků aktuální fáze — pro `mini plan --apply` (volá ho
+ * `/mini:plan`, když Claude v session rozmenil fázi). Žádný Claude: jen zapíše
+ * předané kroky do stavu se stejnou logikou jako interaktivní `plan`.
+ */
+export async function applyPlanSteps(
+  titles: string[],
+  cwd: string = process.cwd(),
+): Promise<StepOutcome> {
+  if (!(await exists(cwd))) {
+    log.warn('V tomto adresáři není projekt.');
+    log.hint('Začni: mini init');
+    return { ok: false, reason: 'no-project' };
+  }
+
+  const clean = titles.map((t) => t.trim()).filter((t) => t.length > 0);
+  if (clean.length === 0) {
+    log.error('Nedostal jsem žádné kroky (stdin byl prázdný).');
+    return { ok: false, reason: 'no-steps' };
+  }
+
+  const state = await load(cwd);
+
+  if (state.currentPhaseId === null) {
+    log.warn('Žádná aktuální fáze k rozplánování.');
+    log.hint('Spusť: mini next');
+    return { ok: false, reason: 'no-current-phase' };
+  }
+
+  const phase = state.phases.find((p) => p.id === state.currentPhaseId);
+  if (!phase) {
+    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    return { ok: false, reason: 'inconsistent-state' };
+  }
+
+  if (phase.status === 'done' || phase.status === 'skipped') {
+    log.info(`Fáze ${phase.id} už není aktivní (${phase.status}).`);
+    return { ok: false, reason: 'phase-not-active' };
+  }
+
+  const steps: Step[] = clean.map((title) => ({ title, status: 'todo' }));
+  phase.steps = steps;
+  if (phase.status === 'proposed') {
+    phase.status = 'planned';
+  }
+  await save(state, cwd);
+
+  log.success(`Fáze ${phase.id} rozmenena na ${steps.length} ${steps.length === 1 ? 'krok' : 'kroků'}.`);
+  return { ok: true };
+}
+
+/**
+ * Naparsuje kroky předané na stdin pro `mini plan --apply`. Tolerantní k tomu,
+ * jak je Claude zapíše: bere každý neprázdný řádek jako jeden krok a odstraní
+ * běžné prefixy seznamu (`STEP:`, `- `, `* `, `1. `).
+ */
+export function parseStepsFromStdin(text: string): string[] {
+  const out: string[] = [];
+  for (const raw of text.split('\n')) {
+    let line = raw.trim();
+    if (line.length === 0) continue;
+    line = line.replace(/^STEP:\s*/i, '');
+    line = line.replace(/^[-*]\s+/, '');
+    line = line.replace(/^\d+[.)]\s+/, '');
+    line = line.trim();
+    if (line.length > 0) out.push(line);
+  }
+  return out;
+}
+
 export function parseSteps(text: string): string[] {
   const out: string[] = [];
   for (const line of text.split('\n')) {

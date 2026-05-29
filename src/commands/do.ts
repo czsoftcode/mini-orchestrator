@@ -178,3 +178,50 @@ export async function doPhase(opts: DoPhaseOptions = {}): Promise<StepOutcome> {
   }
   return { ok: true };
 }
+
+/**
+ * Neinteraktivní příprava fáze před implementací v session — pro `mini do
+ * --apply` (volá ho `/mini:do` před tím, než Claude začne pracovat). Označí
+ * fázi jako `doing`, nastaví `startedAt` a založí `.mini/run/` adresář, aby měl
+ * Claude kam zapsat report. Žádný Claude, žádná implementace.
+ */
+export async function applyDoStart(cwd: string = process.cwd()): Promise<StepOutcome> {
+  if (!(await exists(cwd))) {
+    log.warn('V tomto adresáři není projekt.');
+    log.hint('Začni: mini init');
+    return { ok: false, reason: 'no-project' };
+  }
+
+  const state = await load(cwd);
+
+  if (state.currentPhaseId === null) {
+    log.warn('Žádná aktuální fáze.');
+    log.hint('Spusť: mini next');
+    return { ok: false, reason: 'no-current-phase' };
+  }
+
+  const phase = state.phases.find((p) => p.id === state.currentPhaseId);
+  if (!phase) {
+    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    return { ok: false, reason: 'inconsistent-state' };
+  }
+
+  if (phase.status === 'done') {
+    log.info(`Fáze ${phase.id} (${phase.title}) je už hotová.`);
+    return { ok: false, reason: 'phase-done' };
+  }
+  if (phase.status === 'skipped') {
+    log.info(`Fáze ${phase.id} (${phase.title}) je odložená.`);
+    return { ok: false, reason: 'phase-skipped' };
+  }
+
+  phase.status = 'doing';
+  if (!phase.startedAt) {
+    phase.startedAt = new Date().toISOString();
+  }
+  await save(state, cwd);
+  await ensureRunDir(cwd);
+
+  log.success(`Fáze ${phase.id} (${phase.title}) označena jako rozdělaná.`);
+  return { ok: true };
+}

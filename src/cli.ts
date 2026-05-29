@@ -11,6 +11,24 @@ function parseMaxTurns(value: string): number {
   return n;
 }
 
+/** Přečte celý stdin do řetězce. Pro neinteraktivní `--apply` příkazy. */
+async function readStdin(): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString('utf-8');
+}
+
+function requireOption(value: string | undefined, flag: string): string {
+  const v = (value ?? '').trim();
+  if (v.length === 0) {
+    console.error(`Chybí povinný parametr ${flag}.`);
+    process.exit(1);
+  }
+  return v;
+}
+
 program
   .name('mini')
   .description('Mini orchestrátor nad Claude Code — drží stav projektu a posílá Claudovi jen to nejnutnější.')
@@ -27,7 +45,18 @@ program
 program
   .command('next')
   .description('Navrhne, co by mělo přijít jako další fáze.')
-  .action(async () => {
+  .option('--apply', 'Neinteraktivně ulož fázi z --title/--goal (bez Claude). Pro /mini:next.')
+  .option('--title <title>', 'Název nové fáze (s --apply).')
+  .option('--goal <goal>', 'Cíl nové fáze (s --apply).')
+  .action(async (opts: { apply?: boolean; title?: string; goal?: string }) => {
+    if (opts.apply) {
+      const title = requireOption(opts.title, '--title');
+      const goal = requireOption(opts.goal, '--goal');
+      const { applyNewPhase } = await import('./commands/next.js');
+      const r = await applyNewPhase(title, goal);
+      if (!r.ok) process.exit(1);
+      return;
+    }
     const { next } = await import('./commands/next.js');
     await next();
   });
@@ -35,7 +64,15 @@ program
 program
   .command('plan')
   .description('Rozmění aktuální fázi na konkrétní kroky.')
-  .action(async () => {
+  .option('--apply', 'Neinteraktivně ulož kroky čtené ze stdin (jeden na řádek, bez Claude). Pro /mini:plan.')
+  .action(async (opts: { apply?: boolean }) => {
+    if (opts.apply) {
+      const { applyPlanSteps, parseStepsFromStdin } = await import('./commands/plan.js');
+      const titles = parseStepsFromStdin(await readStdin());
+      const r = await applyPlanSteps(titles);
+      if (!r.ok) process.exit(1);
+      return;
+    }
     const { plan } = await import('./commands/plan.js');
     await plan();
   });
@@ -45,7 +82,14 @@ program
   .description('Spustí Claude Code na aktuální fázi nebo kroku.')
   .option('--stream', 'Spustit Claude v neinteraktivním print-módu se streamovaným JSON výstupem (průběžně zobrazí aktuální akci, na konci shrne cenu a tokeny).')
   .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
-  .action(async (opts: { stream?: boolean; maxTurns?: number }) => {
+  .option('--apply', 'Neinteraktivně označ fázi jako rozdělanou a založ .mini/run/ (bez Claude). Pro /mini:do.')
+  .action(async (opts: { stream?: boolean; maxTurns?: number; apply?: boolean }) => {
+    if (opts.apply) {
+      const { applyDoStart } = await import('./commands/do.js');
+      const r = await applyDoStart();
+      if (!r.ok) process.exit(1);
+      return;
+    }
     const { doPhase } = await import('./commands/do.js');
     await doPhase({ stream: opts.stream, maxTurns: opts.maxTurns });
   });
@@ -53,7 +97,15 @@ program
 program
   .command('done')
   .description('Lidská verifikace — zeptá se, jestli to funguje, a posune stav.')
-  .action(async () => {
+  .option('--apply', 'Neinteraktivně posuň stav podle reportu (bez dotazů). Pro /mini:done.')
+  .option('--accept-verify', 'S --apply: body k ručnímu ověření ber jako odsouhlasené (verifikace proběhla v chatu).')
+  .action(async (opts: { apply?: boolean; acceptVerify?: boolean }) => {
+    if (opts.apply) {
+      const { applyDone } = await import('./commands/done.js');
+      const r = await applyDone(process.cwd(), { acceptVerify: opts.acceptVerify });
+      if (!r.ok) process.exit(1);
+      return;
+    }
     const { done } = await import('./commands/done.js');
     await done();
   });
@@ -113,6 +165,22 @@ program
   .action(async () => {
     const { map } = await import('./commands/map.js');
     await map();
+  });
+
+program
+  .command('context <cmd> [args...]')
+  .description('Vypíše na stdout aktuální session prompt pro daný krok (next|discuss|plan|do|done). Slouží nativním /mini: slash commandům v Claude Code.')
+  .action(async (cmd: string, args: string[]) => {
+    const { context } = await import('./commands/context.js');
+    await context(cmd, args);
+  });
+
+program
+  .command('install-commands')
+  .description('Vygeneruje .claude/commands/mini/*.md (slash commandy /mini:*) do aktuálního projektu. Idempotentní — lze pustit opakovaně.')
+  .action(async () => {
+    const { installCommands } = await import('./commands/install-commands.js');
+    await installCommands();
   });
 
 program

@@ -335,7 +335,8 @@ Exports:
 
 Imports:
 - { describe, expect, it } from "vitest"
-- { describeModels, nextActionHint } from "./status.js"
+- { describeModels, isOrphanedDoing, nextActionHint, openVerifyCount, runReportSummaryLines } from "./status.js"
+- type { RunReportSummary } from "../state/runReport.js"
 - type { Phase, ProjectState } from "../state/types.js"
 
 ## src/commands/status.ts
@@ -343,6 +344,7 @@ Imports:
 Imports:
 - { default } from "picocolors"
 - { MODEL_SCOPES } from "../state/models.js"
+- { readRunReportSummary, RunReportSummary, RunReportVerifyItem, RunVerdict } from "../state/runReport.js"
 - { exists, load, readProject } from "../state/store.js"
 - type { Phase, PhaseStatus, ProjectState, StepStatus } from "../state/types.js"
 - { log } from "../ui/log.js"
@@ -350,6 +352,9 @@ Imports:
 Exports:
 - function status(): Promise<void>
 - function describeModels(state: ProjectState): string
+- function openVerifyCount(verify: readonly RunReportVerifyItem[], phase: Phase): number
+- function runReportSummaryLines(summary: RunReportSummary, phase: Phase): string[]
+- function isOrphanedDoing(phase: Phase, phases: readonly Phase[]): boolean
 - function nextActionHint(state: ProjectState): string
 
 ## src/commands/types.ts
@@ -675,7 +680,7 @@ Imports:
 - { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises"
 - { tmpdir } from "node:os"
 - { join } from "node:path"
-- { RUN_DIR, RunReportParseError, parseRunReport, readRunReport, runReportPath } from "./runReport.js"
+- { RUN_DIR, RunReportParseError, parseRunReport, readRunReport, readRunReportSummary, runReportPath, summarizeRunReportText } from "./runReport.js"
 
 ## src/state/runReport.ts
 
@@ -698,6 +703,9 @@ Exports:
 - interface ParseRunReportContext
 - function parseRunReport(text: string, ctx: ParseRunReportContext): RunReport
 - function readRunReport(cwd: string, ctx: ParseRunReportContext): Promise<RunReport | null>
+- interface RunReportSummary
+- function summarizeRunReportText(text: string): RunReportSummary
+- function readRunReportSummary(cwd: string, phaseId: number): Promise<RunReportSummary | null>
 
 ## src/state/store.test.ts
 
@@ -765,6 +773,13 @@ Imports:
 Exports:
 - const log
 
+## src/ui/streamRender.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+- type { StreamEvent } from "../claude/stream.js"
+- { createStreamRenderer } from "./streamRender.js"
+
 ## src/ui/streamRender.ts
 
 Imports:
@@ -776,9 +791,17 @@ Exports:
 - interface StreamRenderer
 - function createStreamRenderer(): StreamRenderer
 
+## src/ui/usage.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+- type { StreamResult } from "../claude/stream.js"
+- { logStreamSummary } from "./usage.js"
+
 ## src/ui/usage.ts
 
 Imports:
+- { default } from "picocolors"
 - type { AskResult } from "../claude/ask.js"
 - type { StreamResult } from "../claude/stream.js"
 - { log } from "./log.js"

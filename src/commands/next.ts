@@ -172,6 +172,26 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
   return commitPhase(state, cwd, title, goal, opts);
 }
 
+/**
+ * Neinteraktivní uložení nové fáze — pro `mini next --apply` (volá ho
+ * `/mini:next` slash command, když Claude v session navrhl fázi). Žádný Claude,
+ * žádné dotazy: jen zapíše fázi do stavu se stejnou logikou jako interaktivní
+ * `next` (sdílí `commitPhase`).
+ */
+export async function applyNewPhase(
+  title: string,
+  goal: string,
+  cwd: string = process.cwd(),
+): Promise<StepOutcome> {
+  if (!(await exists(cwd))) {
+    log.warn('V tomto adresáři není projekt.');
+    log.hint('Začni: mini init');
+    return { ok: false, reason: 'no-project' };
+  }
+  const state = await load(cwd);
+  return commitPhase(state, cwd, title, goal, { auto: true });
+}
+
 async function addPhaseManually(
   state: ProjectState,
   cwd: string,
