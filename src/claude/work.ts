@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
 
+import { describeSpawnError } from './spawnError.js';
+
 /**
  * mini řídí Claude jen v režimu `acceptEdits` (jinak nechá `permissionMode`
  * nevyplněný = ptej se). CLI zná i další módy (`plan`, `bypassPermissions`,
@@ -43,8 +45,8 @@ export async function workWithClaude(prompt: string, opts: WorkOptions = {}): Pr
       stdio: 'inherit',
     });
 
-    proc.on('error', (err: Error) => {
-      reject(new Error(`Nepodařilo se spustit claude: ${err.message}`));
+    proc.on('error', (err: NodeJS.ErrnoException) => {
+      reject(describeSpawnError(err));
     });
 
     proc.on('close', (code: number | null) => {

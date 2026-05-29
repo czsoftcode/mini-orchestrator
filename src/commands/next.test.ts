@@ -87,6 +87,28 @@ describe('parseSuggestion', () => {
     const out = parseSuggestion(text);
     expect(out).toEqual({ title: 'První', goal: 'cíl A' });
   });
+
+  // --- tolerance k drobným odchylkám formátu (R4) -------------------------
+
+  it('toleruje markdown bold kolem markeru i hodnoty', () => {
+    const out = parseSuggestion('**TITLE:** **Bootstrap CLI**\n**GOAL:** mini funguje');
+    expect(out).toEqual({ title: 'Bootstrap CLI', goal: 'mini funguje' });
+  });
+
+  it('toleruje malá písmena markeru', () => {
+    const out = parseSuggestion('title: Stav v JSON\ngoal: atomický zápis');
+    expect(out).toEqual({ title: 'Stav v JSON', goal: 'atomický zápis' });
+  });
+
+  it('toleruje úvodní markdown dekoraci (#, -, >) před markerem', () => {
+    const out = parseSuggestion('# TITLE: Nadpisová fáze\n- GOAL: hotovo když projde build');
+    expect(out).toEqual({ title: 'Nadpisová fáze', goal: 'hotovo když projde build' });
+  });
+
+  it('toleruje chybějící mezeru za dvojtečkou', () => {
+    const out = parseSuggestion('TITLE:Kompaktní\nGOAL:bez mezery');
+    expect(out).toEqual({ title: 'Kompaktní', goal: 'bez mezery' });
+  });
 });
 
 describe('next({ auto: true }) — číslování fází (W2)', () => {
@@ -129,5 +151,64 @@ describe('next({ auto: true }) — číslování fází (W2)', () => {
     // Nová fáze musí být 22, ne 22.1 (Math.floor zahodí desetinnou část 21.1).
     expect(ids).toContain(22);
     expect(ids.some((id) => id === 22.1)).toBe(false);
+  });
+});
+
+describe('next({ auto: true }) — retry při neparsovatelné odpovědi (R4)', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-next-retry-'));
+    process.chdir(cwd);
+    askClaudeMock.mockReset();
+    await writeProject('# Projekt', cwd);
+    await save(makeState([], null), cwd);
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('po nečitelné první odpovědi zkusí podruhé a uspěje', async () => {
+    askClaudeMock
+      .mockResolvedValueOnce({ text: 'Tady je nějaká úvaha bez markerů.' })
+      .mockResolvedValueOnce({ text: 'TITLE: Druhý pokus\nGOAL: tentokrát čitelně' });
+
+    const r = await next({ auto: true });
+
+    expect(r.ok).toBe(true);
+    expect(askClaudeMock).toHaveBeenCalledTimes(2);
+    const loaded = await load(cwd);
+    expect(loaded.phases).toHaveLength(1);
+    expect(loaded.phases[0]?.title).toBe('Druhý pokus');
+    expect(loaded.phases[0]?.goal).toBe('tentokrát čitelně');
+  });
+
+  it('retry dostane v promptu dovětek o formátu', async () => {
+    askClaudeMock
+      .mockResolvedValueOnce({ text: 'bez markerů' })
+      .mockResolvedValueOnce({ text: 'TITLE: OK\nGOAL: hotovo' });
+
+    await next({ auto: true });
+
+    const secondPrompt = askClaudeMock.mock.calls[1]![0] as string;
+    expect(secondPrompt).toContain('TITLE:');
+    expect(secondPrompt).toContain('nešla přečíst');
+  });
+
+  it('po dvou nečitelných odpovědích to vzdá s parse-failed (jen jeden retry)', async () => {
+    askClaudeMock
+      .mockResolvedValueOnce({ text: 'pořád nic' })
+      .mockResolvedValueOnce({ text: 'zase nic' });
+
+    const r = await next({ auto: true });
+
+    expect(r).toEqual({ ok: false, reason: 'parse-failed' });
+    expect(askClaudeMock).toHaveBeenCalledTimes(2);
+    const loaded = await load(cwd);
+    expect(loaded.phases).toHaveLength(0);
   });
 });

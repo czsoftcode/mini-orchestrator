@@ -47,7 +47,7 @@ program
   .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
   .action(async (opts: { stream?: boolean; maxTurns?: number }) => {
     const { doPhase } = await import('./commands/do.js');
-    await doPhase({ stream: opts.stream });
+    await doPhase({ stream: opts.stream, maxTurns: opts.maxTurns });
   });
 
 program

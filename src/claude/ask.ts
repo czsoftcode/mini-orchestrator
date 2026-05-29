@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { describeSpawnError } from './spawnError.js';
 import type { PermissionMode } from './work.js';
 
 export interface AskOptions {
@@ -82,9 +83,9 @@ export async function askClaude(prompt: string, opts: AskOptions = {}): Promise<
       reject(new Error(`Claude přestal odpovídat (timeout ${timeoutMs} ms).`));
     }, timeoutMs);
 
-    proc.on('error', (err: Error) => {
+    proc.on('error', (err: NodeJS.ErrnoException) => {
       clearTimeout(timer);
-      reject(new Error(`Nepodařilo se spustit claude: ${err.message}`));
+      reject(describeSpawnError(err));
     });
 
     proc.on('close', (code: number | null) => {

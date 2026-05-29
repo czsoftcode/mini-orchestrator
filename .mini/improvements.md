@@ -100,7 +100,7 @@
 
 ## 3. Robustnost a chybové stavy
 
-### R1 — `mini do --max-turns` se tiše ignoruje  · `H` · malá
+### ~~R1 — `mini do --max-turns` se tiše ignoruje~~  · `H` · malá · **hotovo (fáze 25)**
 - **Oblast:** robustnost / DX
 - **title:** `Propojit mini do --max-turns až do Claude session`
 - **goal:** `Volba mini do --max-turns N se skutečně propíše do běhu Claude (omezí počet odpovědí); dnes je definovaná, ale action ji zahodí.`
@@ -110,7 +110,7 @@
   (`do.ts:147,161`). Uživatelská volba je dnes no-op. Triviální oprava
   (`doPhase({ stream: opts.stream, maxTurns: opts.maxTurns })`), ideálně + test.
 
-### R2 — Chybí e2e/integrační test reálné auto smyčky  · `M` · velká
+### ~~R2 — Chybí e2e/integrační test reálné auto smyčky~~  · `M` · velká · **hotovo (fáze 25)**
 - **Oblast:** robustnost
 - **title:** `Přidat e2e test auto smyčky proti reálnému Claude (volitelně)`
 - **goal:** `Existuje aspoň jeden integrační/e2e test, který projede next→plan→do→done na malém dočasném projektu — buď s reálným claude za flagem, nebo s realistickým fake binárkou místo čistých unit mocků.`
@@ -119,7 +119,7 @@
   posun stavu, commit) nikdo neověřil end-to-end. Velká, ale cenná pojistka
   proti regresím na švech mezi moduly.
 
-### R3 — Přívětivé hlášení při chybějící `claude` binárce  · `M` · malá
+### ~~R3 — Přívětivé hlášení při chybějící `claude` binárce~~  · `M` · malá · **hotovo (fáze 25)**
 - **Oblast:** robustnost / DX
 - **title:** `Sjednotit hlášku a návod při chybějícím claude binárce`
 - **goal:** `Když claude binárka chybí (ENOENT), všechny cesty (do, stream, memory přes Claude) vypíšou stejnou srozumitelnou hlášku s návodem na instalaci, ne syrový ENOENT.`
@@ -128,7 +128,7 @@
   cestu (`claude/stream.ts`) a memory přes `askClaude`, a sjednotit UX
   (detekce „claude not found" → hint „nainstaluj Claude Code").
 
-### R4 — `mini next` nemá retry při neparsovatelné odpovědi  · `L` · malá
+### ~~R4 — `mini next` nemá retry při neparsovatelné odpovědi~~  · `L` · malá · **hotovo (fáze 25)**
 - **Oblast:** robustnost
 - **title:** `Dát mini next jeden retry při nečitelném návrhu fáze`
 - **goal:** `Když Claude odpoví bez TITLE:/GOAL:, mini next jednou zopakuje dotaz s upřesněním formátu, než to vzdá s parse-failed.`
@@ -182,3 +182,7 @@
 - **C1** — „Mrtvý kód" z fáze 17 (fáze 24): `MEMORY_ALLOWED_TOOLS`/`MEMORY_TIMEOUT_MS` ve `writeMemory.ts` označeny komentářem jako živé (explicitní memory režim); žádné zavádějící TODO v kódu nebylo.
 - **C2** — Migrace `state.model` → `models.default` (fáze 24): `migrate()` ve `store.load`/`loadPrev` přesune legacy pole; fallbacky zrušeny v `models.ts`, `status.ts`, `model.ts` i `import-gsd.ts`.
 - **C3** — Zúžení `PermissionMode` (fáze 24): typ ve `work.ts` zúžen na reálně používanou hodnotu `'acceptEdits'`.
+- **R1** — `mini do --max-turns` se ignoroval (fáze 25): `cli.ts` action předává `maxTurns` do `doPhase`; `do.test.ts` ověří propagaci do `workWithClaude` i `streamWithClaude`. Tím je vyřešený i premisa **D3** (help u `do --max-turns` teď odpovídá realitě).
+- **R2** — Chybějící e2e test auto smyčky (fáze 25): `commands/auto.e2e.test.ts` projede `next → plan → do → done` proti fake `claude` binárce v PATH (reálný spawn, zápis i parse reportu) bez mockování Claude modulů.
+- **R3** — Hláška při chybějícím `claude` (fáze 25): nový `claude/spawnError.ts` (`describeSpawnError`) sjednocuje ENOENT na návod na instalaci; volá ho `work.ts`, `stream.ts` i `ask.ts`.
+- **R4** — Retry `mini next` při neparsovatelné odpovědi (fáze 25): `parseSuggestion` je tolerantní k markdown dekoraci / velikosti písmen, navíc `next()` dá při neúspěchu jeden retry s upřesněním formátu, než vrátí `parse-failed`.

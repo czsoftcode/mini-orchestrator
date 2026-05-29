@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 24,
+  "currentPhaseId": 25,
   "phases": [
     {
       "id": 1,
@@ -682,38 +682,76 @@
       "id": 24,
       "title": "Bod 2. z .mini/improvements.md",
       "goal": "Hotové fáze C1 - C3",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Zdokumentovat živé MEMORY_* symboly ve writeMemory.ts (C1)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Odstranit zavádějící TODO o jejich smazání (C1)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Přidat migraci state.model → models.default ve store.load (C2)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Zrušit fallbacky na state.model v models.ts a status.ts (C2)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Zúžit typ PermissionMode na reálně používané hodnoty (C3)",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Doplnit/upravit testy pro migraci a PermissionMode",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Ověřit zelené testy a čistý tsc --noEmit",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-29T20:09:33.836Z",
+      "completedAt": "2026-05-29T20:33:17.048Z"
+    },
+    {
+      "id": 25,
+      "title": "Bod 3. z .mini/improvements.md",
+      "goal": "Fáze R1 - R4 budou vyřízené",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "Propojit `--max-turns` z cli do `doPhase` (R1)",
+          "status": "todo"
+        },
+        {
+          "title": "Test ověří, že `--max-turns` dorazí do Claude (R1)",
+          "status": "todo"
+        },
+        {
+          "title": "Sjednotit ENOENT hlášku „claude\" s návodem na instalaci (R3)",
+          "status": "todo"
+        },
+        {
+          "title": "Přidat `mini next` jeden retry při parse-failed (R4)",
+          "status": "todo"
+        },
+        {
+          "title": "Test ověří retry i tolerantní formát v `next` (R4)",
+          "status": "todo"
+        },
+        {
+          "title": "E2e test auto smyčky proti fake claude binárce (R2)",
+          "status": "todo"
+        },
+        {
+          "title": "`tsc --noEmit` čistý a všechny testy zelené",
           "status": "todo"
         }
       ],
-      "startedAt": "2026-05-29T20:09:33.836Z"
+      "startedAt": "2026-05-29T20:35:43.312Z"
     }
   ],
   "models": {

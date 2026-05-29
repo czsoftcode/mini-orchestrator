@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 
+import { describeSpawnError } from './spawnError.js';
 import type { PermissionMode } from './work.js';
 
 export interface StreamOptions {
@@ -306,8 +307,8 @@ export async function streamWithClaude(prompt: string, opts: StreamOptions = {})
       stderr += chunk;
     });
 
-    proc.on('error', (err: Error) => {
-      reject(new Error(`Nepodařilo se spustit claude: ${err.message}`));
+    proc.on('error', (err: NodeJS.ErrnoException) => {
+      reject(describeSpawnError(err));
     });
 
     proc.on('close', (code: number | null) => {

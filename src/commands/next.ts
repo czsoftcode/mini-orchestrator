@@ -18,6 +18,16 @@ export interface ParsedSuggestion {
 
 type NextMode = 'manual' | 'hint' | 'estimate';
 
+/** Kolik pokusů dostane Claude na čitelný návrh fáze (1 původní + retry). */
+const MAX_NEXT_ATTEMPTS = 2;
+
+/** Dovětek k promptu pro retry, když první odpověď nešla naparsovat. */
+const RETRY_FORMAT_NOTE = `POZOR: Tvoje předchozí odpověď nešla přečíst — chyběl řádek "TITLE:" nebo "GOAL:".
+Odpověz teď PŘESNĚ v tomhle formátu, každý marker na začátku vlastního řádku, nic dalšího:
+
+TITLE: <stručný název, max 5 slov>
+GOAL: <1 věta o tom, kdy je fáze hotová>`;
+
 export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
   const cwd = process.cwd();
 
@@ -68,24 +78,40 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
 
   log.dim(userHint ? 'Rozpracovávám tvůj nápad…' : 'Přemýšlím nad další fází…');
 
-  let response;
-  try {
-    response = await askClaude(prompt, {
-      cwd,
-      allowedTools: ['Read', 'Glob', 'Grep'],
-      model: resolveModel('next', state),
-    });
-  } catch (err) {
-    log.error(`Claude se nepodařilo zeptat: ${(err as Error).message}`);
-    return { ok: false, reason: 'claude-error' };
+  // Když Claude odpoví bez čitelných markerů `TITLE:`/`GOAL:`, dáme mu jeden
+  // cílený retry s upřesněním formátu, než to vzdáme s `parse-failed`. Bez
+  // něj by jedna odchylka shodila celou auto smyčku hned v prvním kroku.
+  let parsed: ParsedSuggestion | null = null;
+  let lastText = '';
+  for (let attempt = 1; attempt <= MAX_NEXT_ATTEMPTS; attempt++) {
+    const attemptPrompt = attempt === 1 ? prompt : `${prompt}\n\n${RETRY_FORMAT_NOTE}`;
+
+    let response;
+    try {
+      response = await askClaude(attemptPrompt, {
+        cwd,
+        allowedTools: ['Read', 'Glob', 'Grep'],
+        model: resolveModel('next', state),
+      });
+    } catch (err) {
+      log.error(`Claude se nepodařilo zeptat: ${(err as Error).message}`);
+      return { ok: false, reason: 'claude-error' };
+    }
+
+    logUsage(response);
+    lastText = response.text;
+    parsed = parseSuggestion(response.text);
+    if (parsed) {
+      break;
+    }
+    if (attempt < MAX_NEXT_ATTEMPTS) {
+      log.dim('Claude odpověděl bez TITLE:/GOAL: — zkouším to ještě jednou s upřesněním formátu.');
+    }
   }
 
-  logUsage(response);
-
-  const parsed = parseSuggestion(response.text);
   if (!parsed) {
     log.warn('Claude odpověděl ve formátu, který neumím přečíst:');
-    console.log(response.text);
+    console.log(lastText);
     return { ok: false, reason: 'parse-failed' };
   }
 
@@ -217,15 +243,31 @@ async function readLastMemoryIfExists(cwd: string): Promise<string | undefined> 
 }
 
 export function parseSuggestion(text: string): ParsedSuggestion | null {
-  const titleMatch = text.match(/^TITLE:[ \t]*(.*)$/m);
-  const goalMatch = text.match(/^GOAL:[ \t]*(.*)$/m);
-  if (!titleMatch || !goalMatch) {
-    return null;
-  }
-  const title = (titleMatch[1] ?? '').trim();
-  const goal = (goalMatch[1] ?? '').trim();
-  if (!title || !goal) {
+  const title = matchField(text, 'TITLE');
+  const goal = matchField(text, 'GOAL');
+  if (title === null || goal === null) {
     return null;
   }
   return { title, goal };
+}
+
+/**
+ * Najde hodnotu markeru `TITLE:` / `GOAL:` tolerantně k drobným odchylkám
+ * formátu, kterých se Claude občas dopustí: úvodní markdown dekorace
+ * (`#`, `*`, `-`, `>`), velikost písmen markeru, mezery kolem dvojtečky a
+ * obalující `**bold**`. Marker ale pořád musí být na začátku řádku (po
+ * případné dekoraci) — `foo TITLE: bar` se záměrně neuzná, aby parser
+ * nechytal markery utopené v prozaickém textu.
+ *
+ * Vrací `null`, když marker chybí nebo je hodnota po očištění prázdná.
+ */
+function matchField(text: string, label: 'TITLE' | 'GOAL'): string | null {
+  const re = new RegExp(`^[ \\t>*#-]*${label}[ \\t]*:[ \\t]*(.*)$`, 'im');
+  const m = text.match(re);
+  if (!m) {
+    return null;
+  }
+  // Očistíme obalující markdown dekoraci (`**bold**`, kurzíva) a okolní mezery.
+  const value = (m[1] ?? '').replace(/^[*_\s]+/, '').replace(/[*_\s]+$/, '');
+  return value.length > 0 ? value : null;
 }
