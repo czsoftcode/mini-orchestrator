@@ -758,7 +758,7 @@
       "id": 26,
       "title": "Bod 4. z .mini/improvements.md",
       "goal": "Fáze D1 - D4 budou vyřízené",
-      "status": "planned",
+      "status": "doing",
       "steps": [
         {
           "title": "mini status zobrazí verdikt run reportu",
@@ -784,7 +784,8 @@
           "title": "Zpřehlednit stream render akcí a shrnutí",
           "status": "todo"
         }
-      ]
+      ],
+      "startedAt": "2026-05-29T20:51:21.820Z"
     }
   ],
   "models": {
