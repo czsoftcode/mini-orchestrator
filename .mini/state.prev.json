@@ -801,7 +801,7 @@
       "id": 27,
       "title": "mini příkazi přímo v claude",
       "goal": "Až bude možné příkazy mini spouštět přímo v claude pomocí /",
-      "status": "planned",
+      "status": "doing",
       "steps": [
         {
           "title": "Pod-příkaz `mini context <cmd>` vypíše prompt na stdout",
@@ -827,7 +827,8 @@
           "title": "Ověřit cyklus next→discuss→plan→do→done v session",
           "status": "todo"
         }
-      ]
+      ],
+      "startedAt": "2026-05-29T21:48:55.985Z"
     }
   ],
   "models": {

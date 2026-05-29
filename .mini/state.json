@@ -829,6 +829,12 @@
         }
       ],
       "startedAt": "2026-05-29T21:48:55.985Z"
+    },
+    {
+      "id": 28,
+      "title": "Slash command mini status",
+      "goal": "Přidat read-only slash command /mini:status, který přímo v Claude session vypíše aktuální fázi, její kroky, modely a verdikt posledního run reportu — generovaný přes install-commands a napojený na nový mini context status.",
+      "status": "proposed"
     }
   ],
   "models": {
