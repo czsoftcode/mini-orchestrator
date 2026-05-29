@@ -225,3 +225,85 @@ export async function applyDoStart(cwd: string = process.cwd()): Promise<StepOut
   log.success(`Fáze ${phase.id} (${phase.title}) označena jako rozdělaná.`);
   return { ok: true };
 }
+
+/**
+ * Najde krok podle názvu tolerantně: nejdřív přesnou shodu (po `trim`), pak
+ * shodu bez ohledu na velikost písmen. Vrátí `null`, když nic nesedí. Drží
+ * stejnou logiku jako párování titulků v reportu — Claude název kopíruje ze
+ * sekce "Kroky", ale drobné odchylky (mezery, velikost) nemají rozbít zápis.
+ */
+function findStepByTitle(steps: Step[], title: string): Step | null {
+  const wanted = title.trim();
+  const exact = steps.find((s) => s.title.trim() === wanted);
+  if (exact) return exact;
+  const lower = wanted.toLowerCase();
+  return steps.find((s) => s.title.trim().toLowerCase() === lower) ?? null;
+}
+
+/**
+ * Neinteraktivní průběžný zápis jednoho hotového kroku — pro `mini do --apply
+ * --step-done "<název>"`. Volá ho Claude během `/mini:do` hned po dokončení
+ * každého kroku, takže když session spadne, ve `state.json` zůstane stopa, kam
+ * až se došlo (na rozdíl od finálního reportu, který vzniká až na konci).
+ *
+ * Označí krok aktuální fáze `done` a ihned uloží stav. Vyžaduje, aby fáze byla
+ * `doing` (tj. po `mini do --apply`) — jinak vrátí chybu, ať se status nezapisuje
+ * mimo aktivní session. Posun fáze ani závěrečné statusy nedělá: o ně se pořád
+ * stará `mini done` z reportu.
+ */
+export async function applyStepDone(title: string, cwd: string = process.cwd()): Promise<StepOutcome> {
+  if (!(await exists(cwd))) {
+    log.warn('V tomto adresáři není projekt.');
+    log.hint('Začni: mini init');
+    return { ok: false, reason: 'no-project' };
+  }
+
+  const wanted = title.trim();
+  if (wanted.length === 0) {
+    log.error('Chybí název kroku (--step-done "<název>").');
+    return { ok: false, reason: 'no-step-title' };
+  }
+
+  const state = await load(cwd);
+
+  if (state.currentPhaseId === null) {
+    log.warn('Žádná aktuální fáze.');
+    log.hint('Spusť: mini next');
+    return { ok: false, reason: 'no-current-phase' };
+  }
+
+  const phase = state.phases.find((p) => p.id === state.currentPhaseId);
+  if (!phase) {
+    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    return { ok: false, reason: 'inconsistent-state' };
+  }
+
+  if (phase.status !== 'doing') {
+    log.error(`Fáze ${phase.id} není rozdělaná (stav: ${phase.status}).`);
+    log.hint('Nejdřív spusť: mini do --apply');
+    return { ok: false, reason: 'phase-not-doing' };
+  }
+
+  if (!phase.steps?.length) {
+    log.error(`Fáze ${phase.id} nemá žádné kroky.`);
+    return { ok: false, reason: 'no-steps' };
+  }
+
+  const step = findStepByTitle(phase.steps, wanted);
+  if (!step) {
+    log.error(`Krok "${wanted}" jsem ve fázi ${phase.id} nenašel.`);
+    log.hint('Použij přesný název kroku ze sekce "Kroky" v promptu.');
+    return { ok: false, reason: 'step-not-found' };
+  }
+
+  if (step.status === 'done') {
+    log.dim(`Krok "${step.title}" už je hotový.`);
+    return { ok: true };
+  }
+
+  step.status = 'done';
+  await save(state, cwd);
+
+  log.success(`Krok "${step.title}" označen jako hotový.`);
+  return { ok: true };
+}

@@ -203,6 +203,35 @@ auto má taky vidět diskusi
     expect(out).toContain('detail:');
   });
 
+  it('instruuje průběžný zápis kroků přes mini do --apply --step-done (fáze s kroky)', () => {
+    const phase: Phase = {
+      id: 12,
+      title: 'Průběžný zápis',
+      goal: 'Claude označuje hotové kroky průběžně',
+      status: 'doing',
+      steps: [{ title: 'krok 1', status: 'todo' }],
+    };
+
+    const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
+
+    expect(out).toContain('# Průběžný zápis kroků');
+    expect(out).toContain('mini do --apply --step-done');
+  });
+
+  it('vynechá blok průběžného zápisu u fáze bez kroků', () => {
+    const phase: Phase = {
+      id: 13,
+      title: 'Bez kroků',
+      goal: 'nic k průběžnému zápisu',
+      status: 'doing',
+    };
+
+    const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
+
+    expect(out).not.toContain('# Průběžný zápis kroků');
+    expect(out).not.toContain('--step-done');
+  });
+
   it('falls back to (nezadán) when phase has no goal', () => {
     const phase: Phase = {
       id: 8,

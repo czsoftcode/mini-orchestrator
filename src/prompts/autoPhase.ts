@@ -49,6 +49,22 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
   const notes = discussNotes?.trim();
   const notesBlock = notes ? `\n# Poznámky k fázi (z diskuse)\n${notes}\n` : '';
 
+  // Průběžný zápis: po každém dokončeném kroku ať Claude označí krok hotový
+  // rovnou ve stavu. Když session spadne, zůstane stopa, kam až se došlo —
+  // finální report jinak vzniká až úplně na konci. Dává smysl jen u fází
+  // rozmenených na kroky.
+  const progressBlock = phase.steps?.length
+    ? `\n# Průběžný zápis kroků
+Jakmile dokončíš jeden krok, **hned** ho označ za hotový (ještě než se pustíš do dalšího):
+
+\`\`\`
+mini do --apply --step-done "<přesný název kroku ze sekce Kroky>"
+\`\`\`
+
+Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve stavu pak bude vidět, kam až ses dostal. Finální report na konci (viz níže) zapiš tak jako tak — průběžný zápis ho nenahrazuje.
+`
+    : '';
+
   const retryBlock = retry
     ? `\n# Opakovaný pokus (průchod ${retry.iteration})
 V některém z předchozích průchodů se nepodařilo dotáhnout všechny kroky. Co už je hotové (nebo odložené) uvidíš v sekci "Kroky" níže — soustřeď se na zbývající. Předchozí report najdeš v \`${retry.previousReportPath}\` — přečti si ho, ať víš, kde předchozí pokus skončil a na co narazil. Nový report (viz níže) předchozí přepíše.
@@ -78,9 +94,10 @@ ${retryBlock}
 Cíl: ${phase.goal ?? '(nezadán)'}
 ${stepsBlock}${notesBlock}
 # Tvůj úkol
-Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak neupravuj. O posun stavu fáze a kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
 
 Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+${progressBlock}
 
 # Report na konci session
 Než session ukončíš, **zapiš přes Write tool** report do souboru \`${reportPath}\`. Report má dvě části:

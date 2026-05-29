@@ -24,9 +24,19 @@ Kroky (vodítko k práci — neupravuj je v žádném souboru, slouží jen jako
 shrnutí z diskuze
 
 # Tvůj úkol
-Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak neupravuj. O posun stavu fáze a kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
 
 Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+
+# Průběžný zápis kroků
+Jakmile dokončíš jeden krok, **hned** ho označ za hotový (ještě než se pustíš do dalšího):
+
+\`\`\`
+mini do --apply --step-done "<přesný název kroku ze sekce Kroky>"
+\`\`\`
+
+Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve stavu pak bude vidět, kam až ses dostal. Finální report na konci (viz níže) zapiš tak jako tak — průběžný zápis ho nenahrazuje.
+
 
 # Report na konci session
 Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-10.md\`. Report má dvě části:
@@ -89,9 +99,19 @@ auto má taky vidět diskusi
 - notes se renderují identicky jako v do/plan promptu
 
 # Tvůj úkol
-Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak neupravuj. O posun stavu fáze a kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
 
 Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+
+# Průběžný zápis kroků
+Jakmile dokončíš jeden krok, **hned** ho označ za hotový (ještě než se pustíš do dalšího):
+
+\`\`\`
+mini do --apply --step-done "<přesný název kroku ze sekce Kroky>"
+\`\`\`
+
+Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve stavu pak bude vidět, kam až ses dostal. Finální report na konci (viz níže) zapiš tak jako tak — průběžný zápis ho nenahrazuje.
+
 
 # Report na konci session
 Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-4.md\`. Report má dvě části:
@@ -147,9 +167,19 @@ Kroky (vodítko k práci — neupravuj je v žádném souboru, slouží jen jako
 - [odloženo] starý nápad
 
 # Tvůj úkol
-Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak neupravuj. O posun stavu fáze a kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
 
 Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+
+# Průběžný zápis kroků
+Jakmile dokončíš jeden krok, **hned** ho označ za hotový (ještě než se pustíš do dalšího):
+
+\`\`\`
+mini do --apply --step-done "<přesný název kroku ze sekce Kroky>"
+\`\`\`
+
+Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve stavu pak bude vidět, kam až ses dostal. Finální report na konci (viz níže) zapiš tak jako tak — průběžný zápis ho nenahrazuje.
+
 
 # Report na konci session
 Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-9.md\`. Report má dvě části:
@@ -208,9 +238,10 @@ Cíl: CLI vrací --version
 (Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)
 
 # Tvůj úkol
-Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak neupravuj. O posun stavu fáze a kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
 
 Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+
 
 # Report na konci session
 Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-1.md\`. Report má dvě části:
@@ -265,9 +296,19 @@ Kroky (vodítko k práci — neupravuj je v žádném souboru, slouží jen jako
 - [čeká] krok B
 
 # Tvůj úkol
-Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak neupravuj. O posun stavu fáze a kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
 
 Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+
+# Průběžný zápis kroků
+Jakmile dokončíš jeden krok, **hned** ho označ za hotový (ještě než se pustíš do dalšího):
+
+\`\`\`
+mini do --apply --step-done "<přesný název kroku ze sekce Kroky>"
+\`\`\`
+
+Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve stavu pak bude vidět, kam až ses dostal. Finální report na konci (viz níže) zapiš tak jako tak — průběžný zápis ho nenahrazuje.
+
 
 # Report na konci session
 Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-5.md\`. Report má dvě části:

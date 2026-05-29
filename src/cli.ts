@@ -83,8 +83,15 @@ program
   .option('--stream', 'Spustit Claude v neinteraktivním print-módu se streamovaným JSON výstupem (průběžně zobrazí aktuální akci, na konci shrne cenu a tokeny).')
   .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
   .option('--apply', 'Neinteraktivně označ fázi jako rozdělanou a založ .mini/run/ (bez Claude). Pro /mini:do.')
-  .action(async (opts: { stream?: boolean; maxTurns?: number; apply?: boolean }) => {
+  .option('--step-done <title>', 'S --apply: označ jeden krok aktuální fáze za hotový (průběžný zápis během /mini:do).')
+  .action(async (opts: { stream?: boolean; maxTurns?: number; apply?: boolean; stepDone?: string }) => {
     if (opts.apply) {
+      if (opts.stepDone !== undefined) {
+        const { applyStepDone } = await import('./commands/do.js');
+        const r = await applyStepDone(opts.stepDone);
+        if (!r.ok) process.exit(1);
+        return;
+      }
       const { applyDoStart } = await import('./commands/do.js');
       const r = await applyDoStart();
       if (!r.ok) process.exit(1);

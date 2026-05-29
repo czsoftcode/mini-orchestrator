@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { save, writeProject } from '../state/store.js';
+import { load, save, writeProject } from '../state/store.js';
 import type { ProjectState } from '../state/types.js';
 
 // Interaktivní `do` se před spuštěním Claude ptá na potvrzení — v testu
@@ -23,7 +23,7 @@ vi.mock('../claude/stream.js', () => ({
   streamWithClaude: (...args: unknown[]) => streamWithClaudeMock(...args),
 }));
 
-const { doPhase } = await import('./do.js');
+const { doPhase, applyStepDone } = await import('./do.js');
 
 function stateWithOpenStep(): ProjectState {
   return {
@@ -87,5 +87,95 @@ describe('doPhase — propagace --max-turns (R1)', () => {
     expect(workWithClaudeMock).toHaveBeenCalledTimes(1);
     const opts = workWithClaudeMock.mock.calls[0]![1] as unknown as { maxTurns?: number };
     expect(opts.maxTurns).toBeUndefined();
+  });
+});
+
+describe('applyStepDone — průběžný zápis kroku', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  function doingStateWithSteps(): ProjectState {
+    return {
+      version: 1,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      currentPhaseId: 1,
+      phases: [
+        {
+          id: 1,
+          title: 'Fáze',
+          goal: 'něco udělat',
+          status: 'doing',
+          steps: [
+            { title: 'První krok', status: 'todo' },
+            { title: 'Druhý krok', status: 'todo' },
+          ],
+        },
+      ],
+    };
+  }
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-stepdone-'));
+    process.chdir(cwd);
+    await writeProject('# Projekt', cwd);
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('označí krok podle přesného názvu jako hotový a uloží stav', async () => {
+    await save(doingStateWithSteps(), cwd);
+
+    const r = await applyStepDone('První krok', cwd);
+
+    expect(r.ok).toBe(true);
+    const state = await load(cwd);
+    const steps = state.phases[0]!.steps!;
+    expect(steps[0]!.status).toBe('done');
+    expect(steps[1]!.status).toBe('todo');
+  });
+
+  it('páruje tolerantně — okrajové mezery a velikost písmen', async () => {
+    await save(doingStateWithSteps(), cwd);
+
+    const r = await applyStepDone('  druhý KROK  ', cwd);
+
+    expect(r.ok).toBe(true);
+    const state = await load(cwd);
+    expect(state.phases[0]!.steps![1]!.status).toBe('done');
+  });
+
+  it('nenalezený krok vrátí chybu a stav nezmění', async () => {
+    await save(doingStateWithSteps(), cwd);
+
+    const r = await applyStepDone('neexistující krok', cwd);
+
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('step-not-found');
+    const state = await load(cwd);
+    expect(state.phases[0]!.steps!.every((s) => s.status === 'todo')).toBe(true);
+  });
+
+  it('odmítne zápis, když fáze není doing', async () => {
+    const state = doingStateWithSteps();
+    state.phases[0]!.status = 'planned';
+    await save(state, cwd);
+
+    const r = await applyStepDone('První krok', cwd);
+
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('phase-not-doing');
+  });
+
+  it('prázdný název kroku vrátí chybu', async () => {
+    await save(doingStateWithSteps(), cwd);
+
+    const r = await applyStepDone('   ', cwd);
+
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('no-step-title');
   });
 });

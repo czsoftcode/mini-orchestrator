@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 28,
+  "currentPhaseId": 29,
   "phases": [
     {
       "id": 1,
@@ -843,6 +843,43 @@
       "id": 28,
       "title": "/mini:status slash command",
       "goal": "Přidat read-only command /mini:status, který přes mini status vypíše přehled fází přímo v Claude Code session, a nechat ho generovat příkazem mini install-commands.",
+      "status": "done",
+      "steps": [
+        {
+          "title": "Rozšířit CommandDef v install-commands.ts o volitelné vlastní tělo (body?), renderCommandMd ho použije místo výchozího mini context těla",
+          "status": "done"
+        },
+        {
+          "title": "Přidat definici status do COMMAND_DEFS s tělem, které pustí mini status a instruuje Claude přehled předat uživateli v chatu (bez --apply)",
+          "status": "done"
+        },
+        {
+          "title": "Aktualizovat závěrečný hint v installCommands o /mini:status",
+          "status": "done"
+        },
+        {
+          "title": "Doplnit testy v install-commands.test.ts — status.md vzniká a jeho tělo volá mini status, ne mini context",
+          "status": "done"
+        },
+        {
+          "title": "Pustit mini install-commands a ověřit, že .claude/commands/mini/status.md existuje a má správné tělo",
+          "status": "done"
+        }
+      ],
+      "resolvedVerify": [
+        "Skutečné spuštění /mini:status v živé Claude Code session"
+      ],
+      "completedAt": "2026-05-29T22:24:54.123Z",
+      "autoCommit": {
+        "preSha": "e570dddc2e62b573694aaa3c7630b19b5da37f62",
+        "sha": "6bb46c52c1579824ea4f58e1e70753a3041be5fd",
+        "subject": "Fáze 28: /mini:status slash command"
+      }
+    },
+    {
+      "id": 29,
+      "title": "Průběžný zápis kroků v do",
+      "goal": "Přidat neinteraktivní pod-příkaz (např. mini do --apply --step-done <název>), který během /mini:do označí jednotlivý krok za hotový rovnou ve state.json, a rozšířit do session prompt o instrukci volat ho po každém dokončeném kroku — aby po pádu Claude bylo vidět, kde se skončilo.",
       "status": "proposed"
     }
   ],
