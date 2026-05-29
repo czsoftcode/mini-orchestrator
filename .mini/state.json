@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 27,
+  "currentPhaseId": 28,
   "phases": [
     {
       "id": 1,
@@ -801,40 +801,71 @@
       "id": 27,
       "title": "mini příkazi přímo v claude",
       "goal": "Až bude možné příkazy mini spouštět přímo v claude pomocí /",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Pod-příkaz `mini context <cmd>` vypíše prompt na stdout",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Neinteraktivní stavové pod-příkazy s flagem `--apply`",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Příkaz `mini install-commands` generuje commandy idempotentně",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Vygenerovat `.claude/commands/mini/*.md` pro pět commandů",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Testy pro context, apply a install-commands",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Ověřit cyklus next→discuss→plan→do→done v session",
-          "status": "todo"
+          "status": "done"
         }
       ],
-      "startedAt": "2026-05-29T21:48:55.985Z"
+      "startedAt": "2026-05-29T21:48:55.985Z",
+      "resolvedVerify": [
+        "Skutečný běh /mini:* uvnitř živé Claude Code session"
+      ],
+      "completedAt": "2026-05-29T22:13:48.943Z",
+      "autoCommit": {
+        "preSha": "9737e86af469b9a59faa4077412aa0d5c30e13b6",
+        "sha": "e570dddc2e62b573694aaa3c7630b19b5da37f62",
+        "subject": "Fáze 27: mini příkazi přímo v claude"
+      }
     },
     {
       "id": 28,
-      "title": "Slash command mini status",
-      "goal": "Přidat read-only slash command /mini:status, který přímo v Claude session vypíše aktuální fázi, její kroky, modely a verdikt posledního run reportu — generovaný přes install-commands a napojený na nový mini context status.",
-      "status": "proposed"
+      "title": "/mini:status slash command",
+      "goal": "Přidat read-only command /mini:status, který přes mini status vypíše přehled fází přímo v Claude Code session, a nechat ho generovat příkazem mini install-commands.",
+      "status": "planned",
+      "steps": [
+        {
+          "title": "Rozšířit CommandDef v install-commands.ts o volitelné vlastní tělo (body?), renderCommandMd ho použije místo výchozího mini context těla",
+          "status": "todo"
+        },
+        {
+          "title": "Přidat definici status do COMMAND_DEFS s tělem, které pustí mini status a instruuje Claude přehled předat uživateli v chatu (bez --apply)",
+          "status": "todo"
+        },
+        {
+          "title": "Aktualizovat závěrečný hint v installCommands o /mini:status",
+          "status": "todo"
+        },
+        {
+          "title": "Doplnit testy v install-commands.test.ts — status.md vzniká a jeho tělo volá mini status, ne mini context",
+          "status": "todo"
+        },
+        {
+          "title": "Pustit mini install-commands a ověřit, že .claude/commands/mini/status.md existuje a má správné tělo",
+          "status": "todo"
+        }
+      ]
     }
   ],
   "models": {

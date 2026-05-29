@@ -13,12 +13,19 @@ interface CommandDef {
   argumentHint?: string;
   /** Argument za `mini context <name>` (typicky `$ARGUMENTS` u next). */
   contextArgs?: string;
+  /**
+   * Vlastní tělo .md (text pod frontmatterem). Když chybí, použije se výchozí
+   * tělo cyklu, které pustí `mini context <name>`. Slouží read-only commandům
+   * jako `status`, které žádný session prompt přes `mini context` nemají.
+   */
+  body?: string;
 }
 
 /**
- * Definice pěti commandů cyklu. Tělo každého .md je záměrně tenké: jen pustí
+ * Definice commandů. Tělo workflow commandů je záměrně tenké: jen pustí
  * `mini context <name>` a předá řízení vypsanému promptu. Veškerá logika a
- * aktuální kontext žijí v mini (TS), ne ve zmraženém markdownu.
+ * aktuální kontext žijí v mini (TS), ne ve zmraženém markdownu. Read-only
+ * commandy (`status`) mají vlastní `body` a žádný `mini context` nevolají.
  */
 const COMMAND_DEFS: CommandDef[] = [
   {
@@ -43,6 +50,13 @@ const COMMAND_DEFS: CommandDef[] = [
     name: 'done',
     description: 'mini — lidská verifikace a posun stavu fáze',
   },
+  {
+    name: 'status',
+    description: 'mini — přehled fází projektu (read-only)',
+    body: `Tohle je krok **status** workflow mini, spuštěný přímo v Claude Code.
+
+Spusť v Bash \`mini status\` a jeho výstup (přehled fází projektu) předej uživateli v chatu. Je to **read-only** krok — žádný stav v \`.mini/\` neměň a nic neukládej.`,
+  },
 ];
 
 /** Vyrenderuje obsah jednoho .md commandu. */
@@ -51,17 +65,21 @@ export function renderCommandMd(def: CommandDef): string {
   if (def.argumentHint) {
     front.push(`argument-hint: ${def.argumentHint}`);
   }
+
   const contextCall = def.contextArgs
     ? `mini context ${def.name} ${def.contextArgs}`
     : `mini context ${def.name}`;
+  const body =
+    def.body ??
+    `Tohle je krok **${def.name}** workflow mini, spuštěný přímo v Claude Code.
+
+Spusť v Bash \`${contextCall}\` a postupuj **přesně** podle vypsaných instrukcí. Prompt obsahuje aktuální kontext projektu i to, jak na konci uložit stav (přes \`mini ... --apply\`). Stav v \`.mini/\` měň jen těmi příkazy — nikdy needituj \`.mini/state.json\` ručně.`;
 
   return `---
 ${front.join('\n')}
 ---
 
-Tohle je krok **${def.name}** workflow mini, spuštěný přímo v Claude Code.
-
-Spusť v Bash \`${contextCall}\` a postupuj **přesně** podle vypsaných instrukcí. Prompt obsahuje aktuální kontext projektu i to, jak na konci uložit stav (přes \`mini ... --apply\`). Stav v \`.mini/\` měň jen těmi příkazy — nikdy needituj \`.mini/state.json\` ručně.
+${body}
 `;
 }
 
@@ -113,5 +131,7 @@ export async function installCommands(cwd: string = process.cwd()): Promise<void
 
   const total = created + updated + unchanged;
   log.success(`Hotovo — ${total} commandů v ${COMMANDS_DIR}/ (${created} nových, ${updated} změněných).`);
-  log.hint('Použij je v Claude Code: /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done');
+  log.hint(
+    'Použij je v Claude Code: /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:status',
+  );
 }

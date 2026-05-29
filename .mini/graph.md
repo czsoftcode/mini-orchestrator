@@ -75,6 +75,22 @@ Exports:
 Imports:
 - { Command, InvalidArgumentError } from "commander"
 
+## src/commands/apply.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+- { access, mkdtemp, rm, writeFile } from "node:fs/promises"
+- { tmpdir } from "node:os"
+- { join } from "node:path"
+- { applyNewPhase } from "./next.js"
+- { applyPlanSteps, parseStepsFromStdin } from "./plan.js"
+- { applyDoStart } from "./do.js"
+- { applyDone } from "./done.js"
+- { load, save } from "../state/store.js"
+- { ensureRunDir, runReportPath } from "../state/runReport.js"
+- type { Phase, ProjectState } from "../state/types.js"
+- { writePhaseMemory } from "./writeMemory.js"
+
 ## src/commands/audit.ts
 
 Imports:
@@ -130,6 +146,40 @@ Imports:
 Exports:
 - function auto(opts: AutoOptions): Promise<void>
 
+## src/commands/context.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+- { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises"
+- { tmpdir } from "node:os"
+- { join } from "node:path"
+- { context, isContextCommand, CONTEXT_COMMANDS } from "./context.js"
+- { save } from "../state/store.js"
+- { writeProject } from "../state/store.js"
+- { ensureRunDir, runReportPath } from "../state/runReport.js"
+- type { Phase, ProjectState } from "../state/types.js"
+
+## src/commands/context.ts
+
+Imports:
+- { readFile } from "node:fs/promises"
+- { join } from "node:path"
+- { buildAutoPhasePrompt } from "../prompts/autoPhase.js"
+- { buildDiscussPhasePrompt } from "../prompts/discussPhase.js"
+- { buildDoneSessionPrompt, buildNextSessionPrompt, buildPlanSessionPrompt } from "../prompts/sessionContext.js"
+- { LAST_MEMORY_FILE } from "../prompts/writeMemory.js"
+- { readDiscussNotes } from "../state/discussNotes.js"
+- { RunReportParseError, parseRunReport, runReportExists, runReportPath } from "../state/runReport.js"
+- { exists, load, readProject } from "../state/store.js"
+- type { Phase, ProjectState } from "../state/types.js"
+- { log } from "../ui/log.js"
+
+Exports:
+- const CONTEXT_COMMANDS
+- type ContextCommand
+- function isContextCommand(value: string): value is ContextCommand
+- function context(cmd: string, extraArgs: string[]): Promise<void>
+
 ## src/commands/discuss.ts
 
 Imports:
@@ -177,6 +227,7 @@ Imports:
 Exports:
 - interface DoPhaseOptions
 - function doPhase(opts: DoPhaseOptions): Promise<StepOutcome>
+- function applyDoStart(cwd: string): Promise<StepOutcome>
 
 ## src/commands/done.test.ts
 
@@ -212,6 +263,9 @@ Exports:
 - function done(opts: AutoOptions): Promise<StepOutcome>
 - function buildPhaseCommitMessage(phase: Phase): string
 - function advanceToNextPhase(state: ProjectState): Phase | null
+- interface ApplyReportOptions
+- function applyAutoReport(phase: Phase, state: ProjectState, cwd: string, applyOpts: ApplyReportOptions): Promise<AutoApplyResult>
+- function applyDone(cwd: string, opts: ApplyReportOptions): Promise<StepOutcome>
 
 ## src/commands/import-gsd.ts
 
@@ -241,6 +295,27 @@ Imports:
 
 Exports:
 - function init(): Promise<void>
+
+## src/commands/install-commands.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it } from "vitest"
+- { mkdtemp, readFile, readdir, rm, writeFile, mkdir } from "node:fs/promises"
+- { tmpdir } from "node:os"
+- { join } from "node:path"
+- { COMMANDS_DIR, installCommands } from "./install-commands.js"
+
+## src/commands/install-commands.ts
+
+Imports:
+- { mkdir, readFile, rename, writeFile } from "node:fs/promises"
+- { join } from "node:path"
+- { log } from "../ui/log.js"
+
+Exports:
+- const COMMANDS_DIR
+- function renderCommandMd(def: CommandDef): string
+- function installCommands(cwd: string): Promise<void>
 
 ## src/commands/map.test.ts
 
@@ -305,6 +380,7 @@ Imports:
 Exports:
 - interface ParsedSuggestion
 - function next(opts: AutoOptions): Promise<StepOutcome>
+- function applyNewPhase(title: string, goal: string, cwd: string): Promise<StepOutcome>
 - function parseSuggestion(text: string): ParsedSuggestion | null
 
 ## src/commands/plan.test.ts
@@ -329,6 +405,8 @@ Imports:
 
 Exports:
 - function plan(opts: AutoOptions): Promise<StepOutcome>
+- function applyPlanSteps(titles: string[], cwd: string): Promise<StepOutcome>
+- function parseStepsFromStdin(text: string): string[]
 - function parseSteps(text: string): string[]
 
 ## src/commands/status.test.ts
@@ -622,6 +700,25 @@ Imports:
 
 Exports:
 - function buildPlanPhasePrompt(projectMd: string, phase: Phase, discussNotes?: string | null): string
+
+## src/prompts/sessionContext.test.ts
+
+Imports:
+- { describe, expect, it } from "vitest"
+- { buildDoneSessionPrompt, buildNextSessionPrompt, buildPlanSessionPrompt } from "./sessionContext.js"
+- type { Phase, ProjectState } from "../state/types.js"
+
+## src/prompts/sessionContext.ts
+
+Imports:
+- type { Phase, PhaseStatus, ProjectState, Step, StepStatus } from "../state/types.js"
+
+Exports:
+- interface NextSessionOptions
+- function buildNextSessionPrompt(projectMd: string, state: ProjectState, options: NextSessionOptions): string
+- function buildPlanSessionPrompt(projectMd: string, phase: Phase, discussNotes?: string | null): string
+- interface DoneSessionInput
+- function buildDoneSessionPrompt(input: DoneSessionInput): string
 
 ## src/prompts/writeMemory.test.ts
 
