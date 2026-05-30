@@ -75,11 +75,11 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
-  it('auto command popisuje sekvenci discuss→plan→do→done s podmínkou na discuss', async () => {
+  it('auto command popisuje autonomní smyčku next→discuss→plan→do→done s podmínkou na discuss', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // všechny čtyři kroky cyklu jako mini context volání
-    for (const name of ['discuss', 'plan', 'do', 'done']) {
+    // všech pět kroků cyklu jako mini context volání (nově včetně next)
+    for (const name of ['next', 'discuss', 'plan', 'do', 'done']) {
       expect(md).toContain(`mini context ${name}`);
     }
     // discuss je podmíněný, ne bezpodmínečný
@@ -88,6 +88,33 @@ describe('installCommands', () => {
     expect(md).toContain('mini done --apply');
     expect(md).not.toContain('mini done --apply --push');
     expect(md).toContain('description:');
+  });
+
+  it('auto command je autonomní: argument-hint, --max-phases (default 1), --yolo a smyčka přes víc fází', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
+    // argumenty běhu z $ARGUMENTS
+    expect(md).toContain('argument-hint:');
+    expect(md).toContain('$ARGUMENTS');
+    expect(md).toContain('--max-phases');
+    expect(md).toContain('--yolo');
+    // default 1 fáze, když --max-phases chybí
+    expect(md).toMatch(/default 1|default.*1/i);
+    // autonomní běh přes víc fází (ne jen jedna fáze)
+    expect(md).toMatch(/autonomn/i);
+    // tichý běh — žádné editační výpisy
+    expect(md).toMatch(/editačn[íi] výpis|nevypisuj/i);
+    // detekce hotového projektu
+    expect(md).toContain('TITLE: -');
+  });
+
+  it('auto command popisuje stop háčky (kontrolní body pro budoucí mini stop)', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
+    // stop flag soubor + obě granularity kontroly
+    expect(md).toContain('.mini/STOP');
+    expect(md).toMatch(/mezi kroky cyklu/i);
+    expect(md).toMatch(/step-done/);
   });
 
   it('do command nejdřív nastartuje fázi (mini do --apply), pak context do, step-done a report', async () => {

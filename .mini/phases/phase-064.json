@@ -2,7 +2,7 @@
   "id": 64,
   "title": "Inkrementální update grafu po editaci",
   "goal": "Přidat mini map --file <cesta>, který přemapuje jen jeden soubor (uzel v .mini/graph/ + jeho záznam v graph.json se zachováním pořadí, atomicky přes tmp+rename) místo plného rebuildu, a zapojit ho přes PostToolUse hook na Edit/Write s filtrem mapovatelných přípon a no-opem na ostatní; plný mini map zůstává jako fallback pro změny mimo agenta (mazání, rename, ruční editace, chybějící index).",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "updateGraphFile v buildGraph.ts",
@@ -30,5 +30,14 @@
       "detail": "updateGraphFile — nový soubor (vložení na správné místo v pořadí), změna existujícího (posun line ranges), smazaný soubor (odebrání záznamu i .md), nemapovatelný no-op, chybějící index → plný build; + CLI map --file."
     }
   ],
-  "startedAt": "2026-05-30T19:45:55.094Z"
+  "startedAt": "2026-05-30T19:45:55.094Z",
+  "resolvedVerify": [
+    "Hook reálně střílí v živé Claude Code session"
+  ],
+  "completedAt": "2026-05-30T20:01:59.501Z",
+  "autoCommit": {
+    "preSha": "ef9757c5d6ae06d9b41cd9271fae500a081f08be",
+    "sha": "97b45eab92dbebfb659c60c17812e6dc662a6d43",
+    "subject": "Fáze 64: Inkrementální update grafu po editaci"
+  }
 }

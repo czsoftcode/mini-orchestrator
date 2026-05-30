@@ -92,8 +92,22 @@ Vznikne `.claude/commands/mini/{init,next,discuss,plan,do,done,status,map,audit,
 /mini:plan           # rozmení fázi na kroky
 /mini:do             # implementuje fázi a zapíše report
 /mini:done           # lidská verifikace v chatu → posune stav
+/mini:auto [args]    # autonomní režim: dotáhne víc fází za sebou (--max-phases N, --yolo)
+/mini:map            # přegeneruje graf projektu
+/mini:status         # přehled fází (read-only)
 /mini:audit          # přehled existující codebase do .mini/codebase.md
 ```
+
+### Autonomní `/mini:auto`
+
+`/mini:auto` projede celý cyklus fáze (`next → discuss(podmíněně) → plan → do → done`) a po dokončení jedné fáze plynule pokračuje další — **semi-autonomně**:
+
+- **`--max-phases N`** (default 1) — kolik fází nejvýš dotáhnout za sebou; `--yolo` = běh bez zbytečného doptávání (funguje jen v session spuštěné s `--permission-mode acceptEdits`).
+- **Zastaví se a zeptá** u kroků, kde je potřeba člověk: `next` (vezme tvůj nápad na fázi), `discuss` (jen u složitých fází) a u bodů k **ručnímu ověření** v `done`.
+- **Tichý běh u `do`** — nepřevypráví každou editaci do chatu, jen krátce hlásí postup.
+- **Kooperativní stop:** na hranicích kroků kontroluje stop signál (`.mini/STOP`) a čistě skončí; pro tvrdé přerušení uprostřed kroku použij Esc/Ctrl+C. (Příkaz `mini stop`, který signál zapíše, přijde v další fázi.)
+
+Pozn.: tohle je slash varianta řízená Claudem v jedné session. CLI `mini auto` (níže) je samostatná cesta, která pouští Claude jako podproces a dotahuje **jednu** fázi.
 
 Jak to funguje: tělo `.md` commandu je tenké — jen pustí `mini context <cmd>`, který vypíše vždy aktuální prompt včetně kontextu projektu. Agentní práci dělá Claude v běžící session; **stavové operace** (`.mini/state.json`, reporty, posun fáze) provádějí neinteraktivní pod-příkazy `mini … --apply`, takže stav zůstává v otestovaném TS. `install-commands` je idempotentní — pusť ho znovu po aktualizaci mini. CLI `mini …` přes terminál zůstává beze změny; slash commandy jsou doplněk, ne náhrada.
 

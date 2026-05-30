@@ -1,0 +1,34 @@
+{
+  "id": 65,
+  "title": "Autonomní režim mini:auto",
+  "goal": "mini:auto poběží autonomně: v cyklu sám spouští celé fáze (next → plan → příp. discuss → do → done) a sám rozhoduje, kdy je potřeba diskuze. Interaktivně se ptá jen na nezbytná rozhodnutí, nevypisuje editační výpisy a neběží s potvrzováním příkazů. Hotovo = auto dotáhne několik fází za sebou bez ručních zásahů. Vzhledem k náročnosti návrhu (hranice autonomie, rozhodovací logika) se chování nejdřív rozmyslí v mini:discuss.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Přepsat auto definici v COMMAND_DEFS — smyčka přes víc fází",
+      "status": "done",
+      "detail": "V src/commands/install-commands.ts změnit auto def: nové tělo s vnější smyčkou next → discuss(podmíněně) → plan → do → done → opakuj, argumentHint '[--max-phases N] [--yolo]', contextArgs '$ARGUMENTS'. Smyčka končí při vyčerpání --max-phases (default 1), projekt hotový, nebo blokeru."
+    },
+    {
+      "title": "Tělo auto.md — interaktivní zastávky a tichý běh",
+      "status": "done",
+      "detail": "Do těla doplnit: zastav se a zeptej u next (vzít nápad od člověka), discuss (podmíněně), verify v done; u do nevypisovat editační výpisy, jen krátké hlášení postupu; tolerantní parsování --max-phases/--yolo z $ARGUMENTS (default 1); čistá detekce projekt hotový (TITLE: -)."
+    },
+    {
+      "title": "Tělo auto.md — stop háčky pro budoucí fázi 66",
+      "status": "done",
+      "detail": "Explicitně popsat kontrolní body pro stop: mezi kroky cyklu a po každém mini do --apply --step-done. Zatím jen instrukce pokud existuje stop flag, čistě skonči; samotný mini stop přijde ve fázi 66."
+    },
+    {
+      "title": "Permissions — settings.json allowlist a --yolo dokumentace",
+      "status": "done",
+      "detail": "Založit .claude/settings.json s allowlistem pro mini * a build/test příkazy (potlačí potvrzování). V těle auto.md zdokumentovat, že --yolo / plně tichý běh předpokládá session v acceptEdits."
+    },
+    {
+      "title": "Testy, regenerace a README",
+      "status": "done",
+      "detail": "Aktualizovat src/commands/install-commands.test.ts (asserty na nové auto.md — argument-hint, smyčka, stop háčky), spustit mini install-commands pro regeneraci .claude/commands/mini/auto.md, doplnit README popis autonomního /mini:auto."
+    }
+  ],
+  "startedAt": "2026-05-30T20:45:47.087Z"
+}

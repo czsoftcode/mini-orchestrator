@@ -8,6 +8,13 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **Autonomní `/mini:auto`** — slash command teď dotáhne víc fází za sebou
+  (`next → discuss(podmíněně) → plan → do → done → opakuj`) s `--max-phases N`
+  (default 1) a `--yolo`. Zastaví se a zeptá u kroků vyžadujících člověka (`next`,
+  `discuss`, body k ručnímu ověření v `done`), u `do` běží tiše (nepřevypráví
+  editace). Připraveny kooperativní stop háčky (`.mini/STOP`) pro budoucí `mini stop`.
+- **`.claude/settings.json`** s allowlistem (`mini:*`, build/test, git), aby
+  autonomní běh neotravoval s potvrzováním příkazů.
 - **`mini map --file <cesta>`** — inkrementální update grafu: přemapuje jen jeden
   soubor (uzel `.mini/graph/<cesta>.md` + záznam v `graph.json`, atomicky přes
   tmp+rename, se zachováním pořadí) místo plného rebuildu. Lze opakovat pro víc

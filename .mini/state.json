@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 64,
+  "currentPhaseId": 65,
   "phases": [
     {
       "id": 1,
@@ -321,6 +321,11 @@
     {
       "id": 64,
       "title": "Inkrementální update grafu po editaci",
+      "status": "done"
+    },
+    {
+      "id": 65,
+      "title": "Autonomní režim mini:auto",
       "status": "doing"
     }
   ],
