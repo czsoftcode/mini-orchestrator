@@ -2,7 +2,7 @@
   "id": 57,
   "title": "Mapa pro Kotlin",
   "goal": "Přidat kotlinMapper (mapKotlinFile) parsující .kt/.kts soubory (package, importy vč. as aliasů, top-level fun, typy class/interface/object/enum class/data class/sealed/annotation class, metody; default viditelnost public) a zapojit Kotlin do buildGraph (Lang, detectLang na .kt/.kts, hasMappableProject přes build.gradle.kts/*.kt) i hlášek v map.ts/cli.ts, vč. testů a zeleného buildu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Kostra kotlinMapperu + stripKotlin",
@@ -30,5 +30,11 @@
       "detail": "kotlinMapper.test.ts (package, importy vč. as, druhy typů, top-level fun, viditelnost, strip stringů/komentářů, kotvy řádků); npm test i build/lint zelené."
     }
   ],
-  "startedAt": "2026-05-30T15:07:28.915Z"
+  "startedAt": "2026-05-30T15:07:28.915Z",
+  "completedAt": "2026-05-30T15:29:23.067Z",
+  "autoCommit": {
+    "preSha": "02917529386cd412a2f3d31e10268d0bb35e6d86",
+    "sha": "794b7c7729d77b3b9afae4af433be6e2a540370a",
+    "subject": "Fáze 57: Mapa pro Kotlin"
+  }
 }

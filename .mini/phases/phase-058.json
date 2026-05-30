@@ -1,0 +1,34 @@
+{
+  "id": 58,
+  "title": "Mapa pro Swift",
+  "goal": "Přidat swiftMapper (mapSwiftFile) parsující .swift soubory (import, top-level func, typy class/struct/enum/protocol/extension/actor, metody a vlastnosti; respekt k modifikátorům viditelnosti) a zapojit Swift do buildGraph (Lang, detectLang na .swift, hasMappableProject přes Package.swift/*.swift) i hlášek v map.ts/cli.ts, včetně testů a zeleného buildu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Kostra swiftMapperu + stripSwift",
+      "status": "done",
+      "detail": "mapSwiftFile(content, relPath) + stripSwift mažící komentáře (//, vnořitelné /* */) a stringy (\"...\", víceřádkové \"\"\"...\"\"\", raw #\"...\"#) na mezery se zachováním \\n; pokryto testem stripu."
+    },
+    {
+      "title": "Importy",
+      "status": "done",
+      "detail": "import Foo, import Foo.Bar, import struct Foo.Bar (kind/submodul); source = cesta, symbols = poslední segment; pokryto testy."
+    },
+    {
+      "title": "Typy a top-level func",
+      "status": "done",
+      "detail": "top-level func jako function export se signaturou; typy class/struct/enum/protocol/extension/actor na brace-depth 0; viditelné metody (func) v těle; default viditelnost internal -> export jen pokud není private/fileprivate; @L kotvy; pokryto testy."
+    },
+    {
+      "title": "Zapojení do buildGraph",
+      "status": "done",
+      "detail": "Lang rozšířen o swift, detectLang na .swift, mapByLang větev, hasMappableProject přes Package.swift/*.swift; hlášky v map.ts/cli.ts doplněné o Swift."
+    },
+    {
+      "title": "Testy a zelený build",
+      "status": "done",
+      "detail": "swiftMapper.test.ts (importy, typy, metody, viditelnost, edge-cases), případně doplnění buildGraph/map testů; npm test + build zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T15:33:18.452Z"
+}

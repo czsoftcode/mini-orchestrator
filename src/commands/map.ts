@@ -23,13 +23,13 @@ export async function map(): Promise<StepOutcome> {
 
   if (!(await hasMappableProject(cwd))) {
     log.warn(
-      'V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs, .py, .go, .java, .cs, .kt, .kts).',
+      'V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs, .py, .go, .java, .cs, .kt, .kts, .swift).',
     );
     log.hint('Pro jiné jazyky zkus v Claude session: /graphify');
     return { ok: false, reason: 'not-mappable' };
   }
 
-  log.dim('Mapuji TS/PHP/Rust/Python/Go/Java/C#/Kotlin soubory…');
+  log.dim('Mapuji TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift soubory…');
   const result = await buildGraph(cwd);
 
   if (result.fileCount === 0) {

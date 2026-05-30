@@ -8,6 +8,16 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- Mapa znalostního grafu nově podporuje **Swift** (`.swift`): vytáhnou se
+  importy (vč. submodulů `import Foo.Bar` a kindových `import struct Foo.Bar`)
+  a top-level deklarace — `func` (se signaturou parametrů, default hodnot,
+  variadik `Int...`, generik, `async`/`throws` i `where` klauzule) a typy
+  `class`/`struct`/`enum`/`protocol`/`extension`/`actor`. Default viditelnost je
+  `internal`; `private`/`fileprivate` se vynechá (`private(set)` zůstává
+  viditelné). Viditelné metody se připojí k typu s kotvami na řádky,
+  `static`/`class func` jsou označené. Komentáře (vč. **vnořených** block
+  komentářů), doc komentáře i stringy (vč. víceřádkových `"""…"""` a raw
+  `#"…"#`) se korektně ignorují. Projekt se rozpozná i podle `Package.swift`.
 - Mapa znalostního grafu nově podporuje **Kotlin** (`.kt`/`.kts`): vytáhnou se
   importy (vč. wildcard `import a.b.*` a aliasů `import a.b.C as D`) a top-level
   deklarace — `fun` (se signaturou parametrů, default hodnot, `vararg`, generik

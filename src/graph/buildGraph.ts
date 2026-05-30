@@ -9,6 +9,7 @@ import { mapKotlinFile } from './kotlinMapper.js';
 import { mapPhpFile } from './phpMapper.js';
 import { mapPythonFile } from './pythonMapper.js';
 import { mapRustFile } from './rustMapper.js';
+import { mapSwiftFile } from './swiftMapper.js';
 import type { ExportInfo, FileGraph, ImportInfo } from './types.js';
 
 /** Adresář s per-file mapami (jeden markdown na zdrojový soubor). */
@@ -55,7 +56,7 @@ const IGNORE_DIRS = new Set([
   '__pycache__',
 ]);
 
-type Lang = 'ts' | 'php' | 'rust' | 'python' | 'go' | 'java' | 'csharp' | 'kotlin';
+type Lang = 'ts' | 'php' | 'rust' | 'python' | 'go' | 'java' | 'csharp' | 'kotlin' | 'swift';
 
 /** Jeden záznam v indexu `graph.json`. */
 export interface GraphIndexEntry {
@@ -189,15 +190,18 @@ function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {
       return mapCSharpFile(content, relPath);
     case 'kotlin':
       return mapKotlinFile(content, relPath);
+    case 'swift':
+      return mapSwiftFile(content, relPath);
   }
 }
 
 /**
  * Detekuje, jestli má smysl spouštět vlastní mapper: hledá `tsconfig.json`,
  * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py`, `go.mod`,
- * `pom.xml`, `build.gradle`(`.kts` = i Kotlin), C# `*.sln`/`*.csproj` nebo
- * alespoň jeden mapovatelný soubor (.ts/.tsx/.php/.rs/.py/.go/.java/.cs/.kt/.kts)
- * v projektu (mimo ignorované adresáře).
+ * `pom.xml`, `build.gradle`(`.kts` = i Kotlin), `Package.swift`, C#
+ * `*.sln`/`*.csproj` nebo alespoň jeden mapovatelný soubor
+ * (.ts/.tsx/.php/.rs/.py/.go/.java/.cs/.kt/.kts/.swift) v projektu (mimo
+ * ignorované adresáře).
  */
 export async function hasMappableProject(cwd: string = process.cwd()): Promise<boolean> {
   if (await fileExists(join(cwd, 'tsconfig.json'))) return true;
@@ -209,6 +213,7 @@ export async function hasMappableProject(cwd: string = process.cwd()): Promise<b
   if (await fileExists(join(cwd, 'pom.xml'))) return true;
   if (await fileExists(join(cwd, 'build.gradle'))) return true;
   if (await fileExists(join(cwd, 'build.gradle.kts'))) return true;
+  if (await fileExists(join(cwd, 'Package.swift'))) return true;
   // C#: název `*.sln`/`*.csproj` je variabilní → koukneme po příponě v kořeni.
   if (await hasFileWithExt(cwd, ['.sln', '.csproj'])) return true;
   const files = await collectMappableFiles(cwd, {}, /* stopAfter */ 1);
@@ -353,6 +358,7 @@ function detectLang(name: string): Lang | null {
   if (name.endsWith('.java')) return 'java';
   if (name.endsWith('.cs')) return 'csharp';
   if (name.endsWith('.kt') || name.endsWith('.kts')) return 'kotlin';
+  if (name.endsWith('.swift')) return 'swift';
   return null;
 }
 
