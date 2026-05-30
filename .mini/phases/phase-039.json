@@ -2,7 +2,7 @@
   "id": 39,
   "title": "Štíhlý last-memory v next",
   "goal": "mini:next (headless next.ts i session context.ts) vloží místo celého last-memory.md jen krátké shrnutí poslední fáze — hlavička, cíl, kroky a sekce 'na co dát pozor' — bez doslovných diskuzních poznámek a plného run reportu; ověřitelné unit testem extrakce a měřitelným poklesem next v .mini/token-report.md.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Čistá funkce summarizeMemoryForNext(md) v src/commands/writeMemory.ts (vedle buildPhaseMemoryMarkdown): ponechá vše před '## Diskuse' (hlavička, cíl, kroky, poznámka, auto-commit), z bloku Diskuse vytáhne '## Pozor na', z bloku Run report sekci dle /pozor|nález|další fáz/i; bez kotev fallback tvrdým limitem délky (laditelné konstanty). Ověřitelné: npm run typecheck zelený, funkce exportovaná.",
@@ -21,5 +21,14 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T03:33:48.378Z"
+  "startedAt": "2026-05-30T03:33:48.378Z",
+  "resolvedVerify": [
+    "Až proběhne příští `mini done`, zkontrolovat, že nově vzniklý .mini/last-memory.md je regulérní malý soubor se shrnutím (hlavička, cíl, kroky, auto-commit, Pozor na, Nález) — ne symlink na plný archiv."
+  ],
+  "completedAt": "2026-05-30T03:50:34.452Z",
+  "autoCommit": {
+    "preSha": "cdd73ffc2f1e54d9883777727a8ed8014ecdb224",
+    "sha": "900437965b59817bba85a5aed4f82805af3eec69",
+    "subject": "Fáze 39: Štíhlý last-memory v next"
+  }
 }

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 39,
+  "currentPhaseId": 40,
   "phases": [
     {
       "id": 1,
@@ -196,6 +196,11 @@
     {
       "id": 39,
       "title": "Štíhlý last-memory v next",
+      "status": "done"
+    },
+    {
+      "id": 40,
+      "title": "Diskuzní poznámky načítat jednou",
       "status": "doing"
     }
   ],

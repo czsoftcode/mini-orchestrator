@@ -22,6 +22,17 @@ export interface AutoPhaseContext {
   projectMd: string;
   phase: Phase;
   discussNotes?: string | null;
+  /**
+   * Reference mód poznámek z diskuse (opt-in, default vypnuto). Když `true`,
+   * místo inlinování `discussNotes` se vykreslí jen **odkaz** na soubor
+   * `.mini/discuss/phase-{id}.md` + instrukce „přečti, jen pokud jsi je v této
+   * session ještě nečetl". Použít pro interaktivní `/mini:do`, kde poznámky
+   * skoro vždy už načetl `/mini:plan`/`auto` ve stejné chat session — opakovaný
+   * inline by je do kontextu přilepil podruhé. Volající (context.ts) zapíná
+   * příznak jen když poznámky existují, takže v reference módu se blok vykreslí
+   * vždy. Headless `mini do` i `auto` zůstávají na inline (příznak vypnutý).
+   */
+  useDiscussNotesRef?: boolean;
   retry?: AutoPhaseRetryContext | null;
 }
 
@@ -34,7 +45,7 @@ export interface AutoPhaseContext {
  *   ze kterého pak `done({ auto: true })` vyčte statusy kroků.
  */
 export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
-  const { projectMd, phase, discussNotes, retry } = ctx;
+  const { projectMd, phase, discussNotes, useDiscussNotesRef, retry } = ctx;
 
   const reportPath = `.mini/run/phase-${phase.id}.md`;
 
@@ -46,8 +57,17 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
     stepsBlock = '\n(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)\n';
   }
 
-  const notes = discussNotes?.trim();
-  const notesBlock = notes ? `\n# Poznámky k fázi (z diskuse)\n${notes}\n` : '';
+  // Poznámky z diskuse: buď inline (default), nebo jen odkaz s read-once
+  // podmínkou (reference mód). Reference šetří opakované načtení ve stejné chat
+  // session — volající zapíná příznak jen když poznámky existují.
+  let notesBlock: string;
+  if (useDiscussNotesRef) {
+    const notesPath = `.mini/discuss/phase-${phase.id}.md`;
+    notesBlock = `\n# Poznámky k fázi (z diskuse)\nPoznámky z diskuse k této fázi jsou v \`${notesPath}\`. Pokud jsi je v této session už četl (typicky při \`/mini:plan\` nebo na začátku \`auto\`), **znovu je nenačítej** — máš je v kontextu. Jinak si je teď přečti přes Read tool.\n`;
+  } else {
+    const notes = discussNotes?.trim();
+    notesBlock = notes ? `\n# Poznámky k fázi (z diskuse)\n${notes}\n` : '';
+  }
 
   // Průběžný zápis: po každém dokončeném kroku ať Claude označí krok hotový
   // rovnou ve stavu. Když session spadne, zůstane stopa, kam až se došlo —

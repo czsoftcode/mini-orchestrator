@@ -90,6 +90,55 @@ auto má taky vidět diskusi
     expect(out).toMatchSnapshot();
   });
 
+  it('reference mód: místo inline textu vykreslí odkaz + read-once podmínku', () => {
+    const phase: Phase = {
+      id: 40,
+      title: 'Reference mód',
+      goal: 'do odkazuje místo inline',
+      status: 'doing',
+      steps: [{ title: 'krok', status: 'todo' }],
+    };
+    const notes = `# Fáze 40 — Poznámky
+
+## Záměr
+TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
+
+    const out = buildAutoPhasePrompt({
+      projectMd: PROJECT_MD,
+      phase,
+      discussNotes: notes,
+      useDiscussNotesRef: true,
+    });
+
+    // Nadpis zůstává (ať je blok rozpoznatelný), ale obsahuje odkaz, ne text.
+    expect(out).toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).toContain('.mini/discuss/phase-40.md');
+    // Read-once formulace.
+    expect(out).toContain('Read');
+    expect(out).toContain('znovu je nenačítej');
+    // Inline text poznámek se nesmí objevit.
+    expect(out).not.toContain('TENTO INLINE TEXT SE NESMÍ OBJEVIT');
+    expect(out).toMatchSnapshot();
+  });
+
+  it('reference mód použije id fáze v cestě k poznámkám', () => {
+    const phase: Phase = {
+      id: 7,
+      title: 'Jiné id',
+      status: 'doing',
+      steps: [{ title: 'krok', status: 'todo' }],
+    };
+
+    const out = buildAutoPhasePrompt({
+      projectMd: PROJECT_MD,
+      phase,
+      useDiscussNotesRef: true,
+    });
+
+    expect(out).toContain('.mini/discuss/phase-7.md');
+    expect(out).not.toContain('.mini/discuss/phase-40.md');
+  });
+
   it('omits notes block when notes are null, undefined or blank', () => {
     const phase: Phase = {
       id: 2,

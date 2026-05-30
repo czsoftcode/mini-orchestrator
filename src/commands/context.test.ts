@@ -104,6 +104,28 @@ describe('context', () => {
     expect(out).toContain('Report na konci session');
   });
 
+  it('do bez poznámek z diskuse blok poznámek vynechá', async () => {
+    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
+    await context('do');
+    expect(out).not.toContain('# Poznámky k fázi (z diskuse)');
+  });
+
+  it('do s existujícími poznámkami → odkaz + read-once, ne inline text', async () => {
+    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
+    await mkdir(join(cwd, '.mini', 'discuss'), { recursive: true });
+    await writeFile(
+      join(cwd, '.mini', 'discuss', 'phase-1.md'),
+      '# Fáze 1\n\n## Záměr\nTAJNY INLINE TEXT NESMI BYT V PROMPTU',
+      'utf-8',
+    );
+    await context('do');
+    // Reference mód: odkaz na soubor + read-once instrukce, ale ne plný text.
+    expect(out).toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).toContain('.mini/discuss/phase-1.md');
+    expect(out).toContain('Read');
+    expect(out).not.toContain('TAJNY INLINE TEXT NESMI BYT V PROMPTU');
+  });
+
   it('done bez reportu pošle na /mini:do', async () => {
     await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 's', status: 'doing' }] }], 1);
     await context('done');

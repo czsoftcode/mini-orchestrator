@@ -1,6 +1,6 @@
 {
   "name": "mini",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Mini orchestrator nad Claude Code — drží stav projektu a posílá Claudovi jen to nejnutnější.",
   "type": "module",
   "bin": {

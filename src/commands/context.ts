@@ -122,8 +122,13 @@ async function buildPhaseContext(
     return buildPlanSessionPrompt(projectMd, phase, discussNotes);
   }
   if (cmd === 'do') {
+    // `/mini:do` běží ve stejné chat session jako `/mini:plan` (nebo `auto`),
+    // který diskuzní poznámky skoro vždy už načetl — Claude je má v kontextu.
+    // Místo opakovaného inlinování předáme jen příznak reference módu (odkaz +
+    // read-once), a to pouze když poznámky existují (jinak builder blok vynechá).
     const discussNotes = await readDiscussNotes(cwd, phase.id);
-    return buildAutoPhasePrompt({ projectMd, phase, discussNotes, retry: null });
+    const useDiscussNotesRef = discussNotes != null && discussNotes.trim() !== '';
+    return buildAutoPhasePrompt({ projectMd, phase, useDiscussNotesRef, retry: null });
   }
   // done
   return buildDoneContext(phase, cwd);

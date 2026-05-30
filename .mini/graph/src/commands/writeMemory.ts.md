@@ -1,8 +1,8 @@
 ## src/commands/writeMemory.ts
 
 Imports:
-- { access, copyFile, mkdir, readFile, symlink, unlink, writeFile } from "node:fs/promises"
-- { join, relative } from "node:path"
+- { access, mkdir, readFile, unlink, writeFile } from "node:fs/promises"
+- { join } from "node:path"
 - { askClaude } from "../claude/ask.js"
 - { buildWriteMemoryPrompt, LAST_MEMORY_FILE, MEMORY_DIR } from "../prompts/writeMemory.js"
 - { readProject } from "../state/store.js"
@@ -13,4 +13,5 @@ Imports:
 Exports:
 - function writePhaseMemory(phase: Phase, state: ProjectState, cwd: string, options: { hasAutoCommit: boolean; }): Promise<void>
 - function buildPhaseMemoryMarkdown(phase: Phase, discussContent: string, runContent: string): string
+- function summarizeMemoryForNext(md: string): string
 - function fsSafeTimestamp(date: Date): string

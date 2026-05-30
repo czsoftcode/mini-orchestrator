@@ -21,7 +21,6 @@
 
 import { buildAutoPhasePrompt } from '../prompts/autoPhase.js';
 import { buildDiscussPhasePrompt } from '../prompts/discussPhase.js';
-import { buildDoPhasePrompt } from '../prompts/doPhase.js';
 import {
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
@@ -184,18 +183,21 @@ interface DoInputs {
 }
 const doSpec: CommandSpec<DoInputs> = {
   id: 'do',
+  // `/mini:do` (slash) emituje auto-prompt v reference módu — diskuzní poznámky
+  // se neinlinují, jen odkaz + read-once (Claude je má z plan/auto). Proto tu
+  // není blok „diskuzní poznámky". Pozor: Read call, kterým si je Claude za běhu
+  // načte (když je v session nemá), se do tohoto odhadu NEPOČÍTÁ — číslo tedy
+  // podhodnocuje reálný náklad jednoho izolovaného `do`.
   build: (i) =>
-    buildDoPhasePrompt({
+    buildAutoPhasePrompt({
       projectMd: i.projectMd,
       phase: i.phase,
-      focusedStep: i.focusedStep,
-      discussNotes: i.discussNotes || null,
+      useDiscussNotesRef: true,
     }),
   blocks: (i) => [
     { name: 'projekt', text: i.projectMd },
     { name: 'fáze (název + cíl)', text: phaseHeadText(i.phase) },
     { name: 'kroky', text: stepsText(i.phase) },
-    { name: 'diskuzní poznámky', text: i.discussNotes },
   ],
 };
 

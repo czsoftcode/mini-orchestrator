@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-30T03:07:33.021Z",
+  "generatedAt": "2026-05-30T03:50:37.511Z",
   "files": [
     {
       "path": "scripts/measure-prompt-tokens.ts",
@@ -292,6 +292,7 @@
       "exports": [
         "writePhaseMemory",
         "buildPhaseMemoryMarkdown",
+        "summarizeMemoryForNext",
         "fsSafeTimestamp"
       ]
     },
