@@ -6,6 +6,7 @@ import {
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
+  buildVerifySessionPrompt,
 } from '../prompts/sessionContext.js';
 import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { readDiscussNotes } from '../state/discussNotes.js';
@@ -20,7 +21,7 @@ import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
 
 /** Pod-příkazy, pro které `mini context` umí vypsat session prompt. */
-export const CONTEXT_COMMANDS = ['next', 'discuss', 'plan', 'do', 'done'] as const;
+export const CONTEXT_COMMANDS = ['next', 'discuss', 'plan', 'do', 'done', 'verify'] as const;
 export type ContextCommand = (typeof CONTEXT_COMMANDS)[number];
 
 export function isContextCommand(value: string): value is ContextCommand {
@@ -61,6 +62,8 @@ export async function context(cmd: string, extraArgs: string[] = []): Promise<vo
   let prompt: string | null;
   if (cmd === 'next') {
     prompt = await buildNextContext(projectMd, header, cwd, extraArgs);
+  } else if (cmd === 'verify') {
+    prompt = await buildVerifyContext(header, cwd);
   } else {
     prompt = await buildPhaseContext(cmd, projectMd, header, cwd);
   }
@@ -149,8 +152,18 @@ async function buildDoneContext(phase: Phase, cwd: string): Promise<string> {
     return buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
   }
 
-  // Report čteme tolerantně — i kdyby nešel přísně naparsovat, chceme dát
-  // Claudovi aspoň základní instrukce (poškozený report řeší až `--apply`).
+  const { verify, body } = await readReportVerify(phase, cwd);
+  return buildDoneSessionPrompt({ phase, reportExists: true, reportBody: body, verify });
+}
+
+/**
+ * Tolerantní načtení verify bodů a volného textu z run reportu fáze. Když report
+ * nejde přísně naparsovat, vrátí prázdné verify (poškozený report řeší `--apply`).
+ */
+async function readReportVerify(
+  phase: Phase,
+  cwd: string,
+): Promise<{ verify: { title: string; detail?: string }[]; body?: string }> {
   let verify: { title: string; detail?: string }[] = [];
   let body: string | undefined;
   try {
@@ -167,8 +180,39 @@ async function buildDoneContext(phase: Phase, cwd: string): Promise<string> {
     }
     // Poškozený report — necháme verify prázdné, Claude to probere bez detailů.
   }
+  return { verify, body };
+}
 
-  return buildDoneSessionPrompt({ phase, reportExists: true, reportBody: body, verify });
+/**
+ * Prompt pro `/mini:verify`. Cílová fáze = aktuální (`currentPhaseId`), jinak
+ * fallback na poslední uzavřenou (`done`) — verify se typicky pouští i po `done`,
+ * kdy už currentPhaseId není nastavené. Bez reportu jen upozorní (verify body
+ * z něj čerpá), ale kontrolu povede i tak podle cíle a kroků fáze.
+ */
+async function buildVerifyContext(header: StateHeader, cwd: string): Promise<string | null> {
+  let phase: Phase | null = null;
+  if (header.currentPhaseId !== null) {
+    phase = await loadPhase(cwd, header.currentPhaseId);
+  } else {
+    const lastDone = [...header.phases].reverse().find((p) => p.status === 'done');
+    if (lastDone) {
+      phase = await loadPhase(cwd, lastDone.id);
+    }
+  }
+
+  if (!phase) {
+    log.error('Není fáze k ověření (žádná aktuální ani uzavřená fáze).');
+    log.hint('Nejdřív rozpracuj fázi: /mini:next a /mini:do');
+    return null;
+  }
+
+  const phaseDone = phase.status === 'done';
+  const reportExists = await runReportExists(cwd, phase.id);
+  const { verify, body } = reportExists
+    ? await readReportVerify(phase, cwd)
+    : { verify: [], body: undefined };
+
+  return buildVerifySessionPrompt({ phase, phaseDone, verify, reportBody: body });
 }
 
 async function readLastMemoryIfExists(cwd: string): Promise<string | undefined> {

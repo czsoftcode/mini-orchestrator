@@ -41,9 +41,10 @@ async function setupProject(phases: Phase[], currentPhaseId: number | null): Pro
 }
 
 describe('isContextCommand', () => {
-  it('zná pět příkazů cyklu', () => {
-    expect(CONTEXT_COMMANDS).toEqual(['next', 'discuss', 'plan', 'do', 'done']);
+  it('zná příkazy cyklu i verify', () => {
+    expect(CONTEXT_COMMANDS).toEqual(['next', 'discuss', 'plan', 'do', 'done', 'verify']);
     expect(isContextCommand('plan')).toBe(true);
+    expect(isContextCommand('verify')).toBe(true);
     expect(isContextCommand('auto')).toBe(false);
   });
 });
@@ -171,6 +172,57 @@ describe('context', () => {
     );
     await context('done');
     expect(out).toContain('--accept-verify');
+    expect(out).toContain('mrkni na UI');
+  });
+
+  it('verify bez aktuální i uzavřené fáze → exit code 1', async () => {
+    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'proposed' }], null);
+    await context('verify');
+    expect(process.exitCode).toBe(1);
+    expect(out).toBe('');
+  });
+
+  it('verify s aktuální fází vypíše prompt UI/UX kontroly', async () => {
+    await setupProject(
+      [{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }],
+      1,
+    );
+    await context('verify');
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('krok **verify**');
+    expect(out).toContain('Fáze 1: Fáze A');
+    expect(out).toContain('ještě neuzavřená');
+  });
+
+  it('verify bez aktuální fáze vezme poslední uzavřenou', async () => {
+    await setupProject(
+      [
+        { id: 1, title: 'Stará', goal: 'cíl', status: 'done' },
+        { id: 2, title: 'Poslední hotová', goal: 'cíl', status: 'done' },
+      ],
+      null,
+    );
+    await context('verify');
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('Fáze 2: Poslední hotová');
+    expect(out).toContain('je už uzavřená');
+  });
+
+  it('verify načte verify body z reportu fáze', async () => {
+    await setupProject(
+      [{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }],
+      1,
+    );
+    await ensureRunDir(cwd);
+    await writeFile(
+      runReportPath(cwd, 1),
+      [
+        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "krok 1"', '    status: done',
+        'verify:', '  - title: "mrkni na UI"', '---', '', 'text',
+      ].join('\n'),
+      'utf-8',
+    );
+    await context('verify');
     expect(out).toContain('mrkni na UI');
   });
 });

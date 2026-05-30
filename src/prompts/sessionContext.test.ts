@@ -3,6 +3,7 @@ import {
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
+  buildVerifySessionPrompt,
 } from './sessionContext.js';
 import type { Phase, ProjectState } from '../state/types.js';
 
@@ -144,5 +145,60 @@ describe('buildDoneSessionPrompt', () => {
   it('CHANGELOG sekci nevkládá, když report chybí', () => {
     const p = buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
     expect(p).not.toContain('CHANGELOG.md');
+  });
+});
+
+describe('buildVerifySessionPrompt', () => {
+  const phase: Phase = {
+    id: 5,
+    title: 'Nové UI',
+    goal: 'cíl',
+    status: 'doing',
+    steps: [{ title: 'Tlačítko Uložit', status: 'done', detail: 'modrá barva' }],
+  };
+
+  it('vykreslí krok verify a hloubkovou UI/UX kontrolu', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    expect(p).toContain('krok **verify**');
+    expect(p).toContain('hloubkovou kontrolou UI/UX');
+    expect(p).toContain('read-only');
+  });
+
+  it('u rozdělané fáze rámuje kontrolu před done', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    expect(p).toContain('ještě neuzavřená');
+    expect(p).toContain('/mini:done');
+  });
+
+  it('u uzavřené fáze rámuje zpětnou kontrolu', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [] });
+    expect(p).toContain('je už uzavřená');
+    expect(p).toContain('zpětná hloubková kontrola');
+  });
+
+  it('vypíše verify body z reportu', () => {
+    const p = buildVerifySessionPrompt({
+      phase,
+      phaseDone: true,
+      verify: [{ title: 'zkontroluj barvu', detail: 'má být modrá' }],
+    });
+    expect(p).toContain('zkontroluj barvu');
+    expect(p).toContain('má být modrá');
+  });
+
+  it('bez verify bodů vede kontrolu podle cíle a kroků', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    expect(p).toContain('žádné explicitní verify body');
+    expect(p).toContain('Tlačítko Uložit');
+  });
+
+  it('vloží volný text reportu, když je', () => {
+    const p = buildVerifySessionPrompt({
+      phase,
+      phaseDone: true,
+      verify: [],
+      reportBody: 'Poznámky pro člověka.',
+    });
+    expect(p).toContain('Poznámky pro člověka.');
   });
 });

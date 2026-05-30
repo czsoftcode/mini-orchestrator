@@ -224,3 +224,70 @@ Verze a push:
 Po uzavření napiš, že další na řadě je \`/mini:next\` (navrhnout další fázi), a **nabídni uživateli příkaz \`/clear\`** pro vyčištění kontextu Claude Code před další fází (\`/clear\` musí napsat on sám).
 `;
 }
+
+export interface VerifySessionInput {
+  phase: Phase;
+  /**
+   * Je fáze už uzavřená (status `done`)? Mění úvodní rámec promptu: u uzavřené
+   * fáze jde o zpětnou hloubkovou kontrolu, u rozdělané o kontrolu před `done`.
+   */
+  phaseDone: boolean;
+  /** Body k ručnímu ověření z run reportu — kostra hloubkové kontroly. */
+  verify: { title: string; detail?: string }[];
+  /** Volný text reportu (poznámky pro člověka), pokud existuje. */
+  reportBody?: string;
+}
+
+/**
+ * Prompt pro `/mini:verify` — interaktivní hloubková UI/UX kontrola fáze
+ * člověkem. Na rozdíl od `done` (kde verifikace proběhne mimochodem) tady Claude
+ * člověka **aktivně vede** kontrolou: projde verify body z reportu, doplní širší
+ * UX procházku a posbírá nálezy. Krok stav neposouvá — to zůstává na `done`.
+ */
+export function buildVerifySessionPrompt(input: VerifySessionInput): string {
+  const { phase, phaseDone, verify, reportBody } = input;
+
+  const frame = phaseDone
+    ? `**Fáze ${phase.id}: ${phase.title}** je už uzavřená — tohle je **zpětná hloubková kontrola** jejího UI/UX člověkem.`
+    : `**Fáze ${phase.id}: ${phase.title}** je implementovaná, ale ještě neuzavřená — projdi její UI/UX s člověkem **dřív, než ji v \`done\` zavřeš**.`;
+
+  const bodyBlock = reportBody?.trim()
+    ? `\n# Report z implementace\n${reportBody.trim()}\n`
+    : '';
+
+  let verifyBlock: string;
+  if (verify.length > 0) {
+    const lines = verify.map((v, i) => {
+      const detail = v.detail ? `\n     ${v.detail}` : '';
+      return `  ${i + 1}. ${v.title}${detail}`;
+    });
+    verifyBlock = `\n# Body z reportu k ověření\nClaude tyhle věci sám neověřil — tvoř z nich kostru kontroly:\n${lines.join('\n')}\n`;
+  } else {
+    verifyBlock = `\n# Body z reportu k ověření\nReport žádné explicitní verify body neuvádí — kontrolu veď podle cíle fáze a kroků níže.\n`;
+  }
+
+  const stepsBlock =
+    phase.steps && phase.steps.length > 0
+      ? `\n# Kroky fáze\n${phase.steps
+          .map((s: Step) => `  - ${s.title}${s.detail ? `\n    ${s.detail}` : ''}`)
+          .join('\n')}\n`
+      : '';
+
+  return `Jsi v Claude Code session — krok **verify** workflow mini.
+${frame}
+
+# Tvůj úkol
+Proveď člověka **hloubkovou kontrolou UI/UX** téhle fáze. Nejsi tu od strojových testů (ty patří do \`do\`), ale od věcí, co posoudí jen člověk: vizuální podoba, srozumitelnost, plynulost UX flow, drobné detaily a celkový dojem. Postupuj interaktivně — **ptej se po jednom**, nech člověka reagovat a teprve pak pokračuj:
+
+1. **Připrav scénu.** Z cíle fáze, kroků a reportu níže urči, co konkrétně se má kontrolovat a jak to člověk uvidí (který příkaz/obrazovku/výstup má spustit). Když je potřeba něco nastartovat (build, dev server, ukázkový vstup), navrhni přesné kroky.
+2. **Projdi verify body.** Vezmi body z reportu jako kostru a u každého nech člověka potvrdit, že to vypadá a chová se správně. Aktivně se ptej na detaily, ne jen „funguje to?".
+3. **Rozšiř kontrolu.** Doplň širší UX procházku za rámec verify bodů: okrajové stavy, chybové hlášky, konzistence s okolím, přístupnost/čitelnost, drobné nepřesnosti. Navrhuj konkrétní věci k vyzkoušení.
+4. **Posbírej nálezy.** Shrň, co je v pořádku a co ne. U každého problému zachyť, co se má opravit. **Nálezy nikam neukládáš** a stav fáze **neposouváš** — to je práce \`do\`/\`done\`.
+${bodyBlock}${verifyBlock}${stepsBlock}
+# Po kontrole
+- Když je vše v pořádku → řekni to a doporuč pokračovat na \`/mini:done\` (uzavření fáze), pokud ještě není uzavřená.
+- Když člověk najde problémy → shrň je jako konkrétní úkoly a doporuč vrátit se k \`/mini:do\` a opravit je (fázi nezavírej).
+
+Tohle je **read-only** krok — žádný stav v \`.mini/\` neměň a nic neukládej.
+`;
+}

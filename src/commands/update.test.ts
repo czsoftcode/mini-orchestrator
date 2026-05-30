@@ -103,7 +103,8 @@ describe('update', () => {
     expect(commands).toContain('next.md');
     expect(commands).toContain('init.md');
     expect(commands).toContain('audit.md');
-    expect(commands.length).toBe(10);
+    expect(commands).toContain('verify.md');
+    expect(commands.length).toBe(11);
   });
 
   it('--dry-run nic nezapíše ani pro commandy', async () => {

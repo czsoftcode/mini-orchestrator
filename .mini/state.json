@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 66,
+  "currentPhaseId": 67,
   "phases": [
     {
       "id": 1,
@@ -331,6 +331,11 @@
     {
       "id": 66,
       "title": "mini stop pro zastavení auto",
+      "status": "done"
+    },
+    {
+      "id": 67,
+      "title": "Příkaz mini:verify pro UI/UX",
       "status": "doing"
     }
   ],

@@ -2,7 +2,7 @@
   "id": 66,
   "title": "mini stop pro zastavení auto",
   "goal": "Přidat CLI příkaz 'mini stop' (a 'mini stop --clear'), který založí/smaže soubor .mini/STOP. Autonomní /mini:auto ho už na svých kontrolních bodech čte a po dokončení rozdělaného kroku se čistě zastaví. Součástí je registrace v cli.ts, implementace v src/commands/, testy a krátká zmínka v README/auto.md.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "stopPath helper v store.ts",
@@ -30,5 +30,11 @@
       "detail": "Přepsat zmínky 'přijde v další fázi' na popis hotového mini stop / mini stop --clear; regenerovat .claude/commands/mini/auto.md přes mini install-commands a srovnat install-commands.test.ts."
     }
   ],
-  "startedAt": "2026-05-30T21:09:16.157Z"
+  "startedAt": "2026-05-30T21:09:16.157Z",
+  "completedAt": "2026-05-30T21:13:17.278Z",
+  "autoCommit": {
+    "preSha": "7b61db1740a44ca37c032bf17f16f7180953cf52",
+    "sha": "ace5061e7cfa032526fa45b36bc896a10626e9a5",
+    "subject": "Fáze 66: mini stop pro zastavení auto"
+  }
 }

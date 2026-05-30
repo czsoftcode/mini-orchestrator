@@ -1,0 +1,39 @@
+{
+  "id": 67,
+  "title": "Příkaz mini:verify pro UI/UX",
+  "goal": "Přidat interaktivní 'mini context verify' a slash command /mini:verify, který Claudovi dá prompt, jak člověka krok po kroku provést hloubkovou UI/UX kontrolou aktuální (právě dokončené) fáze: vyjde z 'verify' bodů run reportu, doplní širší UI/UX procházku, posbírá nálezy od člověka a zaznamená výsledek. Součástí je registrace verify v CONTEXT_COMMANDS, builder promptu v sessionContext.ts, větvení v context.ts, generování slash commandu v install-commands.ts, testy a krátká zmínka v README.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "buildVerifySessionPrompt v sessionContext.ts",
+      "status": "done",
+      "detail": "Nový exportovaný builder promptu pro UI/UX verifikaci. Vstup: phase, verify body (title+detail), volitelný reportBody a příznak, zda je fáze už uzavřená (done) vs. aktuální. Výstup: prompt, který Claude vede interaktivní hloubkovou UI/UX kontrolou — projít každý verify bod s člověkem, doplnit širší UI/UX procházku, posbírat nálezy. Pokryto snapshot/unit testem."
+    },
+    {
+      "title": "Registrace verify + resolve fáze v context.ts",
+      "status": "done",
+      "detail": "Přidat 'verify' do CONTEXT_COMMANDS a dispatch větev: cílová fáze = currentPhaseId, jinak fallback na poslední fázi se statusem done z hlavičky; načíst verify body z run reportu (reuse parsing jako buildDoneContext) a zavolat buildVerifySessionPrompt. Když není žádná fáze k ověření, smysluplná chyba+hint."
+    },
+    {
+      "title": "Slash command /mini:verify v install-commands.ts",
+      "status": "done",
+      "detail": "CommandDef 'verify' (description, volá mini context verify výchozím tělem). Regenerovat .claude/commands/mini/verify.md přes node dist/cli.js install-commands."
+    },
+    {
+      "title": "Testy promptu a routingu",
+      "status": "done",
+      "detail": "Unit/snapshot test buildVerifySessionPrompt (s verify body i bez, current vs. last-done). Test, že mini context verify vypíše prompt pro správnou fázi a chybu, když žádná není."
+    },
+    {
+      "title": "Doplnit verify do install-commands.test.ts",
+      "status": "done",
+      "detail": "Aktualizovat počet generovaných commandů a ověřit obsah verify.md (frontmatter description + volání mini context verify)."
+    },
+    {
+      "title": "Zmínka v README",
+      "status": "done",
+      "detail": "Krátce přidat mini verify / /mini:verify do přehledu workflow příkazů."
+    }
+  ],
+  "startedAt": "2026-05-30T21:21:23.110Z"
+}

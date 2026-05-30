@@ -29,7 +29,16 @@ describe('installCommands', () => {
       'next.md',
       'plan.md',
       'status.md',
+      'verify.md',
     ]);
+  });
+
+  it('verify command volá mini context verify a popisuje UI/UX kontrolu', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'verify.md'), 'utf-8');
+    expect(md).toContain('mini context verify');
+    expect(md).toContain('description:');
+    expect(md).toContain('UI/UX');
   });
 
   it('audit command volá mini audit, ne mini context', async () => {

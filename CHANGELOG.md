@@ -6,8 +6,15 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-05-30
+
 ### Added
 
+- **`mini verify` / `/mini:verify`** — hloubková UI/UX kontrola fáze člověkem.
+  Claude tě interaktivně provede vizuální/UX kontrolou (připraví scénu, projde
+  `verify` body z reportu, doplní širší UX procházku a posbírá nálezy). Cílí na
+  aktuální fázi, jinak na poslední uzavřenou. Je **read-only** — stav neposouvá,
+  to zůstává na `done`.
 - **`mini stop`** — kooperativní zastavení autonomního `/mini:auto`. Založí signál
   `.mini/STOP` (z druhého terminálu); běžící `/mini:auto` ho na hranicích kroků
   přečte, dokončí rozdělaný krok, zapíše report a čistě skončí. `mini stop --clear`

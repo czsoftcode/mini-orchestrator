@@ -82,6 +82,10 @@ Když některý krok narazí na blocker, který sám neumíš obejít, zastav se
     description: 'mini — lidská verifikace a posun stavu fáze',
   },
   {
+    name: 'verify',
+    description: 'mini — hloubková UI/UX kontrola fáze člověkem',
+  },
+  {
     name: 'status',
     description: 'mini — přehled fází projektu (read-only)',
     body: `Tohle je krok **status** workflow mini, spuštěný přímo v Claude Code.
