@@ -119,15 +119,20 @@ ${projectMd.trim()}
 Cíl: ${phase.goal ?? '(nezadán)'}
 ${stepsBlock}${notesBlock}
 # Tvůj úkol
-Rozmen fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend"). Pokud potřebuješ pochopit stav kódu, čti soubory (Read/Glob/Grep).
+Rozmen fázi na 3-7 konkrétních kroků. Každý krok má dvě části:
 
-Kroky krátce ukaž uživateli. Po odsouhlasení je **ulož** zavoláním (Bash) — kroky předáš na stdin, jeden na řádek:
+- **title** — krátký, výstižný název (ideálně do 8 slov). Slouží jako kanonický identifikátor kroku (páruje se s reportem), tak ať je stručný a stálý.
+- **detail** (volitelný) — delší upřesnění: ověřitelný výstup a kritéria (např. "API endpoint /tasks vrací JSON; pokryto testem"). Sem patří to, co by jinak title nafukovalo.
+
+Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend"); pokud se nevejde do title, dej ho do detailu. Pokud potřebuješ pochopit stav kódu, čti soubory (Read/Glob/Grep).
+
+Kroky krátce ukaž uživateli. Po odsouhlasení je **ulož** zavoláním (Bash) — jeden krok na řádek ve formátu \`title :: detail\` (oddělovač \` :: \` je volitelný; řádek bez něj je jen title):
 
 \`\`\`
 printf '%s\\n' \\
-  "<první krok>" \\
-  "<druhý krok>" \\
-  "<třetí krok>" | mini plan --apply
+  "<title prvního kroku> :: <detail prvního kroku>" \\
+  "<title druhého kroku bez detailu>" \\
+  "<title třetího kroku> :: <detail třetího kroku>" | mini plan --apply
 \`\`\`
 
 Stav fáze měň jen tímhle příkazem — nikdy needituj \`.mini/state.json\` ručně.

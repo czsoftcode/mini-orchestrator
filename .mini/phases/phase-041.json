@@ -2,7 +2,7 @@
   "id": 41,
   "title": "Projekt blok read-once v do",
   "goal": "buildAutoPhasePrompt dostane opt-in příznak useProjectRef (default vypnuto); /mini:do místo inlinování project.md vykreslí relativní odkaz .mini/project.md + read-once instrukci (auto zůstává inline). Ověřitelné aktualizovanými snapshot/unit testy a přegenerovaným token-reportem.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Builder buildAutoPhasePrompt: přidat opt-in příznak useProjectRef?: boolean (default vypnuto) do AutoPhaseContext; projekt vytáhnout z inline return (autoPhase.ts:109-110) do proměnné projectBlock — když true, vykreslit pod nadpisem '# Projekt' relativní odkaz .mini/project.md + read-once instrukci (zrcadlit notesBlock); když false/neuvedeno → dnešní inline větev beze změny. Ověřitelné: npm run typecheck zelený, funkce přijímá nový příznak.",
@@ -21,5 +21,11 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T05:02:47.748Z"
+  "startedAt": "2026-05-30T05:02:47.748Z",
+  "completedAt": "2026-05-30T05:10:40.940Z",
+  "autoCommit": {
+    "preSha": "bdcb8c92584f8bd98f11b5352f5a79c1c0c420f2",
+    "sha": "133b1e4b5f9dc03458e1041e80b899b79e70373b",
+    "subject": "Fáze 41: Projekt blok read-once v do"
+  }
 }

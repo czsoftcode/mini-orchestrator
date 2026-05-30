@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 41,
+  "currentPhaseId": 42,
   "phases": [
     {
       "id": 1,
@@ -206,6 +206,11 @@
     {
       "id": 41,
       "title": "Projekt blok read-once v do",
+      "status": "done"
+    },
+    {
+      "id": 42,
+      "title": "Step.detail v modelu a v plan",
       "status": "doing"
     }
   ],

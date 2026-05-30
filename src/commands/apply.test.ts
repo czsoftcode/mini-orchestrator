@@ -51,17 +51,49 @@ async function exists(path: string): Promise<boolean> {
 }
 
 describe('parseStepsFromStdin', () => {
-  it('bere každý neprázdný řádek jako krok', () => {
-    expect(parseStepsFromStdin('první\ndruhý\ntřetí')).toEqual(['první', 'druhý', 'třetí']);
+  it('bere každý neprázdný řádek jako krok (bez oddělovače → jen title)', () => {
+    expect(parseStepsFromStdin('první\ndruhý\ntřetí')).toEqual([
+      { title: 'první' },
+      { title: 'druhý' },
+      { title: 'třetí' },
+    ]);
   });
 
   it('ignoruje prázdné řádky a ořeže mezery', () => {
-    expect(parseStepsFromStdin('  a  \n\n\t b \n')).toEqual(['a', 'b']);
+    expect(parseStepsFromStdin('  a  \n\n\t b \n')).toEqual([{ title: 'a' }, { title: 'b' }]);
   });
 
   it('odstraní běžné prefixy seznamu (STEP:, -, *, 1.)', () => {
     const text = 'STEP: jedna\n- dva\n* tři\n1. čtyři\n2) pět';
-    expect(parseStepsFromStdin(text)).toEqual(['jedna', 'dva', 'tři', 'čtyři', 'pět']);
+    expect(parseStepsFromStdin(text)).toEqual([
+      { title: 'jedna' },
+      { title: 'dva' },
+      { title: 'tři' },
+      { title: 'čtyři' },
+      { title: 'pět' },
+    ]);
+  });
+
+  it('rozdělí title a detail na oddělovači ` :: `', () => {
+    expect(parseStepsFromStdin('Krátký title :: delší kritérium k ověření')).toEqual([
+      { title: 'Krátký title', detail: 'delší kritérium k ověření' },
+    ]);
+  });
+
+  it('bere první výskyt oddělovače a snese dvojtečky v textu', () => {
+    expect(parseStepsFromStdin('Upravit foo:bar :: detail: viz soubor a:b')).toEqual([
+      { title: 'Upravit foo:bar', detail: 'detail: viz soubor a:b' },
+    ]);
+  });
+
+  it('prázdný detail za oddělovačem se vynechá (zůstane jen title)', () => {
+    expect(parseStepsFromStdin('jen title ::   ')).toEqual([{ title: 'jen title' }]);
+  });
+
+  it('prefix funguje i s oddělovačem na stejném řádku', () => {
+    expect(parseStepsFromStdin('STEP: title :: detail')).toEqual([
+      { title: 'title', detail: 'detail' },
+    ]);
   });
 
   it('prázdný vstup → prázdný seznam', () => {
@@ -98,7 +130,7 @@ describe('applyNewPhase', () => {
 describe('applyPlanSteps', () => {
   it('uloží kroky a posune proposed → planned', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'proposed' }], 1), cwd);
-    const r = await applyPlanSteps(['krok 1', 'krok 2'], cwd);
+    const r = await applyPlanSteps([{ title: 'krok 1' }, { title: 'krok 2' }], cwd);
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases[0]!.status).toBe('planned');
@@ -108,15 +140,34 @@ describe('applyPlanSteps', () => {
     ]);
   });
 
+  it('uloží detail jen u kroků, které ho mají (prázdný se vynechá)', async () => {
+    await save(makeState([{ id: 1, title: 'A', status: 'proposed' }], 1), cwd);
+    const r = await applyPlanSteps(
+      [
+        { title: 'krok 1', detail: 'kritérium 1' },
+        { title: 'krok 2' },
+        { title: 'krok 3', detail: '   ' },
+      ],
+      cwd,
+    );
+    expect(r.ok).toBe(true);
+    const state = await load(cwd);
+    expect(state.phases[0]!.steps).toEqual([
+      { title: 'krok 1', status: 'todo', detail: 'kritérium 1' },
+      { title: 'krok 2', status: 'todo' },
+      { title: 'krok 3', status: 'todo' },
+    ]);
+  });
+
   it('prázdný seznam kroků → no-steps', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'proposed' }], 1), cwd);
-    const r = await applyPlanSteps(['   ', ''], cwd);
+    const r = await applyPlanSteps([{ title: '   ' }, { title: '' }], cwd);
     expect(r).toEqual({ ok: false, reason: 'no-steps' });
   });
 
   it('bez aktuální fáze → no-current-phase', async () => {
     await save(makeState([], null), cwd);
-    const r = await applyPlanSteps(['krok'], cwd);
+    const r = await applyPlanSteps([{ title: 'krok' }], cwd);
     expect(r).toEqual({ ok: false, reason: 'no-current-phase' });
   });
 });

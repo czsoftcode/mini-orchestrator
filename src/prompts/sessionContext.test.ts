@@ -78,6 +78,14 @@ describe('buildPlanSessionPrompt', () => {
     expect(p).toContain('starý krok');
     expect(p).toContain('přepíše');
   });
+
+  it('navede na krátký title + volitelný detail a formát `title :: detail`', () => {
+    const p = buildPlanSessionPrompt(PROJECT, phase);
+    expect(p).toContain('title');
+    expect(p).toContain('detail');
+    expect(p).toContain('title :: detail');
+    expect(p).toContain('8 slov');
+  });
 });
 
 describe('buildDoneSessionPrompt', () => {

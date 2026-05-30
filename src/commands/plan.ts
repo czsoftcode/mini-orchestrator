@@ -142,7 +142,7 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
  * předané kroky do stavu se stejnou logikou jako interaktivní `plan`.
  */
 export async function applyPlanSteps(
-  titles: string[],
+  parsed: ParsedStep[],
   cwd: string = process.cwd(),
 ): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
@@ -151,7 +151,9 @@ export async function applyPlanSteps(
     return { ok: false, reason: 'no-project' };
   }
 
-  const clean = titles.map((t) => t.trim()).filter((t) => t.length > 0);
+  const clean = parsed
+    .map((p) => ({ title: p.title.trim(), detail: p.detail?.trim() }))
+    .filter((p) => p.title.length > 0);
   if (clean.length === 0) {
     log.error('Nedostal jsem žádné kroky (stdin byl prázdný).');
     return { ok: false, reason: 'no-steps' };
@@ -176,7 +178,11 @@ export async function applyPlanSteps(
     return { ok: false, reason: 'phase-not-active' };
   }
 
-  const steps: Step[] = clean.map((title) => ({ title, status: 'todo' }));
+  const steps: Step[] = clean.map((p) => ({
+    title: p.title,
+    status: 'todo',
+    ...(p.detail ? { detail: p.detail } : {}),
+  }));
   phase.steps = steps;
   if (phase.status === 'proposed') {
     phase.status = 'planned';
@@ -187,13 +193,27 @@ export async function applyPlanSteps(
   return { ok: true };
 }
 
+/** Oddělovač `title :: detail` na jednom řádku stdin. Mezery kolem `::` ho
+ * dělají odolným vůči samostatným dvojtečkám v textu titulu nebo detailu. */
+const STEP_DETAIL_SEPARATOR = ' :: ';
+
+/** Naparsovaný krok ze stdin: krátký `title` + volitelný plánovací `detail`. */
+export interface ParsedStep {
+  title: string;
+  detail?: string;
+}
+
 /**
  * Naparsuje kroky předané na stdin pro `mini plan --apply`. Tolerantní k tomu,
  * jak je Claude zapíše: bere každý neprázdný řádek jako jeden krok a odstraní
  * běžné prefixy seznamu (`STEP:`, `- `, `* `, `1. `).
+ *
+ * Formát řádku: `title :: detail`. Oddělovač ` :: ` je volitelný — řádek bez
+ * něj je jen `title` (zpětná kompatibilita se starým „jeden title na řádek").
+ * Bere se první výskyt oddělovače; prázdný `detail` se vynechá.
  */
-export function parseStepsFromStdin(text: string): string[] {
-  const out: string[] = [];
+export function parseStepsFromStdin(text: string): ParsedStep[] {
+  const out: ParsedStep[] = [];
   for (const raw of text.split('\n')) {
     let line = raw.trim();
     if (line.length === 0) continue;
@@ -201,7 +221,25 @@ export function parseStepsFromStdin(text: string): string[] {
     line = line.replace(/^[-*]\s+/, '');
     line = line.replace(/^\d+[.)]\s+/, '');
     line = line.trim();
-    if (line.length > 0) out.push(line);
+    if (line.length === 0) continue;
+
+    // Visící oddělovač na konci řádku (`title ::`) = prázdný detail. `trim()`
+    // výše odstranil koncovou mezeru, takže ho ` :: ` nezachytí — ošetříme zvlášť.
+    if (line.endsWith(' ::')) {
+      const title = line.slice(0, -' ::'.length).trim();
+      if (title.length > 0) out.push({ title });
+      continue;
+    }
+
+    const sep = line.indexOf(STEP_DETAIL_SEPARATOR);
+    if (sep === -1) {
+      out.push({ title: line });
+      continue;
+    }
+    const title = line.slice(0, sep).trim();
+    const detail = line.slice(sep + STEP_DETAIL_SEPARATOR.length).trim();
+    if (title.length === 0) continue;
+    out.push(detail.length > 0 ? { title, detail } : { title });
   }
   return out;
 }

@@ -71,12 +71,12 @@ program
 program
   .command('plan')
   .description('Rozmění aktuální fázi na konkrétní kroky.')
-  .option('--apply', 'Neinteraktivně ulož kroky čtené ze stdin (jeden na řádek, bez Claude). Pro /mini:plan.')
+  .option('--apply', 'Neinteraktivně ulož kroky čtené ze stdin (jeden na řádek `title :: detail`, detail volitelný, bez Claude). Pro /mini:plan.')
   .action(async (opts: { apply?: boolean }) => {
     if (opts.apply) {
       const { applyPlanSteps, parseStepsFromStdin } = await import('./commands/plan.js');
-      const titles = parseStepsFromStdin(await readStdin());
-      const r = await applyPlanSteps(titles);
+      const steps = parseStepsFromStdin(await readStdin());
+      const r = await applyPlanSteps(steps);
       if (!r.ok) process.exit(1);
       return;
     }

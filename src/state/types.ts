@@ -5,6 +5,14 @@ export type PhaseStatus = 'proposed' | 'planned' | 'doing' | 'done' | 'skipped';
 export interface Step {
   title: string;
   status: StepStatus;
+  /**
+   * Plánovací detail kroku — kritéria / „Ověřitelné …", jak ho zapíše `plan`.
+   * Drží `title` krátký (kanonický identifikátor pro párování reportu ↔ stav),
+   * zatímco delší kontext pro implementátora žije tady. Liší se od `notes`:
+   * `detail` je záměr z plánu (plně statický), `notes` je runtime poznámka
+   * (např. detail blokeru z ručního ověření, viz `done` → opravná podfáze).
+   */
+  detail?: string;
   notes?: string;
 }
 

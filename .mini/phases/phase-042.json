@@ -1,0 +1,25 @@
+{
+  "id": 42,
+  "title": "Step.detail v modelu a v plan",
+  "goal": "Rozšířit Step o volitelné pole detail (kritéria/'Ověřitelné'), aby title zůstal krátký kanonický identifikátor; mini plan --apply přijme a uloží title + detail zpětně kompatibilním stdin formátem (řádek bez oddělovače = jen title) a slash /mini:plan prompt navede na krátký title + samostatný detail. Renderery promptů (auto/do/discuss/writeMemory) a párování reportu zůstávají na title beze změny. Ověřitelné: typecheck, unit testy parsování plan --apply (s detailem i bez), aktualizovaný snapshot plan promptu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Přidat Step.detail do typu Step",
+      "status": "done"
+    },
+    {
+      "title": "Stdin parser plan --apply na title + detail",
+      "status": "done"
+    },
+    {
+      "title": "applyPlanSteps a cli.ts ukládají detail",
+      "status": "done"
+    },
+    {
+      "title": "Slash plan prompt: krátký title + detail",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-30T05:41:38.104Z"
+}
