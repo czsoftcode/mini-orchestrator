@@ -68,6 +68,27 @@ describe('measureAll', () => {
       expect(m.templateTokens + m.injectedTokens).toBe(m.realTokens);
     }
   });
+
+  it('blok „kroky" počítá i Step.detail (měření sedí s promptem)', () => {
+    const krokyTokens = (inputs: RealInputs) => {
+      const cmd = measureAll(inputs).find((m) => m.command === 'do')!;
+      return cmd.blocks.find((b) => b.name === 'kroky')!.tokens;
+    };
+
+    const withDetail: RealInputs = {
+      ...FIXED,
+      phase: {
+        ...FIXED.phase,
+        steps: [
+          { title: 'Krok A', status: 'done', detail: 'D'.repeat(120) },
+          { title: 'Krok B', status: 'todo' },
+        ],
+      },
+    };
+
+    // Stejné tituly, jen jeden krok dostane detail → blok „kroky" musí narůst.
+    expect(krokyTokens(withDetail)).toBeGreaterThan(krokyTokens(FIXED));
+  });
 });
 
 describe('rankMeasurements', () => {

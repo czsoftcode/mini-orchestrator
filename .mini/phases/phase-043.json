@@ -1,0 +1,29 @@
+{
+  "id": 43,
+  "title": "Vykreslit detail kroků v promptu",
+  "goal": "V sekci „Kroky\" auto i do promptu vypsat Step.detail odsazeně pod title (jen když je vyplněn) a rozšířit measure.ts stepsText o detail, aby měření tokenů odpovídalo realitě; sampleSteps ve vzorovém YAML reportu zůstává jen na title. Ověřitelné: typecheck, unit testy + aktualizované snapshoty auto/do promptu a měření, build.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "detail v auto promptu",
+      "status": "done",
+      "detail": "autoPhase.ts stepsBlock (:73-75) — když s.detail, přidat odsazený řádek (4 mezery) pod - [stav] title; krok bez detailu beze změny. Nová fixtura v autoPhase.test.ts."
+    },
+    {
+      "title": "detail v do promptu",
+      "status": "done",
+      "detail": "doPhase.ts stepsBlock (:21-26) — detail na další odsazený řádek pod title, marker ← pracuj na tomhle zůstává u title. Nová fixtura v doPhase.test.ts (krok s detailem + focusedStep s detailem)."
+    },
+    {
+      "title": "detail v measure.stepsText",
+      "status": "done",
+      "detail": "measure.ts stepsText (:116-119) — zahrnout detail stejným formátem jako prompt, ať cena bloku „kroky\" sedí s realitou. Fixtura measure.test.ts dostane krok s detailem."
+    },
+    {
+      "title": "Aktualizovat snapshoty + zelená brána",
+      "status": "done",
+      "detail": "přegenerovat dotčené snapshoty (autoPhase/doPhase/measure), ověřit že fixtury bez detailu se nehnuly. npm run typecheck, npm test, npm run build zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T06:06:43.952Z"
+}

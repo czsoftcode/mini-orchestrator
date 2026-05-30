@@ -115,7 +115,12 @@ function phaseHeadText(phase: Phase): string {
 /** Text bloku „kroky". */
 function stepsText(phase: Phase): string {
   if (!phase.steps?.length) return '';
-  return phase.steps.map((s) => `- [${s.status}] ${s.title}`).join('\n');
+  return phase.steps
+    .map((s) => {
+      const head = `- [${s.status}] ${s.title}`;
+      return s.detail ? `${head}\n    ${s.detail}` : head;
+    })
+    .join('\n');
 }
 
 // --- Specifikace jednotlivých příkazů -------------------------------------

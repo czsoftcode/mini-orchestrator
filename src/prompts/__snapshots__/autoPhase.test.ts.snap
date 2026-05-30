@@ -475,3 +475,71 @@ verify:   # volitelné — vynech, když Claude ověřil všechno sám
 Teprve **po zapsání reportu** session ukonči (napiš /exit nebo stiskni Ctrl+D). Bez reportu uživatel nemá z čeho posunout stav — projde se pak ručně přes interaktivní \`mini done\`.
 "
 `;
+
+exports[`buildAutoPhasePrompt > renders step detail on an indented line below the title (only when present) 1`] = `
+"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+Právě probíhá **auto session** — máš v jednom průchodu implementovat celou fázi.
+
+# Projekt
+# Můj projekt
+Stavím nástroj X pro Y.
+
+# Aktuální fáze
+**Fáze 9: Detail v krocích**
+Cíl: detail se vykreslí pod title
+
+Kroky (vodítko k práci — neupravuj je v žádném souboru, slouží jen jako plán a referenční názvy pro report):
+- [hotovo] Prompt builder pro celou fázi
+    buildAutoPhasePrompt vrací prompt s YAML reportem; pokryto snapshotem
+- [čeká] Bez detailu
+
+# Tvůj úkol
+Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+
+Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+
+# Průběžný zápis kroků
+Jakmile dokončíš jeden krok, **hned** ho označ za hotový (ještě než se pustíš do dalšího):
+
+\`\`\`
+mini do --apply --step-done "<přesný název kroku ze sekce Kroky>"
+\`\`\`
+
+Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve stavu pak bude vidět, kam až ses dostal. Finální report na konci (viz níže) zapiš tak jako tak — průběžný zápis ho nenahrazuje.
+
+
+# Report na konci session
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-9.md\`. Report má dvě části:
+
+1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
+   - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
+   - status každého kroku je právě jeden z: \`done\` (hotovo), \`skipped\` (vědomě vynecháno — vysvětli v textu), \`blocked\` (narazil jsi na blocker — popiš v textu), \`todo\` (zbývá udělat, např. nevyšel čas),
+   - \`verdict\` shrnuje celou fázi a je jeden z: \`done\` (všechno hotové), \`partial\` (něco zbývá, ale nic ti nebrání pokračovat), \`blocked\` (narazil jsi na blocker, který sám neumíš obejít),
+   - volitelné pole \`verify\` — seznam věcí, které jsi **sám nedokázal ověřit** a potřebují lidský pohled (vizuální UI, UX flow, subjektivní dojem). Co jde ověřit strojově (curl, testy, build), **ověř sám** a do \`verify\` to nepiš. Každá položka má \`title\` (co má člověk ověřit, povinné) a volitelně \`detail\` (kontext — co a jak jsi (ne)ověřil). Když není co ověřovat člověkem, pole vynech.
+
+2) **Volný text** pod YAML blokem — krátké shrnutí pro člověka: co se povedlo, co ne, na co jsi narazil, otevřené otázky. Sem patří kontext, který by se do YAML statusu nevešel.
+
+Soubor musí začínat YAML blokem přesně v tomto tvaru (uprav statusy a doplň poznámky; názvy kroků a \`phase\` neměň; \`verify\` přidej jen když je co ověřovat člověkem, jinak ho vynech):
+
+\`\`\`
+---
+phase: 9
+verdict: done
+steps:
+  - title: "Prompt builder pro celou fázi"
+    status: done
+  - title: "Bez detailu"
+    status: done
+verify:   # volitelné — vynech, když Claude ověřil všechno sám
+  - title: "co má člověk ověřit (vizuální/UX věc, co nejde strojově)"
+    detail: "co a jak jsi (ne)ověřil"
+---
+
+# Fáze 9 — report z auto session
+
+(volný text — co se povedlo, co ne, poznámky pro člověka)
+\`\`\`
+
+Teprve **po zapsání reportu** session ukonči (napiš /exit nebo stiskni Ctrl+D). Bez reportu uživatel nemá z čeho posunout stav — projde se pak ručně přes interaktivní \`mini done\`.
+"
+`;

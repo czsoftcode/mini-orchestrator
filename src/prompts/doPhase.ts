@@ -21,7 +21,8 @@ export function buildDoPhasePrompt(ctx: DoPhaseContext): string {
   if (phase.steps?.length) {
     const lines = phase.steps.map((s) => {
       const marker = s === focusedStep ? '   ← pracuj na tomhle' : '';
-      return `- [${STEP_WORD[s.status]}] ${s.title}${marker}`;
+      const head = `- [${STEP_WORD[s.status]}] ${s.title}${marker}`;
+      return s.detail ? `${head}\n    ${s.detail}` : head;
     });
     stepsBlock = `\nKroky:\n${lines.join('\n')}\n`;
   } else {

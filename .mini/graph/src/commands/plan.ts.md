@@ -14,6 +14,7 @@ Imports:
 
 Exports:
 - function plan(opts: AutoOptions): Promise<StepOutcome>
-- function applyPlanSteps(titles: string[], cwd: string): Promise<StepOutcome>
-- function parseStepsFromStdin(text: string): string[]
+- function applyPlanSteps(parsed: ParsedStep[], cwd: string): Promise<StepOutcome>
+- interface ParsedStep
+- function parseStepsFromStdin(text: string): ParsedStep[]
 - function parseSteps(text: string): string[]

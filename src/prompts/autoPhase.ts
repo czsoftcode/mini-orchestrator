@@ -71,7 +71,10 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
 
   let stepsBlock: string;
   if (phase.steps?.length) {
-    const lines = phase.steps.map((s) => `- [${STEP_WORD[s.status]}] ${s.title}`);
+    const lines = phase.steps.map((s) => {
+      const head = `- [${STEP_WORD[s.status]}] ${s.title}`;
+      return s.detail ? `${head}\n    ${s.detail}` : head;
+    });
     stepsBlock = `\nKroky (vodítko k práci — neupravuj je v žádném souboru, slouží jen jako plán a referenční názvy pro report):\n${lines.join('\n')}\n`;
   } else {
     stepsBlock = '\n(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)\n';

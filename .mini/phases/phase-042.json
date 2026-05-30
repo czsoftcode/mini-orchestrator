@@ -2,7 +2,7 @@
   "id": 42,
   "title": "Step.detail v modelu a v plan",
   "goal": "Rozšířit Step o volitelné pole detail (kritéria/'Ověřitelné'), aby title zůstal krátký kanonický identifikátor; mini plan --apply přijme a uloží title + detail zpětně kompatibilním stdin formátem (řádek bez oddělovače = jen title) a slash /mini:plan prompt navede na krátký title + samostatný detail. Renderery promptů (auto/do/discuss/writeMemory) a párování reportu zůstávají na title beze změny. Ověřitelné: typecheck, unit testy parsování plan --apply (s detailem i bez), aktualizovaný snapshot plan promptu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Přidat Step.detail do typu Step",
@@ -21,5 +21,11 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T05:41:38.104Z"
+  "startedAt": "2026-05-30T05:41:38.104Z",
+  "completedAt": "2026-05-30T05:53:44.057Z",
+  "autoCommit": {
+    "preSha": "133b1e4b5f9dc03458e1041e80b899b79e70373b",
+    "sha": "99bba32893623a0bb34ccbc3def17670ae14390b",
+    "subject": "Fáze 42: Step.detail v modelu a v plan"
+  }
 }

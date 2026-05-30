@@ -1,22 +1,48 @@
-# Fáze 41 — Projekt blok read-once v do
+# Fáze 42 — Step.detail v modelu a v plan
 
-**Cíl:** buildAutoPhasePrompt dostane opt-in příznak useProjectRef (default vypnuto); /mini:do místo inlinování project.md vykreslí relativní odkaz .mini/project.md + read-once instrukci (auto zůstává inline). Ověřitelné aktualizovanými snapshot/unit testy a přegenerovaným token-reportem.
+**Cíl:** Rozšířit Step o volitelné pole detail (kritéria/'Ověřitelné'), aby title zůstal krátký kanonický identifikátor; mini plan --apply přijme a uloží title + detail zpětně kompatibilním stdin formátem (řádek bez oddělovače = jen title) a slash /mini:plan prompt navede na krátký title + samostatný detail. Renderery promptů (auto/do/discuss/writeMemory) a párování reportu zůstávají na title beze změny. Ověřitelné: typecheck, unit testy parsování plan --apply (s detailem i bez), aktualizovaný snapshot plan promptu.
 
 ## Kroky
-- [hotovo] Builder buildAutoPhasePrompt: přidat opt-in příznak useProjectRef?: boolean (default vypnuto) do AutoPhaseContext; projekt vytáhnout z inline return (autoPhase.ts:109-110) do proměnné projectBlock — když true, vykreslit pod nadpisem '# Projekt' relativní odkaz .mini/project.md + read-once instrukci (zrcadlit notesBlock); když false/neuvedeno → dnešní inline větev beze změny. Ověřitelné: npm run typecheck zelený, funkce přijímá nový příznak.
-- [hotovo] Unit testy builderu v autoPhase.test.ts: nové testy pro useProjectRef: true (výstup obsahuje .mini/project.md + read-once formulaci a NEobsahuje inline text projektu); při vypnutém příznaku se výstup nemění. Ověřitelné: npm test zelené, existující snapshoty autoPhase.test.ts.snap beze změny.
-- [hotovo] context.ts (větev do) přepnout na referenci + test v context.test.ts: do větev (:124-132) nastaví useProjectRef: true. Nový test: /mini:do → výstup má odkaz .mini/project.md + read-once, ne inline projekt. Ověřitelné: npm test zelené, nový context test.
-- [hotovo] measure.ts doSpec → reference mód: z blocks() u do vyhodit blok projekt, build přepnout na useProjectRef: true, doplnit poznámku že Read call se nepočítá. Brána + přegenerování: npm run typecheck, npm run build, npm test zelené a npm run measure-tokens přegeneruje .mini/token-report.md (bez tvrdé prahové hodnoty). Ověřitelné: brána zelená, report přegenerován.
+- [hotovo] Přidat Step.detail do typu Step
+- [hotovo] Stdin parser plan --apply na title + detail
+- [hotovo] applyPlanSteps a cli.ts ukládají detail
+- [hotovo] Slash plan prompt: krátký title + detail
 
 ## Auto-commit
-- Fáze 41: Projekt blok read-once v do (`133b1e4b5f9dc03458e1041e80b899b79e70373b`)
+- Fáze 42: Step.detail v modelu a v plan (`99bba32893623a0bb34ccbc3def17670ae14390b`)
 
 ## Pozor na
-- Default `useProjectRef` **vypnutý** → výstup `auto` i existující snapshoty
-  `autoPhase.test.ts.snap` se NESMÍ změnit.
-- Nové testy: `autoPhase.test.ts` pro `useProjectRef: true` (obsahuje
-  `.mini/project.md` + read-once, NEobsahuje inline text projektu; vypnutý
-  příznak beze změny). `context.test.ts`: `do` větev → odkaz, ne inline projekt.
-- Brána zelená: `npm run typecheck`, `npm run build`, `npm test`,
-  `npm run measure-tokens` přegeneruje `.mini/token-report.md`.
-- Headless `mini do` (`buildDoPhasePrompt`) a `auto` se NEMĚNÍ — jen slash `do`.
+
+- `runReport.ts:207-220` páruje report ↔ stav **přesnou shodou množin titulů**.
+  Dokud zůstává párování na `title` (a tato fáze ho nemení), nesmí se rozbít.
+- Báze pro navazující fáze (mimo rozsah 42, ale ať plan/do ví, kam to směřuje):
+  1) vykreslit `detail` v sekci "Kroky" auto/do promptu (a `measure.ts`
+     `stepsText` o detail rozšířit, ať měření odpovídá realitě),
+  2) udržet klon ve `sampleSteps` jen na `title` (už dnes klonuje jen title —
+     takže s krátkými tituly je duplikace levná; původní "fáze 42 dedup" se tím
+     stává skoro zbytečnou),
+  3) případná migrace/zkrácení starých titulů — volitelné.
+- Testy/snapshoty: `Step` je v `state/types.ts`; změna parsování v
+  `commands/plan.ts` (`--apply` větev, `:179`); plan prompt v
+  `prompts/sessionContext.ts` má snapshot `__snapshots__/planPhase.test.ts.snap`
+  resp. test v `sessionContext.test.ts` — počítat s jejich aktualizací.
+- Brána zelená: `npm run typecheck`, `npm test` (nové unit testy parsování
+  `plan --apply` s detailem i bez), `npm run build`.
+
+## Pozor / poznámky
+
+- **Renderery a parser reportu se NEMĚNILY** (dle rozsahu fáze) — `detail` se
+  zatím jen ukládá, nikde se nevykresluje. Vykreslení `detail` v sekci „Kroky"
+  auto/do promptu + rozšíření `measure.ts` `stepsText` je navazující fáze.
+  Teprve tam se projeví slíbená úspora na bloku „kroky".
+- **Drobná ironie:** plan prompt se prodloužil (měřená šablona `plan`
+  221→362 tok ve fixních vstupech `measure.test.ts`), protože přibyl návod ke
+  dvoudílnému formátu. Je to jednorázový fixní náklad šablony; úspora přijde
+  plošně v dalších fázích, až budou tituly krátké.
+- **Edge case oddělovače:** `trim()` smaže koncovou mezeru, takže visící
+  oddělovač `title ::` (prázdný detail) ` :: ` netrefí — ošetřeno zvlášť
+  (`endsWith(' ::')` → jen title). Vedoucí prázdný title (`:: detail`) je přes
+  trim nedosažitelný, guard je tam jen defenzivně.
+- `.mini/token-report.md` jsem nepřegeneroval — cíl fáze to nevyžaduje a
+  renderery „kroků" se neměnily (plan šablona by se posunula, ale to není
+  předmět této fáze).

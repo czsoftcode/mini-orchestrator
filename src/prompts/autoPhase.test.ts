@@ -364,4 +364,34 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
     expect(out).toContain('`.mini/run/phase-10.md`');
     expect(out).toMatchSnapshot();
   });
+
+  it('renders step detail on an indented line below the title (only when present)', () => {
+    const phase: Phase = {
+      id: 9,
+      title: 'Detail v krocích',
+      goal: 'detail se vykreslí pod title',
+      status: 'doing',
+      steps: [
+        {
+          title: 'Prompt builder pro celou fázi',
+          status: 'done',
+          detail: 'buildAutoPhasePrompt vrací prompt s YAML reportem; pokryto snapshotem',
+        },
+        { title: 'Bez detailu', status: 'todo' },
+      ],
+    };
+
+    const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
+
+    // Krok s detailem: title na svém řádku, detail odsazený (4 mezery) pod ním.
+    expect(out).toContain(
+      '- [hotovo] Prompt builder pro celou fázi\n    buildAutoPhasePrompt vrací prompt s YAML reportem; pokryto snapshotem',
+    );
+    // Krok bez detailu zůstává jednořádkový.
+    expect(out).toContain('- [čeká] Bez detailu\n');
+    // sampleSteps klonuje jen title — detail se do YAML vzorku nepropisuje.
+    expect(out).toContain('- title: "Prompt builder pro celou fázi"');
+    expect(out).not.toContain('    status: done\n    buildAutoPhasePrompt');
+    expect(out).toMatchSnapshot();
+  });
 });

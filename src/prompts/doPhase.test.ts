@@ -102,6 +102,47 @@ describe('buildDoPhasePrompt', () => {
     expect(out).toContain('Cíl: (nezadán)');
   });
 
+  it('renders step detail on an indented line, with the focus marker still on the title', () => {
+    const phase: Phase = {
+      id: 6,
+      title: 'Detail v krocích',
+      goal: 'detail se vykreslí',
+      status: 'doing',
+      steps: [
+        {
+          title: 'rozhodnout framework',
+          status: 'done',
+          detail: 'vitest; běží přes npm test',
+        },
+        {
+          title: 'napsat snapshoty',
+          status: 'doing',
+          detail: 'snapshot test pokrývá prompt',
+        },
+        { title: 'bez detailu', status: 'todo' },
+      ],
+    };
+    const focusedStep = phase.steps![1]!;
+
+    const out = buildDoPhasePrompt({
+      projectMd: PROJECT_MD,
+      phase,
+      focusedStep,
+    });
+
+    // Detail jde na odsazený řádek pod title.
+    expect(out).toContain('- [hotovo] rozhodnout framework\n    vitest; běží přes npm test');
+    // U focusedStep zůstává marker na řádku s title, detail je až pod ním.
+    expect(out).toContain(
+      '- [dělá se] napsat snapshoty   ← pracuj na tomhle\n    snapshot test pokrývá prompt',
+    );
+    // Krok bez detailu zůstává jednořádkový.
+    expect(out).toContain('- [čeká] bez detailu\n');
+    // marker se objeví právě jednou
+    expect(out.match(/← pracuj na tomhle/g)?.length).toBe(1);
+    expect(out).toMatchSnapshot();
+  });
+
   it('does not mark a step when focusedStep is a different object with the same title', () => {
     const phase: Phase = {
       id: 5,

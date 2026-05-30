@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 42,
+  "currentPhaseId": 43,
   "phases": [
     {
       "id": 1,
@@ -211,6 +211,11 @@
     {
       "id": 42,
       "title": "Step.detail v modelu a v plan",
+      "status": "done"
+    },
+    {
+      "id": 43,
+      "title": "Vykreslit detail kroků v promptu",
       "status": "doing"
     }
   ],
