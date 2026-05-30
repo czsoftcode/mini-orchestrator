@@ -3,6 +3,7 @@ import { isBrownfield } from '../state/brownfield.js';
 import { exists, newState, save, writeProject } from '../state/store.js';
 import { ask, nonEmpty, trim } from '../ui/ask.js';
 import { log } from '../ui/log.js';
+import { syncSkeleton } from './update.js';
 
 interface InitAnswers {
   name: string;
@@ -67,6 +68,10 @@ export async function init(): Promise<void> {
 
   await writeProject(projectMd, cwd);
   await save(newState(), cwd);
+
+  // Statický skeleton (.mini/ adresáře + .gitignore) ze stejného zdroje pravdy
+  // jako `mini update` — project.md a state.json zůstávají generované výše.
+  await syncSkeleton(cwd);
 
   log.success(`Projekt "${(answers as InitAnswers).name}" založen v .mini/`);
 

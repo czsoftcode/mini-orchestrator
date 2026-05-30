@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 61,
+  "currentPhaseId": 62,
   "phases": [
     {
       "id": 1,
@@ -306,6 +306,11 @@
     {
       "id": 61,
       "title": "Migrate: přečíslování a sjednocení fází",
+      "status": "done"
+    },
+    {
+      "id": 62,
+      "title": "mini update + skeleton",
       "status": "doing"
     }
   ],

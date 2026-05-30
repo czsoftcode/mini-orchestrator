@@ -114,14 +114,31 @@ ${body}
 `;
 }
 
+export interface InstallCommandsOptions {
+  /** Jen náhled — nic nezapisuj, vrať počty, jako by se zapsalo. */
+  dryRun?: boolean;
+}
+
+export interface InstallCommandsResult {
+  created: number;
+  updated: number;
+  unchanged: number;
+}
+
 /**
  * `mini install-commands` — vygeneruje `.claude/commands/mini/*.md` do aktuálního
  * projektu. Idempotentní: lze pustit opakovaně, přepíše jen to, co se liší, a
- * vypíše, co vzniklo / aktualizovalo se / zůstalo beze změny.
+ * vypíše, co vzniklo / aktualizovalo se / zůstalo beze změny. S `dryRun` jen
+ * spočítá a vypíše, co by se stalo, ale na disk nesáhne.
  */
-export async function installCommands(cwd: string = process.cwd()): Promise<void> {
+export async function installCommands(
+  cwd: string = process.cwd(),
+  { dryRun = false }: InstallCommandsOptions = {},
+): Promise<InstallCommandsResult> {
   const targetDir = join(cwd, COMMANDS_DIR);
-  await mkdir(targetDir, { recursive: true });
+  if (!dryRun) {
+    await mkdir(targetDir, { recursive: true });
+  }
 
   let created = 0;
   let updated = 0;
@@ -143,16 +160,19 @@ export async function installCommands(cwd: string = process.cwd()): Promise<void
       continue;
     }
 
-    const tmp = `${path}.tmp`;
-    await writeFile(tmp, content, 'utf-8');
-    await rename(tmp, path);
+    if (!dryRun) {
+      const tmp = `${path}.tmp`;
+      await writeFile(tmp, content, 'utf-8');
+      await rename(tmp, path);
+    }
 
+    const rel = join(COMMANDS_DIR, `${def.name}.md`);
     if (old === null) {
       created++;
-      log.success(`Vytvořeno: ${join(COMMANDS_DIR, `${def.name}.md`)}`);
+      log.success(dryRun ? `Vznikne: ${rel}` : `Vytvořeno: ${rel}`);
     } else {
       updated++;
-      log.success(`Aktualizováno: ${join(COMMANDS_DIR, `${def.name}.md`)}`);
+      log.success(dryRun ? `Změní se: ${rel}` : `Aktualizováno: ${rel}`);
     }
   }
 
@@ -165,4 +185,6 @@ export async function installCommands(cwd: string = process.cwd()): Promise<void
   log.hint(
     'Použij je v Claude Code: /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:auto, /mini:status, /mini:map',
   );
+
+  return { created, updated, unchanged };
 }

@@ -240,6 +240,16 @@ program
   });
 
 program
+  .command('update')
+  .description('Srovná negenerovanou část projektu na aktuální verzi mini: statický skeleton .mini/ (adresáře + .gitignore) a slash commandy .claude/commands/mini/*.md. Idempotentní — vytvoří chybějící, přepíše změněné, ostatní nechá.')
+  .option('--dry-run', 'Jen náhled — vypiš, co by se vytvořilo/změnilo, ale nic nezapisuj.')
+  .action(async (opts: { dryRun?: boolean }) => {
+    const { update } = await import('./commands/update.js');
+    const r = await update(process.cwd(), { dryRun: opts.dryRun });
+    if (!r.ok) process.exit(1);
+  });
+
+program
   .command('install-commands')
   .description('Vygeneruje .claude/commands/mini/*.md (slash commandy /mini:*) do aktuálního projektu. Idempotentní — lze pustit opakovaně.')
   .action(async () => {

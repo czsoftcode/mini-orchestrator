@@ -2,7 +2,7 @@
   "id": 61,
   "title": "Migrate: přečíslování a sjednocení fází",
   "goal": "Rozšířit mini migrate o přečíslování fází na souvislá celá čísla (podle pořadí ve state.json) a přejmenování souborů v phases/discuss/memory/run na phase-XXX — idempotentně a crash-safe, s opravou id/currentPhaseId ve stavu a ošetřením .prev.md i memory bez data.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Parser id z názvu + mapování",
@@ -30,5 +30,11 @@
       "detail": "mini migrate --renumber (+ --dry-run náhled mapy a potvrzení), idempotentní no-op hláška; fixture smíšeného schématu, ověřit mapování/rename/idempotenci/abort; build + testy zelené."
     }
   ],
-  "startedAt": "2026-05-30T17:43:31.642Z"
+  "startedAt": "2026-05-30T17:43:31.642Z",
+  "completedAt": "2026-05-30T18:02:33.581Z",
+  "autoCommit": {
+    "preSha": "40ecc6f07e1830e7cd61d01395c0f7955a320460",
+    "sha": "94a950ab1d7b40e343943a171ee5018fa051c9f0",
+    "subject": "Fáze 61: Migrate: přečíslování a sjednocení fází"
+  }
 }

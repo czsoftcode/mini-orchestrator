@@ -6,8 +6,17 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-30
+
 ### Added
 
+- **`mini update`** — srovná negenerovanou část projektu na aktuální verzi mini:
+  statický skeleton `.mini/` (adresáře + `.gitignore`) a slash commandy
+  `.claude/commands/mini/*.md`. Idempotentní — vytvoří chybějící, přepíše změněné
+  (skeleton soubory jsou mini-owned), ostatní nechá beze změny a vypíše souhrn.
+  `--dry-run` ukáže náhled bez zápisu. Skeleton žije jako shipovaný asset
+  (`assets/skeleton/` → `dist/skeleton`) a je jediný zdroj pravdy: čerpá z něj
+  i `mini init` a snadno se rozšiřuje o další statické soubory.
 - **`mini migrate --renumber`** — přečísluje fáze na souvislá celá čísla
   (1..N podle pořadí ve `state.json`) a sjednotí názvy souborů ve všech čtyřech
   adresářích (`phases/`, `discuss/`, `run/`, `memory/`) na kanonický `phase-XXX`.
@@ -72,6 +81,9 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Changed
 
+- **`mini init`** nově zakládá `.mini/` z téhož skeletonu jako `mini update`
+  (adresáře `phases/`, `memory/`, `discuss/`, `run/` + `.gitignore`); `project.md`
+  a `state.json` se dál generují zvlášť.
 - **Výchozí chování `--bump` je nově `none`** (dřív `patch`): `mini done` ani
   `mini auto` už verzi v `package.json` ve výchozím stavu nenavyšují. Pro
   povýšení použij `--bump patch|minor|major`.
