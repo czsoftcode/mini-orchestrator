@@ -1,0 +1,39 @@
+{
+  "id": 30,
+  "title": "Done: verze, push a clear",
+  "goal": "Rozšířit mini done --apply tak, aby po finalizaci fáze navýšil verzi v package.json (patch), zahrnul ji do auto-commitu, nahrál na remote přes git push a na závěr vypsal nabídku spustit /clear pro vyčištění kontextu.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Bump helper + testy: přidat bumpPackageVersion(cwd, level) v novém modulu src/version.ts — načte package.json, navýší semver dle level (patch/minor/major), zapíše zpět se zachováním formátu, chybějící package.json tiše vrátí null; unit testy pro patch/minor/major, chybějící soubor, zachování formátu",
+      "status": "done"
+    },
+    {
+      "title": "Push helper + test: přidat push(cwd) do git.ts (best-effort přes runGit(push), vrací GitResult); test že volá git push a chybu nehází",
+      "status": "done"
+    },
+    {
+      "title": "Zapojit do finalizace: rozšířit finalizePhaseSideEffects a commitPhaseWork o FinalizeOptions { bump, push } — bump verze před commitem (pobere ho add -A), po commitu push jen když push===true, vše best-effort; protáhnout options ze všech tří cest (applyAutoReport, collectNotesAndSave, finalizePhase)",
+      "status": "done"
+    },
+    {
+      "title": "CLI flagy: mini done [--apply] --bump <patch|minor|major> --push a mini auto --bump <...> --push (default patch); předat do finalizace",
+      "status": "done"
+    },
+    {
+      "title": "Nabídka /clear + session prompt: po úspěšné finalizaci vypsat hint na /clear; rozšířit buildDoneSessionPrompt (mini context done), ať Claude po uzavření navrhne /clear a zmíní možnost --push",
+      "status": "done"
+    },
+    {
+      "title": "Ověření: typecheck/build/test + e2e přes lokální build — verze povýšená a v commitu fáze, --push bez remote skončí jen warningem, /clear hint se vypíše",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-29T22:54:10.000Z",
+  "completedAt": "2026-05-29T23:05:53.671Z",
+  "autoCommit": {
+    "preSha": "786dd33b525dd0ece9fce7d934006c0f45cb8924",
+    "sha": "eda2565f855e2aafa97707d963657ba0ba9ad3a4",
+    "subject": "Fáze 30: Done: verze, push a clear"
+  }
+}

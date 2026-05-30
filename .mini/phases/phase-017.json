@@ -1,0 +1,39 @@
+{
+  "id": 17,
+  "title": "Paměť fáze bez Claude API",
+  "goal": "`writePhaseMemory` vygeneruje `.mini/memory/phase-{id}.md` přímo z šablony v TypeScriptu (title, goal, kroky a jejich stav, případně obsah run reportu) bez volání Claude API — Claude se zavolá jen pokud je explicitně zapnutý přes model scope `memory`.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přečíst discuss a run soubory do řetězce (nebo prázdný string)",
+      "status": "done"
+    },
+    {
+      "title": "Sestavit markdown z Phase objektu bez Claude (id, title, goal, kroky+statusy, humanNotes, autoCommit)",
+      "status": "done"
+    },
+    {
+      "title": "Přidat discuss a run obsah jako sekce do markdown",
+      "status": "done"
+    },
+    {
+      "title": "Zapsat soubor přes `fs.writeFile` místo `askClaude`",
+      "status": "done"
+    },
+    {
+      "title": "Zachovat volání Claude pokud `state.models?.memory != null`",
+      "status": "done"
+    },
+    {
+      "title": "Smazat `MEMORY_ALLOWED_TOOLS`, `MEMORY_TIMEOUT_MS` a import `buildWriteMemoryPrompt` pokud se nepoužívají",
+      "status": "skipped"
+    }
+  ],
+  "startedAt": "2026-05-24T18:55:33.731Z",
+  "completedAt": "2026-05-24T19:03:55.906Z",
+  "autoCommit": {
+    "preSha": "ed4a5f1089acc40b0b0dd1b4231a6b51bb0e8f9a",
+    "sha": "dd458a662e0eac779f7e091e2c2e483016465e76",
+    "subject": "Fáze 17: Paměť fáze bez Claude API"
+  }
+}

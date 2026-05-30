@@ -1,11 +1,19 @@
-import { access, mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
-import { join, posix, relative, sep } from 'node:path';
+import { access, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { dirname, join, posix, relative, sep } from 'node:path';
 import { mapFile } from './mapper.js';
 import { mapPhpFile } from './phpMapper.js';
 import { mapRustFile } from './rustMapper.js';
 import type { ExportInfo, FileGraph, ImportInfo } from './types.js';
 
-export const GRAPH_FILE = '.mini/graph.md';
+/** Adresář s per-file mapami (jeden markdown na zdrojový soubor). */
+export const GRAPH_DIR = '.mini/graph';
+/** Lehký index: cesta zdrojáku → cesta v `GRAPH_DIR` + názvy exportů. */
+export const GRAPH_INDEX = '.mini/graph.json';
+/** Starý monolitický soubor — po přechodu na nový layout ho mažeme. */
+export const LEGACY_GRAPH_FILE = '.mini/graph.md';
+
+/** Verze formátu indexu `graph.json`. */
+export const GRAPH_INDEX_VERSION = 1;
 
 /**
  * Adresáře, do kterých nikdy nelezeme — runtime/build artefakty, VCS interní
@@ -37,9 +45,28 @@ const IGNORE_DIRS = new Set([
 
 type Lang = 'ts' | 'php' | 'rust';
 
-export interface BuildGraphResult {
-  /** Cesta k zapsanému `.mini/graph.md` (relativní k `cwd`). */
+/** Jeden záznam v indexu `graph.json`. */
+export interface GraphIndexEntry {
+  /** Cesta zdrojáku relativní ke kořeni projektu (vždy s `/`). */
+  path: string;
+  /** Cesta k per-file mapě relativní ke kořeni projektu (vždy s `/`). */
   graphFile: string;
+  /** Názvy exportů — vodítko, podle čeho vybrat, který soubor otevřít. */
+  exports: string[];
+}
+
+/** Strojová podoba indexu zapsaná do `graph.json`. */
+export interface GraphIndex {
+  version: number;
+  generatedAt: string;
+  files: GraphIndexEntry[];
+}
+
+export interface BuildGraphResult {
+  /** Cesta k zapsanému indexu `.mini/graph.json` (relativní k `cwd`). */
+  indexFile: string;
+  /** Cesta k adresáři s per-file mapami `.mini/graph` (relativní k `cwd`). */
+  graphDir: string;
   /** Počet souborů (TS/TSX/PHP/Rust), ze kterých se mapa sestavila. */
   fileCount: number;
   /** Strojová podoba grafu (pro testy / další zpracování). */
@@ -53,8 +80,13 @@ export interface BuildGraphOptions {
 
 /**
  * Najde všechny mapovatelné soubory v `cwd` (TS/TSX, PHP, Rust), namapuje je
- * a uloží markdown přehled do `.mini/graph.md`. Žádný stav v `state.json` —
- * graf je čistě derivace ze zdrojáků.
+ * a uloží do adresáře `.mini/graph/` (jeden markdown na zdrojový soubor,
+ * zrcadlí strom zdrojáků) + lehký index `.mini/graph.json`. Žádný stav
+ * v `state.json` — graf je čistě derivace ze zdrojáků.
+ *
+ * Zápis je atomický: nejdřív se vše vyrobí v `.mini/graph.tmp/` + dočasném
+ * indexu, pak se starý adresář nahradí a starý monolitický `.mini/graph.md`
+ * (pokud zbyl) smaže.
  */
 export async function buildGraph(
   cwd: string = process.cwd(),
@@ -75,14 +107,56 @@ export async function buildGraph(
 
   graphs.sort((a, b) => a.path.localeCompare(b.path));
 
-  const markdown = renderGraphMarkdown(graphs);
-  const graphFileAbs = join(cwd, GRAPH_FILE);
-  await mkdir(join(cwd, '.mini'), { recursive: true });
-  const tmp = `${graphFileAbs}.tmp`;
-  await writeFile(tmp, markdown, 'utf-8');
-  await rename(tmp, graphFileAbs);
+  await writeGraphLayout(cwd, graphs);
 
-  return { graphFile: GRAPH_FILE, fileCount: graphs.length, files: graphs };
+  return { indexFile: GRAPH_INDEX, graphDir: GRAPH_DIR, fileCount: graphs.length, files: graphs };
+}
+
+/**
+ * Zapíše per-file mapy + index atomicky. Strategie: vyrobit kompletní layout
+ * v `.mini/graph.tmp/` a `.mini/graph.json.tmp`, pak prohodit (`rename` je
+ * atomický per-cesta). Plný rebuild při každém volání znamená, že stačí
+ * adresář celý nahradit — žádné osiřelé soubory po smazaných zdrojácích.
+ */
+async function writeGraphLayout(cwd: string, graphs: FileGraph[]): Promise<void> {
+  const miniDir = join(cwd, '.mini');
+  await mkdir(miniDir, { recursive: true });
+
+  const dirAbs = join(cwd, GRAPH_DIR);
+  const tmpDirAbs = `${dirAbs}.tmp`;
+  const indexAbs = join(cwd, GRAPH_INDEX);
+  const tmpIndexAbs = `${indexAbs}.tmp`;
+
+  // Čistý start tmp adresáře (kdyby zbyl po dřívějším pádu).
+  await rm(tmpDirAbs, { recursive: true, force: true });
+  await mkdir(tmpDirAbs, { recursive: true });
+
+  const entries: GraphIndexEntry[] = [];
+  for (const file of graphs) {
+    const graphFileRel = posix.join(GRAPH_DIR, `${file.path}.md`);
+    const graphFileAbs = join(cwd, graphFileRel);
+    const tmpFileAbs = join(tmpDirAbs, `${file.path}.md`);
+    await mkdir(dirname(tmpFileAbs), { recursive: true });
+    await writeFile(tmpFileAbs, renderFileGraph(file), 'utf-8');
+    entries.push({
+      path: file.path,
+      graphFile: toUnix(relative(cwd, graphFileAbs)),
+      exports: file.exports.map((e) => e.name),
+    });
+  }
+
+  const index: GraphIndex = {
+    version: GRAPH_INDEX_VERSION,
+    generatedAt: new Date().toISOString(),
+    files: entries,
+  };
+  await writeFile(tmpIndexAbs, `${JSON.stringify(index, null, 2)}\n`, 'utf-8');
+
+  // Swap: starý adresář pryč, tmp na jeho místo; pak index; pak legacy soubor.
+  await rm(dirAbs, { recursive: true, force: true });
+  await rename(tmpDirAbs, dirAbs);
+  await rename(tmpIndexAbs, indexAbs);
+  await rm(join(cwd, LEGACY_GRAPH_FILE), { force: true });
 }
 
 function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {
@@ -192,46 +266,34 @@ function toUnix(p: string): string {
 }
 
 /**
- * Vyrenderuje graf do kompaktního markdown přehledu. Jeden soubor = jedna `##`
- * sekce; imports / exports / metody jako bullety. Záměrně bez fenced kódu, ať
- * Claude může do toho zaměřovat search/grep bez markdown escape obtíží.
+ * Vyrenderuje mapu **jednoho** souboru do kompaktního markdownu: `## cesta`
+ * hlavička + imports / exports / metody jako bullety. Záměrně bez fenced kódu,
+ * ať Claude může do toho zaměřovat search/grep bez markdown escape obtíží.
+ * Jeden takový blok = obsah jednoho `.mini/graph/<cesta>.md`.
  */
-export function renderGraphMarkdown(files: FileGraph[]): string {
+export function renderFileGraph(file: FileGraph): string {
   const lines: string[] = [];
-  lines.push('# Graf projektu');
+  lines.push(`## ${file.path}`);
   lines.push('');
-  lines.push(
-    'Strojově generovaný přehled zdrojových souborů (TS/TSX, PHP, Rust) — exporty, importy, signatury. Neupravuj ručně — `mini map` ho přegeneruje.',
-  );
-  lines.push('');
-  if (files.length === 0) {
-    lines.push('_(žádné mapovatelné soubory)_');
+  if (file.imports.length > 0) {
+    lines.push('Imports:');
+    for (const imp of file.imports) {
+      lines.push(`- ${renderImport(imp)}`);
+    }
     lines.push('');
-    return lines.join('\n');
   }
-  for (const file of files) {
-    lines.push(`## ${file.path}`);
+  if (file.exports.length > 0) {
+    lines.push('Exports:');
+    for (const exp of file.exports) {
+      for (const line of renderExport(exp)) {
+        lines.push(line);
+      }
+    }
     lines.push('');
-    if (file.imports.length > 0) {
-      lines.push('Imports:');
-      for (const imp of file.imports) {
-        lines.push(`- ${renderImport(imp)}`);
-      }
-      lines.push('');
-    }
-    if (file.exports.length > 0) {
-      lines.push('Exports:');
-      for (const exp of file.exports) {
-        for (const line of renderExport(exp)) {
-          lines.push(line);
-        }
-      }
-      lines.push('');
-    }
-    if (file.imports.length === 0 && file.exports.length === 0) {
-      lines.push('_(žádné exporty ani importy)_');
-      lines.push('');
-    }
+  }
+  if (file.imports.length === 0 && file.exports.length === 0) {
+    lines.push('_(žádné exporty ani importy)_');
+    lines.push('');
   }
   return lines.join('\n');
 }

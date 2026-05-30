@@ -1,0 +1,684 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-30T00:34:10.378Z",
+  "files": [
+    {
+      "path": "src/claude/ask.ts",
+      "graphFile": ".mini/graph/src/claude/ask.ts.md",
+      "exports": [
+        "AskOptions",
+        "AskUsage",
+        "AskResult",
+        "askClaude"
+      ]
+    },
+    {
+      "path": "src/claude/spawnError.test.ts",
+      "graphFile": ".mini/graph/src/claude/spawnError.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/claude/spawnError.ts",
+      "graphFile": ".mini/graph/src/claude/spawnError.ts.md",
+      "exports": [
+        "CLAUDE_NOT_FOUND_MESSAGE",
+        "describeSpawnError"
+      ]
+    },
+    {
+      "path": "src/claude/stream.test.ts",
+      "graphFile": ".mini/graph/src/claude/stream.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/claude/stream.ts",
+      "graphFile": ".mini/graph/src/claude/stream.ts.md",
+      "exports": [
+        "StreamOptions",
+        "StreamUsage",
+        "StreamResult",
+        "StreamEvent",
+        "SystemInitEvent",
+        "AssistantEvent",
+        "UserEvent",
+        "ResultEvent",
+        "UnknownEvent",
+        "ToolUse",
+        "ToolResult",
+        "RawEnvelope",
+        "parseStreamEvent",
+        "createLineBuffer",
+        "streamWithClaude"
+      ]
+    },
+    {
+      "path": "src/claude/work.ts",
+      "graphFile": ".mini/graph/src/claude/work.ts.md",
+      "exports": [
+        "PermissionMode",
+        "WorkOptions",
+        "WorkResult",
+        "workWithClaude"
+      ]
+    },
+    {
+      "path": "src/cli.ts",
+      "graphFile": ".mini/graph/src/cli.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/apply.test.ts",
+      "graphFile": ".mini/graph/src/commands/apply.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/audit.ts",
+      "graphFile": ".mini/graph/src/commands/audit.ts.md",
+      "exports": [
+        "audit"
+      ]
+    },
+    {
+      "path": "src/commands/auto.e2e.test.ts",
+      "graphFile": ".mini/graph/src/commands/auto.e2e.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/auto.test.ts",
+      "graphFile": ".mini/graph/src/commands/auto.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/auto.ts",
+      "graphFile": ".mini/graph/src/commands/auto.ts.md",
+      "exports": [
+        "auto"
+      ]
+    },
+    {
+      "path": "src/commands/context.test.ts",
+      "graphFile": ".mini/graph/src/commands/context.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/context.ts",
+      "graphFile": ".mini/graph/src/commands/context.ts.md",
+      "exports": [
+        "CONTEXT_COMMANDS",
+        "ContextCommand",
+        "isContextCommand",
+        "context"
+      ]
+    },
+    {
+      "path": "src/commands/discuss.ts",
+      "graphFile": ".mini/graph/src/commands/discuss.ts.md",
+      "exports": [
+        "discuss"
+      ]
+    },
+    {
+      "path": "src/commands/do.test.ts",
+      "graphFile": ".mini/graph/src/commands/do.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/do.ts",
+      "graphFile": ".mini/graph/src/commands/do.ts.md",
+      "exports": [
+        "DoPhaseOptions",
+        "doPhase",
+        "applyDoStart",
+        "applyStepDone"
+      ]
+    },
+    {
+      "path": "src/commands/done.test.ts",
+      "graphFile": ".mini/graph/src/commands/done.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/done.ts",
+      "graphFile": ".mini/graph/src/commands/done.ts.md",
+      "exports": [
+        "done",
+        "buildPhaseCommitMessage",
+        "advanceToNextPhase",
+        "ApplyReportOptions",
+        "applyAutoReport",
+        "applyDone"
+      ]
+    },
+    {
+      "path": "src/commands/import-gsd.ts",
+      "graphFile": ".mini/graph/src/commands/import-gsd.ts.md",
+      "exports": [
+        "importGsd"
+      ]
+    },
+    {
+      "path": "src/commands/init.ts",
+      "graphFile": ".mini/graph/src/commands/init.ts.md",
+      "exports": [
+        "init"
+      ]
+    },
+    {
+      "path": "src/commands/install-commands.test.ts",
+      "graphFile": ".mini/graph/src/commands/install-commands.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/install-commands.ts",
+      "graphFile": ".mini/graph/src/commands/install-commands.ts.md",
+      "exports": [
+        "COMMANDS_DIR",
+        "renderCommandMd",
+        "installCommands"
+      ]
+    },
+    {
+      "path": "src/commands/map.test.ts",
+      "graphFile": ".mini/graph/src/commands/map.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/map.ts",
+      "graphFile": ".mini/graph/src/commands/map.ts.md",
+      "exports": [
+        "map"
+      ]
+    },
+    {
+      "path": "src/commands/migrate.test.ts",
+      "graphFile": ".mini/graph/src/commands/migrate.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/migrate.ts",
+      "graphFile": ".mini/graph/src/commands/migrate.ts.md",
+      "exports": [
+        "migrate"
+      ]
+    },
+    {
+      "path": "src/commands/model.ts",
+      "graphFile": ".mini/graph/src/commands/model.ts.md",
+      "exports": [
+        "model"
+      ]
+    },
+    {
+      "path": "src/commands/next.test.ts",
+      "graphFile": ".mini/graph/src/commands/next.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/next.ts",
+      "graphFile": ".mini/graph/src/commands/next.ts.md",
+      "exports": [
+        "ParsedSuggestion",
+        "next",
+        "applyNewPhase",
+        "parseSuggestion"
+      ]
+    },
+    {
+      "path": "src/commands/plan.test.ts",
+      "graphFile": ".mini/graph/src/commands/plan.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/plan.ts",
+      "graphFile": ".mini/graph/src/commands/plan.ts.md",
+      "exports": [
+        "plan",
+        "applyPlanSteps",
+        "parseStepsFromStdin",
+        "parseSteps"
+      ]
+    },
+    {
+      "path": "src/commands/status.test.ts",
+      "graphFile": ".mini/graph/src/commands/status.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/status.ts",
+      "graphFile": ".mini/graph/src/commands/status.ts.md",
+      "exports": [
+        "status",
+        "describeModels",
+        "openVerifyCount",
+        "runReportSummaryLines",
+        "isOrphanedDoing",
+        "nextActionHint"
+      ]
+    },
+    {
+      "path": "src/commands/types.ts",
+      "graphFile": ".mini/graph/src/commands/types.ts.md",
+      "exports": [
+        "StepOutcome",
+        "AutoOptions",
+        "FinalizeOptions"
+      ]
+    },
+    {
+      "path": "src/commands/undo.test.ts",
+      "graphFile": ".mini/graph/src/commands/undo.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/undo.ts",
+      "graphFile": ".mini/graph/src/commands/undo.ts.md",
+      "exports": [
+        "undo"
+      ]
+    },
+    {
+      "path": "src/commands/writeMemory.test.ts",
+      "graphFile": ".mini/graph/src/commands/writeMemory.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/commands/writeMemory.ts",
+      "graphFile": ".mini/graph/src/commands/writeMemory.ts.md",
+      "exports": [
+        "writePhaseMemory",
+        "buildPhaseMemoryMarkdown",
+        "fsSafeTimestamp"
+      ]
+    },
+    {
+      "path": "src/git.test.ts",
+      "graphFile": ".mini/graph/src/git.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/git.ts",
+      "graphFile": ".mini/graph/src/git.ts.md",
+      "exports": [
+        "GitResult",
+        "runGit",
+        "isGitRepo",
+        "hasChanges",
+        "commitAll",
+        "push",
+        "currentBranch",
+        "headSha",
+        "headSubject",
+        "isCleanWorkingTree",
+        "softResetTo"
+      ]
+    },
+    {
+      "path": "src/graph/buildGraph.test.ts",
+      "graphFile": ".mini/graph/src/graph/buildGraph.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/graph/buildGraph.ts",
+      "graphFile": ".mini/graph/src/graph/buildGraph.ts.md",
+      "exports": [
+        "GRAPH_DIR",
+        "GRAPH_INDEX",
+        "LEGACY_GRAPH_FILE",
+        "GRAPH_INDEX_VERSION",
+        "GraphIndexEntry",
+        "GraphIndex",
+        "BuildGraphResult",
+        "BuildGraphOptions",
+        "buildGraph",
+        "hasMappableProject",
+        "renderFileGraph"
+      ]
+    },
+    {
+      "path": "src/graph/mapper.test.ts",
+      "graphFile": ".mini/graph/src/graph/mapper.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/graph/mapper.ts",
+      "graphFile": ".mini/graph/src/graph/mapper.ts.md",
+      "exports": [
+        "mapFile"
+      ]
+    },
+    {
+      "path": "src/graph/phpMapper.test.ts",
+      "graphFile": ".mini/graph/src/graph/phpMapper.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/graph/phpMapper.ts",
+      "graphFile": ".mini/graph/src/graph/phpMapper.ts.md",
+      "exports": [
+        "mapPhpFile"
+      ]
+    },
+    {
+      "path": "src/graph/rustMapper.test.ts",
+      "graphFile": ".mini/graph/src/graph/rustMapper.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/graph/rustMapper.ts",
+      "graphFile": ".mini/graph/src/graph/rustMapper.ts.md",
+      "exports": [
+        "mapRustFile"
+      ]
+    },
+    {
+      "path": "src/graph/types.ts",
+      "graphFile": ".mini/graph/src/graph/types.ts.md",
+      "exports": [
+        "ExportKind",
+        "Parameter",
+        "FunctionSignature",
+        "MethodSignature",
+        "ExportInfo",
+        "ImportInfo",
+        "FileGraph"
+      ]
+    },
+    {
+      "path": "src/prompts/auditCodebase.test.ts",
+      "graphFile": ".mini/graph/src/prompts/auditCodebase.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/auditCodebase.ts",
+      "graphFile": ".mini/graph/src/prompts/auditCodebase.ts.md",
+      "exports": [
+        "CODEBASE_FILE",
+        "buildAuditCodebasePrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/autoPhase.test.ts",
+      "graphFile": ".mini/graph/src/prompts/autoPhase.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/autoPhase.ts",
+      "graphFile": ".mini/graph/src/prompts/autoPhase.ts.md",
+      "exports": [
+        "AutoPhaseRetryContext",
+        "AutoPhaseContext",
+        "buildAutoPhasePrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/discussPhase.test.ts",
+      "graphFile": ".mini/graph/src/prompts/discussPhase.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/discussPhase.ts",
+      "graphFile": ".mini/graph/src/prompts/discussPhase.ts.md",
+      "exports": [
+        "buildDiscussPhasePrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/doPhase.test.ts",
+      "graphFile": ".mini/graph/src/prompts/doPhase.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/doPhase.ts",
+      "graphFile": ".mini/graph/src/prompts/doPhase.ts.md",
+      "exports": [
+        "DoPhaseContext",
+        "buildDoPhasePrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/importGsd.test.ts",
+      "graphFile": ".mini/graph/src/prompts/importGsd.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/importGsd.ts",
+      "graphFile": ".mini/graph/src/prompts/importGsd.ts.md",
+      "exports": [
+        "buildImportGsdPrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/nextPhase.test.ts",
+      "graphFile": ".mini/graph/src/prompts/nextPhase.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/nextPhase.ts",
+      "graphFile": ".mini/graph/src/prompts/nextPhase.ts.md",
+      "exports": [
+        "BuildNextPhaseOptions",
+        "buildNextPhasePrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/planPhase.test.ts",
+      "graphFile": ".mini/graph/src/prompts/planPhase.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/planPhase.ts",
+      "graphFile": ".mini/graph/src/prompts/planPhase.ts.md",
+      "exports": [
+        "buildPlanPhasePrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/sessionContext.test.ts",
+      "graphFile": ".mini/graph/src/prompts/sessionContext.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/sessionContext.ts",
+      "graphFile": ".mini/graph/src/prompts/sessionContext.ts.md",
+      "exports": [
+        "NextSessionOptions",
+        "buildNextSessionPrompt",
+        "buildPlanSessionPrompt",
+        "DoneSessionInput",
+        "buildDoneSessionPrompt"
+      ]
+    },
+    {
+      "path": "src/prompts/writeMemory.test.ts",
+      "graphFile": ".mini/graph/src/prompts/writeMemory.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/prompts/writeMemory.ts",
+      "graphFile": ".mini/graph/src/prompts/writeMemory.ts.md",
+      "exports": [
+        "MEMORY_DIR",
+        "LAST_MEMORY_FILE",
+        "WriteMemoryPromptInput",
+        "buildWriteMemoryPrompt"
+      ]
+    },
+    {
+      "path": "src/state/brownfield.ts",
+      "graphFile": ".mini/graph/src/state/brownfield.ts.md",
+      "exports": [
+        "BROWNFIELD_IGNORED",
+        "isBrownfield"
+      ]
+    },
+    {
+      "path": "src/state/discussNotes.ts",
+      "graphFile": ".mini/graph/src/state/discussNotes.ts.md",
+      "exports": [
+        "DISCUSS_DIR",
+        "discussNotesPath",
+        "readDiscussNotes"
+      ]
+    },
+    {
+      "path": "src/state/models.ts",
+      "graphFile": ".mini/graph/src/state/models.ts.md",
+      "exports": [
+        "ModelScope",
+        "MODEL_SCOPES",
+        "SCOPE_LABELS",
+        "resolveModel",
+        "getDefaultModel"
+      ]
+    },
+    {
+      "path": "src/state/runReport.test.ts",
+      "graphFile": ".mini/graph/src/state/runReport.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/state/runReport.ts",
+      "graphFile": ".mini/graph/src/state/runReport.ts.md",
+      "exports": [
+        "RUN_DIR",
+        "RunStepStatus",
+        "RunVerdict",
+        "RunReportStep",
+        "RunReportVerifyItem",
+        "RunReport",
+        "runReportPath",
+        "previousRunReportPath",
+        "ensureRunDir",
+        "runReportExists",
+        "RunReportParseError",
+        "ParseRunReportContext",
+        "parseRunReport",
+        "readRunReport",
+        "RunReportSummary",
+        "summarizeRunReportText",
+        "readRunReportSummary"
+      ]
+    },
+    {
+      "path": "src/state/store.test.ts",
+      "graphFile": ".mini/graph/src/state/store.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/state/store.ts",
+      "graphFile": ".mini/graph/src/state/store.ts.md",
+      "exports": [
+        "SCHEMA_VERSION",
+        "LegacyStateError",
+        "statePath",
+        "statePrevPath",
+        "phasesDir",
+        "phaseFileName",
+        "phasePath",
+        "projectPath",
+        "exists",
+        "hasPrev",
+        "loadHeader",
+        "saveHeader",
+        "loadPhase",
+        "savePhase",
+        "loadFullState",
+        "load",
+        "save",
+        "loadPrev",
+        "restorePrev",
+        "readProject",
+        "writeProject",
+        "newState"
+      ]
+    },
+    {
+      "path": "src/state/types.ts",
+      "graphFile": ".mini/graph/src/state/types.ts.md",
+      "exports": [
+        "StepStatus",
+        "PhaseStatus",
+        "Step",
+        "PhaseAutoCommit",
+        "Phase",
+        "ProjectModels",
+        "ProjectState",
+        "PhaseSummary",
+        "StateHeader"
+      ]
+    },
+    {
+      "path": "src/ui/ask.ts",
+      "graphFile": ".mini/graph/src/ui/ask.ts.md",
+      "exports": [
+        "ask",
+        "nonEmpty",
+        "trim"
+      ]
+    },
+    {
+      "path": "src/ui/interactive.ts",
+      "graphFile": ".mini/graph/src/ui/interactive.ts.md",
+      "exports": [
+        "isInteractive"
+      ]
+    },
+    {
+      "path": "src/ui/log.ts",
+      "graphFile": ".mini/graph/src/ui/log.ts.md",
+      "exports": [
+        "log"
+      ]
+    },
+    {
+      "path": "src/ui/streamRender.test.ts",
+      "graphFile": ".mini/graph/src/ui/streamRender.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/ui/streamRender.ts",
+      "graphFile": ".mini/graph/src/ui/streamRender.ts.md",
+      "exports": [
+        "StreamRenderer",
+        "createStreamRenderer"
+      ]
+    },
+    {
+      "path": "src/ui/usage.test.ts",
+      "graphFile": ".mini/graph/src/ui/usage.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/ui/usage.ts",
+      "graphFile": ".mini/graph/src/ui/usage.ts.md",
+      "exports": [
+        "logUsage",
+        "logStreamSummary"
+      ]
+    },
+    {
+      "path": "src/version.test.ts",
+      "graphFile": ".mini/graph/src/version.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/version.ts",
+      "graphFile": ".mini/graph/src/version.ts.md",
+      "exports": [
+        "BumpLevel",
+        "BUMP_LEVELS",
+        "isBumpLevel",
+        "BumpResult",
+        "bumpSemver",
+        "bumpPackageVersion"
+      ]
+    },
+    {
+      "path": "vitest.config.ts",
+      "graphFile": ".mini/graph/vitest.config.ts.md",
+      "exports": [
+        "default"
+      ]
+    }
+  ]
+}

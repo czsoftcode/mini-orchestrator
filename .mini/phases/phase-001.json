@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "title": "Testovací infrastruktura",
+  "goal": "Vitest je nastavený s `npm test` skriptem a běží minimálně 5 unit testů pro `src/state/store.ts` (save/load/restorePrev/atomic write).",
+  "status": "done",
+  "startedAt": "2026-05-23T22:02:24.989Z",
+  "completedAt": "2026-05-23T22:05:54.633Z"
+}

@@ -1,0 +1,34 @@
+{
+  "id": 6,
+  "title": "Flag `--max-turns` pro omezení délky session",
+  "goal": "`mini do [--stream] --max-turns N` předá Claude Code parametr `--max-turns N`, takže session se automaticky zastaví po N odpovědích a spotřebuje méně tokenů; `mini auto` ho také přijme a předá dál.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přidat parsování a validaci `--max-turns N` v cli.ts pro `do` a `auto`",
+      "status": "done"
+    },
+    {
+      "title": "Rozšířit `AutoOptions` o `maxTurns?: number` v commands/types.ts",
+      "status": "done"
+    },
+    {
+      "title": "Předat `maxTurns` přes `auto.ts` do volání `doPhase`",
+      "status": "done"
+    },
+    {
+      "title": "Propsat `maxTurns` z `doPhase` do `streamWithClaude` i `workWithClaude`",
+      "status": "done"
+    },
+    {
+      "title": "Přidat `--max-turns N` do args v claude/stream.ts a claude/work.ts",
+      "status": "done"
+    },
+    {
+      "title": "Doplnit testy pro stream/auto pokrývající nový flag",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T02:35:58.026Z",
+  "completedAt": "2026-05-24T02:49:08.239Z"
+}

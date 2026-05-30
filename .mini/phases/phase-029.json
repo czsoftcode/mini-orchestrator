@@ -1,0 +1,34 @@
+{
+  "id": 29,
+  "title": "Průběžný zápis kroků v do",
+  "goal": "Přidat neinteraktivní pod-příkaz (např. mini do --apply --step-done <název>), který během /mini:do označí jednotlivý krok za hotový rovnou ve state.json, a rozšířit do session prompt o instrukci volat ho po každém dokončeném kroku — aby po pádu Claude bylo vidět, kde se skončilo.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přidat applyStepDone(title, cwd) do do.ts — najde krok aktuální fáze podle názvu (tolerantně: trim, fallback case-insensitive), označí ho done a hned uloží state.json; chyba když fáze není doing nebo se krok nenajde",
+      "status": "done"
+    },
+    {
+      "title": "Zaregistrovat v cli.ts flag mini do --apply --step-done <název> — když je --step-done, volá applyStepDone, jinak stávající applyDoStart",
+      "status": "done"
+    },
+    {
+      "title": "Rozšířit do session prompt (buildAutoPhasePrompt) o instrukci volat mini do --apply --step-done <přesný název> po každém dokončeném kroku, ještě před finálním reportem",
+      "status": "done"
+    },
+    {
+      "title": "Testy v do.test.ts pro applyStepDone — úspěch, nenalezený krok, tolerantní matching; a test že prompt instrukci obsahuje",
+      "status": "done"
+    },
+    {
+      "title": "typecheck/build/test a e2e přes lokální build: plan → do --apply → --step-done → ověřit že status kroku ve state.json je done",
+      "status": "done"
+    }
+  ],
+  "completedAt": "2026-05-29T22:36:02.933Z",
+  "autoCommit": {
+    "preSha": "6bb46c52c1579824ea4f58e1e70753a3041be5fd",
+    "sha": "786dd33b525dd0ece9fce7d934006c0f45cb8924",
+    "subject": "Fáze 29: Průběžný zápis kroků v do"
+  }
+}

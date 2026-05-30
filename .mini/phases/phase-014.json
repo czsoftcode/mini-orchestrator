@@ -1,0 +1,35 @@
+{
+  "id": 14,
+  "title": "Mapování projektu do grafu znalostí",
+  "goal": "Namapovat projekt podle graphify tak, aby se neodesílali celé soubory, ale jenom jejich mapa. Buď se napíše vlastní kód nebo využije stávající systém na https://github.com/safishamsi/graphify",
+  "status": "done",
+  "steps": [
+    {
+      "title": "TS mapper extrahuje exporty, importy, signatury z fixture souboru",
+      "status": "done"
+    },
+    {
+      "title": "buildGraph.ts zapíše .mini/graph.md ze zdrojových souborů projektu",
+      "status": "done"
+    },
+    {
+      "title": "`mini map` příkaz v CLI spustí regeneraci a vypíše počet souborů",
+      "status": "done"
+    },
+    {
+      "title": "buildNextPhasePrompt vloží blok s grafem pokud .mini/graph.md existuje",
+      "status": "done"
+    },
+    {
+      "title": "finalizePhaseSideEffects volá regeneraci grafu po auto-commitu",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T14:55:28.338Z",
+  "completedAt": "2026-05-24T15:26:15.209Z",
+  "autoCommit": {
+    "preSha": "6e45cebfc98b63ca6fb9eb2fb4a0bc29075555d1",
+    "sha": "77ed2e87b92395b26117649d3951090b6642c0e1",
+    "subject": "Fáze 14: Mapování projektu do grafu znalostí"
+  }
+}

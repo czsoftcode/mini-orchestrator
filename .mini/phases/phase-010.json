@@ -1,0 +1,38 @@
+{
+  "id": 10,
+  "title": "Příkaz mini audit a úprava init",
+  "goal": "`mini audit` spustí Claude Code session, která projde existující kód projektu a vytvoří (nebo aktualizuje proti aktuálnímu stavu) `.mini/codebase.md` s přehledem projektu pro pozdější použití orchestrátorem; soubor se neposílá automaticky do žádného jiného promptu.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Vytvořit utilitu brownfield detekce (sdílená init+audit)",
+      "status": "done"
+    },
+    {
+      "title": "Přidat scope 'audit' do ProjectModels a models.ts",
+      "status": "done"
+    },
+    {
+      "title": "Napsat prompt builder auditCodebase.ts + snapshot test",
+      "status": "done"
+    },
+    {
+      "title": "Implementovat příkaz mini audit (greenfield warning, Claude session, tokens summary)",
+      "status": "done"
+    },
+    {
+      "title": "Zaregistrovat audit v cli.ts",
+      "status": "done"
+    },
+    {
+      "title": "Upravit init — v brownfieldu nabídnout spustit audit",
+      "status": "done"
+    },
+    {
+      "title": "Doplnit README (tabulka příkazů, .mini/codebase.md, zmínka v init)",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T07:42:51.941Z",
+  "completedAt": "2026-05-24T07:49:41.499Z"
+}

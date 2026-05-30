@@ -1,0 +1,35 @@
+{
+  "id": 16,
+  "title": "Discuss vloží graph.md místo projectMd",
+  "goal": "`buildDiscussPhasePrompt` přijme volitelný `graphMd` parametr a pokud `.mini/graph.md` existuje, vloží ho do promptu místo celého `projectMd`; `discuss.ts` ho načte a předá, snapshot testy se aktualizují.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přidat volitelný `graphMd` parametr do `buildDiscussPhasePrompt`",
+      "status": "done"
+    },
+    {
+      "title": "Použít `graphMd` v promptu místo `projectMd`, pokud je předán",
+      "status": "done"
+    },
+    {
+      "title": "V `discuss.ts` načíst `.mini/graph.md` a předat ho do prompt builderu",
+      "status": "done"
+    },
+    {
+      "title": "Přidat snapshot test pro případ s `graphMd`",
+      "status": "done"
+    },
+    {
+      "title": "Aktualizovat existující snapshoty (`vitest -u`)",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T18:20:27.615Z",
+  "completedAt": "2026-05-24T18:31:00.534Z",
+  "autoCommit": {
+    "preSha": "c56bbeb152ebde47f9590c007f54429c4538f194",
+    "sha": "ed4a5f1089acc40b0b0dd1b4231a6b51bb0e8f9a",
+    "subject": "Fáze 16: Discuss vloží graph.md místo projectMd"
+  }
+}

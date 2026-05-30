@@ -1,982 +1,167 @@
 {
-  "version": 1,
+  "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 31,
+  "currentPhaseId": 32,
   "phases": [
     {
       "id": 1,
       "title": "Testovací infrastruktura",
-      "goal": "Vitest je nastavený s `npm test` skriptem a běží minimálně 5 unit testů pro `src/state/store.ts` (save/load/restorePrev/atomic write).",
-      "status": "done",
-      "startedAt": "2026-05-23T22:02:24.989Z",
-      "completedAt": "2026-05-23T22:05:54.633Z"
+      "status": "done"
     },
     {
       "id": 2,
       "title": "Snapshot testy pro prompty",
-      "goal": "`src/prompts/*.ts` (nextPhase, planPhase, doPhase, importGsd) mají snapshot/unit testy ověřující výstup pro reprezentativní vstupy (prázdný stav, stav s historií fází, fáze s kroky); `npm test` všechny prochází.",
-      "status": "done",
-      "startedAt": "2026-05-23T22:08:17.056Z",
-      "completedAt": "2026-05-23T22:12:57.446Z"
+      "status": "done"
     },
     {
       "id": 3,
       "title": "Testy parserů a přechodů stavu",
-      "goal": "Pure helpery v commands (`parseSuggestion` v next.ts, `parseSteps` v plan.ts, `advanceToNextPhase` v done.ts) jsou vytažené jako exportované funkce a mají unit testy pokrývající happy path i hraniční případy (prázdný/poškozený vstup, žádná další fáze, několik kandidátů); `npm test` všechny prochází.",
-      "status": "done",
-      "startedAt": "2026-05-23T22:41:45.931Z",
-      "completedAt": "2026-05-23T22:47:28.923Z"
+      "status": "done"
     },
     {
       "id": 4,
       "title": "Streamovaný výstup příkazu `do`",
-      "goal": "`mini do` volitelně spouští Claude Code v print-módu (`--output-format stream-json`) místo interaktivního TUI — průběžně zobrazuje aktuální nástroj/akci a na konci vypíše cenu a počet tokenů; stávající interaktivní režim zůstane jako fallback přes přepínač.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přidat CLI flag --stream do příkazu do",
-          "status": "done"
-        },
-        {
-          "title": "Implementovat streamWithClaude s parsováním NDJSON",
-          "status": "done"
-        },
-        {
-          "title": "Přidat UI renderer aktuální akce ze stream událostí",
-          "status": "done"
-        },
-        {
-          "title": "Vypsat závěrečný souhrn ceny a tokenů",
-          "status": "done"
-        },
-        {
-          "title": "Propojit flag v doPhase mezi work a stream",
-          "status": "done"
-        },
-        {
-          "title": "Jednotkové testy parseru stream událostí",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-23T23:26:03.315Z",
-      "completedAt": "2026-05-24T01:45:43.484Z"
+      "status": "done"
     },
     {
       "id": 5,
       "title": "Automatické dokončení fáze v `auto`",
-      "goal": "`mini auto` doběhne celý cyklus (next → plan → do → done) bez jediného promptu na uživatele — `done` přijme `AutoOptions` a v `auto: true` režimu automaticky označí fázi jako hotovou a posune stav na další.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Rozšířit `done()` o parametr `AutoOptions` a návratový `StepOutcome`",
-          "status": "done"
-        },
-        {
-          "title": "V `auto: true` přeskočit interaktivní `ask` a fázi auto-finalizovat jako `done`",
-          "status": "done"
-        },
-        {
-          "title": "V `auto: true` posunout stav na další fázi přes `advanceToNextPhase`",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat `auto.ts` aby volal `done({ auto: true })` a reagoval na výsledek",
-          "status": "done"
-        },
-        {
-          "title": "Doplnit unit testy pro `done({ auto: true })` v `done.test.ts`",
-          "status": "done"
-        },
-        {
-          "title": "Ověřit end-to-end že `mini auto` proběhne bez promptu",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T01:50:06.723Z",
-      "completedAt": "2026-05-24T02:28:56.872Z"
+      "status": "done"
     },
     {
       "id": 6,
       "title": "Flag `--max-turns` pro omezení délky session",
-      "goal": "`mini do [--stream] --max-turns N` předá Claude Code parametr `--max-turns N`, takže session se automaticky zastaví po N odpovědích a spotřebuje méně tokenů; `mini auto` ho také přijme a předá dál.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přidat parsování a validaci `--max-turns N` v cli.ts pro `do` a `auto`",
-          "status": "done"
-        },
-        {
-          "title": "Rozšířit `AutoOptions` o `maxTurns?: number` v commands/types.ts",
-          "status": "done"
-        },
-        {
-          "title": "Předat `maxTurns` přes `auto.ts` do volání `doPhase`",
-          "status": "done"
-        },
-        {
-          "title": "Propsat `maxTurns` z `doPhase` do `streamWithClaude` i `workWithClaude`",
-          "status": "done"
-        },
-        {
-          "title": "Přidat `--max-turns N` do args v claude/stream.ts a claude/work.ts",
-          "status": "done"
-        },
-        {
-          "title": "Doplnit testy pro stream/auto pokrývající nový flag",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T02:35:58.026Z",
-      "completedAt": "2026-05-24T02:49:08.239Z"
+      "status": "done"
     },
     {
       "id": 7,
       "title": "Příkaz `mini discuss` před plánováním",
-      "goal": "`mini discuss` spustí interaktivní session Claude Code zaměřenou na aktuální navrženou fázi — uživatel může s agentem prodiskutovat záměr, agent může číst kód — a po ukončení session nabídne uložení upraveného title/goal fáze do stavu.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přidat příkaz `discuss` do `cli.ts`",
-          "status": "done"
-        },
-        {
-          "title": "Sestavit discuss prompt z kontextu aktuální fáze",
-          "status": "done"
-        },
-        {
-          "title": "Spustit interaktivní Claude Code session (přes `workWithClaude`)",
-          "status": "done"
-        },
-        {
-          "title": "Po ukončení session nabídnout úpravu title/goal fáze",
-          "status": "done"
-        },
-        {
-          "title": "Uložit změny do stavu a potvrdit výstup",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T02:54:53.812Z",
-      "completedAt": "2026-05-24T03:09:02.177Z"
+      "status": "done"
     },
     {
       "id": 8,
       "title": "Poznámky z diskuze pro mini plan a mini do",
-      "goal": "Upravit plan a do tak, aby četl poznámky z diskuze, pokud existuje; Dej claude přečíst soubor .mini/discuss/phase-8.md, jsou tam pro něj instrukce",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přidat `Write` do `DISCUSS_ALLOWED_TOOLS`, vytvořit `.mini/discuss/` adresář před spuštěním Claude",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat `buildDiscussPhasePrompt` — přidat instrukci zapsat notes soubor na konci diskuse",
-          "status": "done"
-        },
-        {
-          "title": "Po discuss session ověřit existenci notes souboru, zobrazit `log.dim` pokud chybí",
-          "status": "done"
-        },
-        {
-          "title": "`buildPlanPhasePrompt` — načíst a vložit discuss notes do promptu pokud soubor existuje",
-          "status": "done"
-        },
-        {
-          "title": "`buildDoPhasePrompt` — načíst a vložit discuss notes do promptu pokud soubor existuje",
-          "status": "done"
-        },
-        {
-          "title": "Regenerovat snapshot testy po změnách promptů",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat README — doplnit `.mini/discuss/phase-{id}.md` do dokumentace",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T04:12:45.973Z",
-      "completedAt": "2026-05-24T05:03:22.031Z"
+      "status": "done"
     },
     {
       "id": 9,
       "title": "Jeden průchod Claude na fázi",
-      "goal": "Cílem je zjednodušit průchod fázi z restartu claude po každém kroku na jednoprůchodový.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Prompt builder pro celou fázi s instrukcí k reportu",
-          "status": "done"
-        },
-        {
-          "title": "Typy reportu a vytváření `.mini/run/` adresáře",
-          "status": "done"
-        },
-        {
-          "title": "`doPhase` auto-varianta bez focusedStep",
-          "status": "done"
-        },
-        {
-          "title": "Parser YAML reportu s validací názvů kroků",
-          "status": "done"
-        },
-        {
-          "title": "`done({auto})` čte report, fallback na interaktivní",
-          "status": "done"
-        },
-        {
-          "title": "`auto.ts` jeden průchod + retry smyčka max 3",
-          "status": "done"
-        },
-        {
-          "title": "Snapshot testy auto-promptu a aktualizace README",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T05:22:46.688Z",
-      "completedAt": "2026-05-24T06:48:01.918Z"
+      "status": "done"
     },
     {
       "id": 10,
       "title": "Příkaz mini audit a úprava init",
-      "goal": "`mini audit` spustí Claude Code session, která projde existující kód projektu a vytvoří (nebo aktualizuje proti aktuálnímu stavu) `.mini/codebase.md` s přehledem projektu pro pozdější použití orchestrátorem; soubor se neposílá automaticky do žádného jiného promptu.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Vytvořit utilitu brownfield detekce (sdílená init+audit)",
-          "status": "done"
-        },
-        {
-          "title": "Přidat scope 'audit' do ProjectModels a models.ts",
-          "status": "done"
-        },
-        {
-          "title": "Napsat prompt builder auditCodebase.ts + snapshot test",
-          "status": "done"
-        },
-        {
-          "title": "Implementovat příkaz mini audit (greenfield warning, Claude session, tokens summary)",
-          "status": "done"
-        },
-        {
-          "title": "Zaregistrovat audit v cli.ts",
-          "status": "done"
-        },
-        {
-          "title": "Upravit init — v brownfieldu nabídnout spustit audit",
-          "status": "done"
-        },
-        {
-          "title": "Doplnit README (tabulka příkazů, .mini/codebase.md, zmínka v init)",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T07:42:51.941Z",
-      "completedAt": "2026-05-24T07:49:41.499Z"
+      "status": "done"
     },
     {
       "id": 11,
       "title": "Commit po mini done",
-      "goal": "Po ukončení fáze při závěrečném mini done se commitne práce; push se pak dělá na požádání.",
-      "status": "done",
-      "startedAt": "2026-05-24T08:20:27.474Z",
-      "completedAt": "2026-05-24T08:30:25.827Z"
+      "status": "done"
     },
     {
       "id": 12,
       "title": "Undo respektuje auto-commit",
-      "goal": "Po fázi, kterou `mini done` automaticky commitnul, `mini undo` nabídne i revert posledního commitu (soft reset na předchozí HEAD, pokud je auto-commit HEAD a v pracovním stromu nejsou nové změny); state.json a git zůstanou v konzistentním stavu, jinak undo jen vrátí state a vypíše, co s commitem řešit ručně.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Helper v git.ts pro HEAD SHA a subject",
-          "status": "done"
-        },
-        {
-          "title": "Helper pro detekci čistého pracovního stromu",
-          "status": "done"
-        },
-        {
-          "title": "Helper pro soft reset na předchozí commit",
-          "status": "done"
-        },
-        {
-          "title": "Uložit pre-commit HEAD do state před auto-commitem",
-          "status": "done"
-        },
-        {
-          "title": "Undo detekuje auto-commit a nabídne revert",
-          "status": "done"
-        },
-        {
-          "title": "Při neshodě jen vrátit state a vypsat hint",
-          "status": "done"
-        },
-        {
-          "title": "Testy pro nové git helpery a undo větve",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T12:39:38.319Z",
-      "completedAt": "2026-05-24T13:03:55.704Z"
+      "status": "done"
     },
     {
       "id": 13,
       "title": "Záznam paměti po fázi",
-      "goal": "Po dokončení fáze přes `mini done` (i `mini auto`) se do `.mini/memory/phase-{id}-{timestamp}.md` zapíše stručné shrnutí hotové práce a `.mini/last-memory.md` ukazuje (symlink) na poslední záznam.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přidat `memory` scope do ProjectModels a `mini model`",
-          "status": "done"
-        },
-        {
-          "title": "Vytvořit prompt builder writeMemory.ts + snapshot test",
-          "status": "done"
-        },
-        {
-          "title": "Implementovat writePhaseMemory se zápisem souboru a symlinkem",
-          "status": "done"
-        },
-        {
-          "title": "Sloučit commit+memory do finalizePhaseSideEffects v done.ts",
-          "status": "done"
-        },
-        {
-          "title": "Doplnit testy do done.test.ts (volá se jen u done)",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat README o memory soubory a scope",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T13:56:09.282Z",
-      "completedAt": "2026-05-24T14:15:12.998Z"
+      "status": "done"
     },
     {
       "id": 14,
       "title": "Mapování projektu do grafu znalostí",
-      "goal": "Namapovat projekt podle graphify tak, aby se neodesílali celé soubory, ale jenom jejich mapa. Buď se napíše vlastní kód nebo využije stávající systém na https://github.com/safishamsi/graphify",
-      "status": "done",
-      "steps": [
-        {
-          "title": "TS mapper extrahuje exporty, importy, signatury z fixture souboru",
-          "status": "done"
-        },
-        {
-          "title": "buildGraph.ts zapíše .mini/graph.md ze zdrojových souborů projektu",
-          "status": "done"
-        },
-        {
-          "title": "`mini map` příkaz v CLI spustí regeneraci a vypíše počet souborů",
-          "status": "done"
-        },
-        {
-          "title": "buildNextPhasePrompt vloží blok s grafem pokud .mini/graph.md existuje",
-          "status": "done"
-        },
-        {
-          "title": "finalizePhaseSideEffects volá regeneraci grafu po auto-commitu",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T14:55:28.338Z",
-      "completedAt": "2026-05-24T15:26:15.209Z",
-      "autoCommit": {
-        "preSha": "6e45cebfc98b63ca6fb9eb2fb4a0bc29075555d1",
-        "sha": "77ed2e87b92395b26117649d3951090b6642c0e1",
-        "subject": "Fáze 14: Mapování projektu do grafu znalostí"
-      }
+      "status": "done"
     },
     {
       "id": 15,
       "title": "mini map pro PHP a Rust",
-      "goal": "`mini map` rozpozná `.php` a `.rs` soubory a zahrne je do `.mini/graph.md` — PHP mapper extrahuje třídy, funkce a `use` importy, Rust mapper extrahuje `pub fn`, `pub struct/enum/trait` a `use` importy; výstup má stejný formát jako TS sekce a prochází unit testy.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Rozšířit `ExportKind` v `types.ts` o `struct` a `trait`",
-          "status": "done"
-        },
-        {
-          "title": "Napsat `mapPhpFile` s regex extraktorem do `src/graph/phpMapper.ts`",
-          "status": "done"
-        },
-        {
-          "title": "Napsat `mapRustFile` s regex extraktorem do `src/graph/rustMapper.ts`",
-          "status": "done"
-        },
-        {
-          "title": "Upravit `buildGraph.ts` — sbírat `.php` a `.rs` soubory, volat příslušné mappery",
-          "status": "done"
-        },
-        {
-          "title": "Zobecnit detekci jazyka a hlášky v `map.ts` a `renderGraphMarkdown`",
-          "status": "done"
-        },
-        {
-          "title": "Unit testy pro PHP a Rust mappery (včetně negativních fixtur s komentáři)",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T17:54:55.335Z",
-      "completedAt": "2026-05-24T18:15:56.141Z",
-      "autoCommit": {
-        "preSha": "77ed2e87b92395b26117649d3951090b6642c0e1",
-        "sha": "c56bbeb152ebde47f9590c007f54429c4538f194",
-        "subject": "Fáze 15: mini map pro PHP a Rust"
-      }
+      "status": "done"
     },
     {
       "id": 16,
       "title": "Discuss vloží graph.md místo projectMd",
-      "goal": "`buildDiscussPhasePrompt` přijme volitelný `graphMd` parametr a pokud `.mini/graph.md` existuje, vloží ho do promptu místo celého `projectMd`; `discuss.ts` ho načte a předá, snapshot testy se aktualizují.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přidat volitelný `graphMd` parametr do `buildDiscussPhasePrompt`",
-          "status": "done"
-        },
-        {
-          "title": "Použít `graphMd` v promptu místo `projectMd`, pokud je předán",
-          "status": "done"
-        },
-        {
-          "title": "V `discuss.ts` načíst `.mini/graph.md` a předat ho do prompt builderu",
-          "status": "done"
-        },
-        {
-          "title": "Přidat snapshot test pro případ s `graphMd`",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat existující snapshoty (`vitest -u`)",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T18:20:27.615Z",
-      "completedAt": "2026-05-24T18:31:00.534Z",
-      "autoCommit": {
-        "preSha": "c56bbeb152ebde47f9590c007f54429c4538f194",
-        "sha": "ed4a5f1089acc40b0b0dd1b4231a6b51bb0e8f9a",
-        "subject": "Fáze 16: Discuss vloží graph.md místo projectMd"
-      }
+      "status": "done"
     },
     {
       "id": 17,
       "title": "Paměť fáze bez Claude API",
-      "goal": "`writePhaseMemory` vygeneruje `.mini/memory/phase-{id}.md` přímo z šablony v TypeScriptu (title, goal, kroky a jejich stav, případně obsah run reportu) bez volání Claude API — Claude se zavolá jen pokud je explicitně zapnutý přes model scope `memory`.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přečíst discuss a run soubory do řetězce (nebo prázdný string)",
-          "status": "done"
-        },
-        {
-          "title": "Sestavit markdown z Phase objektu bez Claude (id, title, goal, kroky+statusy, humanNotes, autoCommit)",
-          "status": "done"
-        },
-        {
-          "title": "Přidat discuss a run obsah jako sekce do markdown",
-          "status": "done"
-        },
-        {
-          "title": "Zapsat soubor přes `fs.writeFile` místo `askClaude`",
-          "status": "done"
-        },
-        {
-          "title": "Zachovat volání Claude pokud `state.models?.memory != null`",
-          "status": "done"
-        },
-        {
-          "title": "Smazat `MEMORY_ALLOWED_TOOLS`, `MEMORY_TIMEOUT_MS` a import `buildWriteMemoryPrompt` pokud se nepoužívají",
-          "status": "skipped"
-        }
-      ],
-      "startedAt": "2026-05-24T18:55:33.731Z",
-      "completedAt": "2026-05-24T19:03:55.906Z",
-      "autoCommit": {
-        "preSha": "ed4a5f1089acc40b0b0dd1b4231a6b51bb0e8f9a",
-        "sha": "dd458a662e0eac779f7e091e2c2e483016465e76",
-        "subject": "Fáze 17: Paměť fáze bez Claude API"
-      }
+      "status": "done"
     },
     {
       "id": 18,
       "title": "Zjednodušení workflow",
-      "goal": "CO se dá ještě zjednodušit, aby se štřili tokeny a projekt zbytečně nebobtnal",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Zjednodušit historii fází v `nextPhase.ts` na jeden řádek",
-          "status": "done"
-        },
-        {
-          "title": "Přidat `lastMemoryMd` do `buildNextPhasePrompt`, smazat `graphMd`",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat `next.ts` — číst `last-memory.md`, smazat `readGraphIfExists`",
-          "status": "done"
-        },
-        {
-          "title": "Smazat `graphMd` z `buildDiscussPhasePrompt`, přidat instrukci k read",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat `discuss.ts` — smazat `readGraphIfExists` a volání grafu",
-          "status": "done"
-        },
-        {
-          "title": "Přepsat testy `nextPhase.test.ts` a `discussPhase.test.ts`",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-24T19:28:16.636Z",
-      "completedAt": "2026-05-24T19:33:44.042Z",
-      "autoCommit": {
-        "preSha": "dd458a662e0eac779f7e091e2c2e483016465e76",
-        "sha": "970405ef476d2e9375a1395b0972799610e055f2",
-        "subject": "Fáze 18: Zjednodušení workflow"
-      }
+      "status": "done"
     },
     {
       "id": 19,
       "title": "Oprava snapshotu buildGraph",
-      "goal": "Snapshot v `src/graph/buildGraph.test.ts` se srovná s aktuálním headerem grafu („…zdrojových souborů (TS/TSX, PHP, Rust)\") a `npm test` projde celý zeleně (0 selhání).",
-      "status": "done",
-      "startedAt": "2026-05-24T19:42:22.926Z",
-      "completedAt": "2026-05-25T08:06:47.544Z",
-      "autoCommit": {
-        "preSha": "970405ef476d2e9375a1395b0972799610e055f2",
-        "sha": "db7dfa0ecfc8730dd23ae99ebd41e1fc871f7cdf",
-        "subject": "Fáze 19: Oprava snapshotu buildGraph"
-      }
+      "status": "done"
     },
     {
       "id": 20,
       "title": "Testy příkazu mini status",
-      "goal": "Nový soubor `src/commands/status.test.ts` pokrývá `nextActionHint` pro všechny stavy fáze a `describeModels`, a `npm test` projde celý zeleně.",
-      "status": "done",
-      "startedAt": "2026-05-25T10:22:51.814Z",
-      "completedAt": "2026-05-25T10:34:24.279Z",
-      "autoCommit": {
-        "preSha": "db7dfa0ecfc8730dd23ae99ebd41e1fc871f7cdf",
-        "sha": "65e2e64de2fcfc523f4f60ce434e0313fc2cefd5",
-        "subject": "Fáze 20: Testy příkazu mini status"
-      }
+      "status": "done"
     },
     {
       "id": 21,
       "title": "Report označí změny k ručnímu ověření",
-      "goal": "Report fáze umí pole `verify` (seznam bodů, které Claude sám neověřil — typicky UI/UX), a `mini done` tyto body před uzavřením fáze zobrazí a v auto módu si vyžádá potvrzení člověka, místo aby fázi rovnou označil za hotovou.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "parseRunReport čte volitelné pole verify (title+detail)",
-          "status": "done"
-        },
-        {
-          "title": "buildAutoPhasePrompt doplní instrukce a vzor verify",
-          "status": "done"
-        },
-        {
-          "title": "done.ts zobrazí verify body a ptá se pass/skip/issue/block",
-          "status": "done"
-        },
-        {
-          "title": "issue zastaví uzavření, block vytvoří podfázi s float ID",
-          "status": "done"
-        },
-        {
-          "title": "advanceToNextPhase korektně posune na vloženou podfázi",
-          "status": "done"
-        },
-        {
-          "title": "Testy parseru verify, done flow a vložení podfáze",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-25T11:27:10.858Z",
-      "completedAt": "2026-05-25T11:35:52.915Z",
-      "autoCommit": {
-        "preSha": "65e2e64de2fcfc523f4f60ce434e0313fc2cefd5",
-        "sha": "e27fb6a7911ad16d21c0e56ee68b95c27ed67b89",
-        "subject": "Fáze 21: Report označí změny k ručnímu ověření"
-      }
+      "status": "done"
     },
     {
       "id": 22,
       "title": "Návrh na vylepšení mini orchestrátoru",
-      "goal": "Sepiš, neimplementuj co by se dalo vylepšit v programu",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Sepsat nálezy ke správnosti workflow (osiřelá doing)",
-          "status": "done"
-        },
-        {
-          "title": "Sepsat nálezy k mrtvému kódu a úklidu",
-          "status": "done"
-        },
-        {
-          "title": "Sepsat nálezy k robustnosti a chybovým stavům",
-          "status": "done"
-        },
-        {
-          "title": "Sepsat nálezy k DX a výstupu CLI",
-          "status": "done"
-        },
-        {
-          "title": "Sloučit nálezy do .mini/improvements.md s prioritou/odhadem",
-          "status": "done"
-        },
-        {
-          "title": "Ověřit idempotenci a akčnost položek backlogu",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T19:37:49.092Z",
-      "completedAt": "2026-05-29T19:45:51.689Z",
-      "autoCommit": {
-        "preSha": "e27fb6a7911ad16d21c0e56ee68b95c27ed67b89",
-        "sha": "6924c30dd8e83d0119ee8b1fbdfb233f1aa402fc",
-        "subject": "Fáze 22: Návrh na vylepšení mini orchestrátoru"
-      }
+      "status": "done"
     },
     {
       "id": 23,
       "title": "Práce podle .mini/improvements.md, bod 1.",
-      "goal": "Hotové W1 až \u0017W4",
-      "status": "done",
-      "steps": [
-        {
-          "title": "W1: osiřelou doing fázi po podfázi dozavřít",
-          "status": "done"
-        },
-        {
-          "title": "W2: Math.floor v commitPhase brání desetinnému ID",
-          "status": "done"
-        },
-        {
-          "title": "W3: verify v auto módu bez TTY bezpečně",
-          "status": "done"
-        },
-        {
-          "title": "W4: opakovaný done nepřehrává vyřešené verify body",
-          "status": "done"
-        },
-        {
-          "title": "Doplnit testy pro W1–W4",
-          "status": "done"
-        },
-        {
-          "title": "Zelené testy a čistý tsc --noEmit",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T19:52:44.114Z",
-      "completedAt": "2026-05-29T20:07:17.681Z"
+      "status": "done"
     },
     {
       "id": 24,
       "title": "Bod 2. z .mini/improvements.md",
-      "goal": "Hotové fáze C1 - C3",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Zdokumentovat živé MEMORY_* symboly ve writeMemory.ts (C1)",
-          "status": "done"
-        },
-        {
-          "title": "Odstranit zavádějící TODO o jejich smazání (C1)",
-          "status": "done"
-        },
-        {
-          "title": "Přidat migraci state.model → models.default ve store.load (C2)",
-          "status": "done"
-        },
-        {
-          "title": "Zrušit fallbacky na state.model v models.ts a status.ts (C2)",
-          "status": "done"
-        },
-        {
-          "title": "Zúžit typ PermissionMode na reálně používané hodnoty (C3)",
-          "status": "done"
-        },
-        {
-          "title": "Doplnit/upravit testy pro migraci a PermissionMode",
-          "status": "done"
-        },
-        {
-          "title": "Ověřit zelené testy a čistý tsc --noEmit",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T20:09:33.836Z",
-      "completedAt": "2026-05-29T20:33:17.048Z"
+      "status": "done"
     },
     {
       "id": 25,
       "title": "Bod 3. z .mini/improvements.md",
-      "goal": "Fáze R1 - R4 budou vyřízené",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Propojit `--max-turns` z cli do `doPhase` (R1)",
-          "status": "done"
-        },
-        {
-          "title": "Test ověří, že `--max-turns` dorazí do Claude (R1)",
-          "status": "done"
-        },
-        {
-          "title": "Sjednotit ENOENT hlášku „claude\" s návodem na instalaci (R3)",
-          "status": "done"
-        },
-        {
-          "title": "Přidat `mini next` jeden retry při parse-failed (R4)",
-          "status": "done"
-        },
-        {
-          "title": "Test ověří retry i tolerantní formát v `next` (R4)",
-          "status": "done"
-        },
-        {
-          "title": "E2e test auto smyčky proti fake claude binárce (R2)",
-          "status": "done"
-        },
-        {
-          "title": "`tsc --noEmit` čistý a všechny testy zelené",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T20:35:43.312Z",
-      "completedAt": "2026-05-29T20:48:52.915Z"
+      "status": "done"
     },
     {
       "id": 26,
       "title": "Bod 4. z .mini/improvements.md",
-      "goal": "Fáze D1 - D4 budou vyřízené",
-      "status": "done",
-      "steps": [
-        {
-          "title": "mini status zobrazí verdikt run reportu",
-          "status": "done"
-        },
-        {
-          "title": "mini status ukáže počet otevřených verify bodů",
-          "status": "done"
-        },
-        {
-          "title": "mini status vizuálně odliší osiřelou doing fázi",
-          "status": "done"
-        },
-        {
-          "title": "Upravit help příkazu auto ohledně verify",
-          "status": "done"
-        },
-        {
-          "title": "Ověřit konzistenci helpu do --max-turns",
-          "status": "done"
-        },
-        {
-          "title": "Zpřehlednit stream render akcí a shrnutí",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T20:51:21.820Z",
-      "resolvedVerify": [
-        "Vizuální čitelnost streamovaného výstupu mini do --stream",
-        "Vizuální vykreslení markeru osiřelé doing fáze v mini status"
-      ],
-      "completedAt": "2026-05-29T21:08:28.158Z",
-      "autoCommit": {
-        "preSha": "4a288479586257ba22b688d83bb0895dcb44bc40",
-        "sha": "da6f24826c348193905b04f0f4f67ee4f1fc8d24",
-        "subject": "Fáze 26: Bod 4. z .mini/improvements.md"
-      }
+      "status": "done"
     },
     {
       "id": 27,
       "title": "mini příkazi přímo v claude",
-      "goal": "Až bude možné příkazy mini spouštět přímo v claude pomocí /",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Pod-příkaz `mini context <cmd>` vypíše prompt na stdout",
-          "status": "done"
-        },
-        {
-          "title": "Neinteraktivní stavové pod-příkazy s flagem `--apply`",
-          "status": "done"
-        },
-        {
-          "title": "Příkaz `mini install-commands` generuje commandy idempotentně",
-          "status": "done"
-        },
-        {
-          "title": "Vygenerovat `.claude/commands/mini/*.md` pro pět commandů",
-          "status": "done"
-        },
-        {
-          "title": "Testy pro context, apply a install-commands",
-          "status": "done"
-        },
-        {
-          "title": "Ověřit cyklus next→discuss→plan→do→done v session",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T21:48:55.985Z",
-      "resolvedVerify": [
-        "Skutečný běh /mini:* uvnitř živé Claude Code session"
-      ],
-      "completedAt": "2026-05-29T22:13:48.943Z",
-      "autoCommit": {
-        "preSha": "9737e86af469b9a59faa4077412aa0d5c30e13b6",
-        "sha": "e570dddc2e62b573694aaa3c7630b19b5da37f62",
-        "subject": "Fáze 27: mini příkazi přímo v claude"
-      }
+      "status": "done"
     },
     {
       "id": 28,
       "title": "/mini:status slash command",
-      "goal": "Přidat read-only command /mini:status, který přes mini status vypíše přehled fází přímo v Claude Code session, a nechat ho generovat příkazem mini install-commands.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Rozšířit CommandDef v install-commands.ts o volitelné vlastní tělo (body?), renderCommandMd ho použije místo výchozího mini context těla",
-          "status": "done"
-        },
-        {
-          "title": "Přidat definici status do COMMAND_DEFS s tělem, které pustí mini status a instruuje Claude přehled předat uživateli v chatu (bez --apply)",
-          "status": "done"
-        },
-        {
-          "title": "Aktualizovat závěrečný hint v installCommands o /mini:status",
-          "status": "done"
-        },
-        {
-          "title": "Doplnit testy v install-commands.test.ts — status.md vzniká a jeho tělo volá mini status, ne mini context",
-          "status": "done"
-        },
-        {
-          "title": "Pustit mini install-commands a ověřit, že .claude/commands/mini/status.md existuje a má správné tělo",
-          "status": "done"
-        }
-      ],
-      "resolvedVerify": [
-        "Skutečné spuštění /mini:status v živé Claude Code session"
-      ],
-      "completedAt": "2026-05-29T22:24:54.123Z",
-      "autoCommit": {
-        "preSha": "e570dddc2e62b573694aaa3c7630b19b5da37f62",
-        "sha": "6bb46c52c1579824ea4f58e1e70753a3041be5fd",
-        "subject": "Fáze 28: /mini:status slash command"
-      }
+      "status": "done"
     },
     {
       "id": 29,
       "title": "Průběžný zápis kroků v do",
-      "goal": "Přidat neinteraktivní pod-příkaz (např. mini do --apply --step-done <název>), který během /mini:do označí jednotlivý krok za hotový rovnou ve state.json, a rozšířit do session prompt o instrukci volat ho po každém dokončeném kroku — aby po pádu Claude bylo vidět, kde se skončilo.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Přidat applyStepDone(title, cwd) do do.ts — najde krok aktuální fáze podle názvu (tolerantně: trim, fallback case-insensitive), označí ho done a hned uloží state.json; chyba když fáze není doing nebo se krok nenajde",
-          "status": "done"
-        },
-        {
-          "title": "Zaregistrovat v cli.ts flag mini do --apply --step-done <název> — když je --step-done, volá applyStepDone, jinak stávající applyDoStart",
-          "status": "done"
-        },
-        {
-          "title": "Rozšířit do session prompt (buildAutoPhasePrompt) o instrukci volat mini do --apply --step-done <přesný název> po každém dokončeném kroku, ještě před finálním reportem",
-          "status": "done"
-        },
-        {
-          "title": "Testy v do.test.ts pro applyStepDone — úspěch, nenalezený krok, tolerantní matching; a test že prompt instrukci obsahuje",
-          "status": "done"
-        },
-        {
-          "title": "typecheck/build/test a e2e přes lokální build: plan → do --apply → --step-done → ověřit že status kroku ve state.json je done",
-          "status": "done"
-        }
-      ],
-      "completedAt": "2026-05-29T22:36:02.933Z",
-      "autoCommit": {
-        "preSha": "6bb46c52c1579824ea4f58e1e70753a3041be5fd",
-        "sha": "786dd33b525dd0ece9fce7d934006c0f45cb8924",
-        "subject": "Fáze 29: Průběžný zápis kroků v do"
-      }
+      "status": "done"
     },
     {
       "id": 30,
       "title": "Done: verze, push a clear",
-      "goal": "Rozšířit mini done --apply tak, aby po finalizaci fáze navýšil verzi v package.json (patch), zahrnul ji do auto-commitu, nahrál na remote přes git push a na závěr vypsal nabídku spustit /clear pro vyčištění kontextu.",
-      "status": "done",
-      "steps": [
-        {
-          "title": "Bump helper + testy: přidat bumpPackageVersion(cwd, level) v novém modulu src/version.ts — načte package.json, navýší semver dle level (patch/minor/major), zapíše zpět se zachováním formátu, chybějící package.json tiše vrátí null; unit testy pro patch/minor/major, chybějící soubor, zachování formátu",
-          "status": "done"
-        },
-        {
-          "title": "Push helper + test: přidat push(cwd) do git.ts (best-effort přes runGit(push), vrací GitResult); test že volá git push a chybu nehází",
-          "status": "done"
-        },
-        {
-          "title": "Zapojit do finalizace: rozšířit finalizePhaseSideEffects a commitPhaseWork o FinalizeOptions { bump, push } — bump verze před commitem (pobere ho add -A), po commitu push jen když push===true, vše best-effort; protáhnout options ze všech tří cest (applyAutoReport, collectNotesAndSave, finalizePhase)",
-          "status": "done"
-        },
-        {
-          "title": "CLI flagy: mini done [--apply] --bump <patch|minor|major> --push a mini auto --bump <...> --push (default patch); předat do finalizace",
-          "status": "done"
-        },
-        {
-          "title": "Nabídka /clear + session prompt: po úspěšné finalizaci vypsat hint na /clear; rozšířit buildDoneSessionPrompt (mini context done), ať Claude po uzavření navrhne /clear a zmíní možnost --push",
-          "status": "done"
-        },
-        {
-          "title": "Ověření: typecheck/build/test + e2e přes lokální build — verze povýšená a v commitu fáze, --push bez remote skončí jen warningem, /clear hint se vypíše",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T22:54:10.000Z",
-      "completedAt": "2026-05-29T23:05:53.671Z",
-      "autoCommit": {
-        "preSha": "786dd33b525dd0ece9fce7d934006c0f45cb8924",
-        "sha": "eda2565f855e2aafa97707d963657ba0ba9ad3a4",
-        "subject": "Fáze 30: Done: verze, push a clear"
-      }
+      "status": "done"
     },
     {
       "id": 31,
       "title": "Štíhlý state.json: fáze po souborech",
-      "goal": "Rozdělit stav do adresáře .mini/phases/ s jedním souborem na fázi; ve state.json nechat jen hlavičku (currentPhaseId, předchozí fáze, models, poslední fáze), aby soubor nerostl s historií a load/save zůstaly levné i u velkých projektů.",
-      "status": "doing",
-      "steps": [
-        {
-          "title": "store.ts — nový layout + granulární API + kompat load/save: typy StateHeader+PhaseSummary (version 2, createdAt, currentPhaseId, models, phases:[{id,title,status}]); loadHeader/saveHeader/loadPhase/savePhase + path helper (.mini/phases/phase-<id>.json, číselné řazení); loadFullState (header+soubory→ProjectState); kompat load()=loadFullState a save()=rozsek na header+soubory; snapshot pro undo (state.prev.json + phases-prev/) a loadPrev/hasPrev/restorePrev nad novým layoutem; na version 1 vyhodit chybu s hintem 'spusť mini migrate'. Ověření: store.test zelený (round-trip, layout na disku, atomicita bez .tmp, version-1 chyba, prev snapshot), zbytek suity zelený díky kompat API",
-          "status": "done"
-        },
-        {
-          "title": "Příkaz mini migrate — nový commands/migrate.ts + CLI: přečte starý monolitický state.json (version 1), zapíše hlavičku (index, version 2) + phase-<id>.json na fázi; atomicky (temp adresář + rename), idempotentně (na version 2 jen 'není co dělat'); rozšiřitelně pro budoucí graph.md. Ověření: e2e nad version-1 fixturou vyrobí rozdělený layout, druhý běh je no-op",
-          "status": "done"
-        },
-        {
-          "title": "Přepojit příkazy na granulární čtení/zápis: next/status/model → jen loadHeader; plan/do/discuss → loadHeader + loadPhase(current); done → hlavička + aktuální fáze s dual-write (status i sub-fáze splice drží index v hlavičce, detail v souboru). Ověření: existující testy těchto příkazů zelené, done mění status na obou místech",
-          "status": "done"
-        },
-        {
-          "title": "import-gsd + init + okrajoví konzumenti: import-gsd zapíše hlavičku + N souborů fází; init prázdný index bez souborů; projít apply.test/auto.test/auto.e2e/context.test sahající na load/save/readFileSync. Ověření: všechny tyto testy zelené",
-          "status": "done"
-        },
-        {
-          "title": "Závěr: .gitignore + plné ověření: přidat phases-prev/ do .mini/.gitignore; npm run typecheck/build/test; ruční e2e přes lokální build — čerstvý projekt init→next→plan→do→done, migrate nad starým fixturem, undo. Ověření: vše prochází, layout sedí",
-          "status": "done"
-        }
-      ],
-      "startedAt": "2026-05-29T23:52:12.319Z"
+      "status": "done"
+    },
+    {
+      "id": 32,
+      "title": "Štíhlý graf: adresář + index",
+      "status": "planned"
     }
   ],
   "models": {

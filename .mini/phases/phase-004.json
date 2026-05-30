@@ -1,0 +1,34 @@
+{
+  "id": 4,
+  "title": "Streamovaný výstup příkazu `do`",
+  "goal": "`mini do` volitelně spouští Claude Code v print-módu (`--output-format stream-json`) místo interaktivního TUI — průběžně zobrazuje aktuální nástroj/akci a na konci vypíše cenu a počet tokenů; stávající interaktivní režim zůstane jako fallback přes přepínač.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přidat CLI flag --stream do příkazu do",
+      "status": "done"
+    },
+    {
+      "title": "Implementovat streamWithClaude s parsováním NDJSON",
+      "status": "done"
+    },
+    {
+      "title": "Přidat UI renderer aktuální akce ze stream událostí",
+      "status": "done"
+    },
+    {
+      "title": "Vypsat závěrečný souhrn ceny a tokenů",
+      "status": "done"
+    },
+    {
+      "title": "Propojit flag v doPhase mezi work a stream",
+      "status": "done"
+    },
+    {
+      "title": "Jednotkové testy parseru stream událostí",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-23T23:26:03.315Z",
+  "completedAt": "2026-05-24T01:45:43.484Z"
+}

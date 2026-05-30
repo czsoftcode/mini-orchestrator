@@ -1,0 +1,30 @@
+{
+  "id": 7,
+  "title": "Příkaz `mini discuss` před plánováním",
+  "goal": "`mini discuss` spustí interaktivní session Claude Code zaměřenou na aktuální navrženou fázi — uživatel může s agentem prodiskutovat záměr, agent může číst kód — a po ukončení session nabídne uložení upraveného title/goal fáze do stavu.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přidat příkaz `discuss` do `cli.ts`",
+      "status": "done"
+    },
+    {
+      "title": "Sestavit discuss prompt z kontextu aktuální fáze",
+      "status": "done"
+    },
+    {
+      "title": "Spustit interaktivní Claude Code session (přes `workWithClaude`)",
+      "status": "done"
+    },
+    {
+      "title": "Po ukončení session nabídnout úpravu title/goal fáze",
+      "status": "done"
+    },
+    {
+      "title": "Uložit změny do stavu a potvrdit výstup",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T02:54:53.812Z",
+  "completedAt": "2026-05-24T03:09:02.177Z"
+}

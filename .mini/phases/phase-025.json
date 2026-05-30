@@ -1,0 +1,38 @@
+{
+  "id": 25,
+  "title": "Bod 3. z .mini/improvements.md",
+  "goal": "Fáze R1 - R4 budou vyřízené",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Propojit `--max-turns` z cli do `doPhase` (R1)",
+      "status": "done"
+    },
+    {
+      "title": "Test ověří, že `--max-turns` dorazí do Claude (R1)",
+      "status": "done"
+    },
+    {
+      "title": "Sjednotit ENOENT hlášku „claude\" s návodem na instalaci (R3)",
+      "status": "done"
+    },
+    {
+      "title": "Přidat `mini next` jeden retry při parse-failed (R4)",
+      "status": "done"
+    },
+    {
+      "title": "Test ověří retry i tolerantní formát v `next` (R4)",
+      "status": "done"
+    },
+    {
+      "title": "E2e test auto smyčky proti fake claude binárce (R2)",
+      "status": "done"
+    },
+    {
+      "title": "`tsc --noEmit` čistý a všechny testy zelené",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-29T20:35:43.312Z",
+  "completedAt": "2026-05-29T20:48:52.915Z"
+}

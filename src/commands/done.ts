@@ -1,5 +1,5 @@
 import { commitAll, hasChanges, headSha, isGitRepo, push } from '../git.js';
-import { buildGraph, GRAPH_FILE, hasMappableProject } from '../graph/buildGraph.js';
+import { buildGraph, GRAPH_DIR, hasMappableProject } from '../graph/buildGraph.js';
 import { bumpPackageVersion } from '../version.js';
 import {
   RunReportParseError,
@@ -199,8 +199,8 @@ export function buildPhaseCommitMessage(phase: Phase): string {
  * 1. **Auto-commit** práce fáze (`commitPhaseWork`) — zapíše `phase.autoCommit`.
  * 2. **Memory záznam** (`writePhaseMemory`) — vytvoří `.mini/memory/phase-{id}-{ts}.md`
  *    a aktualizuje symlink `.mini/last-memory.md`.
- * 3. **Přegenerování grafu** (`regenerateGraph`) — aktualizuje `.mini/graph.md`
- *    podle nového stavu zdrojáků (po commitu).
+ * 3. **Přegenerování grafu** (`regenerateGraph`) — aktualizuje `.mini/graph/`
+ *    + `.mini/graph.json` podle nového stavu zdrojáků (po commitu).
  *
  * Společné místo, aby se nezapomnělo zavolat z žádné ze tří finalizačních
  * cest v `done.ts` (`applyAutoReport`, `collectNotesAndSave`, `finalizePhase`).
@@ -223,7 +223,7 @@ async function finalizePhaseSideEffects(
 }
 
 /**
- * Best-effort regenerace `.mini/graph.md` po hotové fázi. Nikdy nehází —
+ * Best-effort regenerace `.mini/graph/` + `.mini/graph.json` po hotové fázi. Nikdy nehází —
  * při chybě jen zalogujeme warning a pokračujeme. Pokud projekt nemá co
  * mapovat (žádné TS/PHP/Rust soubory), tiše přeskočíme — jiné jazyky řeší
  * `/graphify`.
@@ -235,7 +235,7 @@ async function regenerateGraph(cwd: string): Promise<void> {
     }
     const result = await buildGraph(cwd);
     const word = result.fileCount === 1 ? 'soubor' : result.fileCount < 5 ? 'soubory' : 'souborů';
-    log.dim(`${GRAPH_FILE}: regenerováno (${result.fileCount} ${word}).`);
+    log.dim(`${GRAPH_DIR}/: regenerováno (${result.fileCount} ${word}).`);
   } catch (err) {
     log.warn(`Mapu projektu se nepodařilo přegenerovat: ${(err as Error).message}`);
   }

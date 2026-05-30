@@ -43,7 +43,7 @@ describe('map command', () => {
     expect(result).toEqual({ ok: false, reason: 'not-mappable' });
   });
 
-  it('generates .mini/graph.md and reports the file count', async () => {
+  it('generates .mini/graph/ + index and reports the file count', async () => {
     await writeFile(join(root, 'tsconfig.json'), '{}', 'utf-8');
     await mkdir(join(root, 'src'), { recursive: true });
     await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;', 'utf-8');
@@ -57,9 +57,12 @@ describe('map command', () => {
     try {
       const result = await map();
       expect(result.ok).toBe(true);
-      const graphContent = await readFile(join(root, '.mini', 'graph.md'), 'utf-8');
-      expect(graphContent).toContain('## src/a.ts');
-      expect(graphContent).toContain('## src/b.ts');
+      const aMap = await readFile(join(root, '.mini', 'graph', 'src', 'a.ts.md'), 'utf-8');
+      expect(aMap).toContain('## src/a.ts');
+      const bMap = await readFile(join(root, '.mini', 'graph', 'src', 'b.ts.md'), 'utf-8');
+      expect(bMap).toContain('## src/b.ts');
+      const index = JSON.parse(await readFile(join(root, '.mini', 'graph.json'), 'utf-8'));
+      expect(index.files.map((f: { path: string }) => f.path)).toEqual(['src/a.ts', 'src/b.ts']);
       expect(successLogs.some((l) => l.includes('2'))).toBe(true);
     } finally {
       spy.mockRestore();

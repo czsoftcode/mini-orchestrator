@@ -1,0 +1,8 @@
+{
+  "id": 3,
+  "title": "Testy parserů a přechodů stavu",
+  "goal": "Pure helpery v commands (`parseSuggestion` v next.ts, `parseSteps` v plan.ts, `advanceToNextPhase` v done.ts) jsou vytažené jako exportované funkce a mají unit testy pokrývající happy path i hraniční případy (prázdný/poškozený vstup, žádná další fáze, několik kandidátů); `npm test` všechny prochází.",
+  "status": "done",
+  "startedAt": "2026-05-23T22:41:45.931Z",
+  "completedAt": "2026-05-23T22:47:28.923Z"
+}

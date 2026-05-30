@@ -1,0 +1,39 @@
+{
+  "id": 22,
+  "title": "Návrh na vylepšení mini orchestrátoru",
+  "goal": "Sepiš, neimplementuj co by se dalo vylepšit v programu",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Sepsat nálezy ke správnosti workflow (osiřelá doing)",
+      "status": "done"
+    },
+    {
+      "title": "Sepsat nálezy k mrtvému kódu a úklidu",
+      "status": "done"
+    },
+    {
+      "title": "Sepsat nálezy k robustnosti a chybovým stavům",
+      "status": "done"
+    },
+    {
+      "title": "Sepsat nálezy k DX a výstupu CLI",
+      "status": "done"
+    },
+    {
+      "title": "Sloučit nálezy do .mini/improvements.md s prioritou/odhadem",
+      "status": "done"
+    },
+    {
+      "title": "Ověřit idempotenci a akčnost položek backlogu",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-29T19:37:49.092Z",
+  "completedAt": "2026-05-29T19:45:51.689Z",
+  "autoCommit": {
+    "preSha": "e27fb6a7911ad16d21c0e56ee68b95c27ed67b89",
+    "sha": "6924c30dd8e83d0119ee8b1fbdfb233f1aa402fc",
+    "subject": "Fáze 22: Návrh na vylepšení mini orchestrátoru"
+  }
+}

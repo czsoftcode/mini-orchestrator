@@ -1,10 +1,11 @@
-import { buildGraph, GRAPH_FILE, hasMappableProject } from '../graph/buildGraph.js';
+import { buildGraph, GRAPH_DIR, GRAPH_INDEX, hasMappableProject } from '../graph/buildGraph.js';
 import { exists } from '../state/store.js';
 import { log } from '../ui/log.js';
 import type { StepOutcome } from './types.js';
 
 /**
- * `mini map` — přegeneruje strojovou mapu projektu (`.mini/graph.md`).
+ * `mini map` — přegeneruje strojovou mapu projektu do `.mini/graph/`
+ * (jeden soubor na zdroják) + index `.mini/graph.json`.
  *
  * Detekuje mapovatelný projekt (tsconfig.json/Cargo.toml/composer.json nebo
  * aspoň jeden `.ts`/`.tsx`/`.php`/`.rs` soubor) a v ostatních případech jen
@@ -29,11 +30,11 @@ export async function map(): Promise<StepOutcome> {
   const result = await buildGraph(cwd);
 
   if (result.fileCount === 0) {
-    log.warn(`${GRAPH_FILE} zapsán, ale žádné mapovatelné soubory nebyly nalezeny.`);
+    log.warn(`${GRAPH_INDEX} zapsán, ale žádné mapovatelné soubory nebyly nalezeny.`);
     return { ok: true };
   }
 
   const word = result.fileCount === 1 ? 'soubor' : result.fileCount < 5 ? 'soubory' : 'souborů';
-  log.success(`${GRAPH_FILE}: ${result.fileCount} ${word}.`);
+  log.success(`${GRAPH_DIR}/ + ${GRAPH_INDEX}: ${result.fileCount} ${word}.`);
   return { ok: true };
 }

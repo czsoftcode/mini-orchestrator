@@ -1,11 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`renderGraphMarkdown > renders all the kinds with deterministic output 1`] = `
-"# Graf projektu
-
-Strojově generovaný přehled zdrojových souborů (TS/TSX, PHP, Rust) — exporty, importy, signatury. Neupravuj ručně — \`mini map\` ho přegeneruje.
-
-## src/a.ts
+exports[`renderFileGraph > renders all the kinds with deterministic output 1`] = `
+"## src/a.ts
 
 Imports:
 - { readFile } from "node:fs"

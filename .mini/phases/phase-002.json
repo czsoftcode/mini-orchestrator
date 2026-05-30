@@ -1,0 +1,8 @@
+{
+  "id": 2,
+  "title": "Snapshot testy pro prompty",
+  "goal": "`src/prompts/*.ts` (nextPhase, planPhase, doPhase, importGsd) mají snapshot/unit testy ověřující výstup pro reprezentativní vstupy (prázdný stav, stav s historií fází, fáze s kroky); `npm test` všechny prochází.",
+  "status": "done",
+  "startedAt": "2026-05-23T22:08:17.056Z",
+  "completedAt": "2026-05-23T22:12:57.446Z"
+}

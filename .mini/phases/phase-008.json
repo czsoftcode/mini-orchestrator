@@ -1,0 +1,38 @@
+{
+  "id": 8,
+  "title": "Poznámky z diskuze pro mini plan a mini do",
+  "goal": "Upravit plan a do tak, aby četl poznámky z diskuze, pokud existuje; Dej claude přečíst soubor .mini/discuss/phase-8.md, jsou tam pro něj instrukce",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přidat `Write` do `DISCUSS_ALLOWED_TOOLS`, vytvořit `.mini/discuss/` adresář před spuštěním Claude",
+      "status": "done"
+    },
+    {
+      "title": "Aktualizovat `buildDiscussPhasePrompt` — přidat instrukci zapsat notes soubor na konci diskuse",
+      "status": "done"
+    },
+    {
+      "title": "Po discuss session ověřit existenci notes souboru, zobrazit `log.dim` pokud chybí",
+      "status": "done"
+    },
+    {
+      "title": "`buildPlanPhasePrompt` — načíst a vložit discuss notes do promptu pokud soubor existuje",
+      "status": "done"
+    },
+    {
+      "title": "`buildDoPhasePrompt` — načíst a vložit discuss notes do promptu pokud soubor existuje",
+      "status": "done"
+    },
+    {
+      "title": "Regenerovat snapshot testy po změnách promptů",
+      "status": "done"
+    },
+    {
+      "title": "Aktualizovat README — doplnit `.mini/discuss/phase-{id}.md` do dokumentace",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T04:12:45.973Z",
+  "completedAt": "2026-05-24T05:03:22.031Z"
+}

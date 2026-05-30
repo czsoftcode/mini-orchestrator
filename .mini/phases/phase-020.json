@@ -1,0 +1,13 @@
+{
+  "id": 20,
+  "title": "Testy příkazu mini status",
+  "goal": "Nový soubor `src/commands/status.test.ts` pokrývá `nextActionHint` pro všechny stavy fáze a `describeModels`, a `npm test` projde celý zeleně.",
+  "status": "done",
+  "startedAt": "2026-05-25T10:22:51.814Z",
+  "completedAt": "2026-05-25T10:34:24.279Z",
+  "autoCommit": {
+    "preSha": "db7dfa0ecfc8730dd23ae99ebd41e1fc871f7cdf",
+    "sha": "65e2e64de2fcfc523f4f60ce434e0313fc2cefd5",
+    "subject": "Fáze 20: Testy příkazu mini status"
+  }
+}

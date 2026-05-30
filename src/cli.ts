@@ -192,7 +192,7 @@ program
 
 program
   .command('map')
-  .description('Přegeneruje strojovou mapu projektu (.mini/graph.md) — exporty, importy a signatury TS/PHP/Rust souborů.')
+  .description('Přegeneruje strojovou mapu projektu do .mini/graph/ + index .mini/graph.json — exporty, importy a signatury TS/PHP/Rust souborů.')
   .action(async () => {
     const { map } = await import('./commands/map.js');
     await map();

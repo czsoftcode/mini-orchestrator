@@ -1,8 +1,17 @@
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildGraph, GRAPH_FILE, hasMappableProject, renderGraphMarkdown } from './buildGraph.js';
+import {
+  buildGraph,
+  GRAPH_DIR,
+  GRAPH_INDEX,
+  GRAPH_INDEX_VERSION,
+  hasMappableProject,
+  LEGACY_GRAPH_FILE,
+  renderFileGraph,
+} from './buildGraph.js';
+import type { GraphIndex } from './buildGraph.js';
 
 async function makeTempProject(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'mini-graph-'));
@@ -12,6 +21,10 @@ async function writeFixture(root: string, rel: string, content: string): Promise
   const abs = join(root, rel);
   await mkdir(join(abs, '..'), { recursive: true });
   await writeFile(abs, content, 'utf-8');
+}
+
+async function readIndex(root: string): Promise<GraphIndex> {
+  return JSON.parse(await readFile(join(root, GRAPH_INDEX), 'utf-8')) as GraphIndex;
 }
 
 describe('buildGraph', () => {
@@ -26,7 +39,7 @@ describe('buildGraph', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it('walks TS files and writes .mini/graph.md', async () => {
+  it('walks TS files and writes per-file maps + index', async () => {
     await writeFixture(root, 'src/a.ts', `export function a(): number { return 1; }\n`);
     await writeFixture(root, 'src/sub/b.tsx', `export const b = 'B';\n`);
     await writeFixture(root, 'node_modules/lib/x.ts', `export const x = 1;\n`);
@@ -38,16 +51,67 @@ describe('buildGraph', () => {
 
     expect(result.fileCount).toBe(2);
     expect(result.files.map((f) => f.path)).toEqual(['src/a.ts', 'src/sub/b.tsx']);
+    expect(result.indexFile).toBe(GRAPH_INDEX);
+    expect(result.graphDir).toBe(GRAPH_DIR);
 
-    const graphPath = join(root, GRAPH_FILE);
-    const written = await readFile(graphPath, 'utf-8');
-    expect(written).toContain('# Graf projektu');
-    expect(written).toContain('## src/a.ts');
-    expect(written).toContain('function a(): number');
-    expect(written).toContain('## src/sub/b.tsx');
-    expect(written).not.toContain('node_modules');
-    expect(written).not.toContain('dist/built');
-    expect(written).not.toContain('src/c.d.ts');
+    // per-file mapy zrcadlí strom zdrojáků
+    const aMap = await readFile(join(root, GRAPH_DIR, 'src/a.ts.md'), 'utf-8');
+    expect(aMap).toContain('## src/a.ts');
+    expect(aMap).toContain('function a(): number');
+    const bMap = await readFile(join(root, GRAPH_DIR, 'src/sub/b.tsx.md'), 'utf-8');
+    expect(bMap).toContain('## src/sub/b.tsx');
+
+    // ignorované soubory se nenamapovaly
+    await expect(readFile(join(root, GRAPH_DIR, 'node_modules/lib/x.ts.md'), 'utf-8')).rejects.toThrow();
+    await expect(readFile(join(root, GRAPH_DIR, 'dist/built.ts.md'), 'utf-8')).rejects.toThrow();
+    await expect(readFile(join(root, GRAPH_DIR, 'src/c.d.ts.md'), 'utf-8')).rejects.toThrow();
+
+    // index: verze, cesty, názvy exportů
+    const index = await readIndex(root);
+    expect(index.version).toBe(GRAPH_INDEX_VERSION);
+    expect(typeof index.generatedAt).toBe('string');
+    expect(index.files).toEqual([
+      { path: 'src/a.ts', graphFile: '.mini/graph/src/a.ts.md', exports: ['a'] },
+      { path: 'src/sub/b.tsx', graphFile: '.mini/graph/src/sub/b.tsx.md', exports: ['b'] },
+    ]);
+  });
+
+  it('zapisuje atomicky — nezůstanou .tmp zbytky', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await buildGraph(root);
+
+    const miniEntries = await readdir(join(root, '.mini'));
+    expect(miniEntries).toContain('graph');
+    expect(miniEntries).toContain('graph.json');
+    expect(miniEntries).not.toContain('graph.tmp');
+    expect(miniEntries).not.toContain('graph.json.tmp');
+  });
+
+  it('smaže starý monolitický graph.md', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    // simuluj starý layout
+    await writeFixture(root, LEGACY_GRAPH_FILE, `# Graf projektu\n`);
+
+    await buildGraph(root);
+
+    await expect(readFile(join(root, LEGACY_GRAPH_FILE), 'utf-8')).rejects.toThrow();
+  });
+
+  it('přegenerování odstraní mapu smazaného zdrojáku', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await writeFixture(root, 'src/b.ts', `export const b = 2;\n`);
+    await buildGraph(root);
+    expect(await readFile(join(root, GRAPH_DIR, 'src/b.ts.md'), 'utf-8')).toContain('## src/b.ts');
+
+    // b.ts zmizí → druhý běh už jeho mapu nemá
+    const { rm } = await import('node:fs/promises');
+    await rm(join(root, 'src/b.ts'));
+    await buildGraph(root);
+
+    await expect(readFile(join(root, GRAPH_DIR, 'src/b.ts.md'), 'utf-8')).rejects.toThrow();
+    expect(await readFile(join(root, GRAPH_DIR, 'src/a.ts.md'), 'utf-8')).toContain('## src/a.ts');
+    const index = await readIndex(root);
+    expect(index.files.map((f) => f.path)).toEqual(['src/a.ts']);
   });
 
   it('handles empty project (no mapovatelné soubory)', async () => {
@@ -56,9 +120,11 @@ describe('buildGraph', () => {
     const result = await buildGraph(root);
     expect(result.fileCount).toBe(0);
 
-    const written = await readFile(join(root, GRAPH_FILE), 'utf-8');
-    expect(written).toContain('# Graf projektu');
-    expect(written).toContain('_(žádné mapovatelné soubory)_');
+    const index = await readIndex(root);
+    expect(index.files).toEqual([]);
+    // adresář existuje, ale je prázdný
+    const dirEntries = await readdir(join(root, GRAPH_DIR));
+    expect(dirEntries).toEqual([]);
   });
 
   it('mapuje i .php a .rs soubory vedle TS/TSX', async () => {
@@ -72,11 +138,10 @@ describe('buildGraph', () => {
     const paths = result.files.map((f) => f.path);
     expect(paths).toEqual(['app/Service.php', 'src/a.ts', 'src/lib.rs']);
 
-    const written = await readFile(join(root, GRAPH_FILE), 'utf-8');
-    expect(written).toContain('## app/Service.php');
-    expect(written).toContain('## src/lib.rs');
-    expect(written).not.toContain('vendor/x.php');
-    expect(written).not.toContain('target/y.rs');
+    expect(await readFile(join(root, GRAPH_DIR, 'app/Service.php.md'), 'utf-8')).toContain('## app/Service.php');
+    expect(await readFile(join(root, GRAPH_DIR, 'src/lib.rs.md'), 'utf-8')).toContain('## src/lib.rs');
+    await expect(readFile(join(root, GRAPH_DIR, 'vendor/x.php.md'), 'utf-8')).rejects.toThrow();
+    await expect(readFile(join(root, GRAPH_DIR, 'target/y.rs.md'), 'utf-8')).rejects.toThrow();
   });
 
   it('hasMappableProject returns true when tsconfig exists', async () => {
@@ -106,33 +171,37 @@ describe('buildGraph', () => {
   });
 });
 
-describe('renderGraphMarkdown', () => {
+describe('renderFileGraph', () => {
   it('renders all the kinds with deterministic output', () => {
-    const md = renderGraphMarkdown([
-      {
-        path: 'src/a.ts',
-        imports: [
-          { source: 'node:fs', symbols: ['readFile'] },
-          { source: './b.js', symbols: ['default'] },
-          { source: './c.js', symbols: ['*'] },
-          { source: './side-effect.js', symbols: [] },
-          { source: './only-types.js', symbols: ['Foo'], typeOnly: true },
-        ],
-        exports: [
-          { name: 'foo', kind: 'function', signature: { parameters: [{ name: 'x', type: 'number' }], returnType: 'number' } },
-          { name: 'Bar', kind: 'class', methods: [
-            { name: 'run', signature: { parameters: [], returnType: 'void' } },
-            { name: 'make', signature: { parameters: [], returnType: 'Bar' }, isStatic: true },
-          ] },
-          { name: 'Mode', kind: 'enum' },
-          { name: 'Greeter', kind: 'interface' },
-          { name: 'Result', kind: 'type' },
-          { name: 'VERSION', kind: 'const' },
-          { name: 'main', kind: 'function', signature: { parameters: [], returnType: 'number' }, isDefault: true },
-        ],
-      },
-    ]);
+    const md = renderFileGraph({
+      path: 'src/a.ts',
+      imports: [
+        { source: 'node:fs', symbols: ['readFile'] },
+        { source: './b.js', symbols: ['default'] },
+        { source: './c.js', symbols: ['*'] },
+        { source: './side-effect.js', symbols: [] },
+        { source: './only-types.js', symbols: ['Foo'], typeOnly: true },
+      ],
+      exports: [
+        { name: 'foo', kind: 'function', signature: { parameters: [{ name: 'x', type: 'number' }], returnType: 'number' } },
+        { name: 'Bar', kind: 'class', methods: [
+          { name: 'run', signature: { parameters: [], returnType: 'void' } },
+          { name: 'make', signature: { parameters: [], returnType: 'Bar' }, isStatic: true },
+        ] },
+        { name: 'Mode', kind: 'enum' },
+        { name: 'Greeter', kind: 'interface' },
+        { name: 'Result', kind: 'type' },
+        { name: 'VERSION', kind: 'const' },
+        { name: 'main', kind: 'function', signature: { parameters: [], returnType: 'number' }, isDefault: true },
+      ],
+    });
 
     expect(md).toMatchSnapshot();
+  });
+
+  it('renders placeholder for soubor bez exportů i importů', () => {
+    const md = renderFileGraph({ path: 'src/empty.ts', imports: [], exports: [] });
+    expect(md).toContain('## src/empty.ts');
+    expect(md).toContain('_(žádné exporty ani importy)_');
   });
 });

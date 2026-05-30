@@ -18,7 +18,7 @@ Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
 - upozornit na nejasnosti, skryté předpoklady nebo rizika
 - navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
 
-Jako úplně první věc si přečti \`.mini/graph.md\` (Read) — je to strojová mapa projektu (exporty, importy, signatury) a dá ti rychlý přehled struktury. Teprve když mapa nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+Jako úplně první věc si přečti \`.mini/graph.json\` (Read) — je to index strojové mapy projektu: pro každý zdrojový soubor jeho cestu, cestu k jeho mapě v \`.mini/graph/\` a názvy exportů. Podle exportů poznáš, který soubor co řeší, a **cíleně** si pak přečteš jen relevantní mapy z \`.mini/graph/<cesta>.md\` (exporty, importy, signatury) — nečti celý adresář najednou. Teprve když mapy nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
 
 Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
 
@@ -57,7 +57,7 @@ Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
 - upozornit na nejasnosti, skryté předpoklady nebo rizika
 - navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
 
-Jako úplně první věc si přečti \`.mini/graph.md\` (Read) — je to strojová mapa projektu (exporty, importy, signatury) a dá ti rychlý přehled struktury. Teprve když mapa nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+Jako úplně první věc si přečti \`.mini/graph.json\` (Read) — je to index strojové mapy projektu: pro každý zdrojový soubor jeho cestu, cestu k jeho mapě v \`.mini/graph/\` a názvy exportů. Podle exportů poznáš, který soubor co řeší, a **cíleně** si pak přečteš jen relevantní mapy z \`.mini/graph/<cesta>.md\` (exporty, importy, signatury) — nečti celý adresář najednou. Teprve když mapy nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
 
 Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
 
@@ -96,7 +96,7 @@ Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
 - upozornit na nejasnosti, skryté předpoklady nebo rizika
 - navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
 
-Jako úplně první věc si přečti \`.mini/graph.md\` (Read) — je to strojová mapa projektu (exporty, importy, signatury) a dá ti rychlý přehled struktury. Teprve když mapa nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+Jako úplně první věc si přečti \`.mini/graph.json\` (Read) — je to index strojové mapy projektu: pro každý zdrojový soubor jeho cestu, cestu k jeho mapě v \`.mini/graph/\` a názvy exportů. Podle exportů poznáš, který soubor co řeší, a **cíleně** si pak přečteš jen relevantní mapy z \`.mini/graph/<cesta>.md\` (exporty, importy, signatury) — nečti celý adresář najednou. Teprve když mapy nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
 
 Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
 
@@ -140,7 +140,7 @@ Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
 - upozornit na nejasnosti, skryté předpoklady nebo rizika
 - navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
 
-Jako úplně první věc si přečti \`.mini/graph.md\` (Read) — je to strojová mapa projektu (exporty, importy, signatury) a dá ti rychlý přehled struktury. Teprve když mapa nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+Jako úplně první věc si přečti \`.mini/graph.json\` (Read) — je to index strojové mapy projektu: pro každý zdrojový soubor jeho cestu, cestu k jeho mapě v \`.mini/graph/\` a názvy exportů. Podle exportů poznáš, který soubor co řeší, a **cíleně** si pak přečteš jen relevantní mapy z \`.mini/graph/<cesta>.md\` (exporty, importy, signatury) — nečti celý adresář najednou. Teprve když mapy nestačí, otevírej jednotlivé zdrojové soubory (Read, Grep, Glob). Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
 
 Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
 

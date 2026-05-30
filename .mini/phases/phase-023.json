@@ -1,0 +1,34 @@
+{
+  "id": 23,
+  "title": "Práce podle .mini/improvements.md, bod 1.",
+  "goal": "Hotové W1 až \u0017W4",
+  "status": "done",
+  "steps": [
+    {
+      "title": "W1: osiřelou doing fázi po podfázi dozavřít",
+      "status": "done"
+    },
+    {
+      "title": "W2: Math.floor v commitPhase brání desetinnému ID",
+      "status": "done"
+    },
+    {
+      "title": "W3: verify v auto módu bez TTY bezpečně",
+      "status": "done"
+    },
+    {
+      "title": "W4: opakovaný done nepřehrává vyřešené verify body",
+      "status": "done"
+    },
+    {
+      "title": "Doplnit testy pro W1–W4",
+      "status": "done"
+    },
+    {
+      "title": "Zelené testy a čistý tsc --noEmit",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-29T19:52:44.114Z",
+  "completedAt": "2026-05-29T20:07:17.681Z"
+}

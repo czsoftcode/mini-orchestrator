@@ -1,0 +1,39 @@
+{
+  "id": 31,
+  "title": "Štíhlý state.json: fáze po souborech",
+  "goal": "Rozdělit stav do adresáře .mini/phases/ s jedním souborem na fázi; ve state.json nechat jen hlavičku (currentPhaseId, předchozí fáze, models, poslední fáze), aby soubor nerostl s historií a load/save zůstaly levné i u velkých projektů.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "store.ts — nový layout + granulární API + kompat load/save: typy StateHeader+PhaseSummary (version 2, createdAt, currentPhaseId, models, phases:[{id,title,status}]); loadHeader/saveHeader/loadPhase/savePhase + path helper (.mini/phases/phase-<id>.json, číselné řazení); loadFullState (header+soubory→ProjectState); kompat load()=loadFullState a save()=rozsek na header+soubory; snapshot pro undo (state.prev.json + phases-prev/) a loadPrev/hasPrev/restorePrev nad novým layoutem; na version 1 vyhodit chybu s hintem 'spusť mini migrate'. Ověření: store.test zelený (round-trip, layout na disku, atomicita bez .tmp, version-1 chyba, prev snapshot), zbytek suity zelený díky kompat API",
+      "status": "done"
+    },
+    {
+      "title": "Příkaz mini migrate — nový commands/migrate.ts + CLI: přečte starý monolitický state.json (version 1), zapíše hlavičku (index, version 2) + phase-<id>.json na fázi; atomicky (temp adresář + rename), idempotentně (na version 2 jen 'není co dělat'); rozšiřitelně pro budoucí graph.md. Ověření: e2e nad version-1 fixturou vyrobí rozdělený layout, druhý běh je no-op",
+      "status": "done"
+    },
+    {
+      "title": "Přepojit příkazy na granulární čtení/zápis: next/status/model → jen loadHeader; plan/do/discuss → loadHeader + loadPhase(current); done → hlavička + aktuální fáze s dual-write (status i sub-fáze splice drží index v hlavičce, detail v souboru). Ověření: existující testy těchto příkazů zelené, done mění status na obou místech",
+      "status": "done"
+    },
+    {
+      "title": "import-gsd + init + okrajoví konzumenti: import-gsd zapíše hlavičku + N souborů fází; init prázdný index bez souborů; projít apply.test/auto.test/auto.e2e/context.test sahající na load/save/readFileSync. Ověření: všechny tyto testy zelené",
+      "status": "done"
+    },
+    {
+      "title": "Závěr: .gitignore + plné ověření: přidat phases-prev/ do .mini/.gitignore; npm run typecheck/build/test; ruční e2e přes lokální build — čerstvý projekt init→next→plan→do→done, migrate nad starým fixturem, undo. Ověření: vše prochází, layout sedí",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-29T23:52:12.319Z",
+  "resolvedVerify": [
+    "Zmigrovat oba reálné projekty: po obnovení globální instalace (npm i -g / build) spustit `mini migrate` v každém projektu (vč. tohohle), než se na nich pustí běžné příkazy.",
+    "Ověřit `mini undo` ručně v reálném projektu přes nový build."
+  ],
+  "completedAt": "2026-05-30T00:08:58.933Z",
+  "autoCommit": {
+    "preSha": "eda2565f855e2aafa97707d963657ba0ba9ad3a4",
+    "sha": "8e3ac1ae3f09c838b60a22c69f42e89b93224b4b",
+    "subject": "Fáze 31: Štíhlý state.json: fáze po souborech"
+  }
+}

@@ -3,3 +3,9 @@
 # zbytečně bobtnala historie.
 phases-prev/
 state.prev.json
+
+# Transientní artefakty atomického zápisu grafu (mini map). Vznikají v půli
+# přegenerování a hned se přejmenují/uklidí; do gitu nikdy nepatří. Zůstat by
+# mohly jen po pádu uprostřed zápisu.
+graph.tmp/
+graph.json.tmp

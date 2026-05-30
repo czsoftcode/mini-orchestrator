@@ -1194,7 +1194,7 @@ describe('done({ auto: true }) — graph regeneration', () => {
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('regeneruje .mini/graph.md po finalizaci fáze v TS projektu', async () => {
+  it('regeneruje .mini/graph/ + index po finalizaci fáze v TS projektu', async () => {
     await writeFile(join(cwd, 'tsconfig.json'), '{}', 'utf-8');
     await writeFile(join(cwd, 'a.ts'), 'export const a = 1;', 'utf-8');
     await save(
@@ -1226,9 +1226,11 @@ steps:
 
     await done({ auto: true });
 
-    const graph = await readFile(join(cwd, '.mini', 'graph.md'), 'utf-8');
+    const graph = await readFile(join(cwd, '.mini', 'graph', 'a.ts.md'), 'utf-8');
     expect(graph).toContain('## a.ts');
     expect(graph).toContain('const a');
+    const index = JSON.parse(await readFile(join(cwd, '.mini', 'graph.json'), 'utf-8'));
+    expect(index.files.map((f: { path: string }) => f.path)).toContain('a.ts');
   });
 
   it('přeskočí regeneraci v non-TS projektu', async () => {
@@ -1263,7 +1265,7 @@ steps:
 
     await done({ auto: true });
 
-    await expect(access(join(cwd, '.mini', 'graph.md'))).rejects.toThrow();
+    await expect(access(join(cwd, '.mini', 'graph.json'))).rejects.toThrow();
   });
 });
 

@@ -1,0 +1,34 @@
+{
+  "id": 5,
+  "title": "Automatické dokončení fáze v `auto`",
+  "goal": "`mini auto` doběhne celý cyklus (next → plan → do → done) bez jediného promptu na uživatele — `done` přijme `AutoOptions` a v `auto: true` režimu automaticky označí fázi jako hotovou a posune stav na další.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Rozšířit `done()` o parametr `AutoOptions` a návratový `StepOutcome`",
+      "status": "done"
+    },
+    {
+      "title": "V `auto: true` přeskočit interaktivní `ask` a fázi auto-finalizovat jako `done`",
+      "status": "done"
+    },
+    {
+      "title": "V `auto: true` posunout stav na další fázi přes `advanceToNextPhase`",
+      "status": "done"
+    },
+    {
+      "title": "Aktualizovat `auto.ts` aby volal `done({ auto: true })` a reagoval na výsledek",
+      "status": "done"
+    },
+    {
+      "title": "Doplnit unit testy pro `done({ auto: true })` v `done.test.ts`",
+      "status": "done"
+    },
+    {
+      "title": "Ověřit end-to-end že `mini auto` proběhne bez promptu",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T01:50:06.723Z",
+  "completedAt": "2026-05-24T02:28:56.872Z"
+}

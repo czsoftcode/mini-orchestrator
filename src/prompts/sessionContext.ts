@@ -69,7 +69,7 @@ ${projectMd.trim()}
 
 ${history}
 ${memoryBlock}${hintBlock}# Tvůj úkol
-Navrhni jednu další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem — ne roadmap, jen jedna věc, co dává smysl udělat hned. Pokud potřebuješ pochopit stav kódu, čti soubory (Read/Glob/Grep); začni \`.mini/graph.md\`, pokud existuje.
+Navrhni jednu další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem — ne roadmap, jen jedna věc, co dává smysl udělat hned. Pokud potřebuješ pochopit stav kódu, čti soubory (Read/Glob/Grep); začni indexem \`.mini/graph.json\` (pokud existuje) a podle názvů exportů si cíleně přečti jen relevantní mapy z \`.mini/graph/\`.
 
 Návrh (název max 5 slov + cíl na 1 větu) krátce ukaž uživateli. Po odsouhlasení fázi **ulož** zavoláním (Bash):
 

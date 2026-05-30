@@ -1,0 +1,38 @@
+{
+  "id": 9,
+  "title": "Jeden průchod Claude na fázi",
+  "goal": "Cílem je zjednodušit průchod fázi z restartu claude po každém kroku na jednoprůchodový.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Prompt builder pro celou fázi s instrukcí k reportu",
+      "status": "done"
+    },
+    {
+      "title": "Typy reportu a vytváření `.mini/run/` adresáře",
+      "status": "done"
+    },
+    {
+      "title": "`doPhase` auto-varianta bez focusedStep",
+      "status": "done"
+    },
+    {
+      "title": "Parser YAML reportu s validací názvů kroků",
+      "status": "done"
+    },
+    {
+      "title": "`done({auto})` čte report, fallback na interaktivní",
+      "status": "done"
+    },
+    {
+      "title": "`auto.ts` jeden průchod + retry smyčka max 3",
+      "status": "done"
+    },
+    {
+      "title": "Snapshot testy auto-promptu a aktualizace README",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-24T05:22:46.688Z",
+  "completedAt": "2026-05-24T06:48:01.918Z"
+}

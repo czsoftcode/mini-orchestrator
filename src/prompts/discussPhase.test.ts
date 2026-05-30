@@ -81,7 +81,7 @@ describe('buildDiscussPhasePrompt', () => {
     expect(out).not.toContain('# Projekt\n\n');
   });
 
-  it('instructs Claude to read graph.md first', () => {
+  it('instructs Claude to read graph.json index first', () => {
     const phase: Phase = {
       id: 8,
       title: 'Discuss s grafem',
@@ -91,7 +91,8 @@ describe('buildDiscussPhasePrompt', () => {
 
     const out = buildDiscussPhasePrompt(PROJECT_MD, phase);
 
-    expect(out).toContain('.mini/graph.md');
+    expect(out).toContain('.mini/graph.json');
+    expect(out).toContain('.mini/graph/');
     // graph se vkládá ne přímo do promptu — Claude si ho přečte sám
     expect(out).toContain('Stavím nástroj X pro Y.');
   });

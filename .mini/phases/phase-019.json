@@ -1,0 +1,13 @@
+{
+  "id": 19,
+  "title": "Oprava snapshotu buildGraph",
+  "goal": "Snapshot v `src/graph/buildGraph.test.ts` se srovná s aktuálním headerem grafu („…zdrojových souborů (TS/TSX, PHP, Rust)\") a `npm test` projde celý zeleně (0 selhání).",
+  "status": "done",
+  "startedAt": "2026-05-24T19:42:22.926Z",
+  "completedAt": "2026-05-25T08:06:47.544Z",
+  "autoCommit": {
+    "preSha": "970405ef476d2e9375a1395b0972799610e055f2",
+    "sha": "db7dfa0ecfc8730dd23ae99ebd41e1fc871f7cdf",
+    "subject": "Fáze 19: Oprava snapshotu buildGraph"
+  }
+}

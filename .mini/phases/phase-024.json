@@ -1,0 +1,38 @@
+{
+  "id": 24,
+  "title": "Bod 2. z .mini/improvements.md",
+  "goal": "Hotové fáze C1 - C3",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Zdokumentovat živé MEMORY_* symboly ve writeMemory.ts (C1)",
+      "status": "done"
+    },
+    {
+      "title": "Odstranit zavádějící TODO o jejich smazání (C1)",
+      "status": "done"
+    },
+    {
+      "title": "Přidat migraci state.model → models.default ve store.load (C2)",
+      "status": "done"
+    },
+    {
+      "title": "Zrušit fallbacky na state.model v models.ts a status.ts (C2)",
+      "status": "done"
+    },
+    {
+      "title": "Zúžit typ PermissionMode na reálně používané hodnoty (C3)",
+      "status": "done"
+    },
+    {
+      "title": "Doplnit/upravit testy pro migraci a PermissionMode",
+      "status": "done"
+    },
+    {
+      "title": "Ověřit zelené testy a čistý tsc --noEmit",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-29T20:09:33.836Z",
+  "completedAt": "2026-05-29T20:33:17.048Z"
+}
