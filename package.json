@@ -11,8 +11,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc && node scripts/copy-assets.mjs",
-    "prepare": "node node_modules/typescript/bin/tsc && node scripts/copy-assets.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "prepublishOnly": "npm run build",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
     "typecheck": "tsc --noEmit",

@@ -1,9 +1,6 @@
 # Závislosti
 node_modules/
 
-# Build výstup
-dist/
-
 # Logy
 *.log
 npm-debug.log*
