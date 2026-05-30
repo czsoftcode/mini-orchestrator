@@ -2,7 +2,7 @@
   "id": 35,
   "title": "Slash command /mini:auto",
   "goal": "Přidat do install-commands.ts nový command /mini:auto s vlastním body, který v jedné Claude session zřetězí kroky workflow: volitelně discuss (jen když je fáze složitá na rozhodnutí a discuss ještě neproběhl), pak plan, do a nakonec done --push — včetně testů a přegenerování commandů.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Do COMMAND_DEFS v install-commands.ts přidat položku auto (description „mini — celý cyklus fáze v jedné session\") s vlastním body, který instruuje Claude provést v jedné session sekvenci: nejdřív zvážit mini context discuss (spustit jen když je fáze složitá na rozhodnutí a discuss ještě neproběhl, jinak přeskočit), pak mini context plan, pak mini context do, nakonec mini context done a uložit přes mini done --apply --push. Výstup: renderCommandMd pro auto vrací md, jehož tělo obsahuje všechny čtyři kroky i --push a podmínku na discuss.",
@@ -21,5 +21,11 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T01:11:51.764Z"
+  "startedAt": "2026-05-30T01:11:51.764Z",
+  "completedAt": "2026-05-30T01:15:30.862Z",
+  "autoCommit": {
+    "preSha": "204eb9808bbc520f3de91cc5e0e05e580d24ca61",
+    "sha": "620a1c7bf4e53cfb68b4e84010f4538e3e6850cc",
+    "subject": "Fáze 35: Slash command /mini:auto"
+  }
 }

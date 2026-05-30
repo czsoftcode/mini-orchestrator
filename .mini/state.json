@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 35,
+  "currentPhaseId": 36,
   "phases": [
     {
       "id": 1,
@@ -176,6 +176,11 @@
     {
       "id": 35,
       "title": "Slash command /mini:auto",
+      "status": "done"
+    },
+    {
+      "id": 36,
+      "title": "Oprava chyby prvního mini do --apply",
       "status": "doing"
     }
   ],

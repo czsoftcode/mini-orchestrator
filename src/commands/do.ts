@@ -246,10 +246,12 @@ function findStepByTitle(steps: Step[], title: string): Step | null {
  * každého kroku, takže když session spadne, ve `state.json` zůstane stopa, kam
  * až se došlo (na rozdíl od finálního reportu, který vzniká až na konci).
  *
- * Označí krok aktuální fáze `done` a ihned uloží stav. Vyžaduje, aby fáze byla
- * `doing` (tj. po `mini do --apply`) — jinak vrátí chybu, ať se status nezapisuje
- * mimo aktivní session. Posun fáze ani závěrečné statusy nedělá: o ně se pořád
- * stará `mini done` z reportu.
+ * Označí krok aktuální fáze `done` a ihned uloží stav. Když fáze ještě není
+ * `doing` (např. slash command `/mini:do` nezavolal `mini do --apply` před
+ * prvním `--step-done`), funkce ji **sama líně nastartuje** — nastaví `doing`,
+ * doplní `startedAt` a založí `.mini/run/`. Na už uzavřenou fázi (`done`/`skipped`)
+ * zápis dál odmítne, ať se status nezapisuje mimo živou fázi. Posun fáze ani
+ * závěrečné statusy nedělá: o ně se pořád stará `mini done` z reportu.
  */
 export async function applyStepDone(title: string, cwd: string = process.cwd()): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
@@ -278,10 +280,21 @@ export async function applyStepDone(title: string, cwd: string = process.cwd()):
     return { ok: false, reason: 'inconsistent-state' };
   }
 
+  if (phase.status === 'done' || phase.status === 'skipped') {
+    log.error(`Fáze ${phase.id} je ${phase.status === 'done' ? 'hotová' : 'odložená'} (stav: ${phase.status}).`);
+    log.hint('Spusť: mini next');
+    return { ok: false, reason: 'phase-closed' };
+  }
+
+  // Líný start: když fáze ještě nezačala (slash command nezavolal `mini do
+  // --apply` před prvním --step-done), nastartujeme ji rovnou tady, místo abychom
+  // zápis odmítli. Průběžný zápis tak projde napoprvé bez ohledu na pořadí volání.
   if (phase.status !== 'doing') {
-    log.error(`Fáze ${phase.id} není rozdělaná (stav: ${phase.status}).`);
-    log.hint('Nejdřív spusť: mini do --apply');
-    return { ok: false, reason: 'phase-not-doing' };
+    phase.status = 'doing';
+    if (!phase.startedAt) {
+      phase.startedAt = new Date().toISOString();
+    }
+    await ensureRunDir(cwd);
   }
 
   if (!phase.steps?.length) {

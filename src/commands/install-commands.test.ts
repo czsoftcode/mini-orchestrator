@@ -69,6 +69,17 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
+  it('do command nejdřív nastartuje fázi (mini do --apply), pak context do, step-done a report', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'do.md'), 'utf-8');
+    expect(md).toContain('mini do --apply');
+    expect(md).toContain('mini context do');
+    expect(md).toContain('mini do --apply --step-done');
+    expect(md).toContain('.mini/run/');
+    // init (`mini do --apply`) musí předcházet vypsání promptu (`mini context do`)
+    expect(md.indexOf('mini do --apply')).toBeLessThan(md.indexOf('mini context do'));
+  });
+
   it('next command předává $ARGUMENTS jako nápad', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'next.md'), 'utf-8');

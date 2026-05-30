@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { access, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { load, save, writeProject } from '../state/store.js';
@@ -159,15 +159,37 @@ describe('applyStepDone — průběžný zápis kroku', () => {
     expect(state.phases[0]!.steps!.every((s) => s.status === 'todo')).toBe(true);
   });
 
-  it('odmítne zápis, když fáze není doing', async () => {
+  it('líně nastartuje fázi, když ještě není doing (planned), a označí krok', async () => {
     const state = doingStateWithSteps();
     state.phases[0]!.status = 'planned';
     await save(state, cwd);
 
     const r = await applyStepDone('První krok', cwd);
 
+    expect(r.ok).toBe(true);
+    const after = await load(cwd);
+    expect(after.phases[0]!.status).toBe('doing');
+    expect(after.phases[0]!.startedAt).toBeTruthy();
+    expect(after.phases[0]!.steps![0]!.status).toBe('done');
+    // .mini/run/ musí vzniknout, aby měl Claude kam zapsat report
+    await expect(access(join(cwd, '.mini', 'run'))).resolves.toBeUndefined();
+  });
+
+  it('odmítne zápis na uzavřené fázi (done/skipped)', async () => {
+    const state = doingStateWithSteps();
+    state.phases[0]!.status = 'done';
+    await save(state, cwd);
+
+    const r = await applyStepDone('První krok', cwd);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe('phase-not-doing');
+    if (!r.ok) expect(r.reason).toBe('phase-closed');
+
+    state.phases[0]!.status = 'skipped';
+    await save(state, cwd);
+
+    const r2 = await applyStepDone('První krok', cwd);
+    expect(r2.ok).toBe(false);
+    if (!r2.ok) expect(r2.reason).toBe('phase-closed');
   });
 
   it('prázdný název kroku vrátí chybu', async () => {
