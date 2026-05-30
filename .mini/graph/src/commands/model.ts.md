@@ -8,4 +8,4 @@ Imports:
 - { log } from "../ui/log.js"
 
 Exports:
-- function model(arg1?: string, arg2?: string): Promise<void>
+- function model(arg1?: string, arg2?: string): Promise<void> @L20-66

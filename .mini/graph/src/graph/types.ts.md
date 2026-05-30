@@ -1,10 +1,10 @@
 ## src/graph/types.ts
 
 Exports:
-- type ExportKind
-- interface Parameter
-- interface FunctionSignature
-- interface MethodSignature
-- interface ExportInfo
-- interface ImportInfo
-- interface FileGraph
+- type ExportKind @L5-14
+- interface Parameter @L16-21
+- interface FunctionSignature @L23-26
+- interface MethodSignature @L28-32
+- interface ExportInfo @L34-56
+- interface ImportInfo @L58-70
+- interface FileGraph @L72-77

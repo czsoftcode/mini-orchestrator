@@ -17,7 +17,7 @@ Imports:
 - type { AutoOptions, StepOutcome } from "./types.js"
 
 Exports:
-- interface DoPhaseOptions
-- function doPhase(opts: DoPhaseOptions): Promise<StepOutcome>
-- function applyDoStart(cwd: string): Promise<StepOutcome>
-- function applyStepDone(title: string, cwd: string): Promise<StepOutcome>
+- interface DoPhaseOptions @L16-23
+- function doPhase(opts: DoPhaseOptions): Promise<StepOutcome> @L25-180
+- function applyDoStart(cwd: string): Promise<StepOutcome> @L188-227
+- function applyStepDone(title: string, cwd: string): Promise<StepOutcome> @L256-322

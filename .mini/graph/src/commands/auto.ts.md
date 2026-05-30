@@ -14,4 +14,4 @@ Imports:
 - type { AutoOptions } from "./types.js"
 
 Exports:
-- function auto(opts: AutoOptions): Promise<void>
+- function auto(opts: AutoOptions): Promise<void> @L27-117

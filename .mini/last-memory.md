@@ -1,14 +1,13 @@
-# Fáze 46 — Čísla řádků v mapách grafu
+# Fáze 47 — Zapisovat jen změněné fáze
 
-**Cíl:** mini map zapíše ke každému exportu číslo řádku (ExportInfo.line, plněno TS/PHP/Rust mappery, vykresleno v renderFileGraph) a sdílený GRAPH_USAGE_HINT v bodě (3) navede agenta číst přímo od daného řádku přes Read s offset; ověřitelné aktualizovanými snapshoty map + zelená brána.
+**Cíl:** save() ve store.ts zapíše soubor fáze jen když se její serializovaný JSON liší od obsahu na disku, a snapshotPrev kopíruje do phases-prev jen reálně změněné soubory místo rm+copy celého adresáře, takže počet diskových operací škáluje s počtem změn, ne s počtem fází; ověřitelné novým testem, že nezměněná fáze se znovu nezapíše, a zelenou bránou.
 
 ## Kroky
-- [hotovo] ExportInfo.line + endLine v typu
-- [hotovo] TS mapper plní line/endLine
-- [hotovo] PHP + Rust mapper plní rozsah
-- [hotovo] renderFileGraph vykreslí rozsah
-- [hotovo] graphHint bod (3) na cílené čtení rozsahu
-- [hotovo] Snapshoty + přegenerovat graf + brána
+- [hotovo] Helper writeJsonIfChanged
+- [hotovo] save() zapisuje jen změněné fáze
+- [hotovo] snapshotPrev() synchronizuje diferenčně
+- [hotovo] Test: nezměněná fáze se znovu nezapíše
+- [hotovo] Zelená brána
 
 ## Auto-commit
-- Fáze 46: Čísla řádků v mapách grafu (`032612ac047ad45b8ee68112ddd472f0837194eb`)
+- Fáze 47: Zapisovat jen změněné fáze (`40876e1aafd3b55440d245d6818132b7d7bd2e98`)

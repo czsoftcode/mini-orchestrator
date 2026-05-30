@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { bumpPackageVersion, bumpSemver, isBumpLevel } from './version.js';
+import { fileURLToPath } from 'node:url';
+import { bumpPackageVersion, bumpSemver, isBumpLevel, readPackageVersion } from './version.js';
 
 describe('bumpSemver', () => {
   it('navýší patch', () => {
@@ -31,6 +32,15 @@ describe('isBumpLevel', () => {
   it('odmítne neplatné', () => {
     expect(isBumpLevel('pách')).toBe(false);
     expect(isBumpLevel('')).toBe(false);
+  });
+});
+
+describe('readPackageVersion', () => {
+  it('vrátí verzi z reálného package.json', async () => {
+    const pkgPath = fileURLToPath(new URL('../package.json', import.meta.url));
+    const pkg = JSON.parse(await readFile(pkgPath, 'utf-8')) as { version: string };
+
+    expect(readPackageVersion()).toBe(pkg.version);
   });
 });
 

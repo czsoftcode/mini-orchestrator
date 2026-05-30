@@ -1,0 +1,29 @@
+{
+  "id": 48,
+  "title": "Verze z package.json",
+  "goal": "mini --version čte verzi dynamicky z package.json (přes import JSON nebo čtení souboru relativně k buildu) místo natvrdo zapsaného '0.1.0' v cli.ts; ověřitelné testem, že vrácená verze odpovídá poli version v package.json, a zelenou bránou.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Helper readPackageVersion() ve version.ts",
+      "status": "done",
+      "detail": "Funkce přečte package.json přes new URL('../package.json', import.meta.url) + readFileSync, vrátí pole version; při chybě bezpečný fallback."
+    },
+    {
+      "title": "cli.ts použije helper",
+      "status": "done",
+      "detail": "Nahradit .version('0.1.0') voláním .version(readPackageVersion())."
+    },
+    {
+      "title": "Test helperu",
+      "status": "done",
+      "detail": "Test ověří, že readPackageVersion() vrací tutéž hodnotu jako pole version v reálném package.json."
+    },
+    {
+      "title": "Zelená brána",
+      "status": "done",
+      "detail": "npm run build, lint a všechny testy zelené; mini --version po buildu vrací verzi z package.json."
+    }
+  ],
+  "startedAt": "2026-05-30T08:45:54.487Z"
+}

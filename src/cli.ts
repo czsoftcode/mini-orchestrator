@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command, InvalidArgumentError } from 'commander';
+import { readPackageVersion } from './version.js';
 
 const program = new Command();
 
@@ -39,7 +40,7 @@ function requireOption(value: string | undefined, flag: string): string {
 program
   .name('mini')
   .description('Mini orchestrátor nad Claude Code — drží stav projektu a posílá Claudovi jen to nejnutnější.')
-  .version('0.1.0');
+  .version(readPackageVersion());
 
 program
   .command('init')

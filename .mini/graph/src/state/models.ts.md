@@ -4,8 +4,8 @@ Imports:
 - type { ProjectModels, ProjectState } from "./types.js"
 
 Exports:
-- type ModelScope
-- const MODEL_SCOPES
-- const SCOPE_LABELS
-- function resolveModel(scope: Exclude<ModelScope, 'default'>, state: ProjectState): string | undefined
-- function getDefaultModel(state: ProjectState): string | undefined
+- type ModelScope @L3
+- const MODEL_SCOPES @L5
+- const SCOPE_LABELS @L7-15
+- function resolveModel(scope: Exclude<ModelScope, 'default'>, state: ProjectState): string | undefined @L17-19
+- function getDefaultModel(state: ProjectState): string | undefined @L21-23

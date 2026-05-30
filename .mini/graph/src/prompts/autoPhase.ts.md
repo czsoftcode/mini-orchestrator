@@ -4,6 +4,6 @@ Imports:
 - type { Phase, StepStatus } from "../state/types.js"
 
 Exports:
-- interface AutoPhaseRetryContext
-- interface AutoPhaseContext
-- function buildAutoPhasePrompt(ctx: AutoPhaseContext): string
+- interface AutoPhaseRetryContext @L10-19
+- interface AutoPhaseContext @L21-47
+- function buildAutoPhasePrompt(ctx: AutoPhaseContext): string @L57-176

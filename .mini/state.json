@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 47,
+  "currentPhaseId": 48,
   "phases": [
     {
       "id": 1,
@@ -236,6 +236,11 @@
     {
       "id": 47,
       "title": "Zapisovat jen změněné fáze",
+      "status": "done"
+    },
+    {
+      "id": 48,
+      "title": "Verze z package.json",
       "status": "doing"
     }
   ],

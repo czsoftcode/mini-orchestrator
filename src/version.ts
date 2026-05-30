@@ -1,5 +1,25 @@
+import { readFileSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+/**
+ * Verze nástroje načtená z vlastního `package.json` (ne z `package.json`
+ * uživatelského projektu). Cesta se odvozuje od umístění tohoto modulu
+ * (`import.meta.url`), takže funguje jak ze zdrojáku (`src/`), tak z buildu
+ * (`dist/`) — v obou případech je `package.json` o úroveň výš.
+ *
+ * Při jakékoli chybě (chybějící soubor, nevalidní JSON, chybějící pole)
+ * vrací `'0.0.0'` — `mini --version` nikdy nemá spadnout kvůli verzi.
+ */
+export function readPackageVersion(): string {
+  try {
+    const raw = readFileSync(new URL('../package.json', import.meta.url), 'utf-8');
+    const version = (JSON.parse(raw) as { version?: unknown }).version;
+    return typeof version === 'string' && version.length > 0 ? version : '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
 
 /** Úroveň navýšení semver verze. */
 export type BumpLevel = 'patch' | 'minor' | 'major';

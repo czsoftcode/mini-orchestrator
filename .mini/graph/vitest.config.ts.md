@@ -4,4 +4,4 @@ Imports:
 - { defineConfig } from "vitest/config"
 
 Exports:
-- const default (default)
+- const default (default) @L3-11

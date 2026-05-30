@@ -8,4 +8,4 @@ Imports:
 - type { StepOutcome } from "./types.js"
 
 Exports:
-- function migrate(cwd: string): Promise<StepOutcome>
+- function migrate(cwd: string): Promise<StepOutcome> @L37-79

@@ -11,7 +11,7 @@ Imports:
 - { logUsage } from "../ui/usage.js"
 
 Exports:
-- function writePhaseMemory(phase: Phase, state: ProjectState, cwd: string, options: { hasAutoCommit: boolean; }): Promise<void>
-- function buildPhaseMemoryMarkdown(phase: Phase, discussContent: string, runContent: string): string
-- function summarizeMemoryForNext(md: string): string
-- function fsSafeTimestamp(date: Date): string
+- function writePhaseMemory(phase: Phase, state: ProjectState, cwd: string, options: { hasAutoCommit: boolean; }): Promise<void> @L56-109
+- function buildPhaseMemoryMarkdown(phase: Phase, discussContent: string, runContent: string): string @L115-157
+- function summarizeMemoryForNext(md: string): string @L179-212
+- function fsSafeTimestamp(date: Date): string @L376-378

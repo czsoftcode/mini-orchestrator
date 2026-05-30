@@ -4,6 +4,6 @@ Imports:
 - type { BumpLevel } from "../version.js"
 
 Exports:
-- type StepOutcome
-- interface AutoOptions
-- interface FinalizeOptions
+- type StepOutcome @L1-3
+- interface AutoOptions @L7-15
+- interface FinalizeOptions @L18-21

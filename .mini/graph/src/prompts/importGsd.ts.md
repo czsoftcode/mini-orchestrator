@@ -1,4 +1,4 @@
 ## src/prompts/importGsd.ts
 
 Exports:
-- function buildImportGsdPrompt(): string
+- function buildImportGsdPrompt(): string @L1-32
