@@ -214,11 +214,11 @@ Ještě **před** \`mini done --apply\` zaznamenej, co fáze přinesla, do \`CHA
 # Posun stavu
 ${applyHint}
 
-Stav fáze měň jen příkazem \`mini done --apply\` — nikdy needituj \`.mini/state.json\` ručně. \`mini done --apply\` přečte report, posune kroky, fázi uzavře, navýší verzi v package.json (default patch) a commitne práci.
+Stav fáze měň jen příkazem \`mini done --apply\` — nikdy needituj \`.mini/state.json\` ručně. \`mini done --apply\` přečte report, posune kroky, fázi uzavře a commitne práci. Verzi v package.json ve výchozím stavu **nenavyšuje** (\`--bump none\`) — vhodné pro dílčí fáze, kde se verze zvedne až na konci celku.
 
 Verze a push:
-- Větší skok verze (po dohodě s uživatelem) přidej \`--bump minor\` nebo \`--bump major\`.
-- Nahrání na remote je opt-in: když to uživatel chce, přidej \`--push\` (jinak práce zůstane jen v lokálním commitu).
+- Verzi navyš jen na vyžádání (po dohodě s uživatelem): přidej \`--bump patch\`, \`--bump minor\` nebo \`--bump major\`. Bez \`--bump\` (default \`none\`) verze zůstane beze změny.
+- Nahrání na remote je opt-in: když to uživatel chce, přidej \`--push\` (jinak práce zůstane jen v lokálním commitu). \`--push\` je vydání, proto **vyžaduje explicitní** \`--bump patch|minor|major\` — s \`none\` (ani bez \`--bump\`) skončí chybou.
 
 Po uzavření napiš, že další na řadě je \`/mini:next\` (navrhnout další fázi), a **nabídni uživateli příkaz \`/clear\`** pro vyčištění kontextu Claude Code před další fází (\`/clear\` musí napsat on sám).
 `;

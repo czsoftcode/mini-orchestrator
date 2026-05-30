@@ -12,11 +12,23 @@ function parseMaxTurns(value: string): number {
   return n;
 }
 
-function parseBumpLevel(value: string): 'patch' | 'minor' | 'major' {
-  if (value !== 'patch' && value !== 'minor' && value !== 'major') {
-    throw new InvalidArgumentError('Musí být patch, minor nebo major.');
+function parseBumpLevel(value: string): 'patch' | 'minor' | 'major' | 'none' {
+  if (value !== 'patch' && value !== 'minor' && value !== 'major' && value !== 'none') {
+    throw new InvalidArgumentError('Musí být none, patch, minor nebo major.');
   }
   return value;
+}
+
+/**
+ * `--push` je vydání, takže vyžaduje explicitní úroveň verze. Default `none`
+ * (ani `--bump none`) s pushem nedává smysl — neměli bychom co otagovat. Hlášku
+ * vypíšeme a ukončíme proces.
+ */
+function ensurePushHasBump(bump: string | undefined, push: boolean | undefined): void {
+  if (push && (bump === undefined || bump === 'none')) {
+    console.error('Při --push musíš zvolit úroveň verze: --bump patch | minor | major.');
+    process.exit(1);
+  }
 }
 
 /** Přečte celý stdin do řetězce. Pro neinteraktivní `--apply` příkazy. */
@@ -114,9 +126,10 @@ program
   .description('Lidská verifikace — zeptá se, jestli to funguje, a posune stav.')
   .option('--apply', 'Neinteraktivně posuň stav podle reportu (bez dotazů). Pro /mini:done.')
   .option('--accept-verify', 'S --apply: body k ručnímu ověření ber jako odsouhlasené (verifikace proběhla v chatu).')
-  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: patch | minor | major (default patch).', parseBumpLevel)
-  .option('--push', 'Po commitu fáze pushnout na remote (git push).')
-  .action(async (opts: { apply?: boolean; acceptVerify?: boolean; bump?: 'patch' | 'minor' | 'major'; push?: boolean }) => {
+  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: none | patch | minor | major (default none — verzi nenavyšovat). Při --push je povinný patch | minor | major.', parseBumpLevel)
+  .option('--push', 'Po commitu fáze pushnout na remote (git push). Vyžaduje --bump patch | minor | major.')
+  .action(async (opts: { apply?: boolean; acceptVerify?: boolean; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean }) => {
+    ensurePushHasBump(opts.bump, opts.push);
     if (opts.apply) {
       const { applyDone } = await import('./commands/done.js');
       const r = await applyDone(process.cwd(), {
@@ -135,9 +148,10 @@ program
   .command('auto')
   .description('Auto chain: next → plan → (do → done){pro každý krok}. Fázi dotáhne sám, ale u bodů k ručnímu ověření (verify) se zastaví a zeptá člověka — není to plně bezobslužný běh.')
   .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v každé session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
-  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: patch | minor | major (default patch).', parseBumpLevel)
-  .option('--push', 'Po commitu fáze pushnout na remote (git push).')
-  .action(async (opts: { maxTurns?: number; bump?: 'patch' | 'minor' | 'major'; push?: boolean }) => {
+  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: none | patch | minor | major (default none — verzi nenavyšovat). Při --push je povinný patch | minor | major.', parseBumpLevel)
+  .option('--push', 'Po commitu fáze pushnout na remote (git push). Vyžaduje --bump patch | minor | major.')
+  .action(async (opts: { maxTurns?: number; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean }) => {
+    ensurePushHasBump(opts.bump, opts.push);
     const { auto } = await import('./commands/auto.js');
     await auto({ maxTurns: opts.maxTurns, bump: opts.bump, push: opts.push });
   });

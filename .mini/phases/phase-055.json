@@ -1,0 +1,34 @@
+{
+  "id": 55,
+  "title": "Done --bump none jako default",
+  "goal": "Přidat k volbě --bump (u done i auto) hodnotu none, která se stane novou výchozí a verzi v package.json nenavýší; verze se zvedne jen při explicitním --bump patch|minor|major.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Přidat typ BumpChoice s none",
+      "status": "done",
+      "detail": "V version.ts zaveď BumpChoice = BumpLevel | 'none' (BumpLevel a BUMP_LEVELS/isBumpLevel nech semver-only). V commands/types.ts změň bump u FinalizeOptions i AutoOptions na BumpChoice a uprav komentář na default none. Ověř typecheckem."
+    },
+    {
+      "title": "CLI: none ve volbě a validace push",
+      "status": "done",
+      "detail": "V cli.ts uprav parseBumpLevel, ať přijme i none, a help texty obou --bump na \"default none\". V action handlerech done i auto přidej kontrolu: když je push a bump chybí nebo je none, vypiš českou hlášku (push vyžaduje --bump patch|minor|major) a process.exit(1). Ověř ručním spuštěním mini done --push."
+    },
+    {
+      "title": "Done: default none a přeskočení bumpu",
+      "status": "done",
+      "detail": "V commands/done.ts uprav commitPhaseWork na const level = finalizeOpts.bump ?? 'none' a při level === 'none' nech version = null bez volání bumpVersion. Zúži bumpVersion na BumpLevel. Stamp i tagVersion se tím u none přirozeně přeskočí; ověř čtením toku version."
+    },
+    {
+      "title": "Aktualizovat prompt v sessionContext",
+      "status": "done",
+      "detail": "V prompts/sessionContext.ts uprav text kolem řádků 217-221: default verzi nenavyšuje (none), pro povýšení přidej --bump patch|minor|major a push vyžaduje explicitní --bump. Ověř, že snapshot/asserty v sessionContext.test.ts po úpravě sedí."
+    },
+    {
+      "title": "Testy a zelený build",
+      "status": "done",
+      "detail": "V commands/done.test.ts doplň: výchozí volání ({}) nebumpuje ani netaguje; explicitní patch|minor|major bumpuje jako dřív; none+push vrací chybu. Projdi auto.test.ts kvůli změně defaultu. Spusť npm test a npm run typecheck do zelena."
+    }
+  ],
+  "startedAt": "2026-05-30T14:11:27.780Z"
+}

@@ -24,6 +24,12 @@ export function readPackageVersion(): string {
 /** Úroveň navýšení semver verze. */
 export type BumpLevel = 'patch' | 'minor' | 'major';
 
+/**
+ * Volba `--bump`: buď semver úroveň, nebo `none` (verzi nenavyšovat). `none` je
+ * výchozí — vhodné pro dílčí fáze, kde se verze zvedne až na konci celku.
+ */
+export type BumpChoice = BumpLevel | 'none';
+
 export const BUMP_LEVELS: readonly BumpLevel[] = ['patch', 'minor', 'major'];
 
 export function isBumpLevel(value: string): value is BumpLevel {

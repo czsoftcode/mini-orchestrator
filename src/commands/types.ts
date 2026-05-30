@@ -2,20 +2,21 @@ export type StepOutcome =
   | { ok: true; phaseAdvanced?: boolean; nextPhaseId?: number | null }
   | { ok: false; reason: string };
 
-import type { BumpLevel } from '../version.js';
+import type { BumpChoice } from '../version.js';
 
 export interface AutoOptions {
   auto?: boolean;
   stream?: boolean;
   maxTurns?: number;
-  /** Úroveň navýšení verze při finalizaci fáze (default `patch`). */
-  bump?: BumpLevel;
+  /** Úroveň navýšení verze při finalizaci fáze (default `none` — nenavyšovat). */
+  bump?: BumpChoice;
   /** Po commitu fáze pushnout na remote (opt-in). */
   push?: boolean;
 }
 
 /** Volby finalizačních side-effectů (commit fáze): bump verze + případný push. */
 export interface FinalizeOptions {
-  bump?: BumpLevel;
+  /** Úroveň navýšení verze (default `none` — nenavyšovat). */
+  bump?: BumpChoice;
   push?: boolean;
 }

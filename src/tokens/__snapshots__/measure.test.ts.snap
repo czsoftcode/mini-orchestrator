@@ -6,8 +6,8 @@ exports[`render > konzolový výpis nad fixními vstupy (snapshot) 1`] = `
   do           reálný=945  šablona=925  kontext=20  (vkládaný kontext 20 tok: fáze (název + cíl) 60 %, kroky 40 %)
   plan         reálný=756  šablona=511  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
   next         reálný=663  šablona=470  kontext=193  (vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %)
+  done         reálný=621  šablona=539  kontext=82  (vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %)
   discuss      reálný=592  šablona=472  kontext=120  (vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %)
-  done         reálný=547  šablona=465  kontext=82  (vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %)
   writeMemory  reálný=473  šablona=346  kontext=127  (vkládaný kontext 127 tok: projekt 79 %, fáze (název + cíl) 9 %)"
 `;
 
@@ -24,8 +24,8 @@ obsahových bloků (projekt, historie fází, poznámky, …).
 | do | 945 | 925 | 20 |
 | plan | 756 | 511 | 245 |
 | next | 663 | 470 | 193 |
+| done | 621 | 539 | 82 |
 | discuss | 592 | 472 | 120 |
-| done | 547 | 465 | 82 |
 | writeMemory | 473 | 346 | 127 |
 
 ## Proč (rozpad vkládaného kontextu)
@@ -34,8 +34,8 @@ obsahových bloků (projekt, historie fází, poznámky, …).
 - **do** — vkládaný kontext 20 tok: fáze (název + cíl) 60 %, kroky 40 %
 - **plan** — vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %
 - **next** — vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %
-- **discuss** — vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %
 - **done** — vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %
+- **discuss** — vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %
 - **writeMemory** — vkládaný kontext 127 tok: projekt 79 %, fáze (název + cíl) 9 %
 "
 `;

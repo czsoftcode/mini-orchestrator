@@ -2,7 +2,7 @@
   "id": 54,
   "title": "Generované artefakty do .gitignore",
   "goal": "Přidat do .gitignore programově generované/odvozené výstupy v .mini/ (graph.json, graph/, last-memory.md, token-report.md, codebase.md a undo-zálohy state.prev.json/phases-prev/), odebrat je ze sledování gitem přes git rm --cached a ověřit, že je workflow (mini map / done) umí znovu vygenerovat.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Doplnit .mini/.gitignore",
@@ -20,5 +20,11 @@
       "detail": "git status .mini/ — untrackované soubory nesmí naskočit jako ?? (.gitignore je chytá). Spustit mini map (graf se korektně přegeneruje) a npm test (zelené)."
     }
   ],
-  "startedAt": "2026-05-30T13:41:52.112Z"
+  "startedAt": "2026-05-30T13:41:52.112Z",
+  "completedAt": "2026-05-30T13:51:29.029Z",
+  "autoCommit": {
+    "preSha": "62387e8d4cd295161e5d4263144fbc563bfba2a8",
+    "sha": "60c3269439e97f4744eb4609c2ef7868bc84f8f0",
+    "subject": "Fáze 54: Generované artefakty do .gitignore"
+  }
 }

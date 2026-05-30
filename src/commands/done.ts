@@ -4,6 +4,7 @@ import { commitAll, createTag, hasChanges, headSha, isGitRepo, push, pushTag } f
 import { buildGraph, GRAPH_DIR, hasMappableProject } from '../graph/buildGraph.js';
 import { CHANGELOG_FILE, stampUnreleased, todayIso } from '../changelog.js';
 import { bumpPackageVersion } from '../version.js';
+import type { BumpLevel } from '../version.js';
 import {
   RunReportParseError,
   readRunReport,
@@ -269,9 +270,11 @@ async function commitPhaseWork(
 
   // Bump verze ještě před `hasChanges`/commitem — patří do commitu fáze a sám
   // o sobě je změnou, která má smysl commitnout (i kdyby jinak nic nebylo).
-  // Výslednou verzi si držíme pro tag při `--push` (níže).
-  const level = finalizeOpts.bump ?? 'patch';
-  const version = await bumpVersion(cwd, level);
+  // Výslednou verzi si držíme pro tag při `--push` (níže). Default `none` verzi
+  // nenavyšuje (dílčí fáze) — pak `version` zůstane `null` a tag/stamp se
+  // přirozeně přeskočí.
+  const level = finalizeOpts.bump ?? 'none';
+  const version = level === 'none' ? null : await bumpVersion(cwd, level);
 
   // Při vydání (minor/major s pushem) zaklapneme `## [Unreleased]` do datované
   // sekce — taky ještě před commitem, ať skončí v commitu fáze. Patche se
@@ -398,10 +401,7 @@ async function stampChangelog(cwd: string, version: string | null): Promise<void
  * `package.json` nemá (jiný jazyk), tiše přeskočí. Chybu při zápisu jen
  * zalogujeme — nesmí zablokovat finalizaci.
  */
-async function bumpVersion(
-  cwd: string,
-  level: NonNullable<FinalizeOptions['bump']>,
-): Promise<string | null> {
+async function bumpVersion(cwd: string, level: BumpLevel): Promise<string | null> {
   try {
     const r = await bumpPackageVersion(cwd, level);
     if (r) {

@@ -8,6 +8,8 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- `mini done`/`mini auto`: volba `--bump none` — uzavře fázi bez navýšení verze
+  (vhodné pro dílčí fáze, kde se verze zvedne až na konci celku).
 - Mapa znalostního grafu nově podporuje **Javu** (`.java`): z tříd se vytáhnou
   importy (`import`, `import static` i wildcard `import a.b.*`) a top-level typy —
   `class`/`interface`/`enum`/`record`/`@interface` deklarované jako `public`/`protected`,
@@ -21,6 +23,14 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
   a `const`/`var` (i seskupené), exportované podle velkého počátečního písmene.
   Metody se připojují k receiver typu, vše s kotvami na řádky. Projekt se rozpozná
   i podle `go.mod`.
+
+### Changed
+
+- **Výchozí chování `--bump` je nově `none`** (dřív `patch`): `mini done` ani
+  `mini auto` už verzi v `package.json` ve výchozím stavu nenavyšují. Pro
+  povýšení použij `--bump patch|minor|major`.
+- `--push` nově vyžaduje explicitní `--bump patch|minor|major` — push bez úrovně
+  verze (nebo s `none`) skončí chybou. Push = vydání, proto musí mít verzi pro tag.
 
 ## [1.2.0] - 2026-05-30
 
