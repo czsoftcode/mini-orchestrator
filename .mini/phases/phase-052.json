@@ -2,7 +2,7 @@
   "id": 52,
   "title": "Mapa pro Go",
   "goal": "Přidat goMapper.ts pro extrakci importů a top-level exportů (func, type, const, var, metody s receiverem; exportované podle velkého počátečního písmene) z .go souborů, napojit na detectLang a hasMappableProject (marker go.mod) v buildGraph.ts a ověřit unit testy mapperu i snapshotem grafu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Stripping komentářů a stringů + kostra",
@@ -35,5 +35,11 @@
       "detail": "goMapper.test.ts s FIXTURE (importy single/blok/_/., exportované i neexportované func, struct+interface, receiver metody, grouped const/var, raw string a komentář s falešným func); rozšířit buildGraph.test.ts o .go soubor; npm test zeleně vč. přegenerování snapshotů"
     }
   ],
-  "startedAt": "2026-05-30T12:52:02.016Z"
+  "startedAt": "2026-05-30T12:52:02.016Z",
+  "completedAt": "2026-05-30T13:06:50.784Z",
+  "autoCommit": {
+    "preSha": "34205d079e907b522647f847eac0367d494502fe",
+    "sha": "128b166b9a691dfb6aefde9d96012dc607c555cc",
+    "subject": "Fáze 52: Mapa pro Go"
+  }
 }

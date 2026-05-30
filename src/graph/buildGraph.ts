@@ -3,6 +3,7 @@ import { dirname, join, posix, relative, sep } from 'node:path';
 import { isGitRepo, runGit } from '../git.js';
 import { mapFile } from './mapper.js';
 import { mapGoFile } from './goMapper.js';
+import { mapJavaFile } from './javaMapper.js';
 import { mapPhpFile } from './phpMapper.js';
 import { mapPythonFile } from './pythonMapper.js';
 import { mapRustFile } from './rustMapper.js';
@@ -52,7 +53,7 @@ const IGNORE_DIRS = new Set([
   '__pycache__',
 ]);
 
-type Lang = 'ts' | 'php' | 'rust' | 'python' | 'go';
+type Lang = 'ts' | 'php' | 'rust' | 'python' | 'go' | 'java';
 
 /** Jeden záznam v indexu `graph.json`. */
 export interface GraphIndexEntry {
@@ -180,13 +181,16 @@ function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {
       return mapPythonFile(content, relPath);
     case 'go':
       return mapGoFile(content, relPath);
+    case 'java':
+      return mapJavaFile(content, relPath);
   }
 }
 
 /**
  * Detekuje, jestli má smysl spouštět vlastní mapper: hledá `tsconfig.json`,
- * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py`, `go.mod` nebo alespoň
- * jeden mapovatelný soubor (.ts/.tsx/.php/.rs/.py/.go) v projektu (mimo ignorované adresáře).
+ * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py`, `go.mod`,
+ * `pom.xml`, `build.gradle`(`.kts`) nebo alespoň jeden mapovatelný soubor
+ * (.ts/.tsx/.php/.rs/.py/.go/.java) v projektu (mimo ignorované adresáře).
  */
 export async function hasMappableProject(cwd: string = process.cwd()): Promise<boolean> {
   if (await fileExists(join(cwd, 'tsconfig.json'))) return true;
@@ -195,6 +199,9 @@ export async function hasMappableProject(cwd: string = process.cwd()): Promise<b
   if (await fileExists(join(cwd, 'pyproject.toml'))) return true;
   if (await fileExists(join(cwd, 'setup.py'))) return true;
   if (await fileExists(join(cwd, 'go.mod'))) return true;
+  if (await fileExists(join(cwd, 'pom.xml'))) return true;
+  if (await fileExists(join(cwd, 'build.gradle'))) return true;
+  if (await fileExists(join(cwd, 'build.gradle.kts'))) return true;
   const files = await collectMappableFiles(cwd, {}, /* stopAfter */ 1);
   return files.length > 0;
 }
@@ -323,6 +330,7 @@ function detectLang(name: string): Lang | null {
   if (name.endsWith('.rs')) return 'rust';
   if (name.endsWith('.py') || name.endsWith('.pyi')) return 'python';
   if (name.endsWith('.go')) return 'go';
+  if (name.endsWith('.java')) return 'java';
   return null;
 }
 

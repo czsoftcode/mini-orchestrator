@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-30T12:46:18.010Z",
+  "generatedAt": "2026-05-30T13:06:51.873Z",
   "files": [
     {
       "path": "scripts/measure-prompt-tokens.ts",
@@ -341,6 +341,18 @@
         "buildGraph",
         "hasMappableProject",
         "renderFileGraph"
+      ]
+    },
+    {
+      "path": "src/graph/goMapper.test.ts",
+      "graphFile": ".mini/graph/src/graph/goMapper.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/graph/goMapper.ts",
+      "graphFile": ".mini/graph/src/graph/goMapper.ts.md",
+      "exports": [
+        "mapGoFile"
       ]
     },
     {

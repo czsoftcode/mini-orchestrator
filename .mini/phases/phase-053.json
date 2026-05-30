@@ -1,0 +1,39 @@
+{
+  "id": 53,
+  "title": "Mapa pro Javu",
+  "goal": "Přidat javaMapper.ts pro extrakci import deklarací a top-level exportů z .java souborů (třídy, interfaces, enums, records, public/protected metody a pole; signatury metod), napojit na detectLang a hasMappableProject (marker pom.xml/build.gradle) v buildGraph.ts a ověřit unit testy mapperu i snapshotem grafu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Stripping komentářů, stringů, text bloků + kostra",
+      "status": "done",
+      "detail": "stripJava smaže // a /* */ a javadoc /** */, \"…\" stringy, char 'x' a text bloky \"\"\"…\"\"\" (Java 15+) náhradou mezerami se zachováním \\n; mapJavaFile(content, relPath) vrací FileGraph s prázdnými exports/imports."
+    },
+    {
+      "title": "Extrakce importů",
+      "status": "done",
+      "detail": "Parsuje import a.b.C;, import static a.b.C.m; a import a.b.*;. Symbol = poslední segment cesty, u .* → ['*']. Pokryto unit testem."
+    },
+    {
+      "title": "Top-level typy",
+      "status": "done",
+      "detail": "Na brace-depth 0 detekuje class/interface/enum/record/@interface jen s public/protected; ExportInfo s odpovídajícím kind a kotvami @L<start>-<end> přes matchBrace. Přeskakuje anotace a modifikátory před deklarací."
+    },
+    {
+      "title": "Členy typu: metody a pole + signatury",
+      "status": "done",
+      "detail": "Uvnitř těla typu (depth 1) vytáhne public/protected metody (parametry + návratový typ → MethodSignature, připojené jako methods k exportu typu) a pole; těla metod přeskočí přes matchBrace."
+    },
+    {
+      "title": "Napojení do buildGraph.ts",
+      "status": "done",
+      "detail": "Lang rozšířen o 'java', detectLang pro .java, mapByLang case 'java' → mapJavaFile, hasMappableProject markery pom.xml/build.gradle/build.gradle.kts."
+    },
+    {
+      "title": "Testy + zelená brána",
+      "status": "done",
+      "detail": "javaMapper.test.ts (importy, top-level typy, metody/pole, anotace, text bloky) + snapshot grafu v buildGraph.test.ts; npm test a lint zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T13:13:44.545Z"
+}

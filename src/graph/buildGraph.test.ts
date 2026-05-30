@@ -164,8 +164,44 @@ describe('buildGraph', () => {
     await expect(readFile(join(root, GRAPH_DIR, 'vendor/dep/x.go.md'), 'utf-8')).rejects.toThrow();
   });
 
+  it('mapuje i .java soubory a ignoruje build/', async () => {
+    await writeFixture(
+      root,
+      'src/Main.java',
+      `package app;\npublic class Main {\n  public int run() { return 0; }\n}\n`,
+    );
+    await writeFixture(root, 'build/Generated.java', `public class Generated {}\n`);
+
+    const result = await buildGraph(root);
+    const paths = result.files.map((f) => f.path);
+    expect(paths).toContain('src/Main.java');
+    expect(paths).not.toContain('build/Generated.java');
+
+    const javaMap = await readFile(join(root, GRAPH_DIR, 'src/Main.java.md'), 'utf-8');
+    expect(javaMap).toContain('## src/Main.java');
+    expect(javaMap).toContain('class Main');
+    await expect(
+      readFile(join(root, GRAPH_DIR, 'build/Generated.java.md'), 'utf-8'),
+    ).rejects.toThrow();
+  });
+
   it('hasMappableProject returns true when go.mod exists', async () => {
     await writeFixture(root, 'go.mod', 'module example.com/x\n\ngo 1.22\n');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns true when pom.xml exists', async () => {
+    await writeFixture(root, 'pom.xml', '<project></project>\n');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns true when build.gradle exists', async () => {
+    await writeFixture(root, 'build.gradle', 'plugins { id "java" }\n');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns true when only .java exists', async () => {
+    await writeFixture(root, 'src/App.java', 'public class App {}');
     expect(await hasMappableProject(root)).toBe(true);
   });
 

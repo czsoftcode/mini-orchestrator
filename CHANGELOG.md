@@ -8,6 +8,13 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- Mapa znalostního grafu nově podporuje **Javu** (`.java`): z tříd se vytáhnou
+  importy (`import`, `import static` i wildcard `import a.b.*`) a top-level typy —
+  `class`/`interface`/`enum`/`record`/`@interface` deklarované jako `public`/`protected`,
+  s `public`/`protected` metodami (vč. signatur parametrů, varargs a `static`)
+  připojenými k typu a kotvami na řádky. Komentáře, javadoc, stringy i text bloky
+  (`"""…"""`) se korektně ignorují. Projekt se rozpozná i podle `pom.xml` nebo
+  `build.gradle`(`.kts`).
 - Mapa znalostního grafu nově podporuje **Go** (`.go`): z balíčku se vytáhnou
   importy (single i blokový `import ( … )` vč. aliasů, `_` blank a `.` dot importů)
   a top-level exporty — funkce se signaturou, `struct`/`interface`, typové aliasy
