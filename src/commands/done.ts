@@ -1,4 +1,4 @@
-import { commitAll, hasChanges, headSha, isGitRepo, push } from '../git.js';
+import { commitAll, createTag, hasChanges, headSha, isGitRepo, push, pushTag } from '../git.js';
 import { buildGraph, GRAPH_DIR, hasMappableProject } from '../graph/buildGraph.js';
 import { bumpPackageVersion } from '../version.js';
 import {
@@ -266,7 +266,8 @@ async function commitPhaseWork(
 
   // Bump verze ještě před `hasChanges`/commitem — patří do commitu fáze a sám
   // o sobě je změnou, která má smysl commitnout (i kdyby jinak nic nebylo).
-  await bumpVersion(cwd, finalizeOpts.bump ?? 'patch');
+  // Výslednou verzi si držíme pro tag při `--push` (níže).
+  const version = await bumpVersion(cwd, finalizeOpts.bump ?? 'patch');
 
   if (!(await hasChanges(cwd))) {
     log.dim('Žádné změny v gitu — commit přeskočen.');
@@ -298,6 +299,7 @@ async function commitPhaseWork(
     const pr = await push(cwd);
     if (pr.ok) {
       log.success('Pushnuto na remote.');
+      await tagVersion(cwd, version);
     } else {
       log.warn('Push selhal — práce zůstává commitnutá lokálně.');
       const detail = pr.stderr.trim() || pr.stdout.trim();
@@ -310,19 +312,55 @@ async function commitPhaseWork(
 }
 
 /**
+ * Při `--push` po úspěšném pushi založí a pushne git tag `v<verze>` podle
+ * aktuální verze z `package.json`. Best-effort jako okolní push logika —
+ * gitové chyby (existující tag, chybějící remote) jen zalogujeme jako warning.
+ *
+ * Když projekt verzi nemá (`version === null` — jiný jazyk bez `package.json`),
+ * tiše přeskočíme; tagovat není podle čeho.
+ */
+async function tagVersion(cwd: string, version: string | null): Promise<void> {
+  if (!version) return;
+
+  const tag = `v${version}`;
+  const tr = await createTag(cwd, tag);
+  if (!tr.ok) {
+    log.warn(`Tag ${tag} se nepodařilo vytvořit — push verze přeskočen.`);
+    const detail = tr.stderr.trim() || tr.stdout.trim();
+    if (detail) log.dim(detail);
+    return;
+  }
+
+  const ptr = await pushTag(cwd, tag);
+  if (ptr.ok) {
+    log.success(`Tag ${tag} pushnut na remote.`);
+  } else {
+    log.warn(`Push tagu ${tag} selhal — tag zůstává lokálně.`);
+    const detail = ptr.stderr.trim() || ptr.stdout.trim();
+    if (detail) log.dim(detail);
+    log.hint(`Zkus ručně: git push origin ${tag}.`);
+  }
+}
+
+/**
  * Best-effort navýšení verze v `package.json` před commitem fáze. Když projekt
  * `package.json` nemá (jiný jazyk), tiše přeskočí. Chybu při zápisu jen
  * zalogujeme — nesmí zablokovat finalizaci.
  */
-async function bumpVersion(cwd: string, level: NonNullable<FinalizeOptions['bump']>): Promise<void> {
+async function bumpVersion(
+  cwd: string,
+  level: NonNullable<FinalizeOptions['bump']>,
+): Promise<string | null> {
   try {
     const r = await bumpPackageVersion(cwd, level);
     if (r) {
       log.dim(`Verze: ${r.from} → ${r.to} (${level}).`);
+      return r.to;
     }
   } catch (err) {
     log.warn(`Navýšení verze selhalo: ${(err as Error).message}`);
   }
+  return null;
 }
 
 export function advanceToNextPhase(state: ProjectState): Phase | null {

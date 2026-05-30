@@ -1,13 +1,12 @@
-# Fáze 47 — Zapisovat jen změněné fáze
+# Fáze 48 — Verze z package.json
 
-**Cíl:** save() ve store.ts zapíše soubor fáze jen když se její serializovaný JSON liší od obsahu na disku, a snapshotPrev kopíruje do phases-prev jen reálně změněné soubory místo rm+copy celého adresáře, takže počet diskových operací škáluje s počtem změn, ne s počtem fází; ověřitelné novým testem, že nezměněná fáze se znovu nezapíše, a zelenou bránou.
+**Cíl:** mini --version čte verzi dynamicky z package.json (přes import JSON nebo čtení souboru relativně k buildu) místo natvrdo zapsaného '0.1.0' v cli.ts; ověřitelné testem, že vrácená verze odpovídá poli version v package.json, a zelenou bránou.
 
 ## Kroky
-- [hotovo] Helper writeJsonIfChanged
-- [hotovo] save() zapisuje jen změněné fáze
-- [hotovo] snapshotPrev() synchronizuje diferenčně
-- [hotovo] Test: nezměněná fáze se znovu nezapíše
+- [hotovo] Helper readPackageVersion() ve version.ts
+- [hotovo] cli.ts použije helper
+- [hotovo] Test helperu
 - [hotovo] Zelená brána
 
 ## Auto-commit
-- Fáze 47: Zapisovat jen změněné fáze (`40876e1aafd3b55440d245d6818132b7d7bd2e98`)
+- Fáze 48: Verze z package.json (`ddb070f7679c3afc9d9b053217c0fe6c69d6a3a7`)

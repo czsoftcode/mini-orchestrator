@@ -5,4 +5,5 @@ Imports:
 - { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 - { tmpdir } from "node:os"
 - { join } from "node:path"
-- { bumpPackageVersion, bumpSemver, isBumpLevel } from "./version.js"
+- { fileURLToPath } from "node:url"
+- { bumpPackageVersion, bumpSemver, isBumpLevel, readPackageVersion } from "./version.js"

@@ -60,6 +60,23 @@ export async function push(cwd: string): Promise<GitResult> {
   return runGit(['push'], cwd);
 }
 
+/**
+ * Vytvoří lokální git tag `tag` na aktuálním HEAD. Best-effort jako zbytek
+ * wrapperu — nikdy nehází: existující tag, absence HEAD i absence gitu skončí
+ * jako `ok: false` se stderr ze gitu, ať to volající umí vypsat jako warning.
+ */
+export async function createTag(cwd: string, tag: string): Promise<GitResult> {
+  return runGit(['tag', tag], cwd);
+}
+
+/**
+ * Pushne jeden tag na nakonfigurovaný `origin`. Best-effort: chybějící remote i
+ * odmítnutí skončí jako `ok: false`, workflow se tím nezablokuje.
+ */
+export async function pushTag(cwd: string, tag: string): Promise<GitResult> {
+  return runGit(['push', 'origin', tag], cwd);
+}
+
 export async function currentBranch(cwd: string): Promise<string | null> {
   const r = await runGit(['rev-parse', '--abbrev-ref', 'HEAD'], cwd);
   if (!r.ok) return null;

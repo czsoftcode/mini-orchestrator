@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 48,
+  "currentPhaseId": 49,
   "phases": [
     {
       "id": 1,
@@ -241,6 +241,11 @@
     {
       "id": 48,
       "title": "Verze z package.json",
+      "status": "done"
+    },
+    {
+      "id": 49,
+      "title": "Tag verze při done --push",
       "status": "doing"
     }
   ],

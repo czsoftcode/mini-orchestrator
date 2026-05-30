@@ -1,0 +1,34 @@
+{
+  "id": 49,
+  "title": "Tag verze při done --push",
+  "goal": "Při mini done --push po úspěšném commitu fáze vytvořit git tag v<verze> podle aktuální verze v package.json a pushnout ho na remote (nový helper v git.ts); best-effort jako zbytek push logiky, ověřeno testem, že se tag se správným jménem vytvoří a pushne.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Git helpery pro tagy",
+      "status": "done",
+      "detail": "createTag(cwd, tag) a pushTag(cwd, tag) v git.ts; best-effort přes GitResult (nikdy nehází, jako push)."
+    },
+    {
+      "title": "bumpVersion vrací novou verzi",
+      "status": "done",
+      "detail": "bumpVersion v done.ts vrátí výslednou verzi (to), případně null když projekt nemá package.json."
+    },
+    {
+      "title": "Tag + push při done --push",
+      "status": "done",
+      "detail": "v commitPhaseWork po úspěšném pushi vytvořit tag v<verze> a pushnout ho; přeskočit bez chyby když verze není; logy/warningy ve stylu okolního push kódu."
+    },
+    {
+      "title": "Testy git helperů",
+      "status": "done",
+      "detail": "git.test.ts ověří, že createTag vytvoří tag se správným jménem a pushTag ho pošle na remote (přes lokální bare repo)."
+    },
+    {
+      "title": "Zelená brána",
+      "status": "done",
+      "detail": "npm test a lint zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T08:55:04.276Z"
+}

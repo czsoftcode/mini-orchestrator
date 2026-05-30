@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import {
   commitAll,
+  createTag,
   currentBranch,
   hasChanges,
   headSha,
@@ -13,6 +14,7 @@ import {
   isCleanWorkingTree,
   isGitRepo,
   push,
+  pushTag,
   runGit,
   softResetTo,
 } from './git.js';
@@ -201,6 +203,63 @@ describe('git helpers', () => {
       } finally {
         await rm(remote, { recursive: true, force: true });
       }
+    });
+  });
+
+  describe('createTag', () => {
+    it('vytvoří tag se zadaným jménem na HEAD', async () => {
+      await initRepo(cwd);
+      await writeFile(join(cwd, 'a.txt'), 'a\n', 'utf-8');
+      await commitAll(cwd, 'init');
+
+      const r = await createTag(cwd, 'v1.2.3');
+      expect(r.ok).toBe(true);
+
+      const tags = await runGit(['tag', '--list'], cwd);
+      expect(tags.stdout).toContain('v1.2.3');
+    });
+
+    it('nehází a vrátí ok=false, když tag už existuje', async () => {
+      await initRepo(cwd);
+      await writeFile(join(cwd, 'a.txt'), 'a\n', 'utf-8');
+      await commitAll(cwd, 'init');
+      await createTag(cwd, 'v1.0.0');
+
+      const r = await createTag(cwd, 'v1.0.0');
+      expect(r.ok).toBe(false);
+    });
+  });
+
+  describe('pushTag', () => {
+    it('pošle tag na remote', async () => {
+      const remote = await mkdtemp(join(tmpdir(), 'mini-remote-'));
+      try {
+        await execFileAsync('git', ['init', '--bare', '-b', 'main'], { cwd: remote });
+        await initRepo(cwd);
+        await writeFile(join(cwd, 'a.txt'), 'a\n', 'utf-8');
+        await commitAll(cwd, 'init');
+        await execFileAsync('git', ['remote', 'add', 'origin', remote], { cwd });
+        await execFileAsync('git', ['push', '-u', 'origin', 'main'], { cwd });
+
+        await createTag(cwd, 'v2.0.0');
+        const r = await pushTag(cwd, 'v2.0.0');
+        expect(r.ok).toBe(true);
+
+        const remoteTags = await runGit(['tag', '--list'], remote);
+        expect(remoteTags.stdout).toContain('v2.0.0');
+      } finally {
+        await rm(remote, { recursive: true, force: true });
+      }
+    });
+
+    it('nehází a vrátí ok=false, když remote není', async () => {
+      await initRepo(cwd);
+      await writeFile(join(cwd, 'a.txt'), 'a\n', 'utf-8');
+      await commitAll(cwd, 'init');
+      await createTag(cwd, 'v3.0.0');
+
+      const r = await pushTag(cwd, 'v3.0.0');
+      expect(r.ok).toBe(false);
     });
   });
 

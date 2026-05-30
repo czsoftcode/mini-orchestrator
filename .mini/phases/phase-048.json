@@ -2,7 +2,7 @@
   "id": 48,
   "title": "Verze z package.json",
   "goal": "mini --version čte verzi dynamicky z package.json (přes import JSON nebo čtení souboru relativně k buildu) místo natvrdo zapsaného '0.1.0' v cli.ts; ověřitelné testem, že vrácená verze odpovídá poli version v package.json, a zelenou bránou.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Helper readPackageVersion() ve version.ts",
@@ -25,5 +25,14 @@
       "detail": "npm run build, lint a všechny testy zelené; mini --version po buildu vrací verzi z package.json."
     }
   ],
-  "startedAt": "2026-05-30T08:45:54.487Z"
+  "startedAt": "2026-05-30T08:45:54.487Z",
+  "resolvedVerify": [
+    "Globální `mini --version` po přeinstalování"
+  ],
+  "completedAt": "2026-05-30T08:50:46.382Z",
+  "autoCommit": {
+    "preSha": "40876e1aafd3b55440d245d6818132b7d7bd2e98",
+    "sha": "ddb070f7679c3afc9d9b053217c0fe6c69d6a3a7",
+    "subject": "Fáze 48: Verze z package.json"
+  }
 }
