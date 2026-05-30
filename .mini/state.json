@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 44,
+  "currentPhaseId": 45,
   "phases": [
     {
       "id": 1,
@@ -221,6 +221,11 @@
     {
       "id": 44,
       "title": "Map respektuje .gitignore",
+      "status": "done"
+    },
+    {
+      "id": 45,
+      "title": "Sdílená instrukce o grafu",
       "status": "doing"
     }
   ],

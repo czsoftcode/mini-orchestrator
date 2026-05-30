@@ -14,7 +14,7 @@ Cíl: (nezadán)
 # Tvůj úkol
 Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
 
-Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory (Read/Glob/Grep). Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) začni indexem \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury); (3) teprve když mapy nestačí, čti samotné zdrojáky. U velkých souborů si symbol najdi přes Grep tool (ripgrep) a přečti jen jeho úsek (\`Read\` s \`offset\`/\`limit\`), ne celý soubor; malé soubory klidně celé. Nezapisuj nic.
 
 Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
 
@@ -49,7 +49,7 @@ shrnout diskusi do souboru
 # Tvůj úkol
 Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
 
-Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory (Read/Glob/Grep). Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) začni indexem \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury); (3) teprve když mapy nestačí, čti samotné zdrojáky. U velkých souborů si symbol najdi přes Grep tool (ripgrep) a přečti jen jeho úsek (\`Read\` s \`offset\`/\`limit\`), ne celý soubor; malé soubory klidně celé. Nezapisuj nic.
 
 Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
 
@@ -75,7 +75,7 @@ Cíl: src/prompts/*.ts mají snapshot testy a npm test prochází
 # Tvůj úkol
 Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
 
-Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory (Read/Glob/Grep). Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) začni indexem \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury); (3) teprve když mapy nestačí, čti samotné zdrojáky. U velkých souborů si symbol najdi přes Grep tool (ripgrep) a přečti jen jeho úsek (\`Read\` s \`offset\`/\`limit\`), ne celý soubor; malé soubory klidně celé. Nezapisuj nic.
 
 Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
 

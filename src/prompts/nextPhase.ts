@@ -1,4 +1,5 @@
 import type { PhaseStatus, ProjectState } from '../state/types.js';
+import { GRAPH_USAGE_HINT } from './graphHint.js';
 
 const PHASE_WORD: Record<PhaseStatus, string> = {
   done: 'hotovo',
@@ -51,7 +52,7 @@ ${memoryBlock}${hintBlock}# Tvůj úkol
 Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
 Není to roadmap — jen jedna věc, co dává smysl udělat hned.
 
-Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory v projektu (Read/Glob/Grep). Nezapisuj nic.
+${GRAPH_USAGE_HINT} Nezapisuj nic.
 
 Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
 

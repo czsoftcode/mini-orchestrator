@@ -3,6 +3,7 @@
 Imports:
 - { access, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises"
 - { dirname, join, posix, relative, sep } from "node:path"
+- { isGitRepo, runGit } from "../git.js"
 - { mapFile } from "./mapper.js"
 - { mapPhpFile } from "./phpMapper.js"
 - { mapRustFile } from "./rustMapper.js"

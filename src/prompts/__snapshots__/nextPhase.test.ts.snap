@@ -18,7 +18,7 @@ Stavím nástroj X pro Y.
 Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
 Není to roadmap — jen jedna věc, co dává smysl udělat hned.
 
-Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory v projektu (Read/Glob/Grep). Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) začni indexem \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury); (3) teprve když mapy nestačí, čti samotné zdrojáky. U velkých souborů si symbol najdi přes Grep tool (ripgrep) a přečti jen jeho úsek (\`Read\` s \`offset\`/\`limit\`), ne celý soubor; malé soubory klidně celé. Nezapisuj nic.
 
 Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
 
@@ -45,7 +45,7 @@ Projekt je čerstvě založený, žádné fáze ještě nebyly.
 Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
 Není to roadmap — jen jedna věc, co dává smysl udělat hned.
 
-Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory v projektu (Read/Glob/Grep). Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) začni indexem \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury); (3) teprve když mapy nestačí, čti samotné zdrojáky. U velkých souborů si symbol najdi přes Grep tool (ripgrep) a přečti jen jeho úsek (\`Read\` s \`offset\`/\`limit\`), ne celý soubor; malé soubory klidně celé. Nezapisuj nic.
 
 Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
 

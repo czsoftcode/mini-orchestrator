@@ -1,4 +1,5 @@
 import type { Phase } from '../state/types.js';
+import { GRAPH_USAGE_HINT } from './graphHint.js';
 
 export function buildPlanPhasePrompt(
   projectMd: string,
@@ -22,7 +23,7 @@ ${notesBlock}
 # Tvůj úkol
 Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
 
-Pokud potřebuješ pochopit současný stav kódu, smíš číst soubory (Read/Glob/Grep). Nezapisuj nic.
+${GRAPH_USAGE_HINT} Nezapisuj nic.
 
 Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
 

@@ -2,7 +2,7 @@
   "id": 44,
   "title": "Map respektuje .gitignore",
   "goal": "mini map při procházení projektu přeskočí soubory a adresáře odpovídající .gitignore v kořeni projektu (vedle stávajícího IGNORE_DIRS), aby se do grafu nedostaly ignorované runtime/build artefakty (např. Symfony var/cache); ověřitelné unit testem s fixturou .gitignore + zelená brána (typecheck, testy, build).",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "JS přípony v detectLang + mapper",
@@ -30,5 +30,14 @@
       "detail": "npm run typecheck, npm test (vč. nehnutých stávajících snapshotů buildGraphu), npm run build."
     }
   ],
-  "startedAt": "2026-05-30T06:54:37.506Z"
+  "startedAt": "2026-05-30T06:54:37.506Z",
+  "resolvedVerify": [
+    "Ověřit na reálném Symfony projektu, že var/cache už není v grafu"
+  ],
+  "completedAt": "2026-05-30T07:06:24.905Z",
+  "autoCommit": {
+    "preSha": "3abb53cdd763fd92d422a178a39a47f6c979fafb",
+    "sha": "073937357dc63d9fa2b65884f81396866d1b2940",
+    "subject": "Fáze 44: Map respektuje .gitignore"
+  }
 }

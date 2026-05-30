@@ -1,0 +1,29 @@
+{
+  "id": 45,
+  "title": "Sdílená instrukce o grafu",
+  "goal": "Vytáhnout návod 'jak využít .mini/graph.json + graph/ při čtení kódu' do jednoho sdíleného bloku a konzistentně ho vložit do promptů, které dnes graf zmiňují nejednotně nebo vůbec (next, discuss, plan; rozsah do/auto doladit v diskusi), aby agent navigoval kód přes graf místo slepého Read/Grep; ověřitelné aktualizovanými snapshoty promptů + zelená brána.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Modul graphHint.ts s konstantou",
+      "status": "done",
+      "detail": "Nový src/prompts/graphHint.ts exportující GRAPH_USAGE_HINT — jeden těsný odstavec: žebříček graph.json (pokud existuje) → per-file mapy graph/<cesta>.md → zdrojáky, u velkých souborů preferovat výřez (Grep + Read offset/limit), malé celé; hledání přes Grep tool. Neutrální znění bez prompt-specifických vět."
+    },
+    {
+      "title": "Vložit hint do next builderů",
+      "status": "done",
+      "detail": "buildNextSessionPrompt (sessionContext.ts:77) — nahradit stávající větu o grafu konstantou; headless nextPhase.ts — doplnit. Bez duplicity."
+    },
+    {
+      "title": "Vložit hint do plan + discuss builderů",
+      "status": "done",
+      "detail": "buildPlanSessionPrompt (nahradit 'čti soubory Read/Glob'), headless planPhase.ts:25, a discussPhase.ts:37 (nahradit dlouhý inline text). Prompt-specifické věty ('Nezapisuj nic', 'kromě poznámek nic nezapisuj') nechat zvlášť. autoPhase nesahat."
+    },
+    {
+      "title": "Snapshoty + zelená brána",
+      "status": "done",
+      "detail": "Aktualizovat snapshoty nextPhase/planPhase/discussPhase/sessionContext (next, plan); ověřit že autoPhase snapshoty se NEhnuly. npm run typecheck, npm test, npm run build."
+    }
+  ],
+  "startedAt": "2026-05-30T07:37:52.573Z"
+}

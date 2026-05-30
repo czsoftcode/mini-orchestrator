@@ -1,4 +1,5 @@
 import type { Phase, PhaseStatus, ProjectState, Step, StepStatus } from '../state/types.js';
+import { GRAPH_USAGE_HINT } from './graphHint.js';
 
 /**
  * Session prompty pro nativní `/mini:` slash commandy v Claude Code.
@@ -74,7 +75,7 @@ ${projectMd.trim()}
 
 ${history}
 ${memoryBlock}${askBlock}${hintBlock}# Tvůj úkol
-Navrhni jednu další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem — ne roadmap, jen jedna věc, co dává smysl udělat hned. Pokud potřebuješ pochopit stav kódu, čti soubory (Read/Glob/Grep); začni indexem \`.mini/graph.json\` (pokud existuje) a podle názvů exportů si cíleně přečti jen relevantní mapy z \`.mini/graph/\`.
+Navrhni jednu další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem — ne roadmap, jen jedna věc, co dává smysl udělat hned. ${GRAPH_USAGE_HINT}
 
 Návrh (název max 5 slov + cíl na 1 větu) krátce ukaž uživateli. Po odsouhlasení fázi **ulož** zavoláním (Bash):
 
@@ -124,7 +125,7 @@ Rozmen fázi na 3-7 konkrétních kroků. Každý krok má dvě části:
 - **title** — krátký, výstižný název (ideálně do 8 slov). Slouží jako kanonický identifikátor kroku (páruje se s reportem), tak ať je stručný a stálý.
 - **detail** (volitelný) — delší upřesnění: ověřitelný výstup a kritéria (např. "API endpoint /tasks vrací JSON; pokryto testem"). Sem patří to, co by jinak title nafukovalo.
 
-Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend"); pokud se nevejde do title, dej ho do detailu. Pokud potřebuješ pochopit stav kódu, čti soubory (Read/Glob/Grep).
+Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend"); pokud se nevejde do title, dej ho do detailu. ${GRAPH_USAGE_HINT}
 
 Kroky krátce ukaž uživateli. Po odsouhlasení je **ulož** zavoláním (Bash) — jeden krok na řádek ve formátu \`title :: detail\` (oddělovač \` :: \` je volitelný; řádek bez něj je jen title):
 
