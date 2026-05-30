@@ -54,10 +54,34 @@ export interface ProjectModels {
 }
 
 export interface ProjectState {
-  version: 1;
+  version: 2;
   createdAt: string;
   currentPhaseId: number | null;
   phases: Phase[];
+  /** @deprecated use `models.default` */
+  model?: string;
+  models?: ProjectModels;
+}
+
+/**
+ * Lehký souhrn fáze do indexu v hlavičce (`state.json`). Drží jen to, co
+ * potřebují `mini status` a `mini context next` (přehled všech fází), aby
+ * nemusely otevírat detail každé fáze. Plný detail (`goal`, `steps`, …) žije
+ * v `.mini/phases/phase-<id>.json`.
+ */
+export type PhaseSummary = Pick<Phase, 'id' | 'title' | 'status'>;
+
+/**
+ * Hlavička stavu — obsah `state.json` v layoutu verze 2. Detail jednotlivých
+ * fází je vyčleněn do souborů `.mini/phases/phase-<id>.json`; tady zůstává jen
+ * lehký index (`phases`) a metadata projektu. Pořadí fází (vč. vsunutých
+ * sub-fází) je dané pořadím v `phases`.
+ */
+export interface StateHeader {
+  version: 2;
+  createdAt: string;
+  currentPhaseId: number | null;
+  phases: PhaseSummary[];
   /** @deprecated use `models.default` */
   model?: string;
   models?: ProjectModels;

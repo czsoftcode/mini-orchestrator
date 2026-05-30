@@ -174,6 +174,15 @@ program
   });
 
 program
+  .command('migrate')
+  .description('Převede starý monolitický state.json (verze 1) na nový layout (.mini/phases/ + hlavička). Idempotentní — na už zmigrovaném stavu nedělá nic.')
+  .action(async () => {
+    const { migrate } = await import('./commands/migrate.js');
+    const r = await migrate();
+    if (!r.ok) process.exit(1);
+  });
+
+program
   .command('audit')
   .description('Projde existující kód a vytvoří/aktualizuje .mini/codebase.md (přehled pro pozdější Claude session).')
   .action(async () => {

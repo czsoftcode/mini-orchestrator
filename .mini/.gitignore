@@ -1,0 +1,5 @@
+# Undo-záloha stavu — transientní, vzniká při každém zápisu (mini undo si
+# pamatuje jeden krok zpět). Do gitu nepatří; pro velké projekty by navíc
+# zbytečně bobtnala historie.
+phases-prev/
+state.prev.json

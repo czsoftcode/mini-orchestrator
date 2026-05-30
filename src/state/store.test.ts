@@ -1,19 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   exists,
   hasPrev,
   load,
+  loadFullState,
+  loadHeader,
+  loadPhase,
   loadPrev,
   newState,
+  phaseFileName,
+  phasesDir,
   restorePrev,
   save,
+  saveHeader,
+  savePhase,
   statePath,
   statePrevPath,
 } from './store.js';
-import type { ProjectState } from './types.js';
+import type { Phase, ProjectState, StateHeader } from './types.js';
 
 let cwd: string;
 
@@ -111,6 +118,122 @@ describe('atomic write under failure', () => {
     const prevRaw = await readFile(statePrevPath(cwd), 'utf-8');
     const prevParsed = JSON.parse(prevRaw) as ProjectState;
     expect(prevParsed.currentPhaseId).toBe(42);
+  });
+});
+
+describe('layout verze 2 (fáze po souborech)', () => {
+  const detailedPhase: Phase = {
+    id: 1,
+    title: 'P1',
+    status: 'doing',
+    goal: 'něco udělat',
+    steps: [{ title: 'krok A', status: 'done' }],
+    humanNotes: 'pozn',
+  };
+
+  it('hlavička drží jen lehký index, detail je v .mini/phases/', async () => {
+    const state: ProjectState = { ...newState(), currentPhaseId: 1, phases: [detailedPhase] };
+    await save(state, cwd);
+
+    const header = JSON.parse(await readFile(statePath(cwd), 'utf-8')) as StateHeader;
+    expect(header.version).toBe(2);
+    expect(header.phases).toEqual([{ id: 1, title: 'P1', status: 'doing' }]);
+    // detail (goal/steps) v hlavičce NENÍ
+    expect((header.phases[0] as Record<string, unknown>).goal).toBeUndefined();
+    expect((header.phases[0] as Record<string, unknown>).steps).toBeUndefined();
+
+    const phaseFiles = await readdir(phasesDir(cwd));
+    expect(phaseFiles).toContain(phaseFileName(1));
+    const detail = JSON.parse(
+      await readFile(join(phasesDir(cwd), phaseFileName(1)), 'utf-8'),
+    ) as Phase;
+    expect(detail.goal).toBe('něco udělat');
+    expect(detail.steps).toEqual([{ title: 'krok A', status: 'done' }]);
+  });
+
+  it('loadFullState sesype hlavičku + soubory zpět do identického stavu', async () => {
+    const state: ProjectState = { ...newState(), currentPhaseId: 1, phases: [detailedPhase] };
+    await save(state, cwd);
+
+    expect(await loadFullState(cwd)).toEqual(state);
+  });
+
+  it('granulární loadHeader / loadPhase', async () => {
+    const state: ProjectState = { ...newState(), currentPhaseId: 1, phases: [detailedPhase] };
+    await save(state, cwd);
+
+    const header = await loadHeader(cwd);
+    expect(header.phases).toEqual([{ id: 1, title: 'P1', status: 'doing' }]);
+    expect(await loadPhase(cwd, 1)).toEqual(detailedPhase);
+    expect(await loadPhase(cwd, 99)).toBeNull();
+  });
+
+  it('saveHeader / savePhase zapisují odděleně', async () => {
+    await saveHeader(
+      { version: 2, createdAt: 'x', currentPhaseId: 2, phases: [{ id: 2, title: 'P2', status: 'planned' }] },
+      cwd,
+    );
+    await savePhase({ id: 2, title: 'P2', status: 'planned', goal: 'cíl' }, cwd);
+
+    expect((await loadHeader(cwd)).currentPhaseId).toBe(2);
+    expect((await loadPhase(cwd, 2))?.goal).toBe('cíl');
+  });
+
+  it('starý monolitický state.json (version 1) skončí chybou s hintem na migrate', async () => {
+    const legacy = {
+      version: 1,
+      createdAt: 'x',
+      currentPhaseId: 1,
+      phases: [{ id: 1, title: 'P1', status: 'done' }],
+    };
+    await mkdir(join(cwd, '.mini'), { recursive: true });
+    await writeFile(statePath(cwd), JSON.stringify(legacy), 'utf-8');
+
+    await expect(load(cwd)).rejects.toThrow(/mini migrate/);
+  });
+});
+
+describe('snapshot adresáře fází pro undo', () => {
+  it('loadPrev/restorePrev vrací i detail fází z prev-vrstvy', async () => {
+    const first: ProjectState = {
+      ...newState(),
+      currentPhaseId: 1,
+      phases: [{ id: 1, title: 'P1', status: 'doing', steps: [{ title: 'a', status: 'todo' }] }],
+    };
+    const second: ProjectState = {
+      ...newState(),
+      currentPhaseId: 1,
+      phases: [{ id: 1, title: 'P1', status: 'done', steps: [{ title: 'a', status: 'done' }] }],
+    };
+
+    await save(first, cwd);
+    await save(second, cwd);
+
+    const prev = await loadPrev(cwd);
+    expect(prev.phases[0]?.status).toBe('doing');
+    expect(prev.phases[0]?.steps?.[0]?.status).toBe('todo');
+
+    await restorePrev(cwd);
+    const restored = await load(cwd);
+    expect(restored.phases[0]?.status).toBe('doing');
+    expect(restored.phases[0]?.steps?.[0]?.status).toBe('todo');
+    expect(await hasPrev(cwd)).toBe(false);
+  });
+
+  it('prune: úbytek fází při uložení smaže osiřelé soubory', async () => {
+    const two: ProjectState = {
+      ...newState(),
+      phases: [
+        { id: 1, title: 'P1', status: 'done' },
+        { id: 2, title: 'P2', status: 'doing' },
+      ],
+    };
+    await save(two, cwd);
+    expect(await readdir(phasesDir(cwd))).toContain(phaseFileName(2));
+
+    const one: ProjectState = { ...newState(), phases: [{ id: 1, title: 'P1', status: 'done' }] };
+    await save(one, cwd);
+    expect(await readdir(phasesDir(cwd))).not.toContain(phaseFileName(2));
   });
 });
 

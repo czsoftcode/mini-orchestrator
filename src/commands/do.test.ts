@@ -27,7 +27,7 @@ const { doPhase, applyStepDone } = await import('./do.js');
 
 function stateWithOpenStep(): ProjectState {
   return {
-    version: 1,
+    version: 2,
     createdAt: '2026-01-01T00:00:00.000Z',
     currentPhaseId: 1,
     phases: [
@@ -96,7 +96,7 @@ describe('applyStepDone — průběžný zápis kroku', () => {
 
   function doingStateWithSteps(): ProjectState {
     return {
-      version: 1,
+      version: 2,
       createdAt: '2026-01-01T00:00:00.000Z',
       currentPhaseId: 1,
       phases: [

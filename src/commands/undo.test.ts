@@ -39,7 +39,7 @@ const softResetToMock = vi.mocked(softResetTo);
 
 function makeState(phases: ProjectState['phases'], currentPhaseId: number | null): ProjectState {
   return {
-    version: 1,
+    version: 2,
     createdAt: '2026-01-01T00:00:00.000Z',
     currentPhaseId,
     phases,

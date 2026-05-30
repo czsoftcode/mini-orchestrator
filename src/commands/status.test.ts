@@ -11,7 +11,7 @@ import type { Phase, ProjectState } from '../state/types.js';
 
 function makeState(overrides: Partial<ProjectState> = {}): ProjectState {
   return {
-    version: 1,
+    version: 2,
     createdAt: '2026-01-01T00:00:00.000Z',
     currentPhaseId: null,
     phases: [],

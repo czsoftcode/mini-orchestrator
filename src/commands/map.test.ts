@@ -9,7 +9,7 @@ async function makeProject(): Promise<string> {
   await mkdir(join(root, '.mini'), { recursive: true });
   await writeFile(
     join(root, '.mini', 'state.json'),
-    JSON.stringify({ version: 1, createdAt: new Date().toISOString(), currentPhaseId: null, phases: [] }),
+    JSON.stringify({ version: 2, createdAt: new Date().toISOString(), currentPhaseId: null, phases: [] }),
     'utf-8',
   );
   return root;

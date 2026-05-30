@@ -15,8 +15,8 @@ import {
   runReportExists,
   runReportPath,
 } from '../state/runReport.js';
-import { exists, load, readProject } from '../state/store.js';
-import type { Phase, ProjectState } from '../state/types.js';
+import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
+import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
 
 /** Pod-příkazy, pro které `mini context` umí vypsat session prompt. */
@@ -54,13 +54,15 @@ export async function context(cmd: string, extraArgs: string[] = []): Promise<vo
     return;
   }
 
-  const [projectMd, state] = await Promise.all([readProject(cwd), load(cwd)]);
+  // Granulární čtení (hot path slash commandů): hlavička je malá a `next` z ní
+  // potřebuje jen index fází; ostatní kroky si k tomu načtou jen aktuální fázi.
+  const [projectMd, header] = await Promise.all([readProject(cwd), loadHeader(cwd)]);
 
   let prompt: string | null;
   if (cmd === 'next') {
-    prompt = await buildNextContext(projectMd, state, cwd, extraArgs);
+    prompt = await buildNextContext(projectMd, header, cwd, extraArgs);
   } else {
-    prompt = await buildPhaseContext(cmd, projectMd, state, cwd);
+    prompt = await buildPhaseContext(cmd, projectMd, header, cwd);
   }
 
   if (prompt === null) {
@@ -71,30 +73,42 @@ export async function context(cmd: string, extraArgs: string[] = []): Promise<vo
   process.stdout.write(prompt.endsWith('\n') ? prompt : `${prompt}\n`);
 }
 
+/** Sestaví lehký `ProjectState` z hlavičky — `next` z něj bere jen index fází. */
+function stateFromHeader(header: StateHeader): ProjectState {
+  const state: ProjectState = {
+    version: header.version,
+    createdAt: header.createdAt,
+    currentPhaseId: header.currentPhaseId,
+    phases: header.phases as Phase[],
+  };
+  if (header.models != null) state.models = header.models;
+  return state;
+}
+
 async function buildNextContext(
   projectMd: string,
-  state: ProjectState,
+  header: StateHeader,
   cwd: string,
   extraArgs: string[],
 ): Promise<string> {
   const userHint = extraArgs.join(' ').trim() || undefined;
   const lastMemoryMd = await readLastMemoryIfExists(cwd);
-  return buildNextSessionPrompt(projectMd, state, { userHint, lastMemoryMd });
+  return buildNextSessionPrompt(projectMd, stateFromHeader(header), { userHint, lastMemoryMd });
 }
 
 /** Společný díl pro discuss/plan/do/done: vyžadují existující aktuální fázi. */
 async function buildPhaseContext(
   cmd: Exclude<ContextCommand, 'next'>,
   projectMd: string,
-  state: ProjectState,
+  header: StateHeader,
   cwd: string,
 ): Promise<string | null> {
-  if (state.currentPhaseId === null) {
+  if (header.currentPhaseId === null) {
     log.error('Žádná aktuální fáze.');
     log.hint('Spusť: /mini:next (nebo mini next)');
     return null;
   }
-  const phase = state.phases.find((p) => p.id === state.currentPhaseId);
+  const phase = await loadPhase(cwd, header.currentPhaseId);
   if (!phase) {
     log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
     return null;

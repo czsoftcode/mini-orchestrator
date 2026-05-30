@@ -37,14 +37,17 @@ if (isAsk) {
   process.exit(0);
 }
 
-// Work session — zapíšeme report podle aktuálního stavu.
+// Work session — zapíšeme report podle aktuálního stavu (layout verze 2:
+// hlavička drží jen index, detail fáze je v .mini/phases/phase-<id>.json).
 const statePath = path.join(process.cwd(), '.mini', 'state.json');
-const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
-const phase = state.phases.find((p) => p.id === state.currentPhaseId);
-if (!phase) {
+const header = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+const curId = header.currentPhaseId;
+if (curId == null) {
   process.stderr.write('fake claude: žádná aktuální fáze\\n');
   process.exit(1);
 }
+const phaseFile = path.join(process.cwd(), '.mini', 'phases', 'phase-' + String(curId).padStart(3, '0') + '.json');
+const phase = JSON.parse(fs.readFileSync(phaseFile, 'utf-8'));
 const steps = phase.steps || [];
 const stepsYaml = steps.length
   ? steps.map((s) => '  - title: ' + JSON.stringify(s.title) + '\\n    status: done').join('\\n')
@@ -58,7 +61,7 @@ process.exit(0);
 
 function emptyState(): ProjectState {
   return {
-    version: 1,
+    version: 2,
     createdAt: '2026-01-01T00:00:00.000Z',
     currentPhaseId: null,
     phases: [],

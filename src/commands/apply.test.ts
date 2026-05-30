@@ -38,7 +38,7 @@ afterEach(async () => {
 });
 
 function makeState(phases: Phase[], currentPhaseId: number | null): ProjectState {
-  return { version: 1, createdAt: '2026-01-01T00:00:00.000Z', currentPhaseId, phases };
+  return { version: 2, createdAt: '2026-01-01T00:00:00.000Z', currentPhaseId, phases };
 }
 
 async function exists(path: string): Promise<boolean> {

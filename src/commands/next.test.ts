@@ -16,7 +16,7 @@ const askClaudeMock = vi.mocked(askClaude);
 
 function makeState(phases: Phase[], currentPhaseId: number | null): ProjectState {
   return {
-    version: 1,
+    version: 2,
     createdAt: '2026-01-01T00:00:00.000Z',
     currentPhaseId,
     phases,

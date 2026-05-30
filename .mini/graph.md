@@ -249,15 +249,16 @@ Imports:
 ## src/commands/done.ts
 
 Imports:
-- { commitAll, hasChanges, headSha, isGitRepo } from "../git.js"
+- { commitAll, hasChanges, headSha, isGitRepo, push } from "../git.js"
 - { buildGraph, GRAPH_FILE, hasMappableProject } from "../graph/buildGraph.js"
+- { bumpPackageVersion } from "../version.js"
 - { RunReportParseError, readRunReport, runReportPath, RunReport, RunReportVerifyItem } from "../state/runReport.js"
 - { exists, load, save } from "../state/store.js"
 - type { Phase, ProjectState, Step } from "../state/types.js"
 - { ask } from "../ui/ask.js"
 - { isInteractive } from "../ui/interactive.js"
 - { log } from "../ui/log.js"
-- type { AutoOptions, StepOutcome } from "./types.js"
+- type { AutoOptions, FinalizeOptions, StepOutcome } from "./types.js"
 - { writePhaseMemory } from "./writeMemory.js"
 
 Exports:
@@ -438,9 +439,13 @@ Exports:
 
 ## src/commands/types.ts
 
+Imports:
+- type { BumpLevel } from "../version.js"
+
 Exports:
 - type StepOutcome
 - interface AutoOptions
+- interface FinalizeOptions
 
 ## src/commands/undo.test.ts
 
@@ -499,7 +504,7 @@ Imports:
 - { tmpdir } from "node:os"
 - { join } from "node:path"
 - { promisify } from "node:util"
-- { commitAll, currentBranch, hasChanges, headSha, headSubject, isCleanWorkingTree, isGitRepo, runGit, softResetTo } from "./git.js"
+- { commitAll, currentBranch, hasChanges, headSha, headSubject, isCleanWorkingTree, isGitRepo, push, runGit, softResetTo } from "./git.js"
 
 ## src/git.ts
 
@@ -513,6 +518,7 @@ Exports:
 - function isGitRepo(cwd: string): Promise<boolean>
 - function hasChanges(cwd: string): Promise<boolean>
 - function commitAll(cwd: string, message: string): Promise<GitResult>
+- function push(cwd: string): Promise<GitResult>
 - function currentBranch(cwd: string): Promise<string | null>
 - function headSha(cwd: string): Promise<string | null>
 - function headSubject(cwd: string): Promise<string | null>
@@ -907,6 +913,29 @@ Imports:
 Exports:
 - function logUsage(response: AskResult): void
 - function logStreamSummary(result: StreamResult): void
+
+## src/version.test.ts
+
+Imports:
+- { afterEach, beforeEach, describe, expect, it } from "vitest"
+- { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+- { tmpdir } from "node:os"
+- { join } from "node:path"
+- { bumpPackageVersion, bumpSemver, isBumpLevel } from "./version.js"
+
+## src/version.ts
+
+Imports:
+- { readFile, writeFile } from "node:fs/promises"
+- { join } from "node:path"
+
+Exports:
+- type BumpLevel
+- const BUMP_LEVELS
+- function isBumpLevel(value: string): value is BumpLevel
+- interface BumpResult
+- function bumpSemver(version: string, level: BumpLevel): string | null
+- function bumpPackageVersion(cwd: string, level: BumpLevel): Promise<BumpResult | null>
 
 ## vitest.config.ts
 

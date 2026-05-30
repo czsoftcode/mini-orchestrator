@@ -9,7 +9,7 @@ import type { Phase, ProjectState } from '../state/types.js';
 const PROJECT = '# Demo\n\n## Co stavím\nNěco.';
 
 function state(phases: Phase[] = [], currentPhaseId: number | null = null): ProjectState {
-  return { version: 1, createdAt: '2026-01-01T00:00:00Z', currentPhaseId, phases };
+  return { version: 2, createdAt: '2026-01-01T00:00:00Z', currentPhaseId, phases };
 }
 
 describe('buildNextSessionPrompt', () => {

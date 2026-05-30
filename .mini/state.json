@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 30,
+  "currentPhaseId": 31,
   "phases": [
     {
       "id": 1,
@@ -914,7 +914,7 @@
       "id": 30,
       "title": "Done: verze, push a clear",
       "goal": "Rozšířit mini done --apply tak, aby po finalizaci fáze navýšil verzi v package.json (patch), zahrnul ji do auto-commitu, nahrál na remote přes git push a na závěr vypsal nabídku spustit /clear pro vyčištění kontextu.",
-      "status": "doing",
+      "status": "done",
       "steps": [
         {
           "title": "Bump helper + testy: přidat bumpPackageVersion(cwd, level) v novém modulu src/version.ts — načte package.json, navýší semver dle level (patch/minor/major), zapíše zpět se zachováním formátu, chybějící package.json tiše vrátí null; unit testy pro patch/minor/major, chybějící soubor, zachování formátu",
@@ -941,7 +941,42 @@
           "status": "done"
         }
       ],
-      "startedAt": "2026-05-29T22:54:10.000Z"
+      "startedAt": "2026-05-29T22:54:10.000Z",
+      "completedAt": "2026-05-29T23:05:53.671Z",
+      "autoCommit": {
+        "preSha": "786dd33b525dd0ece9fce7d934006c0f45cb8924",
+        "sha": "eda2565f855e2aafa97707d963657ba0ba9ad3a4",
+        "subject": "Fáze 30: Done: verze, push a clear"
+      }
+    },
+    {
+      "id": 31,
+      "title": "Štíhlý state.json: fáze po souborech",
+      "goal": "Rozdělit stav do adresáře .mini/phases/ s jedním souborem na fázi; ve state.json nechat jen hlavičku (currentPhaseId, předchozí fáze, models, poslední fáze), aby soubor nerostl s historií a load/save zůstaly levné i u velkých projektů.",
+      "status": "doing",
+      "steps": [
+        {
+          "title": "store.ts — nový layout + granulární API + kompat load/save: typy StateHeader+PhaseSummary (version 2, createdAt, currentPhaseId, models, phases:[{id,title,status}]); loadHeader/saveHeader/loadPhase/savePhase + path helper (.mini/phases/phase-<id>.json, číselné řazení); loadFullState (header+soubory→ProjectState); kompat load()=loadFullState a save()=rozsek na header+soubory; snapshot pro undo (state.prev.json + phases-prev/) a loadPrev/hasPrev/restorePrev nad novým layoutem; na version 1 vyhodit chybu s hintem 'spusť mini migrate'. Ověření: store.test zelený (round-trip, layout na disku, atomicita bez .tmp, version-1 chyba, prev snapshot), zbytek suity zelený díky kompat API",
+          "status": "done"
+        },
+        {
+          "title": "Příkaz mini migrate — nový commands/migrate.ts + CLI: přečte starý monolitický state.json (version 1), zapíše hlavičku (index, version 2) + phase-<id>.json na fázi; atomicky (temp adresář + rename), idempotentně (na version 2 jen 'není co dělat'); rozšiřitelně pro budoucí graph.md. Ověření: e2e nad version-1 fixturou vyrobí rozdělený layout, druhý běh je no-op",
+          "status": "done"
+        },
+        {
+          "title": "Přepojit příkazy na granulární čtení/zápis: next/status/model → jen loadHeader; plan/do/discuss → loadHeader + loadPhase(current); done → hlavička + aktuální fáze s dual-write (status i sub-fáze splice drží index v hlavičce, detail v souboru). Ověření: existující testy těchto příkazů zelené, done mění status na obou místech",
+          "status": "done"
+        },
+        {
+          "title": "import-gsd + init + okrajoví konzumenti: import-gsd zapíše hlavičku + N souborů fází; init prázdný index bez souborů; projít apply.test/auto.test/auto.e2e/context.test sahající na load/save/readFileSync. Ověření: všechny tyto testy zelené",
+          "status": "done"
+        },
+        {
+          "title": "Závěr: .gitignore + plné ověření: přidat phases-prev/ do .mini/.gitignore; npm run typecheck/build/test; ruční e2e přes lokální build — čerstvý projekt init→next→plan→do→done, migrate nad starým fixturem, undo. Ověření: vše prochází, layout sedí",
+          "status": "done"
+        }
+      ],
+      "startedAt": "2026-05-29T23:52:12.319Z"
     }
   ],
   "models": {

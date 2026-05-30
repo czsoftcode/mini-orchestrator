@@ -4,8 +4,20 @@ import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
-import { load, save, writeProject } from '../state/store.js';
-import type { Phase, ProjectState } from '../state/types.js';
+import { load, phaseFileName, phasesDir, save, writeProject } from '../state/store.js';
+import type { Phase, ProjectState, StateHeader } from '../state/types.js';
+
+/**
+ * Synchronně přečte detail aktuální fáze z layoutu verze 2 (hlavička +
+ * .mini/phases/phase-<id>.json). Mocky Claude session ji potřebují, aby do
+ * reportu vypsaly skutečné kroky fáze.
+ */
+function readCurrentPhaseSync(cwd: string): Phase {
+  const header = JSON.parse(readFileSync(join(cwd, '.mini', 'state.json'), 'utf-8')) as StateHeader;
+  const id = header.currentPhaseId;
+  if (id === null) throw new Error('mock: žádná aktuální fáze ve stavu');
+  return JSON.parse(readFileSync(join(phasesDir(cwd), phaseFileName(id)), 'utf-8')) as Phase;
+}
 
 // V auto módu se interaktivní `ask` nikdy nesmí volat. Pokud ho cokoliv
 // v řetězci next → plan → do → done omylem zavolá, test musí spadnout —
@@ -61,7 +73,7 @@ const { auto } = await import('./auto.js');
 
 function emptyState(): ProjectState {
   return {
-    version: 1,
+    version: 2,
     createdAt: '2026-01-01T00:00:00.000Z',
     currentPhaseId: null,
     phases: [],
@@ -131,15 +143,9 @@ describe('auto() end-to-end', () => {
     // Auto-varianta `doPhase` pouští Claude na CELOU fázi v jednom průchodu;
     // mock simuluje, že Claude zapsal report označující všechny kroky jako done.
     workWithClaudeMock.mockImplementation(
-      mockClaudeSessionWritingReport(cwd, () => {
-        // Fáze ještě nemusí být ve stavu, když se mock registruje (proběhne
-        // next + plan předtím), takže ji čerpáme z aktuálního state při volání.
-        const raw = readFileSync(join(cwd, '.mini', 'state.json'), 'utf-8');
-        const parsed = JSON.parse(raw) as ProjectState;
-        const cur = parsed.phases.find((p) => p.id === parsed.currentPhaseId);
-        if (!cur) throw new Error('mock: žádná aktuální fáze ve stavu');
-        return cur;
-      }),
+      // Fáze ještě nemusí být ve stavu, když se mock registruje (proběhne
+      // next + plan předtím), takže ji čerpáme z aktuálního state při volání.
+      mockClaudeSessionWritingReport(cwd, () => readCurrentPhaseSync(cwd)),
     );
 
     await auto();
@@ -187,7 +193,7 @@ describe('auto() end-to-end', () => {
     // na `do` a `done`.
     await save(
       {
-        version: 1,
+        version: 2,
         createdAt: '2026-01-01T00:00:00.000Z',
         currentPhaseId: 1,
         phases: [
@@ -207,13 +213,7 @@ describe('auto() end-to-end', () => {
     );
 
     workWithClaudeMock.mockImplementation(
-      mockClaudeSessionWritingReport(cwd, () => {
-        const raw = readFileSync(join(cwd, '.mini', 'state.json'), 'utf-8');
-        const parsed = JSON.parse(raw) as ProjectState;
-        const cur = parsed.phases.find((p) => p.id === parsed.currentPhaseId);
-        if (!cur) throw new Error('mock: žádná aktuální fáze ve stavu');
-        return cur;
-      }),
+      mockClaudeSessionWritingReport(cwd, () => readCurrentPhaseSync(cwd)),
     );
 
     await auto();
@@ -235,7 +235,7 @@ describe('auto() end-to-end', () => {
     await writeProject('# Test projekt\n', cwd);
     await save(
       {
-        version: 1,
+        version: 2,
         createdAt: '2026-01-01T00:00:00.000Z',
         currentPhaseId: 1,
         phases: [
@@ -255,13 +255,7 @@ describe('auto() end-to-end', () => {
     );
 
     workWithClaudeMock.mockImplementation(
-      mockClaudeSessionWritingReport(cwd, () => {
-        const raw = readFileSync(join(cwd, '.mini', 'state.json'), 'utf-8');
-        const parsed = JSON.parse(raw) as ProjectState;
-        const cur = parsed.phases.find((p) => p.id === parsed.currentPhaseId);
-        if (!cur) throw new Error('mock: žádná aktuální fáze ve stavu');
-        return cur;
-      }),
+      mockClaudeSessionWritingReport(cwd, () => readCurrentPhaseSync(cwd)),
     );
 
     await auto({ maxTurns: 7 });
@@ -279,7 +273,7 @@ describe('auto() end-to-end', () => {
     await writeProject('# Test projekt\n', cwd);
     await save(
       {
-        version: 1,
+        version: 2,
         createdAt: '2026-01-01T00:00:00.000Z',
         currentPhaseId: 1,
         phases: [
@@ -296,13 +290,7 @@ describe('auto() end-to-end', () => {
     );
 
     workWithClaudeMock.mockImplementation(
-      mockClaudeSessionWritingReport(cwd, () => {
-        const raw = readFileSync(join(cwd, '.mini', 'state.json'), 'utf-8');
-        const parsed = JSON.parse(raw) as ProjectState;
-        const cur = parsed.phases.find((p) => p.id === parsed.currentPhaseId);
-        if (!cur) throw new Error('mock: žádná aktuální fáze ve stavu');
-        return cur;
-      }),
+      mockClaudeSessionWritingReport(cwd, () => readCurrentPhaseSync(cwd)),
     );
 
     await auto();
