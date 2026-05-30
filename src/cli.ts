@@ -191,7 +191,25 @@ program
 program
   .command('migrate')
   .description('Převede starý monolitický state.json (verze 1) na nový layout (.mini/phases/ + hlavička). Idempotentní — na už zmigrovaném stavu nedělá nic.')
-  .action(async () => {
+  .option('--renumber', 'Přečísluj fáze na souvislá celá čísla (1..N podle pořadí ve state.json) a sjednoť názvy souborů ve phases/discuss/run/memory na phase-XXX. Idempotentní.')
+  .option('--dry-run', 'S --renumber: jen vypiš náhled mapování a přejmenování, nic nezapisuj.')
+  .action(async (opts: { renumber?: boolean; dryRun?: boolean }) => {
+    if (opts.renumber) {
+      const { renumber } = await import('./commands/renumber.js');
+      const confirm = async (): Promise<boolean> => {
+        const { ask } = await import('./ui/ask.js');
+        const res = await ask({
+          type: 'confirm',
+          name: 'ok',
+          message: 'Provést přečíslování a přejmenování souborů?',
+          initial: false,
+        });
+        return (res as { ok?: boolean }).ok === true;
+      };
+      const r = await renumber(process.cwd(), { dryRun: opts.dryRun, confirm: opts.dryRun ? undefined : confirm });
+      if (!r.ok) process.exit(1);
+      return;
+    }
     const { migrate } = await import('./commands/migrate.js');
     const r = await migrate();
     if (!r.ok) process.exit(1);

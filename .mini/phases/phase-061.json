@@ -1,0 +1,34 @@
+{
+  "id": 61,
+  "title": "Migrate: přečíslování a sjednocení fází",
+  "goal": "Rozšířit mini migrate o přečíslování fází na souvislá celá čísla (podle pořadí ve state.json) a přejmenování souborů v phases/discuss/memory/run na phase-XXX — idempotentně a crash-safe, s opravou id/currentPhaseId ve stavu a ošetřením .prev.md i memory bez data.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Parser id z názvu + mapování",
+      "status": "done",
+      "detail": "Čisté funkce: z názvu souboru vytáhni id (001/1/1.1/.prev/memory timestamp), z pořadí phases ve state.json sestav mapu staré→nové id (1..N), detekuj no-op. Unit testy."
+    },
+    {
+      "title": "Kolizně-bezpečný rename engine",
+      "status": "done",
+      "detail": "Sdílený dvoufázový rename přes dočasné názvy pro libovolný adresář; orphany nechat + warning, při kolizi cílového názvu abort. Unit testy."
+    },
+    {
+      "title": "Přepis state.json",
+      "status": "done",
+      "detail": "Aplikuj mapu — id v každém phase JSONu, phases[].id v hlavičce, currentPhaseId; přejmenuj phases/*.json enginem. Testy."
+    },
+    {
+      "title": "Přejmenování discuss/run/memory",
+      "status": "done",
+      "detail": "Enginem přejmenuj .md vč. run/*.prev.md a memory (zahodit timestamp, víc na fázi → -2/-3). Testy."
+    },
+    {
+      "title": "CLI flag + dry-run + integrační test",
+      "status": "done",
+      "detail": "mini migrate --renumber (+ --dry-run náhled mapy a potvrzení), idempotentní no-op hláška; fixture smíšeného schématu, ověřit mapování/rename/idempotenci/abort; build + testy zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T17:43:31.642Z"
+}

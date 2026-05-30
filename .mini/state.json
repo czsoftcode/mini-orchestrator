@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 60,
+  "currentPhaseId": 61,
   "phases": [
     {
       "id": 1,
@@ -301,6 +301,11 @@
     {
       "id": 60,
       "title": "Sjednocení názvů souborů fází",
+      "status": "done"
+    },
+    {
+      "id": 61,
+      "title": "Migrate: přečíslování a sjednocení fází",
       "status": "doing"
     }
   ],

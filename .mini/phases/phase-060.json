@@ -2,7 +2,7 @@
   "id": 60,
   "title": "Sjednocení názvů souborů fází",
   "goal": "Zavést sdílený helper pro phase-XXX (3 číslice s nulami) a použít ho v discuss/run/memory cestách, z memory názvu odstranit timestamp, přejmenovat existující soubory a opravit testy/snapshoty.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Sdílený helper phaseStem + refactor phaseFileName",
@@ -30,5 +30,11 @@
       "detail": "Aktualizovat snapshoty promptů s novými cestami; npm test i build zelené."
     }
   ],
-  "startedAt": "2026-05-30T16:59:55.499Z"
+  "startedAt": "2026-05-30T16:59:55.499Z",
+  "completedAt": "2026-05-30T17:29:54.654Z",
+  "autoCommit": {
+    "preSha": "73b8483f5a6e7713e12435c2f5285b047524d881",
+    "sha": "40ecc6f07e1830e7cd61d01395c0f7955a320460",
+    "subject": "Fáze 60: Sjednocení názvů souborů fází"
+  }
 }

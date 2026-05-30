@@ -8,6 +8,15 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **`mini migrate --renumber`** — přečísluje fáze na souvislá celá čísla
+  (1..N podle pořadí ve `state.json`) a sjednotí názvy souborů ve všech čtyřech
+  adresářích (`phases/`, `discuss/`, `run/`, `memory/`) na kanonický `phase-XXX`.
+  Narovná projekty se smíšeným/legacy číslováním (např. desetinná „opravná" id
+  `1.1`…`28.1` vedle celých). Zvládá různá stará schémata názvů (paddované
+  i nepaddované, `.prev.md`, memory s timestampem). Idempotentní; `--dry-run`
+  ukáže náhled mapování bez zápisu, jinak se před změnou ptá na potvrzení.
+  Orphany (soubory bez záznamu ve stavu) nechává být s varováním, při kolizi
+  cílových názvů se zastaví, aby nic nepřepsal.
 - Mapa znalostního grafu nově podporuje **Ruby** (`.rb`): vytáhnou se importy
   (`require` i `require_relative`, vč. závorkové formy) a top-level deklarace —
   `def` (se signaturou parametrů vč. splat `*`/`**`, keyword `key:`, default
