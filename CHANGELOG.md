@@ -8,6 +8,16 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- Mapa znalostního grafu nově podporuje **Ruby** (`.rb`): vytáhnou se importy
+  (`require` i `require_relative`, vč. závorkové formy) a top-level deklarace —
+  `def` (se signaturou parametrů vč. splat `*`/`**`, keyword `key:`, default
+  hodnot, `&block` i endless metod `def x = …`) a typy `class` (kind `class`)
+  a `module` (kind `module`). Default viditelnost je `public`; holé
+  `private`/`protected` i `private def …` skryjí následující členy. Viditelné
+  instanční i třídní metody (`def self.x`) a atributy
+  (`attr_reader`/`attr_writer`/`attr_accessor`) se připojí k typu s kotvami na
+  řádky. Komentáře (`#` i blokové `=begin`/`=end`) a stringy se ignorují.
+  Projekt se rozpozná i podle `Gemfile`.
 - Mapa znalostního grafu nově podporuje **Swift** (`.swift`): vytáhnou se
   importy (vč. submodulů `import Foo.Bar` a kindových `import struct Foo.Bar`)
   a top-level deklarace — `func` (se signaturou parametrů, default hodnot,

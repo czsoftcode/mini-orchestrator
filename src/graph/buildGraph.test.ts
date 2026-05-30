@@ -240,6 +240,16 @@ describe('buildGraph', () => {
     expect(await hasMappableProject(root)).toBe(true);
   });
 
+  it('hasMappableProject returns true when Gemfile exists', async () => {
+    await writeFixture(root, 'Gemfile', "source 'https://rubygems.org'\n");
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns true when only .rb exists', async () => {
+    await writeFixture(root, 'lib/foo.rb', 'class Foo\nend\n');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
   it('hasMappableProject returns false for projekt bez mapovatelných souborů', async () => {
     await writeFixture(root, 'package.json', '{}');
     await writeFixture(root, 'styles.css', 'body{}');

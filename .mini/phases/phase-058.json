@@ -2,7 +2,7 @@
   "id": 58,
   "title": "Mapa pro Swift",
   "goal": "Přidat swiftMapper (mapSwiftFile) parsující .swift soubory (import, top-level func, typy class/struct/enum/protocol/extension/actor, metody a vlastnosti; respekt k modifikátorům viditelnosti) a zapojit Swift do buildGraph (Lang, detectLang na .swift, hasMappableProject přes Package.swift/*.swift) i hlášek v map.ts/cli.ts, včetně testů a zeleného buildu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Kostra swiftMapperu + stripSwift",
@@ -30,5 +30,11 @@
       "detail": "swiftMapper.test.ts (importy, typy, metody, viditelnost, edge-cases), případně doplnění buildGraph/map testů; npm test + build zelené."
     }
   ],
-  "startedAt": "2026-05-30T15:33:18.452Z"
+  "startedAt": "2026-05-30T15:33:18.452Z",
+  "completedAt": "2026-05-30T15:46:48.211Z",
+  "autoCommit": {
+    "preSha": "794b7c7729d77b3b9afae4af433be6e2a540370a",
+    "sha": "6efbf6ecac57a1b9b23125527ba67f6b547356f2",
+    "subject": "Fáze 58: Mapa pro Swift"
+  }
 }

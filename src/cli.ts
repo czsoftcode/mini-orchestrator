@@ -207,7 +207,7 @@ program
 
 program
   .command('map')
-  .description('Přegeneruje strojovou mapu projektu do .mini/graph/ + index .mini/graph.json — exporty, importy a signatury TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift souborů.')
+  .description('Přegeneruje strojovou mapu projektu do .mini/graph/ + index .mini/graph.json — exporty, importy a signatury TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby souborů.')
   .action(async () => {
     const { map } = await import('./commands/map.js');
     await map();

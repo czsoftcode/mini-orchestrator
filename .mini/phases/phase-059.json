@@ -1,0 +1,34 @@
+{
+  "id": 59,
+  "title": "Mapa pro Ruby",
+  "goal": "Přidat rubyMapper (mapRubyFile) parsující .rb soubory (require/require_relative, top-level metody def, typy class/module, jejich metody a atributy attr_*, respekt k viditelnosti private/protected) a zapojit Ruby do buildGraph (Lang, detectLang na .rb, hasMappableProject přes Gemfile/*.rb) i hlášek v map.ts/cli.ts, včetně testů a zeleného buildu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Kostra rubyMapperu + stripRuby",
+      "status": "done",
+      "detail": "src/graph/rubyMapper.ts s mapRubyFile(content, relPath) vracejícím FileGraph; helper stripRuby odstraní komentáře (#) a stringy, aby parser nečetl klíčová slova z literálů."
+    },
+    {
+      "title": "Importy (require/require_relative)",
+      "status": "done",
+      "detail": "Rozpoznat require '...' a require_relative '...', naplnit imports ve FileGraph."
+    },
+    {
+      "title": "Typy a top-level metody",
+      "status": "done",
+      "detail": "class/module (vč. dědičnosti <), jejich metody def, atributy attr_reader/writer/accessor, top-level def; respekt k private/protected; kotvy @L."
+    },
+    {
+      "title": "Zapojení do buildGraph",
+      "status": "done",
+      "detail": "Přidat 'ruby' do Lang, case na mapRubyFile, detectLang na .rb, hasMappableProject přes Gemfile/*.rb; doplnit hlášky v map.ts/cli.ts."
+    },
+    {
+      "title": "Testy a zelený build",
+      "status": "done",
+      "detail": "rubyMapper.test.ts (importy, class/module, metody, viditelnost) + případně buildGraph test; npm run build a testy zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T15:52:50.270Z"
+}

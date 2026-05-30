@@ -11,7 +11,8 @@ export type ExportKind =
   | 'enum'
   | 'variable'
   | 'struct'
-  | 'trait';
+  | 'trait'
+  | 'module';
 
 export interface Parameter {
   name: string;
