@@ -158,20 +158,45 @@ describe('buildVerifySessionPrompt', () => {
   };
 
   it('vykreslí krok verify a hloubkovou UI/UX kontrolu', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
     expect(p).toContain('krok **verify**');
     expect(p).toContain('hloubkovou kontrolou UI/UX');
-    expect(p).toContain('read-only');
+  });
+
+  it('zapisuje nálezy do reportu, ale stav fáze neposouvá', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+    expect(p).toContain('## Nálezy z verify');
+    expect(p).toContain('.mini/run/phase-005.md');
+    expect(p).toContain('neposouváš');
+    // už to není čistě read-only krok
+    expect(p).not.toContain('žádný stav v `.mini/` neměň a nic neukládej');
+  });
+
+  it('když report chybí, navede ho založit', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: false });
+    expect(p).toContain('zatím neexistuje');
+    expect(p).toContain('## Nálezy z verify');
+  });
+
+  it('u uzavřené fáze zapisuje nálezy i do paměti', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [], reportExists: true });
+    expect(p).toContain('.mini/memory/phase-005.md');
+    expect(p).toContain('už uzavřená');
+  });
+
+  it('u rozdělané fáze do paměti nepíše', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+    expect(p).not.toContain('.mini/memory/phase-005.md');
   });
 
   it('u rozdělané fáze rámuje kontrolu před done', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
     expect(p).toContain('ještě neuzavřená');
     expect(p).toContain('/mini:done');
   });
 
   it('u uzavřené fáze rámuje zpětnou kontrolu', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [] });
+    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [], reportExists: true });
     expect(p).toContain('je už uzavřená');
     expect(p).toContain('zpětná hloubková kontrola');
   });
@@ -181,13 +206,14 @@ describe('buildVerifySessionPrompt', () => {
       phase,
       phaseDone: true,
       verify: [{ title: 'zkontroluj barvu', detail: 'má být modrá' }],
+      reportExists: true,
     });
     expect(p).toContain('zkontroluj barvu');
     expect(p).toContain('má být modrá');
   });
 
   it('bez verify bodů vede kontrolu podle cíle a kroků', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
     expect(p).toContain('žádné explicitní verify body');
     expect(p).toContain('Tlačítko Uložit');
   });
@@ -198,6 +224,7 @@ describe('buildVerifySessionPrompt', () => {
       phaseDone: true,
       verify: [],
       reportBody: 'Poznámky pro člověka.',
+      reportExists: true,
     });
     expect(p).toContain('Poznámky pro člověka.');
   });

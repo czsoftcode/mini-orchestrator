@@ -236,16 +236,21 @@ export interface VerifySessionInput {
   verify: { title: string; detail?: string }[];
   /** Volný text reportu (poznámky pro člověka), pokud existuje. */
   reportBody?: string;
+  /** Existuje run report `.mini/run/phase-{id}.md`? Řídí, kam zapsat nálezy. */
+  reportExists: boolean;
 }
 
 /**
  * Prompt pro `/mini:verify` — interaktivní hloubková UI/UX kontrola fáze
  * člověkem. Na rozdíl od `done` (kde verifikace proběhne mimochodem) tady Claude
  * člověka **aktivně vede** kontrolou: projde verify body z reportu, doplní širší
- * UX procházku a posbírá nálezy. Krok stav neposouvá — to zůstává na `done`.
+ * UX procházku a posbírá nálezy. Nálezy zapíše do run reportu (a tím i do paměti,
+ * kterou `mini done` z reportu skládá); stav fáze ale **neposouvá** — to je `done`.
  */
 export function buildVerifySessionPrompt(input: VerifySessionInput): string {
-  const { phase, phaseDone, verify, reportBody } = input;
+  const { phase, phaseDone, verify, reportBody, reportExists } = input;
+  const reportRel = `.mini/run/${phaseStem(phase.id)}.md`;
+  const memoryRel = `.mini/memory/${phaseStem(phase.id)}.md`;
 
   const frame = phaseDone
     ? `**Fáze ${phase.id}: ${phase.title}** je už uzavřená — tohle je **zpětná hloubková kontrola** jejího UI/UX člověkem.`
@@ -273,6 +278,16 @@ export function buildVerifySessionPrompt(input: VerifySessionInput): string {
           .join('\n')}\n`
       : '';
 
+  // Kam zapsat nálezy. Hlavní cíl je run report — `mini done` z něj skládá
+  // paměť, takže přes report se nálezy dostanou i tam. U rozdělané fáze stačí
+  // report. U už uzavřené fáze je paměť hotová, proto nálezy přidej i do ní.
+  const reportWrite = reportExists
+    ? `přes \`Read\` + \`Edit\` přidej na konec \`${reportRel}\` sekci \`## Nálezy z verify\` (datum + odrážky: co je OK, co se má opravit a jak). Tahle sekce je **pod** YAML hlavičkou reportu, takže parser ani \`mini done\` nerozhodí`
+    : `report \`${reportRel}\` zatím neexistuje — založ ho přes \`Write\` aspoň se sekcí \`## Nálezy z verify\` (datum + odrážky), ať nálezy nezůstanou jen v chatu`;
+  const memoryWrite = phaseDone
+    ? `\n   Fáze je **už uzavřená**, takže paměť \`${memoryRel}\` je hotová a report už do ní \`mini done\` zpětně nepřevezme — přidej tytéž nálezy i na konec paměťového souboru (sekce \`## Nálezy z verify\`). Pozn.: soubor může mít číselný sufix (\`-2\` apod.), když fáze prošla \`done\` víckrát — uprav ten nejnovější.`
+    : '';
+
   return `Jsi v Claude Code session — krok **verify** workflow mini.
 ${frame}
 
@@ -282,12 +297,12 @@ Proveď člověka **hloubkovou kontrolou UI/UX** téhle fáze. Nejsi tu od stroj
 1. **Připrav scénu.** Z cíle fáze, kroků a reportu níže urči, co konkrétně se má kontrolovat a jak to člověk uvidí (který příkaz/obrazovku/výstup má spustit). Když je potřeba něco nastartovat (build, dev server, ukázkový vstup), navrhni přesné kroky.
 2. **Projdi verify body.** Vezmi body z reportu jako kostru a u každého nech člověka potvrdit, že to vypadá a chová se správně. Aktivně se ptej na detaily, ne jen „funguje to?".
 3. **Rozšiř kontrolu.** Doplň širší UX procházku za rámec verify bodů: okrajové stavy, chybové hlášky, konzistence s okolím, přístupnost/čitelnost, drobné nepřesnosti. Navrhuj konkrétní věci k vyzkoušení.
-4. **Posbírej nálezy.** Shrň, co je v pořádku a co ne. U každého problému zachyť, co se má opravit. **Nálezy nikam neukládáš** a stav fáze **neposouváš** — to je práce \`do\`/\`done\`.
+4. **Posbírej a zapiš nálezy.** Shrň, co je v pořádku a co ne. U každého problému zachyť, co se má opravit. Pak nálezy **zapiš**: ${reportWrite}.${memoryWrite}
 ${bodyBlock}${verifyBlock}${stepsBlock}
 # Po kontrole
-- Když je vše v pořádku → řekni to a doporuč pokračovat na \`/mini:done\` (uzavření fáze), pokud ještě není uzavřená.
-- Když člověk najde problémy → shrň je jako konkrétní úkoly a doporuč vrátit se k \`/mini:do\` a opravit je (fázi nezavírej).
+- Když je vše v pořádku → řekni to (nálezy v reportu to potvrdí) a doporuč pokračovat na \`/mini:done\` (uzavření fáze), pokud ještě není uzavřená.
+- Když člověk najde problémy → shrň je jako konkrétní úkoly (jsou už zapsané v reportu) a doporuč vrátit se k \`/mini:do\` a opravit je (fázi nezavírej).
 
-Tohle je **read-only** krok — žádný stav v \`.mini/\` neměň a nic neukládej.
+Jediné, co tu zapisuješ, jsou **nálezy** (do run reportu, u uzavřené fáze i do paměti) — stav fáze v \`.mini/state.json\` **neposouváš**, to je práce \`done\`.
 `;
 }

@@ -212,7 +212,7 @@ async function buildVerifyContext(header: StateHeader, cwd: string): Promise<str
     ? await readReportVerify(phase, cwd)
     : { verify: [], body: undefined };
 
-  return buildVerifySessionPrompt({ phase, phaseDone, verify, reportBody: body });
+  return buildVerifySessionPrompt({ phase, phaseDone, verify, reportBody: body, reportExists });
 }
 
 async function readLastMemoryIfExists(cwd: string): Promise<string | undefined> {

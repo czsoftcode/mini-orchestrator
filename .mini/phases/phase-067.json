@@ -2,7 +2,7 @@
   "id": 67,
   "title": "Příkaz mini:verify pro UI/UX",
   "goal": "Přidat interaktivní 'mini context verify' a slash command /mini:verify, který Claudovi dá prompt, jak člověka krok po kroku provést hloubkovou UI/UX kontrolou aktuální (právě dokončené) fáze: vyjde z 'verify' bodů run reportu, doplní širší UI/UX procházku, posbírá nálezy od člověka a zaznamená výsledek. Součástí je registrace verify v CONTEXT_COMMANDS, builder promptu v sessionContext.ts, větvení v context.ts, generování slash commandu v install-commands.ts, testy a krátká zmínka v README.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "buildVerifySessionPrompt v sessionContext.ts",
@@ -35,5 +35,14 @@
       "detail": "Krátce přidat mini verify / /mini:verify do přehledu workflow příkazů."
     }
   ],
-  "startedAt": "2026-05-30T21:21:23.110Z"
+  "startedAt": "2026-05-30T21:21:23.110Z",
+  "resolvedVerify": [
+    "Vyzkoušej /mini:verify naživo v Claude Code"
+  ],
+  "completedAt": "2026-05-30T21:42:45.285Z",
+  "autoCommit": {
+    "preSha": "ace5061e7cfa032526fa45b36bc896a10626e9a5",
+    "sha": "b7cd25a4856f889249c7ac898f3e74b35b37a25d",
+    "subject": "Fáze 67: Příkaz mini:verify pro UI/UX"
+  }
 }

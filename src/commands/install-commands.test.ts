@@ -84,11 +84,11 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
-  it('auto command popisuje autonomní smyčku next→discuss→plan→do→done s podmínkou na discuss', async () => {
+  it('auto command popisuje autonomní smyčku next→discuss→plan→do→verify→done s podmínkou na discuss', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // všech pět kroků cyklu jako mini context volání (nově včetně next)
-    for (const name of ['next', 'discuss', 'plan', 'do', 'done']) {
+    // všechny kroky cyklu jako mini context volání (včetně next a verify)
+    for (const name of ['next', 'discuss', 'plan', 'do', 'verify', 'done']) {
       expect(md).toContain(`mini context ${name}`);
     }
     // discuss je podmíněný, ne bezpodmínečný
@@ -115,6 +115,19 @@ describe('installCommands', () => {
     expect(md).toMatch(/editačn[íi] výpis|nevypisuj/i);
     // detekce hotového projektu
     expect(md).toContain('TITLE: -');
+  });
+
+  it('auto command vkládá verify mezi do a done: podmíněně u UI/UX a vynuceně přes --verify', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
+    // verify je v cyklu jako mini context volání a flag --verify ho vynutí
+    expect(md).toContain('mini context verify');
+    expect(md).toContain('--verify');
+    // krok je popsaný jako UI/UX a podmíněný (přeskočí se u vnitřní fáze)
+    expect(md).toMatch(/UI\/UX/);
+    expect(md).toMatch(/přeskoč/i);
+    // verify předchází done v textu cyklu
+    expect(md.indexOf('mini context verify')).toBeLessThan(md.indexOf('mini context done'));
   });
 
   it('auto command popisuje stop háčky (kontrolní body + mini stop)', async () => {
