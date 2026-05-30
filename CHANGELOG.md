@@ -8,11 +8,16 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **`mini stop`** — kooperativní zastavení autonomního `/mini:auto`. Založí signál
+  `.mini/STOP` (z druhého terminálu); běžící `/mini:auto` ho na hranicích kroků
+  přečte, dokončí rozdělaný krok, zapíše report a čistě skončí. `mini stop --clear`
+  signál smaže. Obě varianty jsou idempotentní.
 - **Autonomní `/mini:auto`** — slash command teď dotáhne víc fází za sebou
   (`next → discuss(podmíněně) → plan → do → done → opakuj`) s `--max-phases N`
   (default 1) a `--yolo`. Zastaví se a zeptá u kroků vyžadujících člověka (`next`,
   `discuss`, body k ručnímu ověření v `done`), u `do` běží tiše (nepřevypráví
-  editace). Připraveny kooperativní stop háčky (`.mini/STOP`) pro budoucí `mini stop`.
+  editace). Kooperativní stop háčky (`.mini/STOP`) čte na hranicích kroků — signál
+  zakládá `mini stop` (viz výše).
 - **`.claude/settings.json`** s allowlistem (`mini:*`, build/test, git), aby
   autonomní běh neotravoval s potvrzováním příkazů.
 - **`mini map --file <cesta>`** — inkrementální update grafu: přemapuje jen jeden

@@ -1,0 +1,34 @@
+{
+  "id": 66,
+  "title": "mini stop pro zastavení auto",
+  "goal": "Přidat CLI příkaz 'mini stop' (a 'mini stop --clear'), který založí/smaže soubor .mini/STOP. Autonomní /mini:auto ho už na svých kontrolních bodech čte a po dokončení rozdělaného kroku se čistě zastaví. Součástí je registrace v cli.ts, implementace v src/commands/, testy a krátká zmínka v README/auto.md.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "stopPath helper v store.ts",
+      "status": "done",
+      "detail": "Přidat export stopPath(cwd) v src/state/store.ts vracející join(.mini, STOP); konstanta STOP_FILE."
+    },
+    {
+      "title": "Implementace příkazu mini stop",
+      "status": "done",
+      "detail": "src/commands/stop.ts: stop({clear}) — bez projektu log.warn a return; bez flagu zapíše .mini/STOP (idempotentně), s --clear ho smaže (force, idempotentně); srozumitelné hlášky přes log."
+    },
+    {
+      "title": "Registrace mini stop v cli.ts",
+      "status": "done",
+      "detail": "program.command('stop') s volbou --clear a českým popisem; lazy import { stop }."
+    },
+    {
+      "title": "Testy stop.test.ts",
+      "status": "done",
+      "detail": "src/commands/stop.test.ts pokryje: zápis signálu, --clear smazání, idempotence obou směrů, chování bez projektu."
+    },
+    {
+      "title": "Dokumentace README a auto.md",
+      "status": "done",
+      "detail": "Přepsat zmínky 'přijde v další fázi' na popis hotového mini stop / mini stop --clear; regenerovat .claude/commands/mini/auto.md přes mini install-commands a srovnat install-commands.test.ts."
+    }
+  ],
+  "startedAt": "2026-05-30T21:09:16.157Z"
+}

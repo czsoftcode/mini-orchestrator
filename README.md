@@ -105,7 +105,7 @@ Vznikne `.claude/commands/mini/{init,next,discuss,plan,do,done,status,map,audit,
 - **`--max-phases N`** (default 1) — kolik fází nejvýš dotáhnout za sebou; `--yolo` = běh bez zbytečného doptávání (funguje jen v session spuštěné s `--permission-mode acceptEdits`).
 - **Zastaví se a zeptá** u kroků, kde je potřeba člověk: `next` (vezme tvůj nápad na fázi), `discuss` (jen u složitých fází) a u bodů k **ručnímu ověření** v `done`.
 - **Tichý běh u `do`** — nepřevypráví každou editaci do chatu, jen krátce hlásí postup.
-- **Kooperativní stop:** na hranicích kroků kontroluje stop signál (`.mini/STOP`) a čistě skončí; pro tvrdé přerušení uprostřed kroku použij Esc/Ctrl+C. (Příkaz `mini stop`, který signál zapíše, přijde v další fázi.)
+- **Kooperativní stop:** na hranicích kroků kontroluje stop signál (`.mini/STOP`) a čistě skončí; pro tvrdé přerušení uprostřed kroku použij Esc/Ctrl+C. Signál založíš příkazem `mini stop` (z druhého terminálu), zrušíš ho `mini stop --clear`.
 
 Pozn.: tohle je slash varianta řízená Claudem v jedné session. CLI `mini auto` (níže) je samostatná cesta, která pouští Claude jako podproces a dotahuje **jednu** fázi.
 

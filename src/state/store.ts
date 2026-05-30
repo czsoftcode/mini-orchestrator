@@ -8,6 +8,7 @@ const STATE_PREV_FILE = 'state.prev.json';
 const PHASES_DIR = 'phases';
 const PHASES_PREV_DIR = 'phases-prev';
 const PROJECT_FILE = 'project.md';
+const STOP_FILE = 'STOP';
 
 /** Aktuální verze schématu stavu. 1 = starý monolitický `state.json`. */
 export const SCHEMA_VERSION = 2 as const;
@@ -70,6 +71,15 @@ export function phasePath(cwd: string, id: number): string {
 
 export function projectPath(cwd: string = process.cwd()): string {
   return join(dir(cwd), PROJECT_FILE);
+}
+
+/**
+ * Cesta ke kooperativnímu stop signálu `.mini/STOP`. Když soubor existuje,
+ * autonomní `/mini:auto` na svých kontrolních bodech čistě skončí. Zapisuje
+ * a maže ho příkaz `mini stop` (resp. `mini stop --clear`).
+ */
+export function stopPath(cwd: string = process.cwd()): string {
+  return join(dir(cwd), STOP_FILE);
 }
 
 export async function exists(cwd: string = process.cwd()): Promise<boolean> {

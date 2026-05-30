@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 65,
+  "currentPhaseId": 66,
   "phases": [
     {
       "id": 1,
@@ -326,6 +326,11 @@
     {
       "id": 65,
       "title": "Autonomní režim mini:auto",
+      "status": "done"
+    },
+    {
+      "id": 66,
+      "title": "mini stop pro zastavení auto",
       "status": "doing"
     }
   ],

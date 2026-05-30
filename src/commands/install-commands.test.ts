@@ -108,11 +108,12 @@ describe('installCommands', () => {
     expect(md).toContain('TITLE: -');
   });
 
-  it('auto command popisuje stop háčky (kontrolní body pro budoucí mini stop)', async () => {
+  it('auto command popisuje stop háčky (kontrolní body + mini stop)', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // stop flag soubor + obě granularity kontroly
+    // stop flag soubor + příkaz, kterým ho uživatel zakládá + obě granularity kontroly
     expect(md).toContain('.mini/STOP');
+    expect(md).toMatch(/mini stop/);
     expect(md).toMatch(/mezi kroky cyklu/i);
     expect(md).toMatch(/step-done/);
   });

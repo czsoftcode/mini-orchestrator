@@ -236,6 +236,17 @@ program
   });
 
 program
+  .command('stop')
+  .description(
+    'Založí kooperativní stop signál (.mini/STOP) — autonomní /mini:auto dokončí rozdělaný krok a čistě skončí. S --clear signál smaže.',
+  )
+  .option('--clear', 'Smaže stop signál místo jeho založení.')
+  .action(async (opts: { clear?: boolean }) => {
+    const { stop } = await import('./commands/stop.js');
+    await stop({ clear: opts.clear });
+  });
+
+program
   .command('import-gsd')
   .description('Jednorázový import rozdělaného GSD projektu z .planning/.')
   .action(async () => {
