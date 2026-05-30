@@ -184,18 +184,18 @@ interface DoInputs {
 const doSpec: CommandSpec<DoInputs> = {
   id: 'do',
   // `/mini:do` (slash) emituje auto-prompt v reference módu — diskuzní poznámky
-  // se neinlinují, jen odkaz + read-once (Claude je má z plan/auto). Proto tu
-  // není blok „diskuzní poznámky". Pozor: Read call, kterým si je Claude za běhu
-  // načte (když je v session nemá), se do tohoto odhadu NEPOČÍTÁ — číslo tedy
-  // podhodnocuje reálný náklad jednoho izolovaného `do`.
+  // i projekt se neinlinují, jen odkaz + read-once (Claude je má z plan/auto).
+  // Proto tu nejsou bloky „diskuzní poznámky" ani „projekt". Pozor: Read call,
+  // kterým si je Claude za běhu načte (když je v session nemá), se do tohoto
+  // odhadu NEPOČÍTÁ — číslo tedy podhodnocuje reálný náklad izolovaného `do`.
   build: (i) =>
     buildAutoPhasePrompt({
       projectMd: i.projectMd,
       phase: i.phase,
       useDiscussNotesRef: true,
+      useProjectRef: true,
     }),
   blocks: (i) => [
-    { name: 'projekt', text: i.projectMd },
     { name: 'fáze (název + cíl)', text: phaseHeadText(i.phase) },
     { name: 'kroky', text: stepsText(i.phase) },
   ],

@@ -2,7 +2,7 @@
   "id": 40,
   "title": "Diskuzní poznámky načítat jednou",
   "goal": "do session prompt (buildAutoPhasePrompt v cestě 'do') přestane inlinovat celé diskuzní poznámky — místo toho odkáže na soubor .mini/discuss/phase-N.md s instrukcí 'přečti přes Read tool, jen pokud jsi je v této session ještě nečetl (typicky už je máš z plan/auto)'. plan i auto poznámky inlinují dál jako vstupní bod cyklu. Cílem je nenačítat poznámky v jedné Claude session podruhé; ověřitelné aktualizovanými snapshot/unit testy (do prompt obsahuje odkaz + read-once podmínku místo inline textu).",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Builder buildAutoPhasePrompt: přidat opt-in příznak useDiscussNotesRef?: boolean (default vypnuto) do AutoPhaseContext; když true, místo inline textu vykreslit pod nadpisem '# Poznámky k fázi (z diskuse)' odkaz na relativní .mini/discuss/phase-${phase.id}.md + read-once instrukci; když false/neuvedeno → dnešní inline větev beze změny. Ověřitelné: npm run typecheck zelený, funkce přijímá nový příznak.",
@@ -21,5 +21,15 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T04:21:32.115Z"
+  "startedAt": "2026-05-30T04:21:32.115Z",
+  "resolvedVerify": [
+    "Rozhodnutí: měřicí řádek 'do' nově měří /mini:do (buildAutoPhasePrompt reference), ne headless buildDoPhasePrompt",
+    "Vysvětlivka 'Read call se nepočítá' je jen v komentáři measure.ts, ne v textu vygenerovaného token-report.md"
+  ],
+  "completedAt": "2026-05-30T04:44:17.545Z",
+  "autoCommit": {
+    "preSha": "900437965b59817bba85a5aed4f82805af3eec69",
+    "sha": "bdcb8c92584f8bd98f11b5352f5a79c1c0c420f2",
+    "subject": "Fáze 40: Diskuzní poznámky načítat jednou"
+  }
 }

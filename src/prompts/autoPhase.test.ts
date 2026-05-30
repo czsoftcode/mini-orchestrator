@@ -139,6 +139,46 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
     expect(out).not.toContain('.mini/discuss/phase-40.md');
   });
 
+  it('projekt reference mód: místo inline textu projektu vykreslí odkaz + read-once', () => {
+    const phase: Phase = {
+      id: 41,
+      title: 'Projekt reference',
+      goal: 'do odkazuje na project.md místo inline',
+      status: 'doing',
+      steps: [{ title: 'krok', status: 'todo' }],
+    };
+
+    const out = buildAutoPhasePrompt({
+      projectMd: PROJECT_MD,
+      phase,
+      useProjectRef: true,
+    });
+
+    // Nadpis projektu zůstává, ale tělo je odkaz + read-once, ne inline text.
+    expect(out).toContain('# Projekt');
+    expect(out).toContain('.mini/project.md');
+    expect(out).toContain('Read');
+    expect(out).toContain('znovu ho nenačítej');
+    // Inline text projektu se nesmí objevit.
+    expect(out).not.toContain('Stavím nástroj X pro Y.');
+    expect(out).toMatchSnapshot();
+  });
+
+  it('projekt: bez příznaku useProjectRef se inlinuje (default beze změny)', () => {
+    const phase: Phase = {
+      id: 41,
+      title: 'Projekt inline',
+      status: 'doing',
+      steps: [{ title: 'krok', status: 'todo' }],
+    };
+
+    const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
+
+    // Default inline: obsahuje text projektu a NEodkazuje na soubor.
+    expect(out).toContain('Stavím nástroj X pro Y.');
+    expect(out).not.toContain('.mini/project.md');
+  });
+
   it('omits notes block when notes are null, undefined or blank', () => {
     const phase: Phase = {
       id: 2,

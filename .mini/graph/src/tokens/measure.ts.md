@@ -3,7 +3,6 @@
 Imports:
 - { buildAutoPhasePrompt } from "../prompts/autoPhase.js"
 - { buildDiscussPhasePrompt } from "../prompts/discussPhase.js"
-- { buildDoPhasePrompt } from "../prompts/doPhase.js"
 - { buildDoneSessionPrompt, buildNextSessionPrompt, buildPlanSessionPrompt } from "../prompts/sessionContext.js"
 - { buildWriteMemoryPrompt } from "../prompts/writeMemory.js"
 - type { Phase, ProjectState, Step } from "../state/types.js"

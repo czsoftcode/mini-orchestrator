@@ -6,22 +6,22 @@ obsahových bloků (projekt, historie fází, poznámky, …).
 
 | Příkaz | Reálný | Šablona | Vkládaný kontext |
 | --- | ---: | ---: | ---: |
-| auto | 2815 | 1191 | 1624 |
-| next | 1904 | 370 | 1534 |
-| plan | 1846 | 222 | 1624 |
-| do | 1792 | 1250 | 542 |
-| discuss | 967 | 425 | 542 |
-| writeMemory | 888 | 346 | 542 |
-| done | 269 | 136 | 133 |
+| auto | 2390 | 1164 | 1226 |
+| do | 1702 | 1277 | 425 |
+| next | 1571 | 371 | 1200 |
+| plan | 1447 | 221 | 1226 |
+| discuss | 884 | 423 | 461 |
+| writeMemory | 805 | 344 | 461 |
+| done | 267 | 190 | 77 |
 
 ## Proč (rozpad vkládaného kontextu)
 
-- **auto** — vkládaný kontext 1624 tok: diskuzní poznámky 67 %, kroky 23 %
-- **next** — vkládaný kontext 1534 tok: last-memory 69 %, historie fází 28 %
-- **plan** — vkládaný kontext 1624 tok: diskuzní poznámky 67 %, kroky 23 %
-- **do** — vkládaný kontext 542 tok: kroky 69 %, fáze (název + cíl) 25 %
-- **discuss** — vkládaný kontext 542 tok: kroky 69 %, fáze (název + cíl) 25 %
-- **writeMemory** — vkládaný kontext 542 tok: kroky 69 %, fáze (název + cíl) 25 %
-- **done** — vkládaný kontext 133 tok: fáze (název + cíl) 100 %
+- **auto** — vkládaný kontext 1226 tok: diskuzní poznámky 62 %, kroky 28 %
+- **do** — vkládaný kontext 425 tok: kroky 82 %, fáze (název + cíl) 18 %
+- **next** — vkládaný kontext 1200 tok: last-memory 60 %, historie fází 37 %
+- **plan** — vkládaný kontext 1226 tok: diskuzní poznámky 62 %, kroky 28 %
+- **discuss** — vkládaný kontext 461 tok: kroky 75 %, fáze (název + cíl) 17 %
+- **writeMemory** — vkládaný kontext 461 tok: kroky 75 %, fáze (název + cíl) 17 %
+- **done** — vkládaný kontext 77 tok: fáze (název + cíl) 100 %
 
-_Vygenerováno 2026-05-30T04:39:07.296Z · reprezentativní fáze: 40._
+_Vygenerováno 2026-05-30T05:08:29.988Z · reprezentativní fáze: 41._

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 40,
+  "currentPhaseId": 41,
   "phases": [
     {
       "id": 1,
@@ -201,6 +201,11 @@
     {
       "id": 40,
       "title": "Diskuzní poznámky načítat jednou",
+      "status": "done"
+    },
+    {
+      "id": 41,
+      "title": "Projekt blok read-once v do",
       "status": "doing"
     }
   ],

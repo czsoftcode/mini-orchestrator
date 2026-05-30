@@ -33,6 +33,16 @@ export interface AutoPhaseContext {
    * vždy. Headless `mini do` i `auto` zůstávají na inline (příznak vypnutý).
    */
   useDiscussNotesRef?: boolean;
+  /**
+   * Reference mód bloku projektu (opt-in, default vypnuto). Když `true`, místo
+   * inlinování `projectMd` se pod nadpisem `# Projekt` vykreslí jen **odkaz** na
+   * soubor `.mini/project.md` + instrukce „přečti, jen pokud jsi ho v této
+   * session ještě nečetl". Stejná logika jako `useDiscussNotesRef`: pro
+   * interaktivní `/mini:do`, kde projekt skoro vždy už načetl `/mini:plan`/`auto`
+   * ve stejné chat session — opakovaný inline by ho do kontextu přilepil podruhé.
+   * Headless `mini do` (jiný builder) i `auto` zůstávají na inline (vypnuto).
+   */
+  useProjectRef?: boolean;
   retry?: AutoPhaseRetryContext | null;
 }
 
@@ -45,9 +55,19 @@ export interface AutoPhaseContext {
  *   ze kterého pak `done({ auto: true })` vyčte statusy kroků.
  */
 export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
-  const { projectMd, phase, discussNotes, useDiscussNotesRef, retry } = ctx;
+  const { projectMd, phase, discussNotes, useDiscussNotesRef, useProjectRef, retry } = ctx;
 
   const reportPath = `.mini/run/phase-${phase.id}.md`;
+
+  // Projekt: buď inline (default), nebo jen odkaz s read-once podmínkou
+  // (reference mód). Reference šetří opakované načtení projektu ve stejné chat
+  // session — projekt je v rámci session neměnný, takže „už ho máš, nenačítej".
+  let projectBlock: string;
+  if (useProjectRef) {
+    projectBlock = `Projekt je popsán v \`.mini/project.md\`. Pokud jsi ho v této session už četl (typicky při \`/mini:plan\` nebo na začátku \`auto\`), **znovu ho nenačítej** — máš ho v kontextu. Jinak si ho teď přečti přes Read tool.`;
+  } else {
+    projectBlock = projectMd.trim();
+  }
 
   let stepsBlock: string;
   if (phase.steps?.length) {
@@ -107,7 +127,7 @@ V některém z předchozích průchodů se nepodařilo dotáhnout všechny kroky
 Právě probíhá **auto session** — máš v jednom průchodu implementovat celou fázi.
 
 # Projekt
-${projectMd.trim()}
+${projectBlock}
 ${retryBlock}
 # Aktuální fáze
 **Fáze ${phase.id}: ${phase.title}**

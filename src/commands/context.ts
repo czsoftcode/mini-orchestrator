@@ -128,7 +128,16 @@ async function buildPhaseContext(
     // read-once), a to pouze když poznámky existují (jinak builder blok vynechá).
     const discussNotes = await readDiscussNotes(cwd, phase.id);
     const useDiscussNotesRef = discussNotes != null && discussNotes.trim() !== '';
-    return buildAutoPhasePrompt({ projectMd, phase, useDiscussNotesRef, retry: null });
+    // Projekt řešíme stejně: `/mini:do` běží ve stejné session jako `/mini:plan`,
+    // který projekt už inlinoval. Projekt je v session neměnný, takže ho stačí
+    // odkázat (read-once) — `useProjectRef` zapínáme vždy (project.md tu existuje).
+    return buildAutoPhasePrompt({
+      projectMd,
+      phase,
+      useDiscussNotesRef,
+      useProjectRef: true,
+      retry: null,
+    });
   }
   // done
   return buildDoneContext(phase, cwd);

@@ -1,47 +1,24 @@
-# Fáze 39 — Štíhlý last-memory v next
+# Fáze 40 — Diskuzní poznámky načítat jednou
 
-**Cíl:** mini:next (headless next.ts i session context.ts) vloží místo celého last-memory.md jen krátké shrnutí poslední fáze — hlavička, cíl, kroky a sekce 'na co dát pozor' — bez doslovných diskuzních poznámek a plného run reportu; ověřitelné unit testem extrakce a měřitelným poklesem next v .mini/token-report.md.
+**Cíl:** do session prompt (buildAutoPhasePrompt v cestě 'do') přestane inlinovat celé diskuzní poznámky — místo toho odkáže na soubor .mini/discuss/phase-N.md s instrukcí 'přečti přes Read tool, jen pokud jsi je v této session ještě nečetl (typicky už je máš z plan/auto)'. plan i auto poznámky inlinují dál jako vstupní bod cyklu. Cílem je nenačítat poznámky v jedné Claude session podruhé; ověřitelné aktualizovanými snapshot/unit testy (do prompt obsahuje odkaz + read-once podmínku místo inline textu).
 
 ## Kroky
-- [hotovo] Čistá funkce summarizeMemoryForNext(md) v src/commands/writeMemory.ts (vedle buildPhaseMemoryMarkdown): ponechá vše před '## Diskuse' (hlavička, cíl, kroky, poznámka, auto-commit), z bloku Diskuse vytáhne '## Pozor na', z bloku Run report sekci dle /pozor|nález|další fáz/i; bez kotev fallback tvrdým limitem délky (laditelné konstanty). Ověřitelné: npm run typecheck zelený, funkce exportovaná.
-- [hotovo] Přepis updateLastMemoryLink: místo symlinku/kopie archivu přečte právě zapsaný archivní soubor, prožene summarizeMemoryForNext a zapíše malý regulérní last-memory.md (odpadá symlink i copy fallback, starý soubor se před zápisem smaže, selhání zůstává jen log.dim). Ověřitelné: po writePhaseMemory je last-memory.md malý a obsahuje pozor/nález, archiv memory/phase-*.md zůstává plný.
-- [hotovo] Unit test summarizeMemoryForNext nad FIXNÍM vstupem (výstup buildPhaseMemoryMarkdown se vším): asserty ponechané sekce přítomné, pozor/nález vytažené, '## Záměr'/'## Klíčová rozhodnutí'/mechanické ověření pryč; zvlášť test fallbacku (vstup bez kotev delší než limit → ořez na limit). Ověřitelné: npm test zelené, nové testy.
-- [hotovo] Brána + měření: npm run typecheck, npm run build, npm test zelené; npm run measure-tokens proběhne a next v .mini/token-report.md znatelně klesne oproti 1583 (buildery i measure.ts beze změny, pokles přijde díky menšímu last-memory.md). Ověřitelné: report přegenerován, next nižší.
+- [hotovo] Builder buildAutoPhasePrompt: přidat opt-in příznak useDiscussNotesRef?: boolean (default vypnuto) do AutoPhaseContext; když true, místo inline textu vykreslit pod nadpisem '# Poznámky k fázi (z diskuse)' odkaz na relativní .mini/discuss/phase-${phase.id}.md + read-once instrukci; když false/neuvedeno → dnešní inline větev beze změny. Ověřitelné: npm run typecheck zelený, funkce přijímá nový příznak.
+- [hotovo] Unit testy builderu v autoPhase.test.ts: nové testy pro useDiscussNotesRef: true (výstup obsahuje .mini/discuss/phase-{id}.md + read-once formulaci a NEobsahuje inline text poznámek); při vypnutém příznaku se výstup nemění. Ověřitelné: npm test zelené, existující snapshoty autoPhase.test.ts.snap beze změny.
+- [hotovo] context.ts (větev do) přepnout na reference + test v context.test.ts: do větev nastaví useDiscussNotesRef podle existence poznámek (non-null & non-blank) a inline text builderu nepředá; když poznámky chybí, blok se vynechá. Nový test: /mini:do s existujícím .mini/discuss/phase-1.md → odkaz + read-once, ne inline; bez souboru blok chybí. Ověřitelné: npm test zelené, nový context test.
+- [hotovo] measure.ts řádek do → reference mód (useDiscussNotesRef: true) + poznámka v reportu, že Read call za běhu se nepočítá (auto zůstává inline); brána a přegenerování reportu: npm run typecheck, npm run build, npm test zelené a npm run measure-tokens přegeneruje .mini/token-report.md (bez tvrdé prahové hodnoty). Ověřitelné: brána zelená, report přegenerován.
 
 ## Auto-commit
-- Fáze 39: Štíhlý last-memory v next (`900437965b59817bba85a5aed4f82805af3eec69`)
+- Fáze 40: Diskuzní poznámky načítat jednou (`bdcb8c92584f8bd98f11b5352f5a79c1c0c420f2`)
 
 ## Pozor na
-- **Vnořené nadpisy:** Diskuse i Run report mají vlastní `#`/`##` nadpisy na stejné
-  úrovni jako kotvy koláže — NELZE naivně splitovat podle `## `. Spolehlivé je
-  slicovat podle literálních kotev `## Diskuse` / `## Run report` z producenta.
-- **Run report má volné názvy sekcí** (píše je Claude) — `## Pozor na` z discuss je
-  fixní, ale „nález" v run reportu se může jmenovat různě → matchovat sadou vzorů,
-  a když nic nesedí, blok jen nepřispěje (globální pojistka limitem zůstává).
-- **Token report nepřipínat na konkrétní číslo:** dnes `next` = 1583 tok, ale závisí
-  na obsahu repa. Akceptační kritérium formulovat jako „next znatelně klesl oproti
-  hodnotě před fází" / „podíl bloku last-memory v rozpadu next výrazně menší".
-- **Symlink → soubor:** dnes je `last-memory.md` symlink (s copy fallbackem na
-  Windows). Nově to bude regulérní zapsaný soubor — `updateLastMemoryLink` přestane
-  symlinkovat, takže odpadá i copy fallback. Hlídat: před zápisem smazat starý
-  `last-memory.md` (může to být starý symlink). Memory zůstává nice-to-have:
-  selhání zápisu jen `log.dim`, workflow nepadá.
-- **Unit test extrakce** dělat nad FIXNÍM vstupem (výstup `buildPhaseMemoryMarkdown`
-  se vším), ne nad reálným stavem repa. Snapshoty next builderů se NEMĚNÍ (varianta B).
-- **Brána:** `npm run typecheck`, `npm run build`, `npm test` zelené;
-  `npm run measure-tokens` proběhne a `next` v reportu klesne.
-
-## Pozor / poznámky pro člověka
-
-- **Incident během měření, vyřešeno:** `last-memory.md` byl ještě starý **symlink**
-  na archiv fáze 38. První pokus přegenerovat shrnutí zapsal přes symlink a tím
-  zkrátil i archiv. Archiv jsem obnovil byte-identicky rekonstrukcí přes
-  `buildPhaseMemoryMarkdown` ze stále existujících `discuss/phase-38.md`,
-  `run/phase-38.md` a `phases/phase-038.json` (ověřeno: zpět na původních 12404 B).
-  `last-memory.md` je teď regulérní soubor — git ukáže změnu typu symlink→soubor.
-- Reálný zápis nové paměti (`writePhaseMemory`) se spustí až při příštím
-  `mini done` — viz bod ve `verify`.
-- Nález pro DALŠÍ fázi: `next` teď táhne nahoru hlavně **verbose Kroky** v hlavě
-  shrnutí (každý krok nese dlouhý „Ověřitelné" text) — kandidát na další zeštíhlení
-  (zkrátit/odstranit „Ověřitelné" část kroků v paměti). A `auto`/`plan`/`do` jsou
-  teď dražší než `next` kvůli diskuzním poznámkám (71 %) a krokům (22 %).
+- Default `useDiscussNotesRef` musí být vypnutý → výstup `auto`, headless `mini do`
+  i existující snapshoty `autoPhase.test.ts.snap` se NESMÍ změnit.
+- `context.ts` musí rozlišit „poznámky neexistují" (vynechat blok) vs „existují"
+  (vykreslit odkaz) — využít návratovou hodnotu `readDiscussNotes` (null/blank).
+- Odkaz renderovat jako **relativní** `.mini/discuss/phase-${phase.id}.md`
+  (ne absolutní z `discussNotesPath(cwd,…)`), aby šel z promptu otevřít stejně
+  jako `.mini/run/phase-N.md`.
+- Token-report je zavádějící metrika (nevidí Read call) — formulovat jen jako
+  „přegenerováno", ne „do kleslo pod X".
+- `mini discuss --apply` neexistuje — shrnutí se zapisuje přímo do tohoto souboru.

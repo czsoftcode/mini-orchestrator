@@ -126,6 +126,19 @@ describe('context', () => {
     expect(out).not.toContain('TAJNY INLINE TEXT NESMI BYT V PROMPTU');
   });
 
+  it('do projekt → odkaz na .mini/project.md + read-once, ne inline text projektu', async () => {
+    await setupProject(
+      [{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }],
+      1,
+    );
+    await context('do');
+    // Reference mód projektu: odkaz na soubor místo inlinovaného obsahu project.md.
+    expect(out).toContain('.mini/project.md');
+    expect(out).toContain('Read');
+    // Inline tělo project.md (viz setupProject) se nesmí objevit.
+    expect(out).not.toContain('Něco.');
+  });
+
   it('done bez reportu pošle na /mini:do', async () => {
     await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 's', status: 'doing' }] }], 1);
     await context('done');

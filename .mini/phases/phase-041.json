@@ -1,0 +1,25 @@
+{
+  "id": 41,
+  "title": "Projekt blok read-once v do",
+  "goal": "buildAutoPhasePrompt dostane opt-in příznak useProjectRef (default vypnuto); /mini:do místo inlinování project.md vykreslí relativní odkaz .mini/project.md + read-once instrukci (auto zůstává inline). Ověřitelné aktualizovanými snapshot/unit testy a přegenerovaným token-reportem.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Builder buildAutoPhasePrompt: přidat opt-in příznak useProjectRef?: boolean (default vypnuto) do AutoPhaseContext; projekt vytáhnout z inline return (autoPhase.ts:109-110) do proměnné projectBlock — když true, vykreslit pod nadpisem '# Projekt' relativní odkaz .mini/project.md + read-once instrukci (zrcadlit notesBlock); když false/neuvedeno → dnešní inline větev beze změny. Ověřitelné: npm run typecheck zelený, funkce přijímá nový příznak.",
+      "status": "done"
+    },
+    {
+      "title": "Unit testy builderu v autoPhase.test.ts: nové testy pro useProjectRef: true (výstup obsahuje .mini/project.md + read-once formulaci a NEobsahuje inline text projektu); při vypnutém příznaku se výstup nemění. Ověřitelné: npm test zelené, existující snapshoty autoPhase.test.ts.snap beze změny.",
+      "status": "done"
+    },
+    {
+      "title": "context.ts (větev do) přepnout na referenci + test v context.test.ts: do větev (:124-132) nastaví useProjectRef: true. Nový test: /mini:do → výstup má odkaz .mini/project.md + read-once, ne inline projekt. Ověřitelné: npm test zelené, nový context test.",
+      "status": "done"
+    },
+    {
+      "title": "measure.ts doSpec → reference mód: z blocks() u do vyhodit blok projekt, build přepnout na useProjectRef: true, doplnit poznámku že Read call se nepočítá. Brána + přegenerování: npm run typecheck, npm run build, npm test zelené a npm run measure-tokens přegeneruje .mini/token-report.md (bez tvrdé prahové hodnoty). Ověřitelné: brána zelená, report přegenerován.",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-30T05:02:47.748Z"
+}
