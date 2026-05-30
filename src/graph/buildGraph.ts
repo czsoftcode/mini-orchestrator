@@ -1,5 +1,6 @@
 import { access, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, posix, relative, sep } from 'node:path';
+import { isGitRepo, runGit } from '../git.js';
 import { mapFile } from './mapper.js';
 import { mapPhpFile } from './phpMapper.js';
 import { mapRustFile } from './rustMapper.js';
@@ -16,9 +17,12 @@ export const LEGACY_GRAPH_FILE = '.mini/graph.md';
 export const GRAPH_INDEX_VERSION = 1;
 
 /**
- * Adresáře, do kterých nikdy nelezeme — runtime/build artefakty, VCS interní
- * data, mini vlastní metadata. Záměrně netaháme z .gitignore (jiný projekt mohl
- * ignorovat věci, které pro graf chceme), drž tu konzervativní whitelist.
+ * Adresáře, do kterých nelezeme při `walk` fallbacku — runtime/build artefakty,
+ * VCS interní data, mini vlastní metadata. **Fallback path**: v git repu se
+ * rozsah řídí výhradně `.gitignore` přes `git ls-files` (viz `collectFromGit`),
+ * takže tenhle seznam platí jen mimo git repo / když git binárka chybí. Drž ho
+ * proto konzervativní — má pokrýt to nejhorší (`node_modules`, `dist`, …) i bez
+ * gitu.
  *
  * `vendor/` (Composer) a `target/` (Cargo) jsou tu kvůli PHP a Rust projektům —
  * generované balíčky/buildy nikdo nechce v grafu.
@@ -92,7 +96,7 @@ export async function buildGraph(
   cwd: string = process.cwd(),
   options: BuildGraphOptions = {},
 ): Promise<BuildGraphResult> {
-  const files = await collectMappableFiles(cwd, options);
+  const files = await collectFiles(cwd, options);
 
   const graphs: FileGraph[] = [];
   for (const { relPath, lang } of files) {
@@ -197,6 +201,45 @@ interface MappableFile {
   lang: Lang;
 }
 
+/**
+ * Vybere zdroj seznamu souborů: v git repu se ptáme gitu (respektuje `.gitignore`,
+ * vnořené `.gitignore`, negace i globální excludes), jinak prohledáme strom sami
+ * přes `walk` + `IGNORE_DIRS`. Když git z jakéhokoli důvodu selže (chybí binárka,
+ * porušený repo), spadneme zpět na `walk`.
+ */
+async function collectFiles(cwd: string, options: BuildGraphOptions): Promise<MappableFile[]> {
+  if (await isGitRepo(cwd)) {
+    const fromGit = await collectFromGit(cwd, options);
+    if (fromGit) return fromGit;
+  }
+  return collectMappableFiles(cwd, options);
+}
+
+/**
+ * Seznam mapovatelných souborů z gitu: `git ls-files -co --exclude-standard -z`
+ * vrátí tracked + untracked-ne-ignorované soubory (NUL-separované, cesty s `/`
+ * relativní ke `cwd`). Tím se ignorované runtime/build artefakty (`var/cache`,
+ * `dist`, …) vůbec nezpracují. Vrací `null`, když git příkaz selže — volající
+ * pak použije `walk` fallback.
+ */
+async function collectFromGit(
+  cwd: string,
+  options: BuildGraphOptions,
+): Promise<MappableFile[] | null> {
+  const r = await runGit(['ls-files', '-co', '--exclude-standard', '-z'], cwd);
+  if (!r.ok) return null;
+
+  const matches: MappableFile[] = [];
+  for (const rel of r.stdout.split('\0')) {
+    if (rel.length === 0) continue; // trailing NUL / prázdné řádky
+    const lang = detectLang(rel);
+    if (!lang) continue;
+    if (options.includeFile && !options.includeFile(rel)) continue;
+    matches.push({ relPath: rel, lang });
+  }
+  return matches;
+}
+
 async function collectMappableFiles(
   cwd: string,
   options: BuildGraphOptions,
@@ -254,7 +297,16 @@ async function walk(
 
 function detectLang(name: string): Lang | null {
   if (name.endsWith('.d.ts')) return null;
-  if (name.endsWith('.ts') || name.endsWith('.tsx')) return 'ts';
+  if (
+    name.endsWith('.ts') ||
+    name.endsWith('.tsx') ||
+    name.endsWith('.js') ||
+    name.endsWith('.jsx') ||
+    name.endsWith('.mjs') ||
+    name.endsWith('.cjs')
+  ) {
+    return 'ts';
+  }
   if (name.endsWith('.php')) return 'php';
   if (name.endsWith('.rs')) return 'rust';
   return null;

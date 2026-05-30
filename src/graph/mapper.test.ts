@@ -161,4 +161,35 @@ export * from './all.js';
     const fn = out.exports[0];
     expect(fn?.signature?.parameters[0]?.name).toBe('{...}');
   });
+
+  it('maps plain .js files (imports + exports)', () => {
+    const out = mapFile(
+      `
+import { useState } from 'react';
+export function add(a, b) { return a + b; }
+export const NAME = 'x';
+`,
+      'src/util.js',
+    );
+    expect(out.path).toBe('src/util.js');
+    expect(out.imports.map((i) => i.source)).toEqual(['react']);
+    const names = out.exports.map((e) => e.name);
+    expect(names).toContain('add');
+    expect(names).toContain('NAME');
+  });
+
+  it('parses JSX in .jsx files without choking', () => {
+    const out = mapFile(
+      `
+import React from 'react';
+export function Button({ label }) {
+  return <button className="b">{label}</button>;
+}
+`,
+      'src/Button.jsx',
+    );
+    const fn = out.exports.find((e) => e.name === 'Button');
+    expect(fn?.kind).toBe('function');
+    expect(out.imports.map((i) => i.source)).toEqual(['react']);
+  });
 });

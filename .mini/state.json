@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 43,
+  "currentPhaseId": 44,
   "phases": [
     {
       "id": 1,
@@ -216,6 +216,11 @@
     {
       "id": 43,
       "title": "Vykreslit detail kroků v promptu",
+      "status": "done"
+    },
+    {
+      "id": 44,
+      "title": "Map respektuje .gitignore",
       "status": "doing"
     }
   ],

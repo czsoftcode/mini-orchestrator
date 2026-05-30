@@ -1235,7 +1235,7 @@ steps:
 
   it('přeskočí regeneraci v non-TS projektu', async () => {
     await writeFile(join(cwd, 'package.json'), '{}', 'utf-8');
-    await writeFile(join(cwd, 'main.js'), 'module.exports = {};', 'utf-8');
+    await writeFile(join(cwd, 'styles.css'), 'body{}', 'utf-8');
     await save(
       makeState(
         [

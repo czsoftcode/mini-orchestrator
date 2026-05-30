@@ -2,7 +2,7 @@
   "id": 43,
   "title": "Vykreslit detail kroků v promptu",
   "goal": "V sekci „Kroky\" auto i do promptu vypsat Step.detail odsazeně pod title (jen když je vyplněn) a rozšířit measure.ts stepsText o detail, aby měření tokenů odpovídalo realitě; sampleSteps ve vzorovém YAML reportu zůstává jen na title. Ověřitelné: typecheck, unit testy + aktualizované snapshoty auto/do promptu a měření, build.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "detail v auto promptu",
@@ -25,5 +25,11 @@
       "detail": "přegenerovat dotčené snapshoty (autoPhase/doPhase/measure), ověřit že fixtury bez detailu se nehnuly. npm run typecheck, npm test, npm run build zelené."
     }
   ],
-  "startedAt": "2026-05-30T06:06:43.952Z"
+  "startedAt": "2026-05-30T06:06:43.952Z",
+  "completedAt": "2026-05-30T06:30:53.780Z",
+  "autoCommit": {
+    "preSha": "99bba32893623a0bb34ccbc3def17670ae14390b",
+    "sha": "3abb53cdd763fd92d422a178a39a47f6c979fafb",
+    "subject": "Fáze 43: Vykreslit detail kroků v promptu"
+  }
 }

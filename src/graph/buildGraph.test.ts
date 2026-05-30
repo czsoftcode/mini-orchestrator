@@ -12,6 +12,7 @@ import {
   renderFileGraph,
 } from './buildGraph.js';
 import type { GraphIndex } from './buildGraph.js';
+import { runGit } from '../git.js';
 
 async function makeTempProject(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'mini-graph-'));
@@ -164,10 +165,56 @@ describe('buildGraph', () => {
     expect(await hasMappableProject(root)).toBe(true);
   });
 
-  it('hasMappableProject returns false for projekt bez TS/PHP/Rust', async () => {
+  it('hasMappableProject returns true when only .js exists', async () => {
+    await writeFixture(root, 'src/x.js', 'export const x = 1;');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns false for projekt bez mapovatelných souborů', async () => {
     await writeFixture(root, 'package.json', '{}');
-    await writeFixture(root, 'src/x.js', 'module.exports = {};');
+    await writeFixture(root, 'styles.css', 'body{}');
+    await writeFixture(root, 'README.md', 'hello');
     expect(await hasMappableProject(root)).toBe(false);
+  });
+});
+
+describe('buildGraph v git repu respektuje .gitignore', () => {
+  let root: string;
+
+  beforeEach(async () => {
+    root = await makeTempProject();
+    await runGit(['init'], root);
+  });
+
+  afterEach(async () => {
+    const { rm } = await import('node:fs/promises');
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('přeskočí ignorované soubory (var/cache) a mapuje zdrojáky vč. JS', async () => {
+    await writeFixture(root, '.gitignore', 'var/\n');
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await writeFixture(root, 'src/util.js', `export function f() { return 1; }\n`);
+    await writeFixture(root, 'var/cache/Container.php', `<?php\nclass Container {}\n`);
+
+    const result = await buildGraph(root);
+    const paths = result.files.map((f) => f.path);
+
+    expect(paths).toContain('src/a.ts');
+    expect(paths).toContain('src/util.js');
+    // var/ je v .gitignore → git ho nevypíše → do grafu se nedostane
+    expect(paths).not.toContain('var/cache/Container.php');
+    await expect(
+      readFile(join(root, GRAPH_DIR, 'var/cache/Container.php.md'), 'utf-8'),
+    ).rejects.toThrow();
+  });
+
+  it('mapuje i untracked soubory, které .gitignore neignoruje', async () => {
+    // žádný commit — spoléháme na `ls-files -o` (untracked, ne-ignorované)
+    await writeFixture(root, 'src/fresh.ts', `export const fresh = 1;\n`);
+
+    const result = await buildGraph(root);
+    expect(result.files.map((f) => f.path)).toContain('src/fresh.ts');
   });
 });
 

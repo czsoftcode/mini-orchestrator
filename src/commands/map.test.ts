@@ -38,7 +38,8 @@ describe('map command', () => {
 
   it('warns when project has no mappable sources', async () => {
     await writeFile(join(root, 'package.json'), '{}', 'utf-8');
-    await writeFile(join(root, 'index.js'), 'module.exports = {};', 'utf-8');
+    await writeFile(join(root, 'styles.css'), 'body{}', 'utf-8');
+    await writeFile(join(root, 'README.md'), 'hello', 'utf-8');
     const result = await map();
     expect(result).toEqual({ ok: false, reason: 'not-mappable' });
   });

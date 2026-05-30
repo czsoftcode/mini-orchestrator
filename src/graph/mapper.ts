@@ -24,8 +24,7 @@ import type {
  * platformově stabilní (testy, gitové diffy).
  */
 export function mapFile(content: string, relPath: string): FileGraph {
-  const scriptKind = relPath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const sourceFile = ts.createSourceFile(relPath, content, ts.ScriptTarget.Latest, true, scriptKind);
+  const sourceFile = ts.createSourceFile(relPath, content, ts.ScriptTarget.Latest, true, scriptKindFor(relPath));
 
   const exports: ExportInfo[] = [];
   const imports: ImportInfo[] = [];
@@ -40,6 +39,21 @@ export function mapFile(content: string, relPath: string): FileGraph {
     exports,
     imports,
   };
+}
+
+/**
+ * Vybere `ScriptKind` podle přípony. JSX (`.tsx`/`.jsx`) musí parser vědět
+ * dopředu, jinak JSX syntaxe selže; čisté JS (`.js`/`.mjs`/`.cjs`) jede jako
+ * `JS`, zbytek (`.ts` a spol.) jako `TS`. Syntaktický průchod (`mapFile`) je na
+ * typech nezávislý, takže JS/TS rozdíl je tu jen kvůli korektnímu parsování.
+ */
+function scriptKindFor(relPath: string): ts.ScriptKind {
+  if (relPath.endsWith('.tsx')) return ts.ScriptKind.TSX;
+  if (relPath.endsWith('.jsx')) return ts.ScriptKind.JSX;
+  if (relPath.endsWith('.js') || relPath.endsWith('.mjs') || relPath.endsWith('.cjs')) {
+    return ts.ScriptKind.JS;
+  }
+  return ts.ScriptKind.TS;
 }
 
 function collectImports(node: ts.Statement, out: ImportInfo[]): void {
