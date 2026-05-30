@@ -5,6 +5,7 @@ import { mapFile } from './mapper.js';
 import { mapCSharpFile } from './csharpMapper.js';
 import { mapGoFile } from './goMapper.js';
 import { mapJavaFile } from './javaMapper.js';
+import { mapKotlinFile } from './kotlinMapper.js';
 import { mapPhpFile } from './phpMapper.js';
 import { mapPythonFile } from './pythonMapper.js';
 import { mapRustFile } from './rustMapper.js';
@@ -54,7 +55,7 @@ const IGNORE_DIRS = new Set([
   '__pycache__',
 ]);
 
-type Lang = 'ts' | 'php' | 'rust' | 'python' | 'go' | 'java' | 'csharp';
+type Lang = 'ts' | 'php' | 'rust' | 'python' | 'go' | 'java' | 'csharp' | 'kotlin';
 
 /** Jeden záznam v indexu `graph.json`. */
 export interface GraphIndexEntry {
@@ -186,15 +187,17 @@ function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {
       return mapJavaFile(content, relPath);
     case 'csharp':
       return mapCSharpFile(content, relPath);
+    case 'kotlin':
+      return mapKotlinFile(content, relPath);
   }
 }
 
 /**
  * Detekuje, jestli má smysl spouštět vlastní mapper: hledá `tsconfig.json`,
  * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py`, `go.mod`,
- * `pom.xml`, `build.gradle`(`.kts`), C# `*.sln`/`*.csproj` nebo alespoň jeden
- * mapovatelný soubor (.ts/.tsx/.php/.rs/.py/.go/.java/.cs) v projektu (mimo
- * ignorované adresáře).
+ * `pom.xml`, `build.gradle`(`.kts` = i Kotlin), C# `*.sln`/`*.csproj` nebo
+ * alespoň jeden mapovatelný soubor (.ts/.tsx/.php/.rs/.py/.go/.java/.cs/.kt/.kts)
+ * v projektu (mimo ignorované adresáře).
  */
 export async function hasMappableProject(cwd: string = process.cwd()): Promise<boolean> {
   if (await fileExists(join(cwd, 'tsconfig.json'))) return true;
@@ -349,6 +352,7 @@ function detectLang(name: string): Lang | null {
   if (name.endsWith('.go')) return 'go';
   if (name.endsWith('.java')) return 'java';
   if (name.endsWith('.cs')) return 'csharp';
+  if (name.endsWith('.kt') || name.endsWith('.kts')) return 'kotlin';
   return null;
 }
 

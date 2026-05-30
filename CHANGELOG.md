@@ -8,6 +8,15 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- Mapa znalostního grafu nově podporuje **Kotlin** (`.kt`/`.kts`): vytáhnou se
+  importy (vč. wildcard `import a.b.*` a aliasů `import a.b.C as D`) a top-level
+  deklarace — `fun` (se signaturou parametrů, default hodnot, `vararg`, generik
+  i extension receiveru) a typy `class`/`interface`/`object`/`enum class`/
+  `data class`/`sealed class|interface`/`annotation class`. Default viditelnost
+  je `public`; `private`/`internal` se vynechá. Viditelné metody se připojí
+  k typu s kotvami na řádky. Komentáře (vč. **vnořených** block komentářů), KDoc,
+  char literály i stringy (vč. raw `"""…"""`) se korektně ignorují. Projekt se
+  rozpozná i podle `build.gradle.kts`.
 - Mapa znalostního grafu nově podporuje **C#** (`.cs`): vytáhnou se usingy
   (`using`, `using static`, `global using` i aliasy `using Foo = A.B`) a top-level
   typy uvnitř `namespace` (block i file-scoped) — `class`/`struct`/`interface`/

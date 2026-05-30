@@ -8,7 +8,7 @@ import type { StepOutcome } from './types.js';
  * (jeden soubor na zdroják) + index `.mini/graph.json`.
  *
  * Detekuje mapovatelný projekt (tsconfig.json/Cargo.toml/composer.json/… nebo
- * aspoň jeden `.ts`/`.tsx`/`.php`/`.rs`/`.py`/`.go`/`.java`/`.cs` soubor)
+ * aspoň jeden `.ts`/`.tsx`/`.php`/`.rs`/`.py`/`.go`/`.java`/`.cs`/`.kt`/`.kts` soubor)
  * a v ostatních případech jen tipne uživateli, ať si pustí `/graphify`
  * v Claude session.
  */
@@ -23,13 +23,13 @@ export async function map(): Promise<StepOutcome> {
 
   if (!(await hasMappableProject(cwd))) {
     log.warn(
-      'V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs, .py, .go, .java, .cs).',
+      'V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs, .py, .go, .java, .cs, .kt, .kts).',
     );
     log.hint('Pro jiné jazyky zkus v Claude session: /graphify');
     return { ok: false, reason: 'not-mappable' };
   }
 
-  log.dim('Mapuji TS/PHP/Rust/Python/Go/Java/C# soubory…');
+  log.dim('Mapuji TS/PHP/Rust/Python/Go/Java/C#/Kotlin soubory…');
   const result = await buildGraph(cwd);
 
   if (result.fileCount === 0) {

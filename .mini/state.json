@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 56,
+  "currentPhaseId": 57,
   "phases": [
     {
       "id": 1,
@@ -281,6 +281,11 @@
     {
       "id": 56,
       "title": "Mapa pro C#",
+      "status": "done"
+    },
+    {
+      "id": 57,
+      "title": "Mapa pro Kotlin",
       "status": "doing"
     }
   ],

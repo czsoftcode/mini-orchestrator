@@ -2,7 +2,7 @@
   "id": 56,
   "title": "Mapa pro C#",
   "goal": "Přidat csharpMapper (mapCSharpFile) parsující .cs soubory (usingy, namespace, třídy/struct/interface/enum/record, metody) a zapojit C# do buildGraph (Lang, detectLang na .cs, hasMappableProject přes .csproj/.sln) i graphHintu, vč. testů a zeleného buildu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Kostra csharpMapperu + stripCSharp",
@@ -30,5 +30,11 @@
       "detail": "csharpMapper.test.ts (usingy, namespace block/file-scoped, druhy typů, metody, strip stringů/komentářů, kotvy řádků); npm test i build/lint zelené."
     }
   ],
-  "startedAt": "2026-05-30T14:50:45.223Z"
+  "startedAt": "2026-05-30T14:50:45.223Z",
+  "completedAt": "2026-05-30T15:04:38.759Z",
+  "autoCommit": {
+    "preSha": "6d08f3da62422ce92080311a5d03ade49927c63b",
+    "sha": "02917529386cd412a2f3d31e10268d0bb35e6d86",
+    "subject": "Fáze 56: Mapa pro C#"
+  }
 }

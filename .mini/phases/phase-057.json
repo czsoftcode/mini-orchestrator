@@ -1,0 +1,34 @@
+{
+  "id": 57,
+  "title": "Mapa pro Kotlin",
+  "goal": "Přidat kotlinMapper (mapKotlinFile) parsující .kt/.kts soubory (package, importy vč. as aliasů, top-level fun, typy class/interface/object/enum class/data class/sealed/annotation class, metody; default viditelnost public) a zapojit Kotlin do buildGraph (Lang, detectLang na .kt/.kts, hasMappableProject přes build.gradle.kts/*.kt) i hlášek v map.ts/cli.ts, vč. testů a zeleného buildu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Kostra kotlinMapperu + stripKotlin",
+      "status": "done",
+      "detail": "mapKotlinFile(content, relPath) vrací FileGraph; stripKotlin nahradí komentáře (//, /* */ vč. vnořených), stringy (\"…\", raw \"\"\"…\"\"\", char literály) mezerami stejné délky se zachováním \\n (čísla řádků sedí)."
+    },
+    {
+      "title": "Package a importy (vč. as aliasů)",
+      "status": "done",
+      "detail": "extrakce package foo.bar jako kontext; import foo.Bar, import foo.*, import foo.Bar as Baz jako importy (source = cesta package, případný alias jako jméno)."
+    },
+    {
+      "title": "Typy a top-level fun",
+      "status": "done",
+      "detail": "top-level class/interface/object/enum class/data class/sealed class i interface/annotation class a top-level fun jako exporty; default viditelnost public, vynechá private/internal; metody uvnitř typů jako methods se signaturou; do těl se nezanořuje."
+    },
+    {
+      "title": "Zapojení do buildGraph",
+      "status": "done",
+      "detail": "import + Lang o kotlin, větev v mapByLang, detectLang mapuje .kt/.kts, hasMappableProject přes build.gradle.kts (už je) + přípony .kt/.kts; doplnit Kotlin do hlášek v map.ts a popisu v cli.ts."
+    },
+    {
+      "title": "Testy a zelený build",
+      "status": "done",
+      "detail": "kotlinMapper.test.ts (package, importy vč. as, druhy typů, top-level fun, viditelnost, strip stringů/komentářů, kotvy řádků); npm test i build/lint zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T15:07:28.915Z"
+}
