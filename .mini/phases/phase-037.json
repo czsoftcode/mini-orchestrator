@@ -1,0 +1,21 @@
+{
+  "id": 37,
+  "title": "Odstranit --push z auto.md",
+  "goal": "V bodu auto (COMMAND_DEFS, src/commands/install-commands.ts) změnit závěrečné 'mini done --apply --push' na 'mini done --apply', upravit odpovídající test v install-commands.test.ts a přegenerovat .claude/commands/mini/auto.md, aby /mini:auto automaticky nepushoval na remote.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "V src/commands/install-commands.ts (bod auto v COMMAND_DEFS) změnit závěrečné 'mini done --apply --push' na 'mini done --apply'. Ověřitelné: grep v souboru už neobsahuje 'mini done --apply --push'.",
+      "status": "done"
+    },
+    {
+      "title": "Upravit test v install-commands.test.ts (kolem ř. 58/68), aby očekával 'mini done --apply' a neočekával '--push'; upravit i název testu, ať nezmiňuje --push. Ověřitelné: npm test zelené.",
+      "status": "done"
+    },
+    {
+      "title": "Přegenerovat slash commandy (node dist/cli.js install-commands) a ověřit npm run typecheck + build + test zelené a že .claude/commands/mini/auto.md už neobsahuje --push.",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-30T02:20:26.580Z"
+}

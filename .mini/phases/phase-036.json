@@ -2,7 +2,7 @@
   "id": 36,
   "title": "Oprava chyby prvního mini do --apply",
   "goal": "Najít a opravit příčinu, proč první volání 'mini do --apply' (po krocích /mini:do) skončí chybou a teprve druhé spuštění projde, aby uložení stavu kroku i reportu fungovalo napoprvé; doplnit regresní test.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "applyStepDone (src/commands/do.ts) se líně nastartuje: když fáze není doing a zároveň není done/skipped, sám nastaví status doing, doplní startedAt (když chybí) a založí .mini/run/ přes ensureRunDir, pak teprve označí krok hotový; na done/skipped dál vrací chybu. Ověřitelné novými a upravenými testy v do.test.ts.",
@@ -25,5 +25,11 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T01:59:39.974Z"
+  "startedAt": "2026-05-30T01:59:39.974Z",
+  "completedAt": "2026-05-30T02:10:22.307Z",
+  "autoCommit": {
+    "preSha": "620a1c7bf4e53cfb68b4e84010f4538e3e6850cc",
+    "sha": "f3ac88cc270859021d3d3d937c34258ab5084ee1",
+    "subject": "Fáze 36: Oprava chyby prvního mini do --apply"
+  }
 }

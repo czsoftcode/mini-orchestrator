@@ -55,7 +55,7 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
-  it('auto command popisuje sekvenci discuss→plan→do→done s podmínkou na discuss a --push', async () => {
+  it('auto command popisuje sekvenci discuss→plan→do→done s podmínkou na discuss', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
     // všechny čtyři kroky cyklu jako mini context volání
@@ -64,8 +64,9 @@ describe('installCommands', () => {
     }
     // discuss je podmíněný, ne bezpodmínečný
     expect(md).toMatch(/podmín|jen když|pouze/i);
-    // done se ukládá s nahráním na remote
-    expect(md).toContain('mini done --apply --push');
+    // done se ukládá bez automatického push na remote
+    expect(md).toContain('mini done --apply');
+    expect(md).not.toContain('mini done --apply --push');
     expect(md).toContain('description:');
   });
 
