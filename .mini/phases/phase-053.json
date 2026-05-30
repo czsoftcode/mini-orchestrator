@@ -2,7 +2,7 @@
   "id": 53,
   "title": "Mapa pro Javu",
   "goal": "Přidat javaMapper.ts pro extrakci import deklarací a top-level exportů z .java souborů (třídy, interfaces, enums, records, public/protected metody a pole; signatury metod), napojit na detectLang a hasMappableProject (marker pom.xml/build.gradle) v buildGraph.ts a ověřit unit testy mapperu i snapshotem grafu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Stripping komentářů, stringů, text bloků + kostra",
@@ -35,5 +35,11 @@
       "detail": "javaMapper.test.ts (importy, top-level typy, metody/pole, anotace, text bloky) + snapshot grafu v buildGraph.test.ts; npm test a lint zelené."
     }
   ],
-  "startedAt": "2026-05-30T13:13:44.545Z"
+  "startedAt": "2026-05-30T13:13:44.545Z",
+  "completedAt": "2026-05-30T13:24:44.862Z",
+  "autoCommit": {
+    "preSha": "128b166b9a691dfb6aefde9d96012dc607c555cc",
+    "sha": "62387e8d4cd295161e5d4263144fbc563bfba2a8",
+    "subject": "Fáze 53: Mapa pro Javu"
+  }
 }

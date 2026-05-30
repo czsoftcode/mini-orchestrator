@@ -1,0 +1,24 @@
+{
+  "id": 54,
+  "title": "Generované artefakty do .gitignore",
+  "goal": "Přidat do .gitignore programově generované/odvozené výstupy v .mini/ (graph.json, graph/, last-memory.md, token-report.md, codebase.md a undo-zálohy state.prev.json/phases-prev/), odebrat je ze sledování gitem přes git rm --cached a ověřit, že je workflow (mini map / done) umí znovu vygenerovat.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Doplnit .mini/.gitignore",
+      "status": "done",
+      "detail": "Přidat patterny pro generované/odvozené výstupy: graph.json, graph/, token-report.md, last-memory.md. Cesty relativní k .mini/ (bez prefixu), konzistentně s existujícími řádky + krátký komentář proč. codebase.md NEpřidávat. Ověření: grep najde všechny čtyři řádky, codebase.md tam není."
+    },
+    {
+      "title": "Untrackovat soubory z indexu",
+      "status": "done",
+      "detail": "git rm -r --cached na .mini/graph.json, .mini/graph/, .mini/token-report.md, .mini/last-memory.md. Použít --cached (soubory zůstanou na disku). codebase.md/state.json/phases/ se nedotýkat. Ověření: git ls-files .mini/ je už neobsahuje, ale na disku dál existují."
+    },
+    {
+      "title": "Ověřit čistotu a regeneraci",
+      "status": "done",
+      "detail": "git status .mini/ — untrackované soubory nesmí naskočit jako ?? (.gitignore je chytá). Spustit mini map (graf se korektně přegeneruje) a npm test (zelené)."
+    }
+  ],
+  "startedAt": "2026-05-30T13:41:52.112Z"
+}

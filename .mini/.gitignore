@@ -9,3 +9,13 @@ state.prev.json
 # mohly jen po pádu uprostřed zápisu.
 graph.tmp/
 graph.json.tmp
+
+# Programově generované/odvozené výstupy — jdou kdykoli znovu vytvořit ze zdroje
+# pravdy (zdrojáky / .mini/memory/), tak ať nedělají šum v diffu a commitech.
+# Strojová mapa projektu (mini map / done) — derivace zdrojáků.
+graph/
+graph.json
+# Žebříček příkazů podle tokenů — čistý report z měření.
+token-report.md
+# Zeštíhlené shrnutí poslední fáze pro `next` — odvozené z .mini/memory/.
+last-memory.md
