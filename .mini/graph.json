@@ -1,7 +1,12 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-30T02:23:17.981Z",
+  "generatedAt": "2026-05-30T03:07:33.021Z",
   "files": [
+    {
+      "path": "scripts/measure-prompt-tokens.ts",
+      "graphFile": ".mini/graph/scripts/measure-prompt-tokens.ts.md",
+      "exports": []
+    },
     {
       "path": "src/claude/ask.ts",
       "graphFile": ".mini/graph/src/claude/ask.ts.md",
@@ -605,6 +610,30 @@
         "ProjectState",
         "PhaseSummary",
         "StateHeader"
+      ]
+    },
+    {
+      "path": "src/tokens/measure.test.ts",
+      "graphFile": ".mini/graph/src/tokens/measure.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/tokens/measure.ts",
+      "graphFile": ".mini/graph/src/tokens/measure.ts.md",
+      "exports": [
+        "COMMAND_IDS",
+        "CommandId",
+        "estimateTokens",
+        "ContextBlock",
+        "BlockTokens",
+        "CommandMeasurement",
+        "PhaseLite",
+        "VerifyItem",
+        "RealInputs",
+        "measureAll",
+        "rankMeasurements",
+        "renderReportMarkdown",
+        "renderConsole"
       ]
     },
     {

@@ -1,5 +1,5 @@
-import { access, copyFile, mkdir, readFile, symlink, unlink, writeFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { askClaude } from '../claude/ask.js';
 import {
   buildWriteMemoryPrompt,
@@ -28,9 +28,15 @@ const STEP_WORD: Record<StepStatus, string> = {
   skipped: 'odloženo',
 };
 
+// Názvy „velkých" sekcí memory koláže. Sdílené mezi producentem
+// (`buildPhaseMemoryMarkdown`) a konzumentem (`summarizeMemoryForNext`), aby se
+// kotvy nikdy nerozešly — kdo přejmenuje sekci, změní obojí na jednom místě.
+const DISCUSS_SECTION = 'Diskuse';
+const RUN_REPORT_SECTION = 'Run report';
+
 /**
  * Zapíše memory soubor pro hotovou fázi do `.mini/memory/phase-{id}-{timestamp}.md`
- * a aktualizuje symlink `.mini/last-memory.md` na nejnovější záznam.
+ * a uloží jeho krátké shrnutí do `.mini/last-memory.md` (vstup promptu `next`).
  *
  * Ve výchozím stavu sestaví soubor **přímo v TypeScriptu** jako koláž dat, která
  * mini už má (metadata fáze + doslovný obsah discuss a run reportu) — bez volání
@@ -99,7 +105,7 @@ export async function writePhaseMemory(
     log.success(`Memory: ${memoryPathRel}`);
   }
 
-  await updateLastMemoryLink(cwd, memoryPathAbs, memoryPathRel);
+  await writeLastMemorySummary(cwd, memoryPathAbs, memoryPathRel);
 }
 
 /**
@@ -137,23 +143,125 @@ export function buildPhaseMemoryMarkdown(
 
   if (discussContent.trim()) {
     parts.push('');
-    parts.push('## Diskuse');
+    parts.push(`## ${DISCUSS_SECTION}`);
     parts.push(discussContent.trim());
   }
 
   if (runContent.trim()) {
     parts.push('');
-    parts.push('## Run report');
+    parts.push(`## ${RUN_REPORT_SECTION}`);
     parts.push(runContent.trim());
   }
 
   return `${parts.join('\n')}\n`;
 }
 
+/** Horní mez délky shrnutí (znaky). Pojistka, aby ani neznámý formát paměti
+ * (např. claude-mode, kde memory píše volně Claude) prompt `next` nenafoukl. */
+const SUMMARY_MAX_CHARS = 2000;
+
+/** Vzory nadpisů „na co dát pozor" v run reportu — ten má názvy sekcí volné
+ * (píše je Claude), tak je matchujeme sadou slov místo fixní kotvy. */
+const RUN_WATCH_RE = /pozor|nález|další fáz/i;
+
+/**
+ * Z plné memory koláže (`buildPhaseMemoryMarkdown`) vyrobí krátké shrnutí pro
+ * prompt `next`. Ponechá hlavu (hlavička, cíl, kroky, poznámka, auto-commit) a
+ * navíc vytáhne to nejcennější pro návrh další fáze: pod-sekci `## Pozor na`
+ * z bloku Diskuse a sekci „nález / další fáze" z bloku Run report. Doslovný
+ * Záměr, Klíčová rozhodnutí a mechanické kroky/ověření vynechá.
+ *
+ * Slicuje podle literálních kotev `## Diskuse` / `## Run report`, které vyrábí
+ * producent výš — proto NEjde naivně splitovat podle `## ` (Diskuse i Run report
+ * mají vlastní vnořené `##` nadpisy na stejné úrovni). Když kotvy chybí (paměť
+ * v neznámém formátu), vrátí aspoň tvrdě omezenou délku.
+ */
+export function summarizeMemoryForNext(md: string): string {
+  const text = md.trimEnd();
+
+  const discussIdx = indexOfSection(text, DISCUSS_SECTION, 0);
+  const runSearchFrom = discussIdx === -1 ? 0 : discussIdx + 1;
+  const runIdx = indexOfSection(text, RUN_REPORT_SECTION, runSearchFrom);
+
+  // Bez známých kotev neumíme strukturně ořezat — vrátíme aspoň pojistku délkou.
+  if (discussIdx === -1 && runIdx === -1) {
+    return hardCap(text);
+  }
+
+  // Hlava = vše před první kotvou (hlavička, cíl, kroky, poznámka, auto-commit).
+  const headEnd = Math.min(
+    discussIdx === -1 ? text.length : discussIdx,
+    runIdx === -1 ? text.length : runIdx,
+  );
+  const parts: string[] = [text.slice(0, headEnd).trimEnd()];
+
+  if (discussIdx !== -1) {
+    const discussEnd = runIdx > discussIdx ? runIdx : text.length;
+    const pozor = extractSubsection(text.slice(discussIdx, discussEnd), (h) => /pozor/i.test(h));
+    if (pozor) parts.push(pozor);
+  }
+
+  if (runIdx !== -1) {
+    const nalez = extractSubsection(text.slice(runIdx), (h) => RUN_WATCH_RE.test(h));
+    if (nalez) parts.push(nalez);
+  }
+
+  // Ve strukturní větvi NEkrátíme tvrdě délkou — to by uřízlo konec, tj. zrovna
+  // vytažené „Pozor na" / „Nález" (nejcennější část). Hranicí je výběr sekcí.
+  return `${parts.join('\n\n').trimEnd()}\n`;
+}
+
+/** Najde začátek řádku `## <name>` od `fromIndex`. Vrací index `#`, nebo -1. */
+function indexOfSection(text: string, name: string, fromIndex: number): number {
+  const heading = `## ${name}`;
+  if (fromIndex === 0 && text.startsWith(heading)) return 0;
+  const idx = text.indexOf(`\n${heading}`, fromIndex);
+  return idx === -1 ? -1 : idx + 1;
+}
+
+/**
+ * V bloku najde první pod-sekci `## <nadpis>`, jejíž nadpis splní `matches`, a
+ * vrátí ji od nadpisu po další `## ` (nebo konec bloku). `null`, když nic nesedí.
+ */
+function extractSubsection(block: string, matches: (heading: string) => boolean): string | null {
+  const lines = block.split('\n');
+  let start = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^## (.+)$/.exec(lines[i] ?? '');
+    if (m && m[1] && matches(m[1])) {
+      start = i;
+      break;
+    }
+  }
+  if (start === -1) return null;
+
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^## /.test(lines[i] ?? '')) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start, end).join('\n').trimEnd();
+}
+
+/** Omezí text na `SUMMARY_MAX_CHARS` (řez na hranici řádku) a normalizuje konec.
+ * Používá se jen ve fallbacku bez kotev — ve strukturní větvi by uřízlo to nejcennější. */
+function hardCap(text: string): string {
+  const trimmed = text.trimEnd();
+  if (trimmed.length <= SUMMARY_MAX_CHARS) {
+    return `${trimmed}\n`;
+  }
+  const slice = trimmed.slice(0, SUMMARY_MAX_CHARS);
+  const cut = slice.lastIndexOf('\n');
+  const body = (cut > 0 ? slice.slice(0, cut) : slice).trimEnd();
+  return `${body}\n\n…(zkráceno)\n`;
+}
+
 /**
  * Spustí Claude print-mode session, která zapíše memory soubor. Volá se jen
  * v explicitním režimu (`state.models?.memory != null`). Vrací `true`, když
- * soubor vznikl (a má smysl aktualizovat last-memory symlink).
+ * soubor vznikl (a má smysl z něj zapsat shrnutí do last-memory.md).
  */
 async function writeViaClaude(
   phase: Phase,
@@ -211,18 +319,21 @@ async function writeViaClaude(
 }
 
 /**
- * Aktualizuje `.mini/last-memory.md` tak, aby ukazoval na nejnovější memory soubor.
+ * Zapíše `.mini/last-memory.md` jako **krátké shrnutí** nejnovější fáze. Přečte
+ * právě zapsaný archivní soubor (plnou koláž), prožene ho `summarizeMemoryForNext`
+ * a výsledek uloží — `last-memory.md` tak není kopií archivu, ale jeho zeštíhlenou
+ * verzí, kterou pak `next` vkládá do promptu (proto je čte JEN `next`).
  *
- * Preferuje symlink (lehká reference). Když symlink selže (typicky Windows bez
- * SeCreateSymbolicLink práva), spadne do `copyFile` fallbacku. Před zápisem
- * odstraní starší last-memory.md, ať už je to symlink nebo regulérní soubor.
+ * Funguje jednotně pro TS i claude-mode větev: vstupem je hotový soubor na disku.
+ * Archiv `.mini/memory/phase-{id}-{datum}.md` zůstává plný a netknutý.
  *
- * Selhání obou cest = jen `log.dim` — last-memory.md je čistě pro pohodlí,
- * memory soubor sám už je na disku.
+ * Selhání = jen `log.dim` — last-memory.md je čistě pro pohodlí, archiv už je
+ * na disku.
  */
-async function updateLastMemoryLink(cwd: string, memoryPathAbs: string, memoryPathRel: string): Promise<void> {
+async function writeLastMemorySummary(cwd: string, memoryPathAbs: string, memoryPathRel: string): Promise<void> {
   const lastMemoryAbs = join(cwd, LAST_MEMORY_FILE);
 
+  // Starý last-memory.md může být ještě symlink z dřívějška — smazat před zápisem.
   try {
     await unlink(lastMemoryAbs);
   } catch (err) {
@@ -231,21 +342,10 @@ async function updateLastMemoryLink(cwd: string, memoryPathAbs: string, memoryPa
     }
   }
 
-  // Cíl symlinku držíme relativní k umístění samotného symlinku
-  // (oba sedí v `.mini/`), aby přesun/clone projektu fungoval.
-  const symlinkTarget = relative(join(cwd, '.mini'), memoryPathAbs);
-
   try {
-    await symlink(symlinkTarget, lastMemoryAbs);
-    log.dim(`  ${LAST_MEMORY_FILE} → ${memoryPathRel}`);
-    return;
-  } catch {
-    // Spadneme na copy — typicky Windows bez práv k symlinkům.
-  }
-
-  try {
-    await copyFile(memoryPathAbs, lastMemoryAbs);
-    log.dim(`  ${LAST_MEMORY_FILE} (kopie ${memoryPathRel})`);
+    const full = await readFile(memoryPathAbs, 'utf-8');
+    await writeFile(lastMemoryAbs, summarizeMemoryForNext(full), 'utf-8');
+    log.dim(`  ${LAST_MEMORY_FILE} (shrnutí ${memoryPathRel})`);
   } catch (err) {
     log.dim(`(${LAST_MEMORY_FILE} se nepodařilo aktualizovat: ${(err as Error).message})`);
   }

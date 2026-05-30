@@ -2,7 +2,7 @@
   "id": 38,
   "title": "Žebříček příkazů podle tokenů",
   "goal": "Vytvořit skript scripts/measure-prompt-tokens.ts, který pro každý mini příkaz (next, discuss, plan, do, auto, done, writeMemory) sestaví jeho prompt s reprezentativním kontextem, odhadne počet tokenů offline heuristikou (bez nových závislostí, např. délka/4) a vypíše příkazy seřazené od nejdražšího po nejlevnější se stručným zdůvodněním, co prompt nejvíc nafukuje; výsledek navíc zapíše do verzovatelného reportu (.mini/token-report.md). Fáze nic v promptech nemění, jen měří a řadí.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Měřicí jádro src/tokens/measure.ts: estimateTokens(t)=Math.ceil(t.length/4); registr 7 příkazů (next, discuss, plan, do, auto, done, writeMemory) → každý sestaví prompt ze zadaných vstupů přes svůj reálný builder (buildNextSessionPrompt, buildDiscussPhasePrompt, buildPlanSessionPrompt, buildDoPhasePrompt, buildAutoPhasePrompt, buildDoneSessionPrompt, buildWriteMemoryPrompt) a vrátí i pojmenované vkládané bloky (projectMd, historie fází, last-memory, diskuzní poznámky, run report, kroky) jako samostatné stringy. Ověřitelné: npm run typecheck zelený, exporty hotové.",
@@ -25,5 +25,11 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T02:41:23.935Z"
+  "startedAt": "2026-05-30T02:41:23.935Z",
+  "completedAt": "2026-05-30T03:07:30.039Z",
+  "autoCommit": {
+    "preSha": "d40e6e1b0e6d71186cb5eef74574ff7657f021f2",
+    "sha": "cdd73ffc2f1e54d9883777727a8ed8014ecdb224",
+    "subject": "Fáze 38: Žebříček příkazů podle tokenů"
+  }
 }
