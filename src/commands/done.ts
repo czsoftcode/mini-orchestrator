@@ -201,8 +201,8 @@ export function buildPhaseCommitMessage(phase: Phase): string {
  * Side-effecty, které proběhnou po finalizaci fáze jako `done`:
  *
  * 1. **Auto-commit** práce fáze (`commitPhaseWork`) — zapíše `phase.autoCommit`.
- * 2. **Memory záznam** (`writePhaseMemory`) — vytvoří `.mini/memory/phase-{id}-{ts}.md`
- *    a aktualizuje symlink `.mini/last-memory.md`.
+ * 2. **Memory záznam** (`writePhaseMemory`) — vytvoří `.mini/memory/phase-XXX.md`
+ *    a aktualizuje shrnutí v `.mini/last-memory.md`.
  * 3. **Přegenerování grafu** (`regenerateGraph`) — aktualizuje `.mini/graph/`
  *    + `.mini/graph.json` podle nového stavu zdrojáků (po commitu).
  *

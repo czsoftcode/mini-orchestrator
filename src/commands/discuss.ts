@@ -2,7 +2,7 @@ import { access, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { workWithClaude } from '../claude/work.js';
 import { buildDiscussPhasePrompt } from '../prompts/discussPhase.js';
-import { exists, load, readProject, save } from '../state/store.js';
+import { exists, load, phaseStem, readProject, save } from '../state/store.js';
 import type { Phase } from '../state/types.js';
 import { ask, nonEmpty, trim } from '../ui/ask.js';
 import { log } from '../ui/log.js';
@@ -82,11 +82,12 @@ export async function discuss(): Promise<StepOutcome> {
     log.warn(`Claude session skončila s kódem ${exitCode}.`);
   }
 
-  const notesPath = join(cwd, DISCUSS_DIR, `phase-${phase.id}.md`);
+  const notesFile = `${phaseStem(phase.id)}.md`;
+  const notesPath = join(cwd, DISCUSS_DIR, notesFile);
   try {
     await access(notesPath);
   } catch {
-    log.dim(`Poznámky nebyly uloženy do ${join(DISCUSS_DIR, `phase-${phase.id}.md`)} — plan a do pojedou bez kontextu diskuse.`);
+    log.dim(`Poznámky nebyly uloženy do ${join(DISCUSS_DIR, notesFile)} — plan a do pojedou bez kontextu diskuse.`);
   }
 
   await offerPhaseEdit(phase, cwd);

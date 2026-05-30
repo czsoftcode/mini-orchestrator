@@ -1,3 +1,4 @@
+import { phaseStem } from '../state/store.js';
 import type { Phase, StepStatus } from '../state/types.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
@@ -13,7 +14,7 @@ export interface AutoPhaseRetryContext {
   /**
    * Cesta k předchozímu reportu, kterou má Claude přečíst pro kontext.
    * Renderuje se rovnou do promptu, takže to musí být něco, co Claude umí
-   * otevřít (typicky relativní cesta od cwd, např. `.mini/run/phase-9.prev.md`).
+   * otevřít (typicky relativní cesta od cwd, např. `.mini/run/phase-009.prev.md`).
    */
   previousReportPath: string;
 }
@@ -57,7 +58,7 @@ export interface AutoPhaseContext {
 export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
   const { projectMd, phase, discussNotes, useDiscussNotesRef, useProjectRef, retry } = ctx;
 
-  const reportPath = `.mini/run/phase-${phase.id}.md`;
+  const reportPath = `.mini/run/${phaseStem(phase.id)}.md`;
 
   // Projekt: buď inline (default), nebo jen odkaz s read-once podmínkou
   // (reference mód). Reference šetří opakované načtení projektu ve stejné chat
@@ -85,7 +86,7 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
   // session — volající zapíná příznak jen když poznámky existují.
   let notesBlock: string;
   if (useDiscussNotesRef) {
-    const notesPath = `.mini/discuss/phase-${phase.id}.md`;
+    const notesPath = `.mini/discuss/${phaseStem(phase.id)}.md`;
     notesBlock = `\n# Poznámky k fázi (z diskuse)\nPoznámky z diskuse k této fázi jsou v \`${notesPath}\`. Pokud jsi je v této session už četl (typicky při \`/mini:plan\` nebo na začátku \`auto\`), **znovu je nenačítej** — máš je v kontextu. Jinak si je teď přečti přes Read tool.\n`;
   } else {
     const notes = discussNotes?.trim();

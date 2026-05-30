@@ -1,0 +1,34 @@
+{
+  "id": 60,
+  "title": "Sjednocení názvů souborů fází",
+  "goal": "Zavést sdílený helper pro phase-XXX (3 číslice s nulami) a použít ho v discuss/run/memory cestách, z memory názvu odstranit timestamp, přejmenovat existující soubory a opravit testy/snapshoty.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Sdílený helper phaseStem + refactor phaseFileName",
+      "status": "done",
+      "detail": "V store.ts přidat phaseStem(id)=phase-<padStart(3,0)>, phaseFileName=${phaseStem(id)}.json. Unit test vč. phaseStem(1000)→phase-1000."
+    },
+    {
+      "title": "Použít helper v discuss/run cestách",
+      "status": "done",
+      "detail": "Přepojit discussNotes.ts, commands/discuss.ts, prompts/autoPhase.ts, sessionContext.ts, discussPhase.ts na phaseStem → vznikají phase-XXX.md."
+    },
+    {
+      "title": "Memory: padded název + historie bez data",
+      "status": "done",
+      "detail": "writeMemory.ts skládá název přes phaseStem; při kolizi přidá -2/-3; smazat fsSafeTimestamp; sjednotit doc-komentáře."
+    },
+    {
+      "title": "Migrace existujících souborů",
+      "status": "done",
+      "detail": "git mv všech starých souborů v discuss/, run/, memory/ na phase-XXX.md (memory bez timestampu, vč. netrackovaného phase-59)."
+    },
+    {
+      "title": "Přegenerovat snapshoty a zelený build",
+      "status": "done",
+      "detail": "Aktualizovat snapshoty promptů s novými cestami; npm test i build zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T16:59:55.499Z"
+}

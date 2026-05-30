@@ -55,7 +55,7 @@ const stepsYaml = steps.length
 const report = '---\\nphase: ' + phase.id + '\\nverdict: done\\nsteps:\\n' + stepsYaml + '\\n---\\n\\nFake e2e report.\\n';
 const runDir = path.join(process.cwd(), '.mini', 'run');
 fs.mkdirSync(runDir, { recursive: true });
-fs.writeFileSync(path.join(runDir, 'phase-' + phase.id + '.md'), report);
+fs.writeFileSync(path.join(runDir, 'phase-' + String(phase.id).padStart(3, '0') + '.md'), report);
 process.exit(0);
 `;
 

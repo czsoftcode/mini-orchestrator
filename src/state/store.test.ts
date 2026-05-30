@@ -12,6 +12,7 @@ import {
   loadPrev,
   newState,
   phaseFileName,
+  phaseStem,
   phasesDir,
   restorePrev,
   save,
@@ -30,6 +31,24 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(cwd, { recursive: true, force: true });
+});
+
+describe('phaseStem', () => {
+  it('padduje na 3 číslice', () => {
+    expect(phaseStem(1)).toBe('phase-001');
+    expect(phaseStem(60)).toBe('phase-060');
+    expect(phaseStem(999)).toBe('phase-999');
+  });
+
+  it('neořezává — fáze >= 1000 má přirozeně delší stem', () => {
+    expect(phaseStem(1000)).toBe('phase-1000');
+    expect(phaseStem(12345)).toBe('phase-12345');
+  });
+
+  it('phaseFileName je stem + .json', () => {
+    expect(phaseFileName(60)).toBe('phase-060.json');
+    expect(phaseFileName(1000)).toBe('phase-1000.json');
+  });
 });
 
 describe('save / load', () => {

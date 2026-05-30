@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 59,
+  "currentPhaseId": 60,
   "phases": [
     {
       "id": 1,
@@ -296,6 +296,11 @@
     {
       "id": 59,
       "title": "Mapa pro Ruby",
+      "status": "done"
+    },
+    {
+      "id": 60,
+      "title": "Sjednocení názvů souborů fází",
       "status": "doing"
     }
   ],

@@ -6,7 +6,7 @@ import {
   previousRunReportPath,
   runReportPath,
 } from '../state/runReport.js';
-import { exists, load } from '../state/store.js';
+import { exists, load, phaseStem } from '../state/store.js';
 import { log } from '../ui/log.js';
 import { doPhase } from './do.js';
 import { done } from './done.js';
@@ -140,6 +140,6 @@ async function prepareRetryContext(
   }
   return {
     iteration,
-    previousReportPath: join(RUN_DIR, `phase-${phaseId}.prev.md`),
+    previousReportPath: join(RUN_DIR, `${phaseStem(phaseId)}.prev.md`),
   };
 }

@@ -68,6 +68,11 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
   povýšení použij `--bump patch|minor|major`.
 - `--push` nově vyžaduje explicitní `--bump patch|minor|major` — push bez úrovně
   verze (nebo s `none`) skončí chybou. Push = vydání, proto musí mít verzi pro tag.
+- **Sjednocené názvy souborů fází** ve všech adresářích `.mini/`: `discuss/`,
+  `memory/` i `run/` nově používají stejný formát `phase-XXX` (3 číslice
+  s nulovým paddingem) jako `phases/`. Z názvu memory zmizel ISO timestamp;
+  opakovaný záznam téže fáze se odliší příponou `-2`, `-3`, … místo data.
+  Existující soubory byly přejmenovány.
 
 ## [1.2.0] - 2026-05-30
 

@@ -6,7 +6,7 @@ import {
   LAST_MEMORY_FILE,
   MEMORY_DIR,
 } from '../prompts/writeMemory.js';
-import { readProject } from '../state/store.js';
+import { phaseStem, readProject } from '../state/store.js';
 import type { Phase, ProjectState, StepStatus } from '../state/types.js';
 import { log } from '../ui/log.js';
 import { logUsage } from '../ui/usage.js';
@@ -35,8 +35,12 @@ const DISCUSS_SECTION = 'Diskuse';
 const RUN_REPORT_SECTION = 'Run report';
 
 /**
- * Zapíše memory soubor pro hotovou fázi do `.mini/memory/phase-{id}-{timestamp}.md`
+ * Zapíše memory soubor pro hotovou fázi do `.mini/memory/phase-XXX.md`
  * a uloží jeho krátké shrnutí do `.mini/last-memory.md` (vstup promptu `next`).
+ *
+ * Název nese jen padded ID fáze (`phaseStem`) — žádné datum. Když soubor téže
+ * fáze už existuje (opakované `done`), připojí se číselný rozlišovač
+ * (`phase-XXX-2.md`, `-3`, …), aby se historie nepřepsala (viz `freeMemoryPath`).
  *
  * Ve výchozím stavu sestaví soubor **přímo v TypeScriptu** jako koláž dat, která
  * mini už má (metadata fáze + doslovný obsah discuss a run reportu) — bez volání
@@ -59,10 +63,6 @@ export async function writePhaseMemory(
   cwd: string,
   options: { hasAutoCommit: boolean },
 ): Promise<void> {
-  const timestamp = fsSafeTimestamp(new Date());
-  const memoryFileName = `phase-${phase.id}-${timestamp}.md`;
-  const memoryPathRel = join(MEMORY_DIR, memoryFileName);
-  const memoryPathAbs = join(cwd, memoryPathRel);
   const memoryDirAbs = join(cwd, MEMORY_DIR);
 
   try {
@@ -72,8 +72,12 @@ export async function writePhaseMemory(
     return;
   }
 
-  const discussPath = join(DISCUSS_DIR_REL, `phase-${phase.id}.md`);
-  const runReportPath = join(RUN_DIR_REL, `phase-${phase.id}.md`);
+  const memoryFileName = await freeMemoryFileName(memoryDirAbs, phase.id);
+  const memoryPathRel = join(MEMORY_DIR, memoryFileName);
+  const memoryPathAbs = join(cwd, memoryPathRel);
+
+  const discussPath = join(DISCUSS_DIR_REL, `${phaseStem(phase.id)}.md`);
+  const runReportPath = join(RUN_DIR_REL, `${phaseStem(phase.id)}.md`);
 
   // Explicitní Claude režim — jen když je `memory` scope ručně nastaven přes
   // `mini model`. Fallback na default model k volání Claude NESTAČÍ.
@@ -325,7 +329,7 @@ async function writeViaClaude(
  * verzí, kterou pak `next` vkládá do promptu (proto je čte JEN `next`).
  *
  * Funguje jednotně pro TS i claude-mode větev: vstupem je hotový soubor na disku.
- * Archiv `.mini/memory/phase-{id}-{datum}.md` zůstává plný a netknutý.
+ * Archiv `.mini/memory/phase-XXX.md` zůstává plný a netknutý.
  *
  * Selhání = jen `log.dim` — last-memory.md je čistě pro pohodlí, archiv už je
  * na disku.
@@ -370,9 +374,17 @@ async function readFileOrEmpty(path: string): Promise<string> {
 }
 
 /**
- * ISO 8601 timestamp s `-` místo `:` — `:` je nepovolený znak v názvech souborů
- * na Windows. Příklad: `2026-05-24T14-30-00.000Z`.
+ * Najde volný název memory souboru pro fázi v `dirAbs`. Výchozí je `phase-XXX.md`
+ * (padded ID, bez data); když už existuje (opakované `done` téže fáze), zkouší
+ * `phase-XXX-2.md`, `phase-XXX-3.md`, … dokud nenarazí na volný — historie se
+ * tak nikdy nepřepíše. Vrací jen název souboru (ne cestu).
  */
-export function fsSafeTimestamp(date: Date): string {
-  return date.toISOString().replace(/:/g, '-');
+export async function freeMemoryFileName(dirAbs: string, phaseId: number): Promise<string> {
+  const stem = phaseStem(phaseId);
+  const base = `${stem}.md`;
+  if (!(await fileExists(join(dirAbs, base)))) return base;
+  for (let n = 2; ; n++) {
+    const candidate = `${stem}-${n}.md`;
+    if (!(await fileExists(join(dirAbs, candidate)))) return candidate;
+  }
 }

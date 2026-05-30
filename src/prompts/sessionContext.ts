@@ -1,3 +1,4 @@
+import { phaseStem } from '../state/store.js';
 import type { Phase, PhaseStatus, ProjectState, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
 
@@ -162,7 +163,7 @@ export function buildDoneSessionPrompt(input: DoneSessionInput): string {
   if (!reportExists) {
     return `Jsi v Claude Code session — krok **done** workflow mini.
 
-Fáze **${phase.id}: ${phase.title}** zatím nemá report z implementace (\`.mini/run/phase-${phase.id}.md\` chybí).
+Fáze **${phase.id}: ${phase.title}** zatím nemá report z implementace (\`.mini/run/${phaseStem(phase.id)}.md\` chybí).
 Bez reportu nelze stav posunout neinteraktivně. Nejdřív spusť \`/mini:do\` (implementovat fázi a zapsat report), pak se vrať k \`/mini:done\`.
 `;
   }

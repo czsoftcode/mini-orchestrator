@@ -35,7 +35,7 @@ describe('buildAutoPhasePrompt', () => {
     // Bez notes nesmí být sekce poznámek.
     expect(out).not.toContain('# Poznámky k fázi');
     // Auto report cesta a YAML šablona pro správnou fázi.
-    expect(out).toContain('`.mini/run/phase-9.md`');
+    expect(out).toContain('`.mini/run/phase-009.md`');
     expect(out).toContain('phase: 9');
     expect(out).toContain('verdict: done');
     expect(out).toContain('- title: "Prompt builder pro celou fázi"');
@@ -58,7 +58,7 @@ describe('buildAutoPhasePrompt', () => {
     expect(out).toContain('(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)');
     // V YAML vzorku musí mít sekce steps placeholder pro prázdný seznam, ne fiktivní položku.
     expect(out).toContain('[]  # fáze nemá kroky — nech prázdný seznam');
-    expect(out).toContain('`.mini/run/phase-1.md`');
+    expect(out).toContain('`.mini/run/phase-001.md`');
     expect(out).toMatchSnapshot();
   });
 
@@ -112,7 +112,7 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
 
     // Nadpis zůstává (ať je blok rozpoznatelný), ale obsahuje odkaz, ne text.
     expect(out).toContain('# Poznámky k fázi (z diskuse)');
-    expect(out).toContain('.mini/discuss/phase-40.md');
+    expect(out).toContain('.mini/discuss/phase-040.md');
     // Read-once formulace.
     expect(out).toContain('Read');
     expect(out).toContain('znovu je nenačítej');
@@ -135,8 +135,8 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
       useDiscussNotesRef: true,
     });
 
-    expect(out).toContain('.mini/discuss/phase-7.md');
-    expect(out).not.toContain('.mini/discuss/phase-40.md');
+    expect(out).toContain('.mini/discuss/phase-007.md');
+    expect(out).not.toContain('.mini/discuss/phase-040.md');
   });
 
   it('projekt reference mód: místo inline textu projektu vykreslí odkaz + read-once', () => {
@@ -361,7 +361,7 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
     expect(out).toContain('shrnutí z diskuze');
     expect(out).toContain('- [hotovo] hotový krok');
     expect(out).toContain('- [čeká] zbývající krok');
-    expect(out).toContain('`.mini/run/phase-10.md`');
+    expect(out).toContain('`.mini/run/phase-010.md`');
     expect(out).toMatchSnapshot();
   });
 

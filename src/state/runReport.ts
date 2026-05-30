@@ -1,5 +1,6 @@
 import { access, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { phaseStem } from './store.js';
 
 /**
  * Adresář pro reporty z auto session.
@@ -66,18 +67,18 @@ export interface RunReport {
 }
 
 export function runReportPath(cwd: string, phaseId: number): string {
-  return join(cwd, RUN_DIR, `phase-${phaseId}.md`);
+  return join(cwd, RUN_DIR, `${phaseStem(phaseId)}.md`);
 }
 
 /**
- * Cesta k zálohovanému předchozímu reportu (`phase-{id}.prev.md`).
+ * Cesta k zálohovanému předchozímu reportu (`phase-XXX.prev.md`).
  *
  * Auto loop sem před druhým a třetím pokusem přejmenuje aktuální
- * `phase-{id}.md`, aby si ho Claude mohl přečíst pro kontext, aniž by ho nový
+ * `phase-XXX.md`, aby si ho Claude mohl přečíst pro kontext, aniž by ho nový
  * report při zápisu okamžitě přepsal.
  */
 export function previousRunReportPath(cwd: string, phaseId: number): string {
-  return join(cwd, RUN_DIR, `phase-${phaseId}.prev.md`);
+  return join(cwd, RUN_DIR, `${phaseStem(phaseId)}.prev.md`);
 }
 
 /**

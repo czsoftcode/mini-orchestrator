@@ -39,7 +39,7 @@ Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve 
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-10.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-010.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
@@ -114,7 +114,7 @@ Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve 
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-4.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-004.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
@@ -177,7 +177,7 @@ Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve 
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-41.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-041.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
@@ -226,7 +226,7 @@ Kroky (vodítko k práci — neupravuj je v žádném souboru, slouží jen jako
 - [čeká] krok
 
 # Poznámky k fázi (z diskuse)
-Poznámky z diskuse k této fázi jsou v \`.mini/discuss/phase-40.md\`. Pokud jsi je v této session už četl (typicky při \`/mini:plan\` nebo na začátku \`auto\`), **znovu je nenačítej** — máš je v kontextu. Jinak si je teď přečti přes Read tool.
+Poznámky z diskuse k této fázi jsou v \`.mini/discuss/phase-040.md\`. Pokud jsi je v této session už četl (typicky při \`/mini:plan\` nebo na začátku \`auto\`), **znovu je nenačítej** — máš je v kontextu. Jinak si je teď přečti přes Read tool.
 
 # Tvůj úkol
 Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
@@ -244,7 +244,7 @@ Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve 
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-40.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-040.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
@@ -312,7 +312,7 @@ Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve 
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-9.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-009.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
@@ -374,7 +374,7 @@ Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-1.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-001.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
@@ -441,7 +441,7 @@ Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve 
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-5.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-005.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
@@ -509,7 +509,7 @@ Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve 
 
 
 # Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-9.md\`. Report má dvě části:
+Než session ukončíš, **zapiš přes Write tool** report do souboru \`.mini/run/phase-009.md\`. Report má dvě části:
 
 1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
    - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),

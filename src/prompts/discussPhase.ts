@@ -1,3 +1,4 @@
+import { phaseStem } from '../state/store.js';
 import type { Phase, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
 
@@ -17,7 +18,7 @@ export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string
     stepsBlock = `\nKroky:\n${lines.join('\n')}\n`;
   }
 
-  const notesPath = `.mini/discuss/phase-${phase.id}.md`;
+  const notesPath = `.mini/discuss/${phaseStem(phase.id)}.md`;
 
   return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
 Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.

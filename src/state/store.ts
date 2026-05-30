@@ -47,9 +47,21 @@ function phasesPrevDir(cwd: string = process.cwd()): string {
   return join(dir(cwd), PHASES_PREV_DIR);
 }
 
-/** Název souboru fáze s nulovým paddingem kvůli čitelnému řazení v adresáři. */
+/**
+ * Společný základ názvu souboru fáze: `phase-<id>` s nulovým paddingem na min.
+ * 3 číslice kvůli čitelnému řazení v adresáři (`phase-001`, … `phase-060`).
+ * `padStart` jen doplňuje, NIKDY neořezává — fáze ≥ 1000 dostane přirozeně delší
+ * stem (`phase-1000`). Pořadí fází se proto NESMÍ odvozovat z lexikografického
+ * řazení názvů (přechod 999→1000 by `ls` mis-sortil); mini řadí podle pole fází
+ * ve `state.json`. Sdílí ho `phases/` (.json) i `discuss/`/`memory/`/`run/` (.md).
+ */
+export function phaseStem(id: number): string {
+  return `phase-${String(id).padStart(3, '0')}`;
+}
+
+/** Název souboru fáze v `phases/` — JSON nad sdíleným stemem. */
 export function phaseFileName(id: number): string {
-  return `phase-${String(id).padStart(3, '0')}.json`;
+  return `${phaseStem(id)}.json`;
 }
 
 export function phasePath(cwd: string, id: number): string {
