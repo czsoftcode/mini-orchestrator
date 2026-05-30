@@ -15,7 +15,7 @@ Imports:
 - type { AutoOptions, StepOutcome } from "./types.js"
 
 Exports:
-- interface ParsedSuggestion @L14-17
-- function next(opts: AutoOptions): Promise<StepOutcome> @L31-173
-- function applyNewPhase(title: string, goal: string, cwd: string): Promise<StepOutcome> @L181-193
-- function parseSuggestion(text: string): ParsedSuggestion | null @L265-272
+- interface ParsedSuggestion
+- function next(opts: AutoOptions): Promise<StepOutcome>
+- function applyNewPhase(title: string, goal: string, cwd: string): Promise<StepOutcome>
+- function parseSuggestion(text: string): ParsedSuggestion | null

@@ -14,9 +14,9 @@ Imports:
 - { writePhaseMemory } from "./writeMemory.js"
 
 Exports:
-- function done(opts: AutoOptions): Promise<StepOutcome> @L19-139
-- function buildPhaseCommitMessage(phase: Phase): string @L187-194
-- function advanceToNextPhase(state: ProjectState): Phase | null @L328-336
-- interface ApplyReportOptions @L406-413
-- function applyAutoReport(phase: Phase, state: ProjectState, cwd: string, applyOpts: ApplyReportOptions): Promise<AutoApplyResult> @L415-500
-- function applyDone(cwd: string, opts: ApplyReportOptions): Promise<StepOutcome> @L740-782
+- function done(opts: AutoOptions): Promise<StepOutcome>
+- function buildPhaseCommitMessage(phase: Phase): string
+- function advanceToNextPhase(state: ProjectState): Phase | null
+- interface ApplyReportOptions
+- function applyAutoReport(phase: Phase, state: ProjectState, cwd: string, applyOpts: ApplyReportOptions): Promise<AutoApplyResult>
+- function applyDone(cwd: string, opts: ApplyReportOptions): Promise<StepOutcome>

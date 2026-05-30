@@ -2,7 +2,7 @@
   "id": 46,
   "title": "Čísla řádků v mapách grafu",
   "goal": "mini map zapíše ke každému exportu číslo řádku (ExportInfo.line, plněno TS/PHP/Rust mappery, vykresleno v renderFileGraph) a sdílený GRAPH_USAGE_HINT v bodě (3) navede agenta číst přímo od daného řádku přes Read s offset; ověřitelné aktualizovanými snapshoty map + zelená brána.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "ExportInfo.line + endLine v typu",
@@ -35,5 +35,11 @@
       "detail": "npm test (aktualizovat snapshoty map i promptů), mini map pro přegenerování .mini/graph/ s rozsahy, npm run typecheck + npm run build zelené."
     }
   ],
-  "startedAt": "2026-05-30T08:01:01.744Z"
+  "startedAt": "2026-05-30T08:01:01.744Z",
+  "completedAt": "2026-05-30T08:16:38.686Z",
+  "autoCommit": {
+    "preSha": "74f66d7a916fee05a566c81a173d928930611393",
+    "sha": "032612ac047ad45b8ee68112ddd472f0837194eb",
+    "subject": "Fáze 46: Čísla řádků v mapách grafu"
+  }
 }

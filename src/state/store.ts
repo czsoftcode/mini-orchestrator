@@ -103,6 +103,27 @@ async function writeJsonAtomic(target: string, data: unknown): Promise<void> {
   await rename(tmp, target);
 }
 
+/**
+ * Zapíše JSON atomicky, ale jen když se serializovaný obsah liší od toho na
+ * disku. Šetří diskové operace u stavu, který se z velké části nemění (např.
+ * jen jedna fáze ze sady). Vrací `true`, pokud reálně zapsala. Chybějící cíl =
+ * zapsat.
+ */
+async function writeJsonIfChanged(target: string, data: unknown): Promise<boolean> {
+  const next = JSON.stringify(data, null, 2);
+  let current: string | null = null;
+  try {
+    current = await readFile(target, 'utf-8');
+  } catch {
+    current = null;
+  }
+  if (current === next) return false;
+  const tmp = `${target}.tmp`;
+  await writeFile(tmp, next, 'utf-8');
+  await rename(tmp, target);
+  return true;
+}
+
 async function writeRawAtomic(target: string, content: string): Promise<void> {
   const tmp = `${target}.tmp`;
   await writeFile(tmp, content, 'utf-8');
@@ -199,17 +220,42 @@ async function snapshotPrev(cwd: string): Promise<void> {
 
   await writeRawAtomic(statePrevPath(cwd), oldHeader);
 
-  await rm(phasesPrevDir(cwd), { recursive: true, force: true });
+  // phases-prev má být zrcadlo aktuálního phases. Místo zahození a kopie celého
+  // adresáře synchronizujeme diferenčně: kopírujeme jen soubory s odlišným
+  // obsahem (nebo v prev chybějící) a mažeme z prev ty, co už v phases nejsou.
   await mkdir(phasesPrevDir(cwd), { recursive: true });
-  let files: string[] = [];
+  let srcFiles: string[] = [];
   try {
-    files = await readdir(phasesDir(cwd));
+    srcFiles = await readdir(phasesDir(cwd));
   } catch {
-    files = [];
+    srcFiles = [];
   }
-  for (const f of files) {
-    if (f.endsWith('.json')) {
-      await copyFile(join(phasesDir(cwd), f), join(phasesPrevDir(cwd), f));
+  const keep = new Set<string>();
+  for (const f of srcFiles) {
+    if (!f.endsWith('.json')) continue;
+    keep.add(f);
+    const src = join(phasesDir(cwd), f);
+    const dst = join(phasesPrevDir(cwd), f);
+    let prev: string | null = null;
+    try {
+      prev = await readFile(dst, 'utf-8');
+    } catch {
+      prev = null;
+    }
+    const cur = await readFile(src, 'utf-8');
+    if (prev !== cur) {
+      await copyFile(src, dst);
+    }
+  }
+  let prevFiles: string[] = [];
+  try {
+    prevFiles = await readdir(phasesPrevDir(cwd));
+  } catch {
+    prevFiles = [];
+  }
+  for (const f of prevFiles) {
+    if (f.endsWith('.json') && !keep.has(f)) {
+      await rm(join(phasesPrevDir(cwd), f), { force: true });
     }
   }
 }
@@ -242,7 +288,7 @@ export async function save(state: ProjectState, cwd: string = process.cwd()): Pr
   await snapshotPrev(cwd);
 
   for (const phase of state.phases) {
-    await writeJsonAtomic(phasePath(cwd, phase.id), phase);
+    await writeJsonIfChanged(phasePath(cwd, phase.id), phase);
   }
   await prunePhaseFiles(cwd, new Set(state.phases.map((p) => p.id)));
 

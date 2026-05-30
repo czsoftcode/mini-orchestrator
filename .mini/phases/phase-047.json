@@ -1,0 +1,34 @@
+{
+  "id": 47,
+  "title": "Zapisovat jen změněné fáze",
+  "goal": "save() ve store.ts zapíše soubor fáze jen když se její serializovaný JSON liší od obsahu na disku, a snapshotPrev kopíruje do phases-prev jen reálně změněné soubory místo rm+copy celého adresáře, takže počet diskových operací škáluje s počtem změn, ne s počtem fází; ověřitelné novým testem, že nezměněná fáze se znovu nezapíše, a zelenou bránou.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Helper writeJsonIfChanged",
+      "status": "done",
+      "detail": "Privátní funkce ve store.ts: přečte cílový soubor, porovná se serializovaným JSON, zapíše atomicky (tmp+rename) jen při odlišnosti; vrátí boolean, zda zapsala. Chybějící soubor = zapsat."
+    },
+    {
+      "title": "save() zapisuje jen změněné fáze",
+      "status": "done",
+      "detail": "Smyčka přes state.phases použije writeJsonIfChanged místo bezpodmínečného writeJsonAtomic; pruning osiřelých souborů a zápis hlavičky zůstává beze změny."
+    },
+    {
+      "title": "snapshotPrev() synchronizuje diferenčně",
+      "status": "done",
+      "detail": "Místo rm celého phases-prev + copyFile všech zkopíruje jen soubory s odlišným obsahem a smaže z prev ty, co už nejsou v phases. Výsledek je stále přesné zrcadlo phases pro undo."
+    },
+    {
+      "title": "Test: nezměněná fáze se znovu nezapíše",
+      "status": "done",
+      "detail": "Do store.test.ts: po druhém save se stejným stavem se soubor nezměněné fáze nezapíše (špehování writeFile nebo mtime), undo i prev nadále fungují."
+    },
+    {
+      "title": "Zelená brána",
+      "status": "done",
+      "detail": "Lint, typecheck a testy projdou; přegenerovat dotčené snapshoty, pokud na chování závisí."
+    }
+  ],
+  "startedAt": "2026-05-30T08:34:14.201Z"
+}

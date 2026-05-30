@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -234,6 +234,58 @@ describe('snapshot adresáře fází pro undo', () => {
     const one: ProjectState = { ...newState(), phases: [{ id: 1, title: 'P1', status: 'done' }] };
     await save(one, cwd);
     expect(await readdir(phasesDir(cwd))).not.toContain(phaseFileName(2));
+  });
+});
+
+describe('zápis jen změněných fází', () => {
+  const mtimeOf = async (cwd: string, id: number): Promise<number> =>
+    (await stat(join(phasesDir(cwd), phaseFileName(id)))).mtimeMs;
+
+  it('opakovaný save se stejným stavem nezapíše soubor nezměněné fáze', async () => {
+    const state: ProjectState = {
+      ...newState(),
+      currentPhaseId: 1,
+      phases: [
+        { id: 1, title: 'P1', status: 'doing' },
+        { id: 2, title: 'P2', status: 'planned' },
+      ],
+    };
+    await save(state, cwd);
+    const before1 = await mtimeOf(cwd, 1);
+    const before2 = await mtimeOf(cwd, 2);
+
+    // druhý identický save: žádný soubor fáze se nesmí znovu zapsat
+    await save(state, cwd);
+    expect(await mtimeOf(cwd, 1)).toBe(before1);
+    expect(await mtimeOf(cwd, 2)).toBe(before2);
+  });
+
+  it('save přepíše jen tu fázi, jejíž obsah se změnil', async () => {
+    const state: ProjectState = {
+      ...newState(),
+      currentPhaseId: 1,
+      phases: [
+        { id: 1, title: 'P1', status: 'doing' },
+        { id: 2, title: 'P2', status: 'planned' },
+      ],
+    };
+    await save(state, cwd);
+    const before2 = await mtimeOf(cwd, 2);
+
+    const changed: ProjectState = {
+      ...state,
+      phases: [
+        { id: 1, title: 'P1', status: 'done' },
+        { id: 2, title: 'P2', status: 'planned' },
+      ],
+    };
+    await save(changed, cwd);
+
+    // fáze 2 se nezměnila → mtime zůstává, fáze 1 nese nový obsah
+    expect(await mtimeOf(cwd, 2)).toBe(before2);
+    expect((await loadPhase(cwd, 1))?.status).toBe('done');
+    // a prev-vrstva drží předchozí podobu fáze 1
+    expect((await loadPrev(cwd)).phases[0]?.status).toBe('doing');
   });
 });
 

@@ -4,4 +4,4 @@ Imports:
 - { default } from "picocolors"
 
 Exports:
-- const log @L3-25
+- const log

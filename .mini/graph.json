@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-30T08:11:37.952Z",
+  "generatedAt": "2026-05-30T08:16:41.701Z",
   "files": [
     {
       "path": "scripts/measure-prompt-tokens.ts",

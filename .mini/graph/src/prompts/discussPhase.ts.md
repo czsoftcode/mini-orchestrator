@@ -5,4 +5,4 @@ Imports:
 - { GRAPH_USAGE_HINT } from "./graphHint.js"
 
 Exports:
-- function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string @L11-57
+- function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string

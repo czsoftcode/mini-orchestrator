@@ -9,9 +9,9 @@ Imports:
 - { log } from "../ui/log.js"
 
 Exports:
-- function status(): Promise<void> @L36-86
-- function describeModels(state: ProjectState): string @L127-136
-- function openVerifyCount(verify: readonly RunReportVerifyItem[], phase: Phase): number @L142-145
-- function runReportSummaryLines(summary: RunReportSummary, phase: Phase): string[] @L158-178
-- function isOrphanedDoing(phase: Phase, phases: readonly Phase[]): boolean @L189-200
-- function nextActionHint(state: ProjectState): string @L210-229
+- function status(): Promise<void>
+- function describeModels(state: ProjectState): string
+- function openVerifyCount(verify: readonly RunReportVerifyItem[], phase: Phase): number
+- function runReportSummaryLines(summary: RunReportSummary, phase: Phase): string[]
+- function isOrphanedDoing(phase: Phase, phases: readonly Phase[]): boolean
+- function nextActionHint(state: ProjectState): string

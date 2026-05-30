@@ -6,5 +6,5 @@ Imports:
 - { log } from "./log.js"
 
 Exports:
-- interface StreamRenderer @L7-10
-- function createStreamRenderer(): StreamRenderer @L22-78
+- interface StreamRenderer
+- function createStreamRenderer(): StreamRenderer

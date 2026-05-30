@@ -13,4 +13,4 @@ Imports:
 - { logUsage } from "../ui/usage.js"
 
 Exports:
-- function importGsd(): Promise<void> @L40-175
+- function importGsd(): Promise<void>

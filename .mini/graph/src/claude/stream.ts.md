@@ -6,18 +6,18 @@ Imports:
 - type { PermissionMode } from "./work.js"
 
 Exports:
-- interface StreamOptions @L6-14
-- interface StreamUsage @L16-21
-- interface StreamResult @L23-32
-- type StreamEvent @L34-39
-- interface SystemInitEvent @L41-48
-- interface AssistantEvent @L50-56
-- interface UserEvent @L58-63
-- interface ResultEvent @L65-75
-- interface UnknownEvent @L77-81
-- interface ToolUse @L83-87
-- interface ToolResult @L89-93
-- type RawEnvelope @L95
-- function parseStreamEvent(line: string): StreamEvent | null @L101-108
-- function createLineBuffer(onLine: (line: string) => void): { push: (chunk: string) => void; flush: () => void; } @L229-251
-- function streamWithClaude(prompt: string, opts: StreamOptions): Promise<StreamResult> @L253-335
+- interface StreamOptions
+- interface StreamUsage
+- interface StreamResult
+- type StreamEvent
+- interface SystemInitEvent
+- interface AssistantEvent
+- interface UserEvent
+- interface ResultEvent
+- interface UnknownEvent
+- interface ToolUse
+- interface ToolResult
+- type RawEnvelope
+- function parseStreamEvent(line: string): StreamEvent | null
+- function createLineBuffer(onLine: (line: string) => void): { push: (chunk: string) => void; flush: () => void; }
+- function streamWithClaude(prompt: string, opts: StreamOptions): Promise<StreamResult>

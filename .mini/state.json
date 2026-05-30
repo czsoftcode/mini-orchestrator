@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 46,
+  "currentPhaseId": 47,
   "phases": [
     {
       "id": 1,
@@ -231,6 +231,11 @@
     {
       "id": 46,
       "title": "Čísla řádků v mapách grafu",
+      "status": "done"
+    },
+    {
+      "id": 47,
+      "title": "Zapisovat jen změněné fáze",
       "status": "doing"
     }
   ],

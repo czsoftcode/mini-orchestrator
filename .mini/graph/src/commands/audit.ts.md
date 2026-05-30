@@ -11,4 +11,4 @@ Imports:
 - type { StepOutcome } from "./types.js"
 
 Exports:
-- function audit(): Promise<StepOutcome> @L13-51
+- function audit(): Promise<StepOutcome>

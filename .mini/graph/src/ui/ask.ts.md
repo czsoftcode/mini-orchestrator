@@ -5,6 +5,6 @@ Imports:
 - { log } from "./log.js"
 
 Exports:
-- function ask(questions: PromptObject<T> | Array<PromptObject<T>>): Promise<Answers<T>> @L4-13
-- function nonEmpty(label) @L15-19
-- function trim(value: string): string @L21-23
+- function ask(questions: PromptObject<T> | Array<PromptObject<T>>): Promise<Answers<T>>
+- function nonEmpty(label)
+- function trim(value: string): string

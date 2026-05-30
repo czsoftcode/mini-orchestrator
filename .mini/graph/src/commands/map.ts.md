@@ -7,4 +7,4 @@ Imports:
 - type { StepOutcome } from "./types.js"
 
 Exports:
-- function map(): Promise<StepOutcome> @L14-40
+- function map(): Promise<StepOutcome>
