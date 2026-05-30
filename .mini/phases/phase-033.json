@@ -1,0 +1,25 @@
+{
+  "id": 33,
+  "title": "/mini:map slash command",
+  "goal": "Přidat slash command /mini:map (tenký wrapper nad CLI mini map), kterým lze přímo v Claude Code přegenerovat graf projektu (.mini/graph/ + .mini/graph.json) a výsledek (cesta indexu + počet souborů) předat uživateli — analogicky k /mini:status.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Přidat 'map' def do COMMAND_DEFS v src/commands/install-commands.ts — read-only styl jako status (vlastní body, žádné mini context): tělo spustí 'mini map' a výsledek (cesta indexu + počet souborů) předá uživateli. Výstup: installCommands vygeneruje i map.md s tělem volajícím 'mini map'.",
+      "status": "done"
+    },
+    {
+      "title": "Aktualizovat závěrečný log.hint v installCommands o /mini:map v seznamu příkazů. Výstup: hint vypisuje i /mini:map.",
+      "status": "done"
+    },
+    {
+      "title": "Rozšířit testy v install-commands.test.ts — map.md v očekávaném seznamu souborů, idempotence i v polích názvů, a nový test, že map.md volá 'mini map' a ne 'mini context'. Výstup: aktualizované testy zelené.",
+      "status": "done"
+    },
+    {
+      "title": "Vygenerovat command do projektu a ověřit build — npm run typecheck/build/test, pak node dist/cli.js install-commands → vznikne .claude/commands/mini/map.md; ručně ověřit tělo /mini:map. Výstup: vše zelené, map.md na disku.",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-30T00:48:04.402Z"
+}

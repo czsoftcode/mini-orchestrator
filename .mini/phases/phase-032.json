@@ -2,23 +2,29 @@
   "id": 32,
   "title": "Štíhlý graf: adresář + index",
   "goal": "Rozdělit monolitický .mini/graph.md do adresáře .mini/graph/ se souborem na zdrojový soubor a lehkým indexem .mini/graph.json (cesta zdrojáku → cesta v graphu); mini map i regenerace v done zapisují tento layout a prompty čtoucí graf (discussPhase, sessionContext) navedou Claude, aby si přes index selektivně načítal jen potřebné soubory místo celého grafu.",
-  "status": "planned",
+  "status": "done",
   "steps": [
     {
       "title": "buildGraph.ts — nový layout (adresář + index): nahradit GRAPH_FILE za GRAPH_DIR (.mini/graph) + GRAPH_INDEX (.mini/graph.json); vyčlenit per-file render jedné ## sekce z renderGraphMarkdown a zapsat .mini/graph/<zdroj>.md zrcadlící strom zdrojáků + graph.json index ({version, generatedAt, files:[{path, graphFile, exports:[names]}]}); atomicita přes .mini/graph.tmp/ + graph.json.tmp → swap (smazat starý .mini/graph/ + rename), starý graph.md smazat; BuildGraphResult → {indexFile, graphDir, fileCount, files}. Ověření: přepsaný buildGraph.test.ts zelený — layout na disku, obsah indexu vč. exportů, atomicita bez .tmp zbytků, smazaný graph.md.",
-      "status": "todo"
+      "status": "done"
     },
     {
       "title": "Konzumenti buildGraph (map.ts, done.ts, cli.ts): map loguje cestu indexu + počet souborů; regenerateGraph v done napojit na nový result a zachovat best-effort (chyby jen warning, nikdy nehází); CLI popis příkazu map aktualizovat z graph.md na nový layout. Ověření: přepsaný map.test.ts + existující testy done zelené.",
-      "status": "todo"
+      "status": "done"
     },
     {
       "title": "Prompty discussPhase + sessionContext na index + selektivní čtení: přeformulovat tak, aby vstupní bod byl .mini/graph.json (index s názvy exportů) a per-file soubory z .mini/graph/ se četly cíleně podle indexu, ne celý graf najednou. Ověření: aktualizovaný snapshot discussPhase, testy promptů zelené.",
-      "status": "todo"
+      "status": "done"
     },
     {
       "title": "Git tracking + plné ověření: git rm --cached .mini/graph.md, natrackovat .mini/graph/ + .mini/graph.json; npm run typecheck/build/test; ruční e2e přes lokální build (mini map → ověřit layout adresáře, obsah graph.json, zmizelý graph.md). Ověření: vše prochází, layout na disku sedí.",
-      "status": "todo"
+      "status": "done"
     }
-  ]
+  ],
+  "completedAt": "2026-05-30T00:38:17.797Z",
+  "autoCommit": {
+    "preSha": "8e3ac1ae3f09c838b60a22c69f42e89b93224b4b",
+    "sha": "b4a58b397c6b0cc416bc973f720602a83dc6d0fd",
+    "subject": "Fáze 32: Štíhlý graf: adresář + index"
+  }
 }

@@ -57,6 +57,13 @@ const COMMAND_DEFS: CommandDef[] = [
 
 Spusť v Bash \`mini status\` a jeho výstup (přehled fází projektu) předej uživateli v chatu. Je to **read-only** krok — žádný stav v \`.mini/\` neměň a nic neukládej.`,
   },
+  {
+    name: 'map',
+    description: 'mini — přegeneruj graf projektu (doplněk)',
+    body: `Tohle je krok **map** workflow mini, spuštěný přímo v Claude Code.
+
+Spusť v Bash \`mini map\` — přegeneruje graf projektu (\`.mini/graph/\` + index \`.mini/graph.json\`) ze zdrojáků. Výsledek (cestu indexu a počet zmapovaných souborů) z výstupu předej uživateli v chatu. Stav fází v \`.mini/state.json\` to nijak nemění — graf je jen derivace ze zdrojáků.`,
+  },
 ];
 
 /** Vyrenderuje obsah jednoho .md commandu. */
@@ -132,6 +139,6 @@ export async function installCommands(cwd: string = process.cwd()): Promise<void
   const total = created + updated + unchanged;
   log.success(`Hotovo — ${total} commandů v ${COMMANDS_DIR}/ (${created} nových, ${updated} změněných).`);
   log.hint(
-    'Použij je v Claude Code: /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:status',
+    'Použij je v Claude Code: /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:status, /mini:map',
   );
 }

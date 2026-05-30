@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 32,
+  "currentPhaseId": 33,
   "phases": [
     {
       "id": 1,
@@ -161,7 +161,12 @@
     {
       "id": 32,
       "title": "Štíhlý graf: adresář + index",
-      "status": "planned"
+      "status": "done"
+    },
+    {
+      "id": 33,
+      "title": "/mini:map slash command",
+      "status": "doing"
     }
   ],
   "models": {

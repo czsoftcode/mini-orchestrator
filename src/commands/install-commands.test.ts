@@ -15,10 +15,18 @@ afterEach(async () => {
 });
 
 describe('installCommands', () => {
-  it('vygeneruje .md commandy pro pět příkazů cyklu i read-only status', async () => {
+  it('vygeneruje .md commandy pro pět příkazů cyklu i read-only status a map', async () => {
     await installCommands(cwd);
     const files = (await readdir(join(cwd, COMMANDS_DIR))).sort();
-    expect(files).toEqual(['discuss.md', 'do.md', 'done.md', 'next.md', 'plan.md', 'status.md']);
+    expect(files).toEqual([
+      'discuss.md',
+      'do.md',
+      'done.md',
+      'map.md',
+      'next.md',
+      'plan.md',
+      'status.md',
+    ]);
   });
 
   it('každý workflow command volá mini context <name>', async () => {
@@ -38,6 +46,14 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
+  it('map command volá mini map, ne mini context', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'map.md'), 'utf-8');
+    expect(md).toContain('mini map');
+    expect(md).not.toContain('mini context');
+    expect(md).toContain('description:');
+  });
+
   it('next command předává $ARGUMENTS jako nápad', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'next.md'), 'utf-8');
@@ -48,11 +64,11 @@ describe('installCommands', () => {
   it('je idempotentní — druhé spuštění obsah nezmění', async () => {
     await installCommands(cwd);
     const before = await Promise.all(
-      ['next', 'discuss', 'plan', 'do', 'done', 'status'].map((n) => readFile(join(cwd, COMMANDS_DIR, `${n}.md`), 'utf-8')),
+      ['next', 'discuss', 'plan', 'do', 'done', 'status', 'map'].map((n) => readFile(join(cwd, COMMANDS_DIR, `${n}.md`), 'utf-8')),
     );
     await installCommands(cwd);
     const after = await Promise.all(
-      ['next', 'discuss', 'plan', 'do', 'done', 'status'].map((n) => readFile(join(cwd, COMMANDS_DIR, `${n}.md`), 'utf-8')),
+      ['next', 'discuss', 'plan', 'do', 'done', 'status', 'map'].map((n) => readFile(join(cwd, COMMANDS_DIR, `${n}.md`), 'utf-8')),
     );
     expect(after).toEqual(before);
   });
