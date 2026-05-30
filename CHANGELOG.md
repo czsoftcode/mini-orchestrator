@@ -6,6 +6,15 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ## [Unreleased]
 
+### Added
+
+- Mapa znalostního grafu nově podporuje **Go** (`.go`): z balíčku se vytáhnou
+  importy (single i blokový `import ( … )` vč. aliasů, `_` blank a `.` dot importů)
+  a top-level exporty — funkce se signaturou, `struct`/`interface`, typové aliasy
+  a `const`/`var` (i seskupené), exportované podle velkého počátečního písmene.
+  Metody se připojují k receiver typu, vše s kotvami na řádky. Projekt se rozpozná
+  i podle `go.mod`.
+
 ## [1.2.0] - 2026-05-30
 
 ### Added

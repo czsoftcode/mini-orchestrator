@@ -149,6 +149,31 @@ describe('buildGraph', () => {
     await expect(readFile(join(root, GRAPH_DIR, '.venv/lib/ignored.py.md'), 'utf-8')).rejects.toThrow();
   });
 
+  it('mapuje i .go soubory a ignoruje vendor/', async () => {
+    await writeFixture(root, 'main.go', `package main\n\nfunc Run() int { return 0 }\n`);
+    await writeFixture(root, 'vendor/dep/x.go', `package dep\n\nfunc Ignored() {}\n`);
+
+    const result = await buildGraph(root);
+    const paths = result.files.map((f) => f.path);
+    expect(paths).toContain('main.go');
+    expect(paths).not.toContain('vendor/dep/x.go');
+
+    const goMap = await readFile(join(root, GRAPH_DIR, 'main.go.md'), 'utf-8');
+    expect(goMap).toContain('## main.go');
+    expect(goMap).toContain('function Run');
+    await expect(readFile(join(root, GRAPH_DIR, 'vendor/dep/x.go.md'), 'utf-8')).rejects.toThrow();
+  });
+
+  it('hasMappableProject returns true when go.mod exists', async () => {
+    await writeFixture(root, 'go.mod', 'module example.com/x\n\ngo 1.22\n');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
+  it('hasMappableProject returns true when only .go exists', async () => {
+    await writeFixture(root, 'cmd/main.go', 'package main\nfunc main() {}');
+    expect(await hasMappableProject(root)).toBe(true);
+  });
+
   it('hasMappableProject returns true when pyproject.toml exists', async () => {
     await writeFixture(root, 'pyproject.toml', '[project]\nname = "x"\n');
     expect(await hasMappableProject(root)).toBe(true);

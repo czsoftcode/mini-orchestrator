@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-30T09:40:17.473Z",
+  "generatedAt": "2026-05-30T12:46:18.010Z",
   "files": [
     {
       "path": "scripts/measure-prompt-tokens.ts",
@@ -365,6 +365,18 @@
       "graphFile": ".mini/graph/src/graph/phpMapper.ts.md",
       "exports": [
         "mapPhpFile"
+      ]
+    },
+    {
+      "path": "src/graph/pythonMapper.test.ts",
+      "graphFile": ".mini/graph/src/graph/pythonMapper.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/graph/pythonMapper.ts",
+      "graphFile": ".mini/graph/src/graph/pythonMapper.ts.md",
+      "exports": [
+        "mapPythonFile"
       ]
     },
     {

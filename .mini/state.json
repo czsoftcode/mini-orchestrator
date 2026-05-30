@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 51,
+  "currentPhaseId": 52,
   "phases": [
     {
       "id": 1,
@@ -256,6 +256,11 @@
     {
       "id": 51,
       "title": "Mapa pro Python",
+      "status": "done"
+    },
+    {
+      "id": 52,
+      "title": "Mapa pro Go",
       "status": "doing"
     }
   ],

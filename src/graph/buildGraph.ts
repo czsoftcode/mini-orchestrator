@@ -2,6 +2,7 @@ import { access, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs
 import { dirname, join, posix, relative, sep } from 'node:path';
 import { isGitRepo, runGit } from '../git.js';
 import { mapFile } from './mapper.js';
+import { mapGoFile } from './goMapper.js';
 import { mapPhpFile } from './phpMapper.js';
 import { mapPythonFile } from './pythonMapper.js';
 import { mapRustFile } from './rustMapper.js';
@@ -51,7 +52,7 @@ const IGNORE_DIRS = new Set([
   '__pycache__',
 ]);
 
-type Lang = 'ts' | 'php' | 'rust' | 'python';
+type Lang = 'ts' | 'php' | 'rust' | 'python' | 'go';
 
 /** Jeden záznam v indexu `graph.json`. */
 export interface GraphIndexEntry {
@@ -75,7 +76,7 @@ export interface BuildGraphResult {
   indexFile: string;
   /** Cesta k adresáři s per-file mapami `.mini/graph` (relativní k `cwd`). */
   graphDir: string;
-  /** Počet souborů (TS/TSX/PHP/Rust), ze kterých se mapa sestavila. */
+  /** Počet souborů (TS/TSX/PHP/Rust/Python/Go), ze kterých se mapa sestavila. */
   fileCount: number;
   /** Strojová podoba grafu (pro testy / další zpracování). */
   files: FileGraph[];
@@ -87,7 +88,7 @@ export interface BuildGraphOptions {
 }
 
 /**
- * Najde všechny mapovatelné soubory v `cwd` (TS/TSX, PHP, Rust), namapuje je
+ * Najde všechny mapovatelné soubory v `cwd` (TS/TSX, PHP, Rust, Python, Go), namapuje je
  * a uloží do adresáře `.mini/graph/` (jeden markdown na zdrojový soubor,
  * zrcadlí strom zdrojáků) + lehký index `.mini/graph.json`. Žádný stav
  * v `state.json` — graf je čistě derivace ze zdrojáků.
@@ -177,13 +178,15 @@ function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {
       return mapRustFile(content, relPath);
     case 'python':
       return mapPythonFile(content, relPath);
+    case 'go':
+      return mapGoFile(content, relPath);
   }
 }
 
 /**
  * Detekuje, jestli má smysl spouštět vlastní mapper: hledá `tsconfig.json`,
- * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py` nebo alespoň jeden
- * mapovatelný soubor (.ts/.tsx/.php/.rs/.py) v projektu (mimo ignorované adresáře).
+ * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py`, `go.mod` nebo alespoň
+ * jeden mapovatelný soubor (.ts/.tsx/.php/.rs/.py/.go) v projektu (mimo ignorované adresáře).
  */
 export async function hasMappableProject(cwd: string = process.cwd()): Promise<boolean> {
   if (await fileExists(join(cwd, 'tsconfig.json'))) return true;
@@ -191,6 +194,7 @@ export async function hasMappableProject(cwd: string = process.cwd()): Promise<b
   if (await fileExists(join(cwd, 'composer.json'))) return true;
   if (await fileExists(join(cwd, 'pyproject.toml'))) return true;
   if (await fileExists(join(cwd, 'setup.py'))) return true;
+  if (await fileExists(join(cwd, 'go.mod'))) return true;
   const files = await collectMappableFiles(cwd, {}, /* stopAfter */ 1);
   return files.length > 0;
 }
@@ -318,6 +322,7 @@ function detectLang(name: string): Lang | null {
   if (name.endsWith('.php')) return 'php';
   if (name.endsWith('.rs')) return 'rust';
   if (name.endsWith('.py') || name.endsWith('.pyi')) return 'python';
+  if (name.endsWith('.go')) return 'go';
   return null;
 }
 
@@ -374,15 +379,12 @@ function renderExport(exp: ExportInfo): string[] {
     lines.push(`- function ${exp.name}${renderSignature(exp.signature)}${defaultMark}${loc}`);
     return lines;
   }
-  if (exp.kind === 'class') {
-    lines.push(`- class ${exp.name}${defaultMark}${loc}`);
-    for (const method of exp.methods ?? []) {
-      const staticMark = method.isStatic ? 'static ' : '';
-      lines.push(`  - ${staticMark}${method.name}${renderSignature(method.signature)}`);
-    }
-    return lines;
-  }
   lines.push(`- ${exp.kind} ${exp.name}${defaultMark}${loc}`);
+  // Metody: class (TS/PHP) i struct/interface (Go přes receiver) je můžou mít.
+  for (const method of exp.methods ?? []) {
+    const staticMark = method.isStatic ? 'static ' : '';
+    lines.push(`  - ${staticMark}${method.name}${renderSignature(method.signature)}`);
+  }
   return lines;
 }
 

@@ -2,7 +2,7 @@
   "id": 51,
   "title": "Mapa pro Python",
   "goal": "Přidat pythonMapper.ts, který z .py souborů vytáhne importy a top-level exporty (funkce, třídy, konstanty s kotvami na řádky), napojit ho na detectLang a shouldMap (marker pyproject.toml/setup.py) v buildGraph.ts a ověřit unit testy mapperu i snapshotem grafu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Stripping + odsazení helpery",
@@ -35,5 +35,11 @@
       "detail": "buildGraph.test.ts rozšířit o .py soubor + ignoraci (.venv), zkontrolovat/aktualizovat snapshoty (__snapshots__, příp. token measure); lint + typecheck + test zeleně."
     }
   ],
-  "startedAt": "2026-05-30T12:31:19.187Z"
+  "startedAt": "2026-05-30T12:31:19.187Z",
+  "completedAt": "2026-05-30T12:46:13.266Z",
+  "autoCommit": {
+    "preSha": "a10ba26554e91b144b97b56a0dc6b36ca53f6fbe",
+    "sha": "34205d079e907b522647f847eac0367d494502fe",
+    "subject": "Fáze 51: Mapa pro Python"
+  }
 }

@@ -1,0 +1,39 @@
+{
+  "id": 52,
+  "title": "Mapa pro Go",
+  "goal": "Přidat goMapper.ts pro extrakci importů a top-level exportů (func, type, const, var, metody s receiverem; exportované podle velkého počátečního písmene) z .go souborů, napojit na detectLang a hasMappableProject (marker go.mod) v buildGraph.ts a ověřit unit testy mapperu i snapshotem grafu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Stripping komentářů a stringů + kostra",
+      "status": "done",
+      "detail": "mapGoFile v goMapper.ts; smazat // a /* */ (nevnořené), \"...\", backtick raw stringy a rune literály náhradou mezerami stejné délky se zachováním \\n, aby brace-counting i čísla řádků seděla; ověřeno testy v dalších krocích"
+    },
+    {
+      "title": "Extrakce importů",
+      "status": "done",
+      "detail": "single import \"fmt\" i závorkový blok import ( ... ); source = cesta, symbol = alias nebo poslední segment; _ blank import → prázdné symboly (side-effect), . dot import → ['*']; pokryto unit testy"
+    },
+    {
+      "title": "Top-level exporty func/type/const/var",
+      "status": "done",
+      "detail": "jen depth 0 a jen exportované (velké počáteční písmeno); func→function, type T struct→struct, type T interface→interface, jiné type→type, const/var vč. seskupených const(...)/var(...)→const/variable; kotvy line/endLine přes matchBrace/; /řádek"
+    },
+    {
+      "title": "Signatury funkcí + receiver metody",
+      "status": "done",
+      "detail": "parametry vč. sdíleného typu (a, b int), variadic ...T → Parameter.rest, návratový typ i vícenásobný (T, error); metody func (r T) Name připojit jako methods k exportu typu T; neexportované metody/typy přeskočit"
+    },
+    {
+      "title": "Napojení do buildGraph.ts",
+      "status": "done",
+      "detail": "Lang += 'go', case v mapByLang (import mapGoFile), detectLang pro .go, hasMappableProject marker go.mod, aktualizovat doc-komentáře zmiňující přípony (.ts/.tsx/.php/.rs/.py)"
+    },
+    {
+      "title": "Testy + zelená brána",
+      "status": "done",
+      "detail": "goMapper.test.ts s FIXTURE (importy single/blok/_/., exportované i neexportované func, struct+interface, receiver metody, grouped const/var, raw string a komentář s falešným func); rozšířit buildGraph.test.ts o .go soubor; npm test zeleně vč. přegenerování snapshotů"
+    }
+  ],
+  "startedAt": "2026-05-30T12:52:02.016Z"
+}
