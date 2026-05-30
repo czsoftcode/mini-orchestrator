@@ -2,7 +2,7 @@
   "id": 37,
   "title": "Odstranit --push z auto.md",
   "goal": "V bodu auto (COMMAND_DEFS, src/commands/install-commands.ts) změnit závěrečné 'mini done --apply --push' na 'mini done --apply', upravit odpovídající test v install-commands.test.ts a přegenerovat .claude/commands/mini/auto.md, aby /mini:auto automaticky nepushoval na remote.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "V src/commands/install-commands.ts (bod auto v COMMAND_DEFS) změnit závěrečné 'mini done --apply --push' na 'mini done --apply'. Ověřitelné: grep v souboru už neobsahuje 'mini done --apply --push'.",
@@ -17,5 +17,11 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T02:20:26.580Z"
+  "startedAt": "2026-05-30T02:20:26.580Z",
+  "completedAt": "2026-05-30T02:23:17.033Z",
+  "autoCommit": {
+    "preSha": "f3ac88cc270859021d3d3d937c34258ab5084ee1",
+    "sha": "d40e6e1b0e6d71186cb5eef74574ff7657f021f2",
+    "subject": "Fáze 37: Odstranit --push z auto.md"
+  }
 }

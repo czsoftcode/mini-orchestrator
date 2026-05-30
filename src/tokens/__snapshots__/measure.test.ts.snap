@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`render > konzolový výpis nad fixními vstupy (snapshot) 1`] = `
+"Token report (heuristika délka/4), seřazeno podle reálných tokenů:
+  auto         reálný=1059  šablona=814  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
+  next         reálný=546  šablona=353  kontext=193  (vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %)
+  discuss      reálný=538  šablona=418  kontext=120  (vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %)
+  writeMemory  reálný=473  šablona=346  kontext=127  (vkládaný kontext 127 tok: projekt 79 %, fáze (název + cíl) 9 %)
+  plan         reálný=466  šablona=221  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
+  done         reálný=364  šablona=282  kontext=82  (vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %)
+  do           reálný=323  šablona=78  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)"
+`;
+
+exports[`render > markdown report nad fixními vstupy (snapshot) 1`] = `
+"# Token report — cena promptů mini příkazů
+
+Heuristika: odhad tokenů = délka textu / 4 (offline, ne přesný tokenizér Claude).
+Reálný = celý prompt · Šablona = fixní text promptu · Vkládaný kontext = součet
+obsahových bloků (projekt, historie fází, poznámky, …).
+
+| Příkaz | Reálný | Šablona | Vkládaný kontext |
+| --- | ---: | ---: | ---: |
+| auto | 1059 | 814 | 245 |
+| next | 546 | 353 | 193 |
+| discuss | 538 | 418 | 120 |
+| writeMemory | 473 | 346 | 127 |
+| plan | 466 | 221 | 245 |
+| done | 364 | 282 | 82 |
+| do | 323 | 78 | 245 |
+
+## Proč (rozpad vkládaného kontextu)
+
+- **auto** — vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %
+- **next** — vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %
+- **discuss** — vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %
+- **writeMemory** — vkládaný kontext 127 tok: projekt 79 %, fáze (název + cíl) 9 %
+- **plan** — vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %
+- **done** — vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %
+- **do** — vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %
+"
+`;
