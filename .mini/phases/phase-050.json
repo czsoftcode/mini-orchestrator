@@ -1,0 +1,29 @@
+{
+  "id": 50,
+  "title": "CHANGELOG.md v /mini:done",
+  "goal": "Done session prompt (buildDoneSessionPrompt) dostane instrukci, aby Claude před 'mini done --apply' založil/aktualizoval CHANGELOG.md podle zásad keepachangelog 1.1.0 — sekce '## [verze] - YYYY-MM-DD' s Added/Changed/Fixed poskládanými z reportu hotové fáze — aby ho commit fáze pobral; ověřeno snapshot testem promptu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Modul changelog.ts + stamp funkce",
+      "status": "done",
+      "detail": "Nový src/changelog.ts: čistá funkce stampUnreleased(content, version, date) přejmenuje první '## [Unreleased]' na '## [<verze>] - <datum>' a nad ni vloží novou prázdnou '## [Unreleased]'; prázdný Unreleased = signál nestampovat (idempotence). Plus konstanta CHANGELOG_FILE. Pokryto unit testy."
+    },
+    {
+      "title": "Napojení stampu do commitPhaseWork (done.ts)",
+      "status": "done",
+      "detail": "Best-effort před commitAll: když push && bump je minor/major, načíst CHANGELOG.md, stampnout cílovou verzí + dnešním datem, zapsat. Chybějící/nestandardní soubor jen warning, neblokovat done. Pokryto testem v done.test.ts."
+    },
+    {
+      "title": "Instrukce o CHANGELOGu do done promptu",
+      "status": "done",
+      "detail": "buildDoneSessionPrompt dostane sekci: před 'mini done --apply' aktualizuj '## [Unreleased]' v CHANGELOG.md (Added/Changed/Fixed z reportu, soubor založ když chybí). Pokryto testem (toContain)."
+    },
+    {
+      "title": "Zelená brána",
+      "status": "done",
+      "detail": "tsc, vitest i lint zelené; nové/aktualizované testy procházejí."
+    }
+  ],
+  "startedAt": "2026-05-30T09:27:16.181Z"
+}

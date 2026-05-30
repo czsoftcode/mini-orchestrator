@@ -1,12 +1,13 @@
-# Fáze 48 — Verze z package.json
+# Fáze 49 — Tag verze při done --push
 
-**Cíl:** mini --version čte verzi dynamicky z package.json (přes import JSON nebo čtení souboru relativně k buildu) místo natvrdo zapsaného '0.1.0' v cli.ts; ověřitelné testem, že vrácená verze odpovídá poli version v package.json, a zelenou bránou.
+**Cíl:** Při mini done --push po úspěšném commitu fáze vytvořit git tag v<verze> podle aktuální verze v package.json a pushnout ho na remote (nový helper v git.ts); best-effort jako zbytek push logiky, ověřeno testem, že se tag se správným jménem vytvoří a pushne.
 
 ## Kroky
-- [hotovo] Helper readPackageVersion() ve version.ts
-- [hotovo] cli.ts použije helper
-- [hotovo] Test helperu
+- [hotovo] Git helpery pro tagy
+- [hotovo] bumpVersion vrací novou verzi
+- [hotovo] Tag + push při done --push
+- [hotovo] Testy git helperů
 - [hotovo] Zelená brána
 
 ## Auto-commit
-- Fáze 48: Verze z package.json (`ddb070f7679c3afc9d9b053217c0fe6c69d6a3a7`)
+- Fáze 49: Tag verze při done --push (`3b793300e0c0218928955bb2c4092ec66bb1c34b`)

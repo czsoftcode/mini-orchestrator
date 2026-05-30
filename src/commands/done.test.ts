@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { advanceToNextPhase, buildPhaseCommitMessage, done } from './done.js';
+import { advanceToNextPhase, applyDone, buildPhaseCommitMessage, done } from './done.js';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import { load, save } from '../state/store.js';
 import type { Phase, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
 import { isInteractive } from '../ui/interactive.js';
-import { commitAll, hasChanges, headSha, isGitRepo } from '../git.js';
+import { commitAll, hasChanges, headSha, isGitRepo, push } from '../git.js';
 import { writePhaseMemory } from './writeMemory.js';
 
 // `ask` nahrazujeme `vi.fn`, ať můžeme v testech přepínat implementaci —
@@ -36,6 +36,9 @@ vi.mock('../git.js', () => ({
   isGitRepo: vi.fn(async () => false),
   hasChanges: vi.fn(async () => false),
   commitAll: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
+  push: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
+  createTag: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
+  pushTag: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
   currentBranch: vi.fn(async () => null),
   headSha: vi.fn(async () => null),
   headSubject: vi.fn(async () => null),
@@ -55,6 +58,7 @@ const isGitRepoMock = vi.mocked(isGitRepo);
 const hasChangesMock = vi.mocked(hasChanges);
 const commitAllMock = vi.mocked(commitAll);
 const headShaMock = vi.mocked(headSha);
+const pushMock = vi.mocked(push);
 const writePhaseMemoryMock = vi.mocked(writePhaseMemory);
 
 async function writeRunReport(cwd: string, phaseId: number, body: string): Promise<void> {
@@ -1555,4 +1559,123 @@ steps:
     expect(loaded.currentPhaseId).toBe(22);
   });
 
+});
+
+describe('CHANGELOG stamp při vydání', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  const CHANGELOG = `# Changelog
+
+## [Unreleased]
+### Added
+- nová funkce
+
+## [0.9.0] - 2026-01-01
+### Added
+- starší věc
+`;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-changelog-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() nesmí být v auto módu zavoláno');
+    });
+    isGitRepoMock.mockReset();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockReset();
+    hasChangesMock.mockResolvedValue(true);
+    commitAllMock.mockReset();
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
+    pushMock.mockReset();
+    pushMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  async function setup(): Promise<void> {
+    await writeFile(join(cwd, 'package.json'), '{\n  "version": "1.2.3"\n}\n', 'utf-8');
+    await writeFile(join(cwd, 'CHANGELOG.md'), CHANGELOG, 'utf-8');
+    await save(
+      makeState(
+        [
+          {
+            id: 1,
+            title: 'Fáze k vydání',
+            status: 'doing',
+            steps: [{ title: 'krok 1', status: 'doing' }],
+          },
+        ],
+        1,
+      ),
+      cwd,
+    );
+    await writeRunReport(
+      cwd,
+      1,
+      `---
+phase: 1
+verdict: done
+steps:
+  - title: "krok 1"
+    status: done
+---
+`,
+    );
+  }
+
+  it('--push --bump minor zaklapne Unreleased do datované sekce', async () => {
+    await setup();
+
+    const r = await applyDone(cwd, { push: true, bump: 'minor' });
+
+    expect(r.ok).toBe(true);
+    const changelog = await readFile(join(cwd, 'CHANGELOG.md'), 'utf-8');
+    // minor z 1.2.3 → 1.3.0, dnešní datum
+    expect(changelog).toMatch(/## \[1\.3\.0\] - \d{4}-\d{2}-\d{2}\n### Added\n- nová funkce/);
+    // nahoře zůstala čerstvá prázdná Unreleased
+    expect(changelog).toMatch(/## \[Unreleased\]\n\n## \[1\.3\.0\]/);
+  });
+
+  it('patch (i s --push) Unreleased nestampuje — položky zůstanou', async () => {
+    await setup();
+
+    const r = await applyDone(cwd, { push: true, bump: 'patch' });
+
+    expect(r.ok).toBe(true);
+    const changelog = await readFile(join(cwd, 'CHANGELOG.md'), 'utf-8');
+    expect(changelog).toMatch(/## \[Unreleased\]\n### Added\n- nová funkce/);
+    expect(changelog).not.toMatch(/## \[1\.2\.4\]/);
+  });
+
+  it('minor bez --push (jen lokální commit) Unreleased nestampuje', async () => {
+    await setup();
+
+    const r = await applyDone(cwd, { bump: 'minor' });
+
+    expect(r.ok).toBe(true);
+    const changelog = await readFile(join(cwd, 'CHANGELOG.md'), 'utf-8');
+    expect(changelog).toMatch(/## \[Unreleased\]\n### Added\n- nová funkce/);
+    expect(changelog).not.toMatch(/## \[1\.3\.0\]/);
+  });
+
+  it('chybějící CHANGELOG.md neshodí done (best-effort)', async () => {
+    await setup();
+    await rm(join(cwd, 'CHANGELOG.md'));
+
+    const r = await applyDone(cwd, { push: true, bump: 'major' });
+
+    expect(r.ok).toBe(true);
+    expect(commitAllMock).toHaveBeenCalledTimes(1);
+  });
 });

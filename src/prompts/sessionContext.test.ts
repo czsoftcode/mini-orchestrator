@@ -130,4 +130,19 @@ describe('buildDoneSessionPrompt', () => {
     });
     expect(p).toContain('Všechno se povedlo.');
   });
+
+  it('instruuje aktualizovat CHANGELOG.md (Unreleased) před mini done --apply', () => {
+    const p = buildDoneSessionPrompt({ phase, reportExists: true, verify: [] });
+    expect(p).toContain('CHANGELOG.md');
+    expect(p).toContain('## [Unreleased]');
+    expect(p).toContain('keepachangelog');
+    expect(p).toContain('### Added');
+    expect(p).toContain('### Changed');
+    expect(p).toContain('### Fixed');
+  });
+
+  it('CHANGELOG sekci nevkládá, když report chybí', () => {
+    const p = buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
+    expect(p).not.toContain('CHANGELOG.md');
+  });
 });

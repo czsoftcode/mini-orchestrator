@@ -1,5 +1,8 @@
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { commitAll, createTag, hasChanges, headSha, isGitRepo, push, pushTag } from '../git.js';
 import { buildGraph, GRAPH_DIR, hasMappableProject } from '../graph/buildGraph.js';
+import { CHANGELOG_FILE, stampUnreleased, todayIso } from '../changelog.js';
 import { bumpPackageVersion } from '../version.js';
 import {
   RunReportParseError,
@@ -267,7 +270,15 @@ async function commitPhaseWork(
   // Bump verze ještě před `hasChanges`/commitem — patří do commitu fáze a sám
   // o sobě je změnou, která má smysl commitnout (i kdyby jinak nic nebylo).
   // Výslednou verzi si držíme pro tag při `--push` (níže).
-  const version = await bumpVersion(cwd, finalizeOpts.bump ?? 'patch');
+  const level = finalizeOpts.bump ?? 'patch';
+  const version = await bumpVersion(cwd, level);
+
+  // Při vydání (minor/major s pushem) zaklapneme `## [Unreleased]` do datované
+  // sekce — taky ještě před commitem, ať skončí v commitu fáze. Patche se
+  // nestampují: jejich položky se kumulují v Unreleased do dalšího vydání.
+  if (finalizeOpts.push && (level === 'minor' || level === 'major')) {
+    await stampChangelog(cwd, version);
+  }
 
   if (!(await hasChanges(cwd))) {
     log.dim('Žádné změny v gitu — commit přeskočen.');
@@ -339,6 +350,46 @@ async function tagVersion(cwd: string, version: string | null): Promise<void> {
     const detail = ptr.stderr.trim() || ptr.stdout.trim();
     if (detail) log.dim(detail);
     log.hint(`Zkus ručně: git push origin ${tag}.`);
+  }
+}
+
+/**
+ * Best-effort zaklapnutí `## [Unreleased]` v `CHANGELOG.md` do datované sekce
+ * `## [<verze>] - <dnešek>` při vydání (minor/major s pushem). Volá se před
+ * commitem fáze, aby datovaná sekce skončila v commitu, který se pushuje.
+ *
+ * Nikdy neblokuje done — chybějící soubor, chybějící sekce `## [Unreleased]`
+ * nebo prázdná Unreleased jen zalogujeme. Když projekt verzi nemá
+ * (`version === null` — jiný jazyk bez `package.json`), tiše přeskočíme.
+ */
+async function stampChangelog(cwd: string, version: string | null): Promise<void> {
+  if (!version) return;
+
+  const path = join(cwd, CHANGELOG_FILE);
+  let raw: string;
+  try {
+    raw = await readFile(path, 'utf-8');
+  } catch {
+    log.dim(`${CHANGELOG_FILE} nenalezen — sekci verze nestampuju.`);
+    return;
+  }
+
+  const date = todayIso();
+  const result = stampUnreleased(raw, version, date);
+  if (!result.stamped) {
+    if (result.reason === 'no-unreleased') {
+      log.warn(`${CHANGELOG_FILE} nemá sekci "## [Unreleased]" — verzi nestampuju.`);
+    } else {
+      log.dim(`${CHANGELOG_FILE}: "## [Unreleased]" je prázdná — verzi nestampuju.`);
+    }
+    return;
+  }
+
+  try {
+    await writeFile(path, result.content, 'utf-8');
+    log.dim(`${CHANGELOG_FILE}: "## [Unreleased]" → "## [${version}] - ${date}".`);
+  } catch (err) {
+    log.warn(`Zápis ${CHANGELOG_FILE} selhal: ${(err as Error).message}`);
   }
 }
 

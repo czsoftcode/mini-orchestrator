@@ -7,4 +7,4 @@ Imports:
 - { tmpdir } from "node:os"
 - { join } from "node:path"
 - { promisify } from "node:util"
-- { commitAll, currentBranch, hasChanges, headSha, headSubject, isCleanWorkingTree, isGitRepo, push, runGit, softResetTo } from "./git.js"
+- { commitAll, createTag, currentBranch, hasChanges, headSha, headSubject, isCleanWorkingTree, isGitRepo, push, pushTag, runGit, softResetTo } from "./git.js"

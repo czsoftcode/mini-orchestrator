@@ -201,6 +201,16 @@ Fáze **${phase.id}: ${phase.title}** je hotová z pohledu implementace.
 # Tvůj úkol
 Lidská verifikace: krátce shrň uživateli, co se udělalo (viz report níže), a nech ho potvrdit, že to funguje.
 ${bodyBlock}${verifyBlock}
+# CHANGELOG
+Ještě **před** \`mini done --apply\` zaznamenej, co fáze přinesla, do \`CHANGELOG.md\`
+(formát keepachangelog 1.1.0) — commit fáze ho pak automaticky pobere:
+- Soubor je v kořeni projektu; když chybí, založ ho s krátkou hlavičkou a sekcí \`## [Unreleased]\`.
+- Z reportu vyber změny zajímavé pro uživatele a přidej je pod \`## [Unreleased]\` do podsekcí
+  \`### Added\` (nová funkce), \`### Changed\` (změna chování) nebo \`### Fixed\` (oprava) — jen ty, které dávají smysl.
+- **Verzi ani datum nedoplňuj** — zůstaň u \`## [Unreleased]\`. Datovanou sekci \`## [verze] - datum\`
+  vyrobí až \`mini done --apply --push\` při minor/major vydání; patche se kumulují v Unreleased.
+- Čistě interní úpravy bez dopadu na uživatele klidně vynech.
+
 # Posun stavu
 ${applyHint}
 

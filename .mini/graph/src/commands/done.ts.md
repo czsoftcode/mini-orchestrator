@@ -1,7 +1,7 @@
 ## src/commands/done.ts
 
 Imports:
-- { commitAll, hasChanges, headSha, isGitRepo, push } from "../git.js"
+- { commitAll, createTag, hasChanges, headSha, isGitRepo, push, pushTag } from "../git.js"
 - { buildGraph, GRAPH_DIR, hasMappableProject } from "../graph/buildGraph.js"
 - { bumpPackageVersion } from "../version.js"
 - { RunReportParseError, readRunReport, runReportPath, RunReport, RunReportVerifyItem } from "../state/runReport.js"
@@ -16,7 +16,7 @@ Imports:
 Exports:
 - function done(opts: AutoOptions): Promise<StepOutcome> @L19-139
 - function buildPhaseCommitMessage(phase: Phase): string @L187-194
-- function advanceToNextPhase(state: ProjectState): Phase | null @L328-336
-- interface ApplyReportOptions @L406-413
-- function applyAutoReport(phase: Phase, state: ProjectState, cwd: string, applyOpts: ApplyReportOptions): Promise<AutoApplyResult> @L415-500
-- function applyDone(cwd: string, opts: ApplyReportOptions): Promise<StepOutcome> @L740-782
+- function advanceToNextPhase(state: ProjectState): Phase | null @L366-374
+- interface ApplyReportOptions @L444-451
+- function applyAutoReport(phase: Phase, state: ProjectState, cwd: string, applyOpts: ApplyReportOptions): Promise<AutoApplyResult> @L453-538
+- function applyDone(cwd: string, opts: ApplyReportOptions): Promise<StepOutcome> @L778-820

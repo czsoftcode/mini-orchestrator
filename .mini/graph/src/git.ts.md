@@ -11,8 +11,10 @@ Exports:
 - function hasChanges(cwd: string): Promise<boolean> @L37-41
 - function commitAll(cwd: string, message: string): Promise<GitResult> @L48-52
 - function push(cwd: string): Promise<GitResult> @L59-61
-- function currentBranch(cwd: string): Promise<string | null> @L63-68
-- function headSha(cwd: string): Promise<string | null> @L74-79
-- function headSubject(cwd: string): Promise<string | null> @L85-90
-- function isCleanWorkingTree(cwd: string): Promise<boolean> @L97-101
-- function softResetTo(cwd: string, sha: string): Promise<GitResult> @L108-110
+- function createTag(cwd: string, tag: string): Promise<GitResult> @L68-70
+- function pushTag(cwd: string, tag: string): Promise<GitResult> @L76-78
+- function currentBranch(cwd: string): Promise<string | null> @L80-85
+- function headSha(cwd: string): Promise<string | null> @L91-96
+- function headSubject(cwd: string): Promise<string | null> @L102-107
+- function isCleanWorkingTree(cwd: string): Promise<boolean> @L114-118
+- function softResetTo(cwd: string, sha: string): Promise<GitResult> @L125-127

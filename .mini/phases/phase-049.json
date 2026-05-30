@@ -2,7 +2,7 @@
   "id": 49,
   "title": "Tag verze při done --push",
   "goal": "Při mini done --push po úspěšném commitu fáze vytvořit git tag v<verze> podle aktuální verze v package.json a pushnout ho na remote (nový helper v git.ts); best-effort jako zbytek push logiky, ověřeno testem, že se tag se správným jménem vytvoří a pushne.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Git helpery pro tagy",
@@ -30,5 +30,11 @@
       "detail": "npm test a lint zelené."
     }
   ],
-  "startedAt": "2026-05-30T08:55:04.276Z"
+  "startedAt": "2026-05-30T08:55:04.276Z",
+  "completedAt": "2026-05-30T09:00:25.896Z",
+  "autoCommit": {
+    "preSha": "ddb070f7679c3afc9d9b053217c0fe6c69d6a3a7",
+    "sha": "3b793300e0c0218928955bb2c4092ec66bb1c34b",
+    "subject": "Fáze 49: Tag verze při done --push"
+  }
 }
