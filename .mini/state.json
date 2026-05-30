@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 33,
+  "currentPhaseId": 34,
   "phases": [
     {
       "id": 1,
@@ -166,6 +166,11 @@
     {
       "id": 33,
       "title": "/mini:map slash command",
+      "status": "done"
+    },
+    {
+      "id": 34,
+      "title": "Mini:next se ptá na plán",
       "status": "doing"
     }
   ],

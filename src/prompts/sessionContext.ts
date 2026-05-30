@@ -61,6 +61,11 @@ export function buildNextSessionPrompt(
     ? `# Nápad uživatele\nUživatel má představu, kterou chce v další fázi rozpracovat:\n"""\n${hint}\n"""\nPřesně z toho vyjdi. Pokud je nápad příliš velký na jednu fázi (1-3 dny), vyber z něj první smysluplný kus.\n\n`
     : '';
 
+  // Bez nápadu se nejdřív zeptej — uživatel ho mohl zapomenout zadat.
+  const askBlock = hint
+    ? ''
+    : `# Nejdřív se zeptej\nUživatel ti k další fázi nic nezadal. Než cokoli navrhneš, **zeptej se ho**, jestli má pro další fázi vlastní představu (mohl ji omylem nezadat), nebo to má nechat na tobě. Teprve podle odpovědi pokračuj:\n- má-li vlastní nápad → vyjdi přesně z něj,\n- nechá-li to na tobě → navrhni fázi sám podle dosavadního postupu a stavu kódu.\n\n`;
+
   return `Jsi v Claude Code session a pomáháš uživateli budovat projekt po malých fázích.
 Tohle je krok **next** workflow mini — navrhni JEDNU další fázi.
 
@@ -68,7 +73,7 @@ Tohle je krok **next** workflow mini — navrhni JEDNU další fázi.
 ${projectMd.trim()}
 
 ${history}
-${memoryBlock}${hintBlock}# Tvůj úkol
+${memoryBlock}${askBlock}${hintBlock}# Tvůj úkol
 Navrhni jednu další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem — ne roadmap, jen jedna věc, co dává smysl udělat hned. Pokud potřebuješ pochopit stav kódu, čti soubory (Read/Glob/Grep); začni indexem \`.mini/graph.json\` (pokud existuje) a podle názvů exportů si cíleně přečti jen relevantní mapy z \`.mini/graph/\`.
 
 Návrh (název max 5 slov + cíl na 1 větu) krátce ukaž uživateli. Po odsouhlasení fázi **ulož** zavoláním (Bash):

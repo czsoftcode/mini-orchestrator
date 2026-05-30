@@ -32,6 +32,17 @@ describe('buildNextSessionPrompt', () => {
     expect(p).not.toContain('Nápad uživatele');
   });
 
+  it('bez nápadu přiměje Claude nejdřív se zeptat na vlastní plán', () => {
+    const p = buildNextSessionPrompt(PROJECT, state());
+    expect(p).toContain('Nejdřív se zeptej');
+    expect(p).toContain('nechat na tobě');
+  });
+
+  it('se zadaným nápadem se na vlastní plán neptá', () => {
+    const p = buildNextSessionPrompt(PROJECT, state(), { userHint: 'přidej export do CSV' });
+    expect(p).not.toContain('Nejdřív se zeptej');
+  });
+
   it('vypíše dosavadní fáze, pokud existují', () => {
     const phases: Phase[] = [{ id: 1, title: 'Základ', status: 'done' }];
     const p = buildNextSessionPrompt(PROJECT, state(phases, 1));

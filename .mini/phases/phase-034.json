@@ -1,0 +1,25 @@
+{
+  "id": 34,
+  "title": "Mini:next se ptá na plán",
+  "goal": "Když /mini:next dostane prázdný nápad, session prompt přiměje Claude nejdřív se uživatele zeptat, zda má pro další fázi vlastní představu, nebo to má nechat na Claude — a teprve podle odpovědi navrhne fázi.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Do buildNextSessionPrompt (src/prompts/sessionContext.ts) přidat pro větev bez userHint instrukci: než Claude něco navrhne, ať se uživatele zeptá, zda má pro další fázi vlastní představu, nebo to má nechat na Claude — a teprve podle odpovědi pokračuje. Výstup: prompt bez nápadu obsahuje pokyn nejdřív se zeptat.",
+      "status": "done"
+    },
+    {
+      "title": "Zajistit, že při zadaném userHint se dotaz nevkládá (uživatel už nápad dal). Výstup: prompt s userHint instrukci na dotaz neobsahuje.",
+      "status": "done"
+    },
+    {
+      "title": "Rozšířit testy v sessionContext.test.ts — nový test, že bez nápadu prompt obsahuje dotaz na vlastní plán, a test, že s nápadem ho neobsahuje. Výstup: nové testy zelené.",
+      "status": "done"
+    },
+    {
+      "title": "Ověřit npm run typecheck/build/test; přegenerovat command přes node dist/cli.js install-commands a ověřit, že vše prochází. Výstup: vše zelené.",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-30T01:00:06.143Z"
+}
