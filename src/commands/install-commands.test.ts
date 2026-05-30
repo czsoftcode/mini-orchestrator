@@ -107,6 +107,8 @@ describe('installCommands', () => {
     expect(md).toContain('$ARGUMENTS');
     expect(md).toContain('--max-phases');
     expect(md).toContain('--yolo');
+    expect(md).toContain('--verify');
+    expect(md).toContain('--discuss');
     // default 1 fáze, když --max-phases chybí
     expect(md).toMatch(/default 1|default.*1/i);
     // autonomní běh přes víc fází (ne jen jedna fáze)
@@ -128,6 +130,16 @@ describe('installCommands', () => {
     expect(md).toMatch(/přeskoč/i);
     // verify předchází done v textu cyklu
     expect(md.indexOf('mini context verify')).toBeLessThan(md.indexOf('mini context done'));
+  });
+
+  it('auto command umí vynutit discuss přes --discuss', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
+    // flag --discuss vynutí discuss v každé fázi (jinak podmíněný)
+    expect(md).toContain('--discuss');
+    // krok discuss zůstává podmíněný, pokud --discuss není
+    expect(md).toMatch(/discuss/i);
+    expect(md).toMatch(/přeskoč/i);
   });
 
   it('auto command popisuje stop háčky (kontrolní body + mini stop)', async () => {

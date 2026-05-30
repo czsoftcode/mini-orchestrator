@@ -8,6 +8,8 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **`/mini:auto --discuss`** — flag vynutí krok `discuss` v každé fázi běhu
+  (analogicky k `--verify`). Bez něj se `discuss` spouští jen podmíněně u složitých fází.
 - **Verify v autonomním `/mini:auto`** — cyklus teď mezi `do` a `done` spustí krok
   `verify` u **UI/UX fází** (Claude posoudí z cíle/kroků/reportu). Nový flag
   **`--verify`** ho vynutí v každé fázi. Nálezy se zapíšou do reportu (a tím i do

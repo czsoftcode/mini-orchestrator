@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 68,
+  "currentPhaseId": 69,
   "phases": [
     {
       "id": 1,
@@ -341,6 +341,11 @@
     {
       "id": 68,
       "title": "Verify v auto + zápis nálezů",
+      "status": "done"
+    },
+    {
+      "id": 69,
+      "title": "Flag --discuss pro mini:auto",
       "status": "doing"
     }
   ],

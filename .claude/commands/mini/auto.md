@@ -1,6 +1,6 @@
 ---
 description: mini — autonomní režim: dotáhne víc fází za sebou
-argument-hint: [--max-phases N] [--yolo] [--verify]
+argument-hint: [--max-phases N] [--yolo] [--verify] [--discuss]
 ---
 
 Tohle je krok **auto** workflow mini, spuštěný přímo v Claude Code. Jsi v **autonomním režimu**: v cyklu sám dotahuješ celé fáze (next → discuss(podmíněně) → plan → do → verify(podmíněně) → done) a po dokončení jedné fáze plynule pokračuješ další, dokud nenarazíš na některou z hranic běhu (viz „Konec běhu"). Stav v `.mini/` měň jen příkazy `mini ... --apply`, nikdy needituj `.mini/state.json` ručně.
@@ -10,14 +10,15 @@ Uživatel spustil příkaz s argumenty: `$ARGUMENTS`. Vyparsuj z nich (tolerantn
 - **`--max-phases N`** — kolik fází nejvýš dotáhnout za sebou. Když chybí (nebo nejde přečíst), použij **default 1**.
 - **`--yolo`** — plně bezobslužný režim (viz „Potvrzování příkazů"). Když chybí, běž v normálním režimu.
 - **`--verify`** — vynutí krok **verify** (hloubková UI/UX kontrola člověkem) v **každé** fázi běhu, i kdyby ti nepřišla jako UI/UX. Bez něj verify spouštíš jen podmíněně (viz krok 5 cyklu).
+- **`--discuss`** — vynutí krok **discuss** v **každé** fázi běhu, i kdyby ti přišla přímočará. Bez něj discuss spouštíš jen podmíněně (viz krok 2 cyklu).
 
-Na začátku uživateli **jednou** krátce oznam, kolik fází poběžíš, jestli je zapnutý `--yolo` a jestli je zapnutý `--verify`.
+Na začátku uživateli **jednou** krátce oznam, kolik fází poběžíš a které z přepínačů `--yolo` / `--verify` / `--discuss` jsou zapnuté.
 
 ## Cyklus jedné fáze
 Pro každou fázi projdi tyto kroky po sobě (další spusť až po dokončení předchozího):
 
 1. **next (zastav se a zeptej).** Pokud zrovna **není** rozdělaná žádná fáze (po předchozím `done`, nebo na začátku, když je poslední fáze hotová), navrhni další. Spusť `mini context next` a řiď se promptem, ale **napřed se zastav a vezmi od uživatele nápad/podklad** na další fázi (autonomní režim fáze nevymýšlí naslepo). Když `mini context next` / tvůj návrh dojde k závěru, že **projekt je hotový** (TITLE: -), cyklus čistě ukonči (viz „Konec běhu"). Je-li už fáze rozdělaná (`proposed`/`planned`/`doing`), tenhle krok přeskoč.
-2. **discuss (jen podmíněně, zastav se a zeptej).** Spusť `mini context discuss` **pouze** když je fáze složitá na rozhodnutí (nejednoznačný cíl, víc směrů, potřeba něco vyjasnit) **a** diskuse pro ni ještě neproběhla; pak interaktivně seber vstup od uživatele a ulož poznámky. U přímočaré fáze discuss **přeskoč**.
+2. **discuss (podmíněně / vynuceně, zastav se a zeptej).** Spusť `mini context discuss`, když je fáze složitá na rozhodnutí (nejednoznačný cíl, víc směrů, potřeba něco vyjasnit) **a** diskuse pro ni ještě neproběhla, **nebo** vždy, když běh dostal `--discuss`; pak interaktivně seber vstup od uživatele a ulož poznámky. U přímočaré fáze bez `--discuss` krok **přeskoč**.
 3. **plan.** Spusť `mini context plan` a rozmen fázi na kroky; ulož přes `mini plan --apply`. Když už fáze kroky má, přeskoč.
 4. **do (tiše).** Spusť `mini do --apply` a pak `mini context do`; implementuj fázi podle instrukcí. **Nevypisuj editační výpisy** — nepřevyprávěj každou změnu souboru do chatu, jen krátce hlas postup po krocích. Po každém hotovém kroku ho označ: `mini do --apply --step-done "<přesný název>"`. Na konci zapiš report do `.mini/run/phase-{id}.md`.
 5. **verify (podmíněně, zastav se a nech ověřit).** Tenhle krok spusť, když je fáze **UI/UX povahy** — má viditelný výstup, který posoudí jen člověk (vzhled, CLI/obrazovka, UX flow, srozumitelnost); posuď to z cíle fáze, kroků a reportu. **Nebo** ho spusť vždy, když běh dostal `--verify`. U čistě vnitřní fáze (refaktor, parser, build, testy bez viditelného výstupu) a bez `--verify` verify **přeskoč**. Když běží: nech report z `do` zapsaný, spusť `mini context verify` a veď člověka hloubkovou UI/UX kontrolou podle promptu (ptej se po jednom). Nálezy se zapíšou do reportu (prompt tě navede), takže se přes report dostanou i do paměti. **Najdou-li se problémy, fázi nezavírej** — vrať se do `do`, oprav je ještě v téhle fázi, report aktualizuj a teprve pak pokračuj na `done`. Verify je řízený člověkem — **auto ho neobchází**.

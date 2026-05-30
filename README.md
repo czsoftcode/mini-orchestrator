@@ -94,7 +94,7 @@ Vznikne `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map
 /mini:do             # implementuje fázi a zapíše report
 /mini:done           # lidská verifikace v chatu → posune stav
 /mini:verify         # hloubková UI/UX kontrola fáze člověkem; nálezy zapíše do reportu (a paměti)
-/mini:auto [args]    # autonomní režim: dotáhne víc fází za sebou (--max-phases N, --yolo, --verify)
+/mini:auto [args]    # autonomní režim: dotáhne víc fází za sebou (--max-phases N, --yolo, --verify, --discuss)
 /mini:map            # přegeneruje graf projektu
 /mini:status         # přehled fází (read-only)
 /mini:audit          # přehled existující codebase do .mini/codebase.md
@@ -106,7 +106,8 @@ Vznikne `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map
 
 - **`--max-phases N`** (default 1) — kolik fází nejvýš dotáhnout za sebou; `--yolo` = běh bez zbytečného doptávání (funguje jen v session spuštěné s `--permission-mode acceptEdits`).
 - **`--verify`** — vynutí krok `verify` v každé fázi. Bez něj auto spustí `verify` jen u **UI/UX fází** (posoudí z cíle/kroků/reportu): provede člověka hloubkovou kontrolou mezi `do` a `done`, nálezy zapíše do reportu (a tím i do paměti) a případné problémy opraví ještě v téže fázi před uzavřením.
-- **Zastaví se a zeptá** u kroků, kde je potřeba člověk: `next` (vezme tvůj nápad na fázi), `discuss` (jen u složitých fází), `verify` (UI/UX kontrola) a u bodů k **ručnímu ověření** v `done`.
+- **`--discuss`** — vynutí krok `discuss` v každé fázi. Bez něj auto spustí `discuss` jen u **složitých fází** (nejednoznačný cíl, víc směrů).
+- **Zastaví se a zeptá** u kroků, kde je potřeba člověk: `next` (vezme tvůj nápad na fázi), `discuss` (u složitých fází nebo s `--discuss`), `verify` (UI/UX kontrola) a u bodů k **ručnímu ověření** v `done`.
 - **Tichý běh u `do`** — nepřevypráví každou editaci do chatu, jen krátce hlásí postup.
 - **Kooperativní stop:** na hranicích kroků kontroluje stop signál (`.mini/STOP`) a čistě skončí; pro tvrdé přerušení uprostřed kroku použij Esc/Ctrl+C. Signál založíš příkazem `mini stop` (z druhého terminálu), zrušíš ho `mini stop --clear`.
 

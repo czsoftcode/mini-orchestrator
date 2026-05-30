@@ -1,0 +1,29 @@
+{
+  "id": 69,
+  "title": "Flag --discuss pro mini:auto",
+  "goal": "Přidat do slash commandu /mini:auto flag --discuss, který vynutí krok discuss v každé fázi běhu (analogicky k --verify): rozšířit argument-hint, sekci Argumenty běhu, úvodní oznámení i podmínku kroku discuss v install-commands.ts a doplnit testy.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Flag --discuss do auto.md",
+      "status": "done",
+      "detail": "V install-commands.ts (COMMAND_DEFS 'auto') rozšířit argument-hint o [--discuss], přidat bullet do sekce 'Argumenty běhu' (vynutí discuss v každé fázi) a zmínit ho v úvodním oznámení vedle --yolo/--verify."
+    },
+    {
+      "title": "Podmínka kroku discuss",
+      "status": "done",
+      "detail": "V kroku 2 cyklu (discuss) doplnit, že se spustí buď podmíněně (složitá fáze, diskuse ještě neproběhla), NEBO vždy když běh dostal --discuss."
+    },
+    {
+      "title": "Testy a regenerace auto.md",
+      "status": "done",
+      "detail": "Doplnit assertions do install-commands.test.ts (auto.md obsahuje --discuss a vynucení discuss), přegenerovat .claude/commands/mini/auto.md přes node dist/cli.js install-commands a spustit npm test."
+    },
+    {
+      "title": "README a CHANGELOG",
+      "status": "done",
+      "detail": "Krátce doplnit --discuss k /mini:auto v README (řádek příkazu i sekce Autonomní /mini:auto) a záznam do CHANGELOG Unreleased."
+    }
+  ],
+  "startedAt": "2026-05-30T22:08:12.890Z"
+}
