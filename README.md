@@ -12,28 +12,25 @@ Vznikl jako jednodušší alternativa k [GSD](https://github.com/gsd-build/get-s
 ## Instalace
 
 ```bash
-git clone <tvuj-repo>/mini
-cd mini
-npm install
-npm run install-local        # build + nainstaluje do ~/.local
+npm install -g mini-orchestrator@latest
 ```
 
-Layout po instalaci (stejně jako Claude Code):
+Příkaz se jmenuje `mini`. Aktualizace: stejný příkaz znovu. Odinstalace: `npm uninstall -g mini-orchestrator`.
 
-```
-~/.local/bin/mini                              → symlink
-~/.local/share/mini/versions/<verze>/dist/...  → vlastní soubory
-~/.local/share/mini/versions/<verze>/node_modules/  → runtime deps
-```
-
-Update po změnách: `npm run install-local` znovu — bumpneš verzi v `package.json` a vznikne nový version dir (starší zůstávají pro rollback).
-
-Odinstalace: `npm run uninstall-local`.
-
-Pokud nechceš globální instalaci, použij alias:
+Instalace bez `sudo`: nasměruj globální npm prefix do domovského adresáře (jednorázově) a měj jeho `bin` v `PATH`:
 
 ```bash
-alias mini='node /cesta/k/mini/dist/cli.js'
+npm config set prefix "$HOME/.local" --location=user   # ~/.local/bin musí být v PATH
+```
+
+### Z gitu / pro vývoj
+
+```bash
+git clone https://github.com/czsoftcode/mini-orchestrator.git
+cd mini-orchestrator
+npm install
+npm run build
+node dist/cli.js --help        # nebo: alias mini='node $(pwd)/dist/cli.js'
 ```
 
 ## Quick start
