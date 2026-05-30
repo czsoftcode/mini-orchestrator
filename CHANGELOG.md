@@ -8,6 +8,16 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **`mini map --file <cesta>`** — inkrementální update grafu: přemapuje jen jeden
+  soubor (uzel `.mini/graph/<cesta>.md` + záznam v `graph.json`, atomicky přes
+  tmp+rename, se zachováním pořadí) místo plného rebuildu. Lze opakovat pro víc
+  souborů. Zmizelý soubor odebere uzel i záznam; nemapovatelné přípony a ignorované
+  adresáře jsou no-op; chybějící index spadne na plný build. Protože uzly grafu jsou
+  per-file, výsledek je identický s plným rebuildem dotčeného souboru.
+- **`mini map --hook`** — pro autonomní režim: přečte cestu editovaného souboru
+  z PostToolUse hook JSON na stdin a inkrementálně ji přemapuje (bez závislosti na
+  `jq`). Bez cesty tiše no-opuje. README popisuje snippet do `.claude/settings.json`,
+  který po každém `Edit`/`Write` drží graf čerstvý; `mini init` na něj upozorní.
 - **`/mini:init`** — inicializace projektu přímo z Claude Code: slash command se
   v session zeptá na čtyři věci (název, co stavíš, pro koho, omezení), uloží projekt
   přes nové neinteraktivní `mini init --apply --name/--what/--for-whom/--constraints

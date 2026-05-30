@@ -31,6 +31,32 @@ function ensurePushHasBump(bump: string | undefined, push: boolean | undefined):
   }
 }
 
+/** Sběrač pro opakovatelný `--file` u příkazu `map`. */
+function collectFile(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
+
+/**
+ * Vytáhne cestu editovaného souboru z hook JSON na stdin (PostToolUse Edit/Write).
+ * Payload má tvar `{ tool_input: { file_path: "…" } }`. Cokoli nečitelného nebo
+ * bez cesty → `null` (hook pak tiše no-opuje, nikdy neblokuje).
+ */
+async function readHookFilePath(): Promise<string | null> {
+  let raw: string;
+  try {
+    raw = await readStdin();
+  } catch {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(raw) as { tool_input?: { file_path?: unknown } };
+    const p = payload?.tool_input?.file_path;
+    return typeof p === 'string' && p.length > 0 ? p : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Přečte celý stdin do řetězce. Pro neinteraktivní `--apply` příkazy. */
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
@@ -255,9 +281,26 @@ program
 program
   .command('map')
   .description('Přegeneruje strojovou mapu projektu do .mini/graph/ + index .mini/graph.json — exporty, importy a signatury TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby souborů.')
-  .action(async () => {
+  .option(
+    '--file <cesta>',
+    'Inkrementálně přemapuj jen daný soubor (uzel + záznam v indexu), lze opakovat. Bez tohoto flagu proběhne plný rebuild.',
+    collectFile,
+    [],
+  )
+  .option(
+    '--hook',
+    'Přečti cestu editovaného souboru z hook JSON na stdin (PostToolUse Edit/Write) a inkrementálně ji přemapuj. Tiše no-opuje, když payload cestu nemá.',
+  )
+  .action(async (opts: { file: string[]; hook?: boolean }) => {
     const { map } = await import('./commands/map.js');
-    await map();
+    if (opts.hook) {
+      const fromHook = await readHookFilePath();
+      // Žádná cesta (jiný tool / nečitelný payload) → tiché no-op, ne plný rebuild.
+      if (!fromHook) return;
+      await map([...opts.file, fromHook]);
+      return;
+    }
+    await map(opts.file.length > 0 ? opts.file : undefined);
   });
 
 program

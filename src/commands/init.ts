@@ -147,6 +147,7 @@ export async function init(): Promise<void> {
     log.hint('Můžeš spustit kdykoli: mini audit');
   }
 
+  log.hint('Pro autonomní režim: zapni auto-update grafu po editaci (hook v .claude/settings.json) — viz README „Strojová mapa projektu".');
   log.hint('Další krok: mini next');
 }
 

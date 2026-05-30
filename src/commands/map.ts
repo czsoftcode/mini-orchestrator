@@ -1,4 +1,10 @@
-import { buildGraph, GRAPH_DIR, GRAPH_INDEX, hasMappableProject } from '../graph/buildGraph.js';
+import {
+  buildGraph,
+  GRAPH_DIR,
+  GRAPH_INDEX,
+  hasMappableProject,
+  updateGraphFile,
+} from '../graph/buildGraph.js';
 import { exists } from '../state/store.js';
 import { log } from '../ui/log.js';
 import type { StepOutcome } from './types.js';
@@ -12,13 +18,20 @@ import type { StepOutcome } from './types.js';
  * a v ostatních případech jen tipne uživateli, ať si pustí `/graphify`
  * v Claude session.
  */
-export async function map(): Promise<StepOutcome> {
+export async function map(files?: string[]): Promise<StepOutcome> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
+    // V --file (hook) režimu drž hubu — hook může vyletět i mimo mini projekt.
+    if (files && files.length > 0) return { ok: false, reason: 'no-project' };
     log.warn('V tomto adresáři není projekt.');
     log.hint('Začni: mini init');
     return { ok: false, reason: 'no-project' };
+  }
+
+  // Inkrementální cesta: přemapuj jen zadané soubory (uzel + záznam v indexu).
+  if (files && files.length > 0) {
+    return mapFiles(cwd, files);
   }
 
   if (!(await hasMappableProject(cwd))) {
@@ -39,5 +52,51 @@ export async function map(): Promise<StepOutcome> {
 
   const word = result.fileCount === 1 ? 'soubor' : result.fileCount < 5 ? 'soubory' : 'souborů';
   log.success(`${GRAPH_DIR}/ + ${GRAPH_INDEX}: ${result.fileCount} ${word}.`);
+  return { ok: true };
+}
+
+/**
+ * Inkrementálně přemapuje zadané soubory přes `updateGraphFile` a vypíše krátké
+ * shrnutí. Chyba u jednoho souboru nezhatí ostatní — hook nesmí spadnout.
+ */
+async function mapFiles(cwd: string, files: string[]): Promise<StepOutcome> {
+  let updated = 0;
+  let removed = 0;
+  let skipped = 0;
+  let fellBack = false;
+
+  for (const file of files) {
+    try {
+      const res = await updateGraphFile(cwd, file);
+      switch (res.status) {
+        case 'updated':
+          updated += 1;
+          break;
+        case 'removed':
+          removed += 1;
+          break;
+        case 'skipped':
+          skipped += 1;
+          break;
+        case 'fell-back':
+          fellBack = true;
+          break;
+      }
+    } catch (err) {
+      log.warn(`Nepodařilo se přemapovat ${file}: ${(err as Error).message}`);
+    }
+  }
+
+  // Fallback znamená plný rebuild celého grafu (chyběl/poškozený index).
+  if (fellBack) {
+    log.success(`${GRAPH_INDEX} chyběl → plný rebuild grafu.`);
+    return { ok: true };
+  }
+
+  const parts: string[] = [];
+  if (updated > 0) parts.push(`${updated} aktualizováno`);
+  if (removed > 0) parts.push(`${removed} odebráno`);
+  if (skipped > 0) parts.push(`${skipped} přeskočeno`);
+  log.success(`Graf: ${parts.length > 0 ? parts.join(', ') : 'beze změny'}.`);
   return { ok: true };
 }

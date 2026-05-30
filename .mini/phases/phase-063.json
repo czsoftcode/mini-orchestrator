@@ -2,7 +2,7 @@
   "id": 63,
   "title": "Slash command /mini:init",
   "goal": "Přidat příkaz /mini:init, který z Claude Code spustí neinteraktivní inicializaci projektu (otázky se odbaví v session, uloží se přes mini init --apply ...) a po dokončení nabídne /mini:map a — když je mini v existujícím projektu (brownfield) — /mini:audit.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Neinteraktivní mini init přes flagy",
@@ -35,5 +35,14 @@
       "detail": "Neinteraktivní init zapíše soubory + skeleton; guard bez --force; --force přepíše; brownfield hint ve výstupu; installCommands generuje init.md."
     }
   ],
-  "startedAt": "2026-05-30T19:03:56.629Z"
+  "startedAt": "2026-05-30T19:03:56.629Z",
+  "resolvedVerify": [
+    "Reálné chování /mini:init v Claude Code session"
+  ],
+  "completedAt": "2026-05-30T19:20:14.932Z",
+  "autoCommit": {
+    "preSha": "b2e9616daa6849b60e44cd8482070e51eff05827",
+    "sha": "ef9757c5d6ae06d9b41cd9271fae500a081f08be",
+    "subject": "Fáze 63: Slash command /mini:init"
+  }
 }

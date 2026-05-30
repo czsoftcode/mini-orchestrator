@@ -10,6 +10,7 @@ import {
   hasMappableProject,
   LEGACY_GRAPH_FILE,
   renderFileGraph,
+  updateGraphFile,
 } from './buildGraph.js';
 import type { GraphIndex } from './buildGraph.js';
 import { runGit } from '../git.js';
@@ -330,5 +331,103 @@ describe('renderFileGraph', () => {
     const md = renderFileGraph({ path: 'src/empty.ts', imports: [], exports: [] });
     expect(md).toContain('## src/empty.ts');
     expect(md).toContain('_(žádné exporty ani importy)_');
+  });
+});
+
+describe('updateGraphFile (inkrementální update)', () => {
+  let root: string;
+
+  beforeEach(async () => {
+    root = await makeTempProject();
+  });
+
+  afterEach(async () => {
+    const { rm } = await import('node:fs/promises');
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('nový soubor vloží uzel i záznam na správné místo v pořadí', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await writeFixture(root, 'src/c.ts', `export const c = 3;\n`);
+    await buildGraph(root);
+
+    // b.ts vznikne až teď
+    await writeFixture(root, 'src/b.ts', `export const b = 2;\n`);
+    const res = await updateGraphFile(root, 'src/b.ts');
+
+    expect(res).toEqual({ path: 'src/b.ts', status: 'updated' });
+    const bMap = await readFile(join(root, GRAPH_DIR, 'src/b.ts.md'), 'utf-8');
+    expect(bMap).toContain('## src/b.ts');
+    const index = await readIndex(root);
+    expect(index.files.map((f) => f.path)).toEqual(['src/a.ts', 'src/b.ts', 'src/c.ts']);
+    expect(index.files.find((f) => f.path === 'src/b.ts')?.exports).toEqual(['b']);
+  });
+
+  it('změna existujícího souboru posune kotvy na řádky', async () => {
+    const fn = `export function a(): number {\n  return 1;\n}\n`;
+    await writeFixture(root, 'src/a.ts', fn);
+    await buildGraph(root);
+    const before = await readFile(join(root, GRAPH_DIR, 'src/a.ts.md'), 'utf-8');
+    expect(before).toContain('@L1-3');
+
+    // přidáme dva řádky nad funkci → deklarace se posune o 2
+    await writeFixture(root, 'src/a.ts', `const x = 1;\nconst y = 2;\n${fn}`);
+    const res = await updateGraphFile(root, 'src/a.ts');
+
+    expect(res.status).toBe('updated');
+    const after = await readFile(join(root, GRAPH_DIR, 'src/a.ts.md'), 'utf-8');
+    expect(after).toContain('@L3-5');
+    expect(after).not.toContain('@L1-3');
+  });
+
+  it('zmizelý soubor odebere uzel i záznam', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await writeFixture(root, 'src/b.ts', `export const b = 2;\n`);
+    await buildGraph(root);
+
+    const { rm } = await import('node:fs/promises');
+    await rm(join(root, 'src/b.ts'));
+    const res = await updateGraphFile(root, 'src/b.ts');
+
+    expect(res).toEqual({ path: 'src/b.ts', status: 'removed' });
+    await expect(readFile(join(root, GRAPH_DIR, 'src/b.ts.md'), 'utf-8')).rejects.toThrow();
+    const index = await readIndex(root);
+    expect(index.files.map((f) => f.path)).toEqual(['src/a.ts']);
+  });
+
+  it('nemapovatelný soubor je no-op (skipped)', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await buildGraph(root);
+    const before = await readIndex(root);
+
+    await writeFixture(root, 'README.md', `# hello\n`);
+    const res = await updateGraphFile(root, 'README.md');
+
+    expect(res.status).toBe('skipped');
+    const after = await readIndex(root);
+    expect(after.files).toEqual(before.files);
+  });
+
+  it('soubor v ignorovaném adresáři je no-op (skipped)', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    await buildGraph(root);
+
+    await writeFixture(root, 'node_modules/lib/x.ts', `export const x = 1;\n`);
+    const res = await updateGraphFile(root, 'node_modules/lib/x.ts');
+
+    expect(res.status).toBe('skipped');
+    await expect(
+      readFile(join(root, GRAPH_DIR, 'node_modules/lib/x.ts.md'), 'utf-8'),
+    ).rejects.toThrow();
+  });
+
+  it('chybějící index spadne na plný build (fell-back)', async () => {
+    await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
+    // žádný buildGraph předem → graph.json neexistuje
+    const res = await updateGraphFile(root, 'src/a.ts');
+
+    expect(res.status).toBe('fell-back');
+    const index = await readIndex(root);
+    expect(index.files.map((f) => f.path)).toEqual(['src/a.ts']);
   });
 });

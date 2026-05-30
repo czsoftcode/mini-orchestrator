@@ -1,0 +1,34 @@
+{
+  "id": 64,
+  "title": "Inkrementální update grafu po editaci",
+  "goal": "Přidat mini map --file <cesta>, který přemapuje jen jeden soubor (uzel v .mini/graph/ + jeho záznam v graph.json se zachováním pořadí, atomicky přes tmp+rename) místo plného rebuildu, a zapojit ho přes PostToolUse hook na Edit/Write s filtrem mapovatelných přípon a no-opem na ostatní; plný mini map zůstává jako fallback pro změny mimo agenta (mazání, rename, ruční editace, chybějící index).",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "updateGraphFile v buildGraph.ts",
+      "status": "done",
+      "detail": "Nová exportovaná funkce updateGraphFile(cwd, relPath): přemapuje jeden soubor, zapíše/přepíše .mini/graph/<cesta>.md (tmp+rename kvůli atomicitě) a upsertne jeho záznam do graph.json se zachováním localeCompare pořadí + bump generatedAt. Ošetří: soubor zmizel → odebrat uzel i záznam; soubor není mapovatelný → no-op; chybějící graph.json → fallback na plný buildGraph. Vrací stav (updated/removed/skipped/fell-back)."
+    },
+    {
+      "title": "CLI flag map --file <cesty...>",
+      "status": "done",
+      "detail": "V cli.ts přidat na map command opakovatelný --file <cesta>; bez flagu zůstává stávající plný rebuild. Cesty normalizovat na relPath vůči cwd."
+    },
+    {
+      "title": "commands/map.ts podpora --file",
+      "status": "done",
+      "detail": "map() přijme volitelné cesty, filtruje mapovatelné přípony (no-op log na ostatní), volá updateGraphFile per cesta a vypíše, kolik uzlů se aktualizovalo / co se přeskočilo."
+    },
+    {
+      "title": "PostToolUse hook na Edit/Write",
+      "status": "done",
+      "detail": "Konfigurace hooku (do skeletonu initu + dokumentace), který po Edit/Write zavolá mini map --file s cestou editovaného souboru (cesta z hook JSON na stdin); tiše no-opuje na nemapovatelné přípony a chybějící mini binárku."
+    },
+    {
+      "title": "Testy",
+      "status": "done",
+      "detail": "updateGraphFile — nový soubor (vložení na správné místo v pořadí), změna existujícího (posun line ranges), smazaný soubor (odebrání záznamu i .md), nemapovatelný no-op, chybějící index → plný build; + CLI map --file."
+    }
+  ],
+  "startedAt": "2026-05-30T19:45:55.094Z"
+}

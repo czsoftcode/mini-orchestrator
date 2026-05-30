@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 63,
+  "currentPhaseId": 64,
   "phases": [
     {
       "id": 1,
@@ -316,6 +316,11 @@
     {
       "id": 63,
       "title": "Slash command /mini:init",
+      "status": "done"
+    },
+    {
+      "id": 64,
+      "title": "Inkrementální update grafu po editaci",
       "status": "doing"
     }
   ],

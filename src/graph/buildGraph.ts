@@ -1,5 +1,5 @@
 import { access, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, posix, relative, sep } from 'node:path';
+import { dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
 import { isGitRepo, runGit } from '../git.js';
 import { mapFile } from './mapper.js';
 import { mapCSharpFile } from './csharpMapper.js';
@@ -181,6 +181,144 @@ async function writeGraphLayout(cwd: string, graphs: FileGraph[]): Promise<void>
   await rename(tmpDirAbs, dirAbs);
   await rename(tmpIndexAbs, indexAbs);
   await rm(join(cwd, LEGACY_GRAPH_FILE), { force: true });
+}
+
+/** Výsledek inkrementálního přemapování jednoho souboru. */
+export type UpdateGraphFileStatus = 'updated' | 'removed' | 'skipped' | 'fell-back';
+
+export interface UpdateGraphFileResult {
+  /** Cesta zdrojáku relativní ke kořeni (vždy s `/`), jak se použila v indexu. */
+  path: string;
+  /**
+   * - `updated` — uzel + záznam přemapovány,
+   * - `removed` — soubor zmizel, uzel i záznam odebrány,
+   * - `skipped` — nemapovatelná přípona / ignorovaný adresář / mimo projekt (no-op),
+   * - `fell-back` — chyběl/poškozený index, proběhl plný `buildGraph`.
+   */
+  status: UpdateGraphFileStatus;
+}
+
+/**
+ * Inkrementálně přemapuje **jeden** soubor: přepíše jeho uzel
+ * `.mini/graph/<cesta>.md` a upsertne odpovídající záznam v `.mini/graph.json`
+ * se zachováním `localeCompare` pořadí (+ bump `generatedAt`). Zápisy jsou
+ * atomické přes tmp + `rename`. Protože uzly grafu jsou čistě per-file (žádné
+ * zpětné hrany), výsledek je identický s plným rebuildem dotčeného souboru.
+ *
+ * Hot path pro autonomní režim (hook po Edit/Write). Plný `buildGraph` zůstává
+ * fallback pro změny, které tudy neprojdou (rename přes shell, ruční editace).
+ */
+export async function updateGraphFile(
+  cwd: string,
+  filePath: string,
+): Promise<UpdateGraphFileResult> {
+  const abs = isAbsolute(filePath) ? filePath : join(cwd, filePath);
+  const relPath = toUnix(relative(cwd, abs));
+
+  // Mimo projekt (cesta vede přes `..`) nebo prázdná → nic neděláme.
+  if (relPath === '' || relPath.startsWith('..') || isAbsolute(relPath)) {
+    return { path: relPath, status: 'skipped' };
+  }
+
+  // Chybějící / poškozený / jiná verze indexu → inkrement nemá na co navázat,
+  // uděláme plný rebuild (ten index i adresář postaví od nuly).
+  const index = await readGraphIndex(join(cwd, GRAPH_INDEX));
+  if (!index) {
+    await buildGraph(cwd);
+    return { path: relPath, status: 'fell-back' };
+  }
+
+  // Nemapovatelná přípona nebo ignorovaný adresář (node_modules, dist, .mini, …)
+  // → no-op. Drží to konzistenci s tím, co by namapoval plný build.
+  const lang = detectLang(relPath);
+  if (!lang || isIgnoredPath(relPath)) {
+    return { path: relPath, status: 'skipped' };
+  }
+
+  const graphFileRel = posix.join(GRAPH_DIR, `${relPath}.md`);
+  const graphFileAbs = join(cwd, graphFileRel);
+
+  // Soubor zmizel → odeber uzel i záznam (pokud v indexu byl).
+  let content: string;
+  try {
+    content = await readFile(abs, 'utf-8');
+  } catch {
+    await rm(graphFileAbs, { force: true });
+    const without = index.files.filter((e) => e.path !== relPath);
+    if (without.length === index.files.length) {
+      return { path: relPath, status: 'skipped' };
+    }
+    await writeGraphIndexAtomic(cwd, {
+      version: GRAPH_INDEX_VERSION,
+      generatedAt: new Date().toISOString(),
+      files: without,
+    });
+    return { path: relPath, status: 'removed' };
+  }
+
+  // Namapuj a zapiš uzel atomicky (tmp + rename), ať index nikdy neukazuje na
+  // rozepsaný `.md`.
+  const fileGraph = mapByLang(content, relPath, lang);
+  await mkdir(dirname(graphFileAbs), { recursive: true });
+  const tmpFileAbs = `${graphFileAbs}.tmp`;
+  await writeFile(tmpFileAbs, renderFileGraph(fileGraph), 'utf-8');
+  await rename(tmpFileAbs, graphFileAbs);
+
+  // Upsert záznamu v indexu se zachováním pořadí (stejné `localeCompare` jako
+  // plný build), pak index zapiš atomicky.
+  const entry: GraphIndexEntry = {
+    path: fileGraph.path,
+    graphFile: toUnix(relative(cwd, graphFileAbs)),
+    exports: fileGraph.exports.map((e) => e.name),
+  };
+  await writeGraphIndexAtomic(cwd, {
+    version: GRAPH_INDEX_VERSION,
+    generatedAt: new Date().toISOString(),
+    files: upsertEntry(index.files, entry),
+  });
+  return { path: relPath, status: 'updated' };
+}
+
+/** Načte a zvaliduje index; vrátí `null`, když chybí, je poškozený nebo má jinou verzi. */
+async function readGraphIndex(indexAbs: string): Promise<GraphIndex | null> {
+  let raw: string;
+  try {
+    raw = await readFile(indexAbs, 'utf-8');
+  } catch {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw) as GraphIndex;
+    if (!parsed || parsed.version !== GRAPH_INDEX_VERSION || !Array.isArray(parsed.files)) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/** Atomický zápis indexu (tmp + rename), stejný formát jako plný build. */
+async function writeGraphIndexAtomic(cwd: string, index: GraphIndex): Promise<void> {
+  const indexAbs = join(cwd, GRAPH_INDEX);
+  const tmpIndexAbs = `${indexAbs}.tmp`;
+  await writeFile(tmpIndexAbs, `${JSON.stringify(index, null, 2)}\n`, 'utf-8');
+  await rename(tmpIndexAbs, indexAbs);
+}
+
+/** Vloží/nahradí záznam a seřadí podle `path` (shodně s `buildGraph`). */
+function upsertEntry(entries: GraphIndexEntry[], entry: GraphIndexEntry): GraphIndexEntry[] {
+  const next = entries.filter((e) => e.path !== entry.path);
+  next.push(entry);
+  next.sort((a, b) => a.path.localeCompare(b.path));
+  return next;
+}
+
+/** True, když některý adresářový segment cesty patří do `IGNORE_DIRS`. */
+function isIgnoredPath(relPath: string): boolean {
+  const segments = relPath.split('/');
+  // Poslední segment je soubor; kontrolujeme jen adresářové segmenty.
+  return segments.slice(0, -1).some((seg) => IGNORE_DIRS.has(seg));
 }
 
 function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {

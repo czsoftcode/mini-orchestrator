@@ -69,4 +69,33 @@ describe('map command', () => {
       spy.mockRestore();
     }
   });
+
+  it('--file přemapuje jen zadaný soubor (uzel + záznam v indexu)', async () => {
+    await writeFile(join(root, 'tsconfig.json'), '{}', 'utf-8');
+    await mkdir(join(root, 'src'), { recursive: true });
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;', 'utf-8');
+    await map(); // plný build → index existuje
+
+    // přidáme nový export do a.ts a přemapujeme jen ten soubor
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\nexport const a2 = 2;', 'utf-8');
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      const result = await map(['src/a.ts']);
+      expect(result.ok).toBe(true);
+    } finally {
+      spy.mockRestore();
+    }
+
+    const index = JSON.parse(await readFile(join(root, '.mini', 'graph.json'), 'utf-8'));
+    expect(index.files.find((f: { path: string }) => f.path === 'src/a.ts')?.exports).toEqual([
+      'a',
+      'a2',
+    ]);
+  });
+
+  it('--file v adresáři bez mini projektu tiše neuspěje (no spam)', async () => {
+    await rm(join(root, '.mini', 'state.json'));
+    const result = await map(['src/a.ts']);
+    expect(result).toEqual({ ok: false, reason: 'no-project' });
+  });
 });
