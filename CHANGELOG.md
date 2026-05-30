@@ -6,6 +6,16 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ## [Unreleased]
 
+### Added
+
+- **`/mini:init`** — inicializace projektu přímo z Claude Code: slash command se
+  v session zeptá na čtyři věci (název, co stavíš, pro koho, omezení), uloží projekt
+  přes nové neinteraktivní `mini init --apply --name/--what/--for-whom/--constraints
+  [--force]` a podle obsahu adresáře nabídne další kroky — u existujícího kódu
+  `/mini:map` a `/mini:audit`, jinak `/mini:next`.
+- **`/mini:audit`** — slash command, který pustí `mini audit` (přehled existující
+  codebase do `.mini/codebase.md`) přímo z Claude Code.
+
 ## [1.3.0] - 2026-05-30
 
 ### Added

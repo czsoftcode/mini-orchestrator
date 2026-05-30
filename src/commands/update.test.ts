@@ -101,7 +101,9 @@ describe('update', () => {
     expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(true);
     const commands = (await readdir(join(cwd, '.claude', 'commands', 'mini'))).sort();
     expect(commands).toContain('next.md');
-    expect(commands.length).toBe(8);
+    expect(commands).toContain('init.md');
+    expect(commands).toContain('audit.md');
+    expect(commands.length).toBe(10);
   });
 
   it('--dry-run nic nezapíše ani pro commandy', async () => {

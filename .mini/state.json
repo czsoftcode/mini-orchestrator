@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 62,
+  "currentPhaseId": 63,
   "phases": [
     {
       "id": 1,
@@ -311,6 +311,11 @@
     {
       "id": 62,
       "title": "mini update + skeleton",
+      "status": "done"
+    },
+    {
+      "id": 63,
+      "title": "Slash command /mini:init",
       "status": "doing"
     }
   ],

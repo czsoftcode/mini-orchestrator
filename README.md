@@ -82,14 +82,16 @@ Celý cyklus `next → discuss → plan → do → done` jde projet i **přímo 
 mini install-commands     # jednorázově v cílovém projektu
 ```
 
-Vznikne `.claude/commands/mini/{next,discuss,plan,do,done}.md`. Pak v Claude Code:
+Vznikne `.claude/commands/mini/{init,next,discuss,plan,do,done,status,map,audit,auto}.md`. Pak v Claude Code:
 
 ```
+/mini:init           # založí projekt (otázky v chatu) → nabídne /mini:map a /mini:audit
 /mini:next [nápad]   # navrhne a uloží další fázi
 /mini:discuss        # prodiskutuje fázi, uloží poznámky
 /mini:plan           # rozmení fázi na kroky
 /mini:do             # implementuje fázi a zapíše report
 /mini:done           # lidská verifikace v chatu → posune stav
+/mini:audit          # přehled existující codebase do .mini/codebase.md
 ```
 
 Jak to funguje: tělo `.md` commandu je tenké — jen pustí `mini context <cmd>`, který vypíše vždy aktuální prompt včetně kontextu projektu. Agentní práci dělá Claude v běžící session; **stavové operace** (`.mini/state.json`, reporty, posun fáze) provádějí neinteraktivní pod-příkazy `mini … --apply`, takže stav zůstává v otestovaném TS. `install-commands` je idempotentní — pusť ho znovu po aktualizaci mini. CLI `mini …` přes terminál zůstává beze změny; slash commandy jsou doplněk, ne náhrada.

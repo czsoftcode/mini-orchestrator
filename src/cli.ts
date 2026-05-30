@@ -57,10 +57,39 @@ program
 program
   .command('init')
   .description('Založí nový projekt v aktuálním adresáři.')
-  .action(async () => {
-    const { init } = await import('./commands/init.js');
-    await init();
-  });
+  .option('--apply', 'Neinteraktivně založ projekt z flagů (bez otázek). Pro /mini:init.')
+  .option('--name <name>', 'Název projektu (s --apply; default název adresáře).')
+  .option('--what <what>', 'Co stavíš (s --apply).')
+  .option('--for-whom <forWhom>', 'Pro koho to je (s --apply).')
+  .option('--constraints <constraints>', 'Hlavní omezení (s --apply; volitelné).')
+  .option('--force', 'Přepiš existující projekt bez ptaní (s --apply).')
+  .action(
+    async (opts: {
+      apply?: boolean;
+      name?: string;
+      what?: string;
+      forWhom?: string;
+      constraints?: string;
+      force?: boolean;
+    }) => {
+      if (opts.apply) {
+        const what = requireOption(opts.what, '--what');
+        const forWhom = requireOption(opts.forWhom, '--for-whom');
+        const { applyInit } = await import('./commands/init.js');
+        const r = await applyInit({
+          name: opts.name,
+          what,
+          forWhom,
+          constraints: opts.constraints,
+          force: opts.force,
+        });
+        if (!r.ok) process.exit(1);
+        return;
+      }
+      const { init } = await import('./commands/init.js');
+      await init();
+    },
+  );
 
 program
   .command('next')

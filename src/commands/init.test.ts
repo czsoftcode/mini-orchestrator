@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -17,7 +17,7 @@ vi.mock('../ui/ask.js', async (importOriginal) => {
   };
 });
 
-import { init } from './init.js';
+import { applyInit, init } from './init.js';
 
 let cwd: string;
 let prevCwd: string;
@@ -59,5 +59,66 @@ describe('init', () => {
     }
     // .gitkeep se do projektu nekopíruje
     expect(await pathExists(join(cwd, '.mini', 'phases', '.gitkeep'))).toBe(false);
+  });
+});
+
+describe('applyInit (neinteraktivní)', () => {
+  it('založí project.md + state.json a položí skeleton bez ask promptů', async () => {
+    const r = await applyInit({
+      name: 'Z flagů',
+      what: 'Něco z flagů',
+      forWhom: 'Pro CI',
+      constraints: 'Bez interakce',
+    });
+
+    expect(r.ok).toBe(true);
+    expect(await pathExists(join(cwd, '.mini', 'project.md'))).toBe(true);
+    expect(await pathExists(join(cwd, '.mini', 'state.json'))).toBe(true);
+    expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(true);
+    const projectMd = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
+    expect(projectMd).toContain('Z flagů');
+    expect(projectMd).toContain('Něco z flagů');
+  });
+
+  it('název doplní z adresáře a prázdné omezení nahradí placeholderem', async () => {
+    await applyInit({ what: 'Co', forWhom: 'Pro koho' });
+    const projectMd = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
+    // bez --name se vezme název temp adresáře
+    expect(projectMd).toContain(`# ${join(cwd).split('/').pop()}`);
+    expect(projectMd).toContain('(žádné)');
+  });
+
+  it('na existujícím projektu bez --force selže a nepřepíše', async () => {
+    await applyInit({ what: 'Původní', forWhom: 'A' });
+    const before = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
+
+    const r = await applyInit({ what: 'Nové', forWhom: 'B' });
+    expect(r.ok).toBe(false);
+    const after = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
+    expect(after).toBe(before);
+  });
+
+  it('s --force existující projekt přepíše', async () => {
+    await applyInit({ what: 'Původní', forWhom: 'A' });
+    const r = await applyInit({ what: 'Nové znění', forWhom: 'B', force: true });
+    expect(r.ok).toBe(true);
+    const after = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
+    expect(after).toContain('Nové znění');
+  });
+
+  it('v brownfield adresáři nabídne v outputu mini map a mini audit', async () => {
+    await writeFile(join(cwd, 'index.ts'), 'export const x = 1;\n', 'utf-8');
+    const logs: string[] = [];
+    const spy = vi.spyOn(console, 'log').mockImplementation((...a: unknown[]) => {
+      logs.push(a.join(' '));
+    });
+    try {
+      await applyInit({ what: 'Co', forWhom: 'Pro koho' });
+    } finally {
+      spy.mockRestore();
+    }
+    const out = logs.join('\n');
+    expect(out).toContain('mini map');
+    expect(out).toContain('mini audit');
   });
 });

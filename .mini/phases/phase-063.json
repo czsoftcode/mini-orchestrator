@@ -1,0 +1,39 @@
+{
+  "id": 63,
+  "title": "Slash command /mini:init",
+  "goal": "Přidat příkaz /mini:init, který z Claude Code spustí neinteraktivní inicializaci projektu (otázky se odbaví v session, uloží se přes mini init --apply ...) a po dokončení nabídne /mini:map a — když je mini v existujícím projektu (brownfield) — /mini:audit.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Neinteraktivní mini init přes flagy",
+      "status": "done",
+      "detail": "Refaktor init() na příjem options; mini init --apply --name --what --for-whom --constraints [--force] zapíše project.md + state.json + skeleton bez ask promptů. Holé mini init zůstává interaktivní."
+    },
+    {
+      "title": "Guard existujícího projektu bez --force",
+      "status": "done",
+      "detail": "V neinteraktivním režimu: existující .mini/state.json bez --force → chyba + hint (žádný confirm); s --force přepíše. Ověřeno testem."
+    },
+    {
+      "title": "Brownfield-aware nabídka po init",
+      "status": "done",
+      "detail": "Neinteraktivní init neuspouští audit sám; po uložení vypíše, zda je brownfield, a nabídne další kroky (mini map, u brownfieldu i mini audit). Interaktivní cesta beze změny."
+    },
+    {
+      "title": "CLI wiring nových flagů initu",
+      "status": "done",
+      "detail": "mini init v cli.ts zaregistruje --apply/--name/--what/--for-whom/--constraints/--force a předá do init(opts)."
+    },
+    {
+      "title": "Slash command /mini:init",
+      "status": "done",
+      "detail": "Přidat init do COMMAND_DEFS (install-commands.ts) s vlastním tělem: posbírá 4 odpovědi, spustí mini init --apply ..., pak nabídne /mini:map a u brownfieldu /mini:audit. Doplnit /mini:init do hintu."
+    },
+    {
+      "title": "Testy",
+      "status": "done",
+      "detail": "Neinteraktivní init zapíše soubory + skeleton; guard bez --force; --force přepíše; brownfield hint ve výstupu; installCommands generuje init.md."
+    }
+  ],
+  "startedAt": "2026-05-30T19:03:56.629Z"
+}

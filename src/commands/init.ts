@@ -12,6 +12,61 @@ interface InitAnswers {
   constraints: string;
 }
 
+/** Odpovědi pro neinteraktivní `mini init --apply` (z flagů, bez `ask`). */
+export interface ApplyInitOptions {
+  /** Název projektu; když chybí, vezme se název adresáře. */
+  name?: string;
+  /** Co se staví (povinné — validuje CLI). */
+  what?: string;
+  /** Pro koho to je (povinné — validuje CLI). */
+  forWhom?: string;
+  /** Hlavní omezení (volitelné). */
+  constraints?: string;
+  /** Přepíše existující projekt bez ptaní. */
+  force?: boolean;
+}
+
+/**
+ * Neinteraktivní inicializace pro `/mini:init` v Claude Code: odpovědi přijdou
+ * flagy, žádné `ask` prompty. Na rozdíl od interaktivní cesty **nespouští**
+ * audit sám — jen po uložení vypíše, zda jde o existující projekt (brownfield),
+ * a nabídne další kroky (slash command pak nabídne `/mini:map` a `/mini:audit`).
+ */
+export async function applyInit(opts: ApplyInitOptions): Promise<{ ok: boolean }> {
+  const cwd = process.cwd();
+
+  if ((await exists(cwd)) && !opts.force) {
+    log.error('V tomto adresáři už projekt existuje (.mini/state.json).');
+    log.hint('Začít nanovo (stará historie fází se ztratí): mini init --apply --force …');
+    return { ok: false };
+  }
+
+  const answers: InitAnswers = {
+    name: (opts.name ?? '').trim() || basename(cwd),
+    what: (opts.what ?? '').trim(),
+    forWhom: (opts.forWhom ?? '').trim(),
+    constraints: (opts.constraints ?? '').trim(),
+  };
+
+  const projectMd = renderProjectMd(answers);
+
+  await writeProject(projectMd, cwd);
+  await save(newState(), cwd);
+  await syncSkeleton(cwd);
+
+  log.success(`Projekt "${answers.name}" založen v .mini/`);
+
+  if (await isBrownfield(cwd)) {
+    console.log();
+    log.info('V adresáři už nějaký kód je.');
+    log.hint('Doporučené další kroky: mini map (graf projektu), pak mini audit (přehled codebase do .mini/codebase.md).');
+  } else {
+    log.hint('Další krok: mini next');
+  }
+
+  return { ok: true };
+}
+
 export async function init(): Promise<void> {
   const cwd = process.cwd();
 

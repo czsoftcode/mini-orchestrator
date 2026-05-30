@@ -2,7 +2,7 @@
   "id": 62,
   "title": "mini update + skeleton",
   "goal": "Zavést verzovaný .mini skeleton (negenerované soubory, zatím .gitignore) jako shipovaný asset (install-local ho kopíruje vedle dist, přibalí se přes package.json files) coby jediný zdroj pravdy. mini init z něj píše počáteční .mini/. Nový příkaz mini update skeleton + slash commandy (install-commands) idempotentně srovná do existujícího projektu — vytvoří chybějící, přepíše změněné, ostatní nechá beze změny, vypíše souhrn. migrate je záměrně mimo (jednorázová věc).",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Asset skeletonu v repu + ship přes build",
@@ -35,5 +35,11 @@
       "detail": "Temp fixtures: prázdný .mini → doplní; změněný .gitignore → přepíše; aktuální → no-op; --dry-run nezapíše; bez .mini → guard+hint; init položí skeleton i project.md/state.json."
     }
   ],
-  "startedAt": "2026-05-30T18:29:25.055Z"
+  "startedAt": "2026-05-30T18:29:25.055Z",
+  "completedAt": "2026-05-30T18:49:36.795Z",
+  "autoCommit": {
+    "preSha": "94a950ab1d7b40e343943a171ee5018fa051c9f0",
+    "sha": "ec24598dd1d36ef2e174f77c1db90527389c2c30",
+    "subject": "Fáze 62: mini update + skeleton"
+  }
 }
