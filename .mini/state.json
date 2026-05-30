@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 45,
+  "currentPhaseId": 46,
   "phases": [
     {
       "id": 1,
@@ -226,6 +226,11 @@
     {
       "id": 45,
       "title": "Sdílená instrukce o grafu",
+      "status": "done"
+    },
+    {
+      "id": 46,
+      "title": "Čísla řádků v mapách grafu",
       "status": "doing"
     }
   ],

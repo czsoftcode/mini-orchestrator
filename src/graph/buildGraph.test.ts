@@ -230,16 +230,16 @@ describe('renderFileGraph', () => {
         { source: './only-types.js', symbols: ['Foo'], typeOnly: true },
       ],
       exports: [
-        { name: 'foo', kind: 'function', signature: { parameters: [{ name: 'x', type: 'number' }], returnType: 'number' } },
-        { name: 'Bar', kind: 'class', methods: [
+        { name: 'foo', kind: 'function', signature: { parameters: [{ name: 'x', type: 'number' }], returnType: 'number' }, line: 5, endLine: 8 },
+        { name: 'Bar', kind: 'class', line: 10, endLine: 20, methods: [
           { name: 'run', signature: { parameters: [], returnType: 'void' } },
           { name: 'make', signature: { parameters: [], returnType: 'Bar' }, isStatic: true },
         ] },
-        { name: 'Mode', kind: 'enum' },
+        { name: 'Mode', kind: 'enum', line: 22, endLine: 25 },
         { name: 'Greeter', kind: 'interface' },
         { name: 'Result', kind: 'type' },
-        { name: 'VERSION', kind: 'const' },
-        { name: 'main', kind: 'function', signature: { parameters: [], returnType: 'number' }, isDefault: true },
+        { name: 'VERSION', kind: 'const', line: 27 },
+        { name: 'main', kind: 'function', signature: { parameters: [], returnType: 'number' }, isDefault: true, line: 29, endLine: 31 },
       ],
     });
 

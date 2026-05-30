@@ -1,0 +1,39 @@
+{
+  "id": 46,
+  "title": "Čísla řádků v mapách grafu",
+  "goal": "mini map zapíše ke každému exportu číslo řádku (ExportInfo.line, plněno TS/PHP/Rust mappery, vykresleno v renderFileGraph) a sdílený GRAPH_USAGE_HINT v bodě (3) navede agenta číst přímo od daného řádku přes Read s offset; ověřitelné aktualizovanými snapshoty map + zelená brána.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "ExportInfo.line + endLine v typu",
+      "status": "done",
+      "detail": "Do src/graph/types.ts přidat line? a endLine? (1-based, řádek deklarace exportu) + JSDoc."
+    },
+    {
+      "title": "TS mapper plní line/endLine",
+      "status": "done",
+      "detail": "V collectExports/variableExport doplnit line a endLine přes sourceFile.getLineAndCharacterOfPosition pro node.getStart() i node.getEnd() (+1); pokryto v mapper.test.ts."
+    },
+    {
+      "title": "PHP + Rust mapper plní rozsah",
+      "status": "done",
+      "detail": "Start řádku z m.index (počet \\n do pozice +1); konec best-effort přes existující brace/paren matchery (jinak jen start). Pokryto phpMapper.test.ts a rustMapper.test.ts."
+    },
+    {
+      "title": "renderFileGraph vykreslí rozsah",
+      "status": "done",
+      "detail": "renderExport připojí ' @L<start>-<end>' (nebo ' @L<start>', chybí-li konec); chybí-li line, nic. Snapshot renderu zelený."
+    },
+    {
+      "title": "graphHint bod (3) na cílené čtení rozsahu",
+      "status": "done",
+      "detail": "Přepsat GRAPH_USAGE_HINT — bod (3) navede Read s offset na startu a limit dle rozsahu z mapy + graph.json načíst jednou a sdílet mezi next/discuss/plan. Snapshoty next/plan/discuss + sessionContext zelené."
+    },
+    {
+      "title": "Snapshoty + přegenerovat graf + brána",
+      "status": "done",
+      "detail": "npm test (aktualizovat snapshoty map i promptů), mini map pro přegenerování .mini/graph/ s rozsahy, npm run typecheck + npm run build zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T08:01:01.744Z"
+}

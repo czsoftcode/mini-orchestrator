@@ -137,6 +137,20 @@ const C: char = '}';
     expect(echo?.signature?.returnType).toBe("&'a T");
   });
 
+  it('zachycuje rozsah řádků deklarací (1-based)', () => {
+    const greeter = graph.exports.find((e) => e.name === 'Greeter');
+    expect(greeter?.line).toBe(10);
+    expect(greeter?.endLine).toBe(13);
+
+    const talker = graph.exports.find((e) => e.name === 'Talker');
+    expect(talker?.line).toBe(20);
+    expect(talker?.endLine).toBe(22);
+
+    const run = graph.exports.find((e) => e.name === 'run');
+    expect(run?.line).toBe(24);
+    expect(run?.endLine).toBe(27);
+  });
+
   it('prázdný soubor produkuje prázdný graf', () => {
     const out = mapRustFile('', 'src/empty.rs');
     expect(out.exports).toEqual([]);

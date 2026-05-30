@@ -175,6 +175,43 @@ function depthAt(stripped: string, position: number): number {
   return depth;
 }
 
+/** Číslo řádku (1-based), na kterém leží znak na dané pozici. */
+function lineAt(text: string, position: number): number {
+  let line = 1;
+  const stop = Math.min(position, text.length);
+  for (let i = 0; i < stop; i++) {
+    if (text[i] === '\n') line++;
+  }
+  return line;
+}
+
+function matchBrace(stripped: string, openPos: number): number {
+  let depth = 0;
+  for (let i = openPos; i < stripped.length; i++) {
+    if (stripped[i] === '{') depth++;
+    else if (stripped[i] === '}') {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return stripped.length;
+}
+
+/**
+ * Best-effort konec Rust položky od `fromPos` (za názvem): scanuje k prvnímu
+ * `{` nebo `;`. Tělo `{ ... }` (fn/struct/enum/trait) zakončí přes `matchBrace`,
+ * unit/tuple struct (`pub struct Foo;`, `pub struct Foo(T);`) zakončí na `;`.
+ * Vrátí prázdný objekt, když nenajde ani jedno (konec nejde určit).
+ */
+function itemEnd(stripped: string, fromPos: number): { endLine?: number } {
+  for (let i = fromPos; i < stripped.length; i++) {
+    const c = stripped[i];
+    if (c === '{') return { endLine: lineAt(stripped, matchBrace(stripped, i)) };
+    if (c === ';') return { endLine: lineAt(stripped, i) };
+  }
+  return {};
+}
+
 function matchParen(stripped: string, openPos: number): number {
   let depth = 0;
   for (let i = openPos; i < stripped.length; i++) {
@@ -291,15 +328,17 @@ function extractRustExports(stripped: string): ExportInfo[] {
     const kind = m[1];
     const name = m[2];
     if (!kind || !name) continue;
+    const line = lineAt(stripped, m.index);
+    const afterHeader = m.index + m[0].length;
     if (kind === 'fn') {
-      const sig = parseRustFnAfterName(stripped, m.index + m[0].length);
-      exports.push({ name, kind: 'function', signature: sig });
+      const sig = parseRustFnAfterName(stripped, afterHeader);
+      exports.push({ name, kind: 'function', signature: sig, line, ...itemEnd(stripped, afterHeader) });
     } else if (kind === 'struct') {
-      exports.push({ name, kind: 'struct' });
+      exports.push({ name, kind: 'struct', line, ...itemEnd(stripped, afterHeader) });
     } else if (kind === 'enum') {
-      exports.push({ name, kind: 'enum' });
+      exports.push({ name, kind: 'enum', line, ...itemEnd(stripped, afterHeader) });
     } else if (kind === 'trait') {
-      exports.push({ name, kind: 'trait' });
+      exports.push({ name, kind: 'trait', line, ...itemEnd(stripped, afterHeader) });
     }
   }
   return exports;

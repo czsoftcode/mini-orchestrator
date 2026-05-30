@@ -5,4 +5,4 @@ Imports:
 - type { ExportInfo, ExportKind, FileGraph, FunctionSignature, ImportInfo, MethodSignature, Parameter } from "./types.js"
 
 Exports:
-- function mapFile(content: string, relPath: string): FileGraph
+- function mapFile(content: string, relPath: string): FileGraph @L26-42

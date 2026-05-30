@@ -11,14 +11,14 @@ Imports:
 - type { Foo } from "./only-types.js"
 
 Exports:
-- function foo(x: number): number
-- class Bar
+- function foo(x: number): number @L5-8
+- class Bar @L10-20
   - run(): void
   - static make(): Bar
-- enum Mode
+- enum Mode @L22-25
 - interface Greeter
 - type Result
-- const VERSION
-- function main(): number (default)
+- const VERSION @L27
+- function main(): number (default) @L29-31
 "
 `;

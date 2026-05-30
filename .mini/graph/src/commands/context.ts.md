@@ -14,7 +14,7 @@ Imports:
 - { log } from "../ui/log.js"
 
 Exports:
-- const CONTEXT_COMMANDS
-- type ContextCommand
-- function isContextCommand(value: string): value is ContextCommand
-- function context(cmd: string, extraArgs: string[]): Promise<void>
+- const CONTEXT_COMMANDS @L23
+- type ContextCommand @L24
+- function isContextCommand(value: string): value is ContextCommand @L26-28
+- function context(cmd: string, extraArgs: string[]): Promise<void> @L40-74

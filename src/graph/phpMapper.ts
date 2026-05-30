@@ -143,6 +143,16 @@ function depthAt(stripped: string, position: number): number {
   return depth;
 }
 
+/** Číslo řádku (1-based), na kterém leží znak na dané pozici. */
+function lineAt(text: string, position: number): number {
+  let line = 1;
+  const stop = Math.min(position, text.length);
+  for (let i = 0; i < stop; i++) {
+    if (text[i] === '\n') line++;
+  }
+  return line;
+}
+
 function matchBrace(stripped: string, openPos: number): number {
   let depth = 0;
   for (let i = openPos; i < stripped.length; i++) {
@@ -255,9 +265,10 @@ function extractPhpExports(stripped: string): ExportInfo[] {
     const name = m[1];
     if (name === undefined) continue;
     const openBrace = findOpenBrace(stripped, m.index + m[0].length);
-    const info: ExportInfo = { name, kind: 'class' };
+    const info: ExportInfo = { name, kind: 'class', line: lineAt(stripped, m.index) };
     if (openBrace !== -1) {
       const closeBrace = matchBrace(stripped, openBrace);
+      info.endLine = lineAt(stripped, closeBrace);
       const body = stripped.slice(openBrace + 1, closeBrace);
       const methods = extractPhpMethods(body);
       if (methods.length > 0) info.methods = methods;
@@ -271,7 +282,12 @@ function extractPhpExports(stripped: string): ExportInfo[] {
     if (depthAt(stripped, m.index) !== 0) continue;
     const name = m[1];
     if (name === undefined) continue;
-    exports.push({ name, kind: 'interface' });
+    exports.push({
+      name,
+      kind: 'interface',
+      line: lineAt(stripped, m.index),
+      ...bracedEnd(stripped, m.index + m[0].length),
+    });
   }
 
   // Trait
@@ -280,7 +296,12 @@ function extractPhpExports(stripped: string): ExportInfo[] {
     if (depthAt(stripped, m.index) !== 0) continue;
     const name = m[1];
     if (name === undefined) continue;
-    exports.push({ name, kind: 'trait' });
+    exports.push({
+      name,
+      kind: 'trait',
+      line: lineAt(stripped, m.index),
+      ...bracedEnd(stripped, m.index + m[0].length),
+    });
   }
 
   // Funkce — pouze top-level (depth 0)
@@ -291,10 +312,30 @@ function extractPhpExports(stripped: string): ExportInfo[] {
     if (name === undefined) continue;
     const openParen = m.index + m[0].length - 1;
     const sig = parsePhpSignature(stripped, openParen);
-    exports.push({ name, kind: 'function', signature: sig });
+    const close = matchParen(stripped, openParen);
+    exports.push({
+      name,
+      kind: 'function',
+      signature: sig,
+      line: lineAt(stripped, m.index),
+      ...bracedEnd(stripped, close + 1),
+    });
   }
 
   return exports;
+}
+
+/**
+ * Best-effort konec deklarace s tělem `{ ... }`: od `fromPos` najde otevírací
+ * `{` (přeskočí `extends`/`implements`/návratový typ) a vrátí řádek odpovídající
+ * `}`. Když tělo nenajde (`-1`), vrátí prázdný objekt — `endLine` zůstane
+ * nevyplněný. Start (`line`) plní volající z pozice klíčového slova.
+ */
+function bracedEnd(stripped: string, fromPos: number): { endLine?: number } {
+  const openBrace = findOpenBrace(stripped, fromPos);
+  if (openBrace === -1) return {};
+  const closeBrace = matchBrace(stripped, openBrace);
+  return { endLine: lineAt(stripped, closeBrace) };
 }
 
 function findOpenBrace(stripped: string, fromPos: number): number {

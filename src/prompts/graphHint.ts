@@ -10,10 +10,11 @@
  */
 export const GRAPH_USAGE_HINT =
   'Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: ' +
-  '(1) začni indexem `.mini/graph.json` (pokud existuje) — pro každý zdroják cestu, ' +
-  'jeho mapu v `.mini/graph/` a názvy exportů; ' +
+  '(1) jednou si načti index `.mini/graph.json` (pokud existuje) — pro každý zdroják cestu, ' +
+  'jeho mapu v `.mini/graph/` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, ' +
+  'nenačítej ho opakovaně; ' +
   '(2) podle exportů cíleně otevři jen relevantní mapy `.mini/graph/<cesta>.md` ' +
-  '(importy, exporty, signatury); ' +
-  '(3) teprve když mapy nestačí, čti samotné zdrojáky. U velkých souborů si symbol ' +
-  'najdi přes Grep tool (ripgrep) a přečti jen jeho úsek (`Read` s `offset`/`limit`), ' +
-  'ne celý soubor; malé soubory klidně celé.';
+  '(importy, exporty, signatury; u exportů je kotva `@L<start>-<end>` = řádky deklarace); ' +
+  '(3) když potřebuješ samotný kód, čti ho cíleně přes `Read` rovnou od kotvy ' +
+  '(`offset` = start, `limit` = end − start + 1), ne celý soubor; ' +
+  'když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé.';

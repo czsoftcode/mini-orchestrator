@@ -1,38 +1,25 @@
-# Fáze 44 — Map respektuje .gitignore
+# Fáze 45 — Sdílená instrukce o grafu
 
-**Cíl:** mini map při procházení projektu přeskočí soubory a adresáře odpovídající .gitignore v kořeni projektu (vedle stávajícího IGNORE_DIRS), aby se do grafu nedostaly ignorované runtime/build artefakty (např. Symfony var/cache); ověřitelné unit testem s fixturou .gitignore + zelená brána (typecheck, testy, build).
+**Cíl:** Vytáhnout návod 'jak využít .mini/graph.json + graph/ při čtení kódu' do jednoho sdíleného bloku a konzistentně ho vložit do promptů, které dnes graf zmiňují nejednotně nebo vůbec (next, discuss, plan; rozsah do/auto doladit v diskusi), aby agent navigoval kód přes graf místo slepého Read/Grep; ověřitelné aktualizovanými snapshoty promptů + zelená brána.
 
 ## Kroky
-- [hotovo] JS přípony v detectLang + mapper
-- [hotovo] Git-aware sběr souborů v buildGraph
-- [hotovo] Přepsat komentář IGNORE_DIRS
-- [hotovo] Testy: gitignore + JS + fallback
-- [hotovo] Zelená brána
+- [hotovo] Modul graphHint.ts s konstantou
+- [hotovo] Vložit hint do next builderů
+- [hotovo] Vložit hint do plan + discuss builderů
+- [hotovo] Snapshoty + zelená brána
 
 ## Auto-commit
-- Fáze 44: Map respektuje .gitignore (`073937357dc63d9fa2b65884f81396866d1b2940`)
+- Fáze 45: Sdílená instrukce o grafu (`74f66d7a916fee05a566c81a173d928930611393`)
 
 ## Pozor na
-- **JS scriptKind**: `mapFile` (`mapper.ts:27`) dnes rozlišuje jen `.tsx` →
-  jinak `ScriptKind.TS`. Pro JS doplnit: `.js/.cjs/.mjs` → `ScriptKind.JS`,
-  `.jsx` → `ScriptKind.JSX` (jinak JSX v `.js`/`.jsx` neparsuje). `detectLang`
-  rozšířit o JS přípony (vrací `lang: 'ts'`, scriptKind řeší mapper podle cesty).
-- **`-z` (NUL-separované)** místo prostého stdout — git jinak cesty se speciálními
-  znaky uvozuje/escapuje. Cesty z gitu jsou už s `/` (není třeba `toUnix`).
-- **`includeFile` opce** (`BuildGraphOptions`) musí platit i nad git seznamem.
-- **`hasMappableProject`** nech na stávajícím `walk` (`collectMappableFiles` se
-  `stopAfter:1`, kontroluje hlavně tsconfig/Cargo/composer) — neduplikovat git
-  logiku do detekce.
-- **Tracked soubor, co je i v `.gitignore`** → `ls-files -c` ho zahrne; to je
-  správně (commitnutý = patří do grafu). Nezahazovat.
-- **Smazaný-ale-tracked soubor** (`ls-files -c` ho vrátí, na disku chybí) — řeší
-  už `readFile` try/catch v `buildGraph` (best-effort skip).
-- **Test:** temp projekt s `git init` + fixturou `.gitignore` (`var/cache` nebo
-  `/var/`), ověřit že `var/cache/*.php` se nenamapuje a `src/*.ts` ano. Druhý test:
-  bez `git init` → pořád funguje `walk` + `IGNORE_DIRS` (stávající chování beze
-  změny). Pozor: testy běží nad temp direm bez gitu, takže nový test musí git repo
-  založit explicitně; vyžaduje git binárku v test prostředí.
-- **Determinismus**: po načtení ze `ls-files` zachovat sort (`graphs.sort` už je).
-- **Snapshoty**: stávající snapshoty buildGraphu by se hnout neměly (běží mimo git
-  repo → fallback walk), ověřit `npm test`.
+- **Nahrazovat, ne přidávat**: u next (`sessionContext`) a discuss už věta o grafu
+  je — vyměnit za sdílený blok, ať nevznikne duplicita.
+- **Prompt-specifické věty nechat zvlášť**: discuss má navíc „kromě poznámek nic
+  nezapisuj"; plan má „Nezapisuj nic". To do sdíleného bloku NEPATŘÍ.
+- **Blok musí znít neutrálně**, ať sedí do next/plan/discuss (ne do/auto).
+- **Snapshoty se pohnou**: `nextPhase`, `planPhase`, `discussPhase` + interaktivní
+  `sessionContext` (next, plan). `autoPhase` se hnout NESMÍ (mimo rozsah) — pokud
+  se hne, něco je špatně. Projít `npm test` a aktualizovat jen očekávané.
+- **`.mini/token-report.md`** lze po fázi přegenerovat (`npm run measure-tokens`,
+  `measure.ts` čerpá ze `sessionContext`) — volitelné.
 - Brána zelená: `npm run typecheck`, `npm test`, `npm run build`.

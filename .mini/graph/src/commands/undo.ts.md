@@ -8,4 +8,4 @@ Imports:
 - { log } from "../ui/log.js"
 
 Exports:
-- function undo(): Promise<void>
+- function undo(): Promise<void> @L22-82

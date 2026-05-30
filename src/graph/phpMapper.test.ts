@@ -152,6 +152,20 @@ function real(): void {}
     expect(importSources).not.toContain('Heredoc\\Ns');
   });
 
+  it('zachycuje rozsah řádků deklarací (1-based)', () => {
+    const greeter = graph.exports.find((e) => e.name === 'Greeter');
+    expect(greeter?.line).toBe(12);
+    expect(greeter?.endLine).toBe(31);
+
+    const talker = graph.exports.find((e) => e.name === 'Talker');
+    expect(talker?.line).toBe(33);
+    expect(talker?.endLine).toBe(36);
+
+    const topLevel = graph.exports.find((e) => e.name === 'topLevel');
+    expect(topLevel?.line).toBe(43);
+    expect(topLevel?.endLine).toBe(46);
+  });
+
   it('prázdný soubor produkuje prázdný graf', () => {
     const out = mapPhpFile(`<?php\n`, 'src/empty.php');
     expect(out.exports).toEqual([]);

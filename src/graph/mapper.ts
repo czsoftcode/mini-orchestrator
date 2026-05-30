@@ -31,7 +31,7 @@ export function mapFile(content: string, relPath: string): FileGraph {
 
   for (const statement of sourceFile.statements) {
     collectImports(statement, imports);
-    collectExports(statement, exports);
+    collectExports(statement, exports, sourceFile);
   }
 
   return {
@@ -39,6 +39,17 @@ export function mapFile(content: string, relPath: string): FileGraph {
     exports,
     imports,
   };
+}
+
+/**
+ * Rozsah řádků (1-based) deklarace daného node — kotva pro cílené čtení
+ * zdrojáku. `getStart` přeskakuje leading trivia/komentáře, takže `line` ukazuje
+ * na první řádek samotné deklarace.
+ */
+function lineRange(sourceFile: ts.SourceFile, node: ts.Node): { line: number; endLine: number } {
+  const line = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1;
+  const endLine = sourceFile.getLineAndCharacterOfPosition(node.getEnd()).line + 1;
+  return { line, endLine };
 }
 
 /**
@@ -88,7 +99,9 @@ function collectImports(node: ts.Statement, out: ImportInfo[]): void {
   out.push(typeOnly ? { source, symbols, typeOnly: true } : { source, symbols });
 }
 
-function collectExports(node: ts.Statement, out: ExportInfo[]): void {
+function collectExports(node: ts.Statement, out: ExportInfo[], sourceFile: ts.SourceFile): void {
+  const range = lineRange(sourceFile, node);
+
   if (ts.isFunctionDeclaration(node) && hasExportModifier(node) && node.name) {
     const isDefault = hasDefaultModifier(node);
     out.push({
@@ -96,6 +109,7 @@ function collectExports(node: ts.Statement, out: ExportInfo[]): void {
       kind: 'function',
       signature: functionSignature(node),
       ...(isDefault ? { isDefault: true } : {}),
+      ...range,
     });
     return;
   }
@@ -106,6 +120,7 @@ function collectExports(node: ts.Statement, out: ExportInfo[]): void {
     const info: ExportInfo = {
       name: isDefault ? (node.name?.text ?? 'default') : node.name.text,
       kind: 'class',
+      ...range,
     };
     if (methods.length > 0) info.methods = methods;
     if (isDefault) info.isDefault = true;
@@ -114,17 +129,17 @@ function collectExports(node: ts.Statement, out: ExportInfo[]): void {
   }
 
   if (ts.isInterfaceDeclaration(node) && hasExportModifier(node)) {
-    out.push({ name: node.name.text, kind: 'interface' });
+    out.push({ name: node.name.text, kind: 'interface', ...range });
     return;
   }
 
   if (ts.isTypeAliasDeclaration(node) && hasExportModifier(node)) {
-    out.push({ name: node.name.text, kind: 'type' });
+    out.push({ name: node.name.text, kind: 'type', ...range });
     return;
   }
 
   if (ts.isEnumDeclaration(node) && hasExportModifier(node)) {
-    out.push({ name: node.name.text, kind: 'enum' });
+    out.push({ name: node.name.text, kind: 'enum', ...range });
     return;
   }
 
@@ -132,7 +147,7 @@ function collectExports(node: ts.Statement, out: ExportInfo[]): void {
     const isConst = (node.declarationList.flags & ts.NodeFlags.Const) !== 0;
     for (const decl of node.declarationList.declarations) {
       if (!ts.isIdentifier(decl.name)) continue;
-      const exportInfo = variableExport(decl, isConst);
+      const exportInfo = variableExport(decl, isConst, lineRange(sourceFile, decl));
       out.push(exportInfo);
     }
     return;
@@ -143,7 +158,7 @@ function collectExports(node: ts.Statement, out: ExportInfo[]): void {
     // default a snažíme se vykoukat identifier z expression.
     if (node.isExportEquals) return;
     const name = ts.isIdentifier(node.expression) ? node.expression.text : 'default';
-    out.push({ name, kind: 'const', isDefault: true });
+    out.push({ name, kind: 'const', isDefault: true, ...range });
     return;
   }
 
@@ -152,16 +167,20 @@ function collectExports(node: ts.Statement, out: ExportInfo[]): void {
     const clause = node.exportClause;
     if (clause && ts.isNamedExports(clause)) {
       for (const element of clause.elements) {
-        out.push({ name: element.name.text, kind: 'const' });
+        out.push({ name: element.name.text, kind: 'const', ...range });
       }
     } else if (!clause && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       // `export * from './x'` — pojmenuju to jako re-export, kind 'const' jako fallback
-      out.push({ name: `* from "${node.moduleSpecifier.text}"`, kind: 'const' });
+      out.push({ name: `* from "${node.moduleSpecifier.text}"`, kind: 'const', ...range });
     }
   }
 }
 
-function variableExport(decl: ts.VariableDeclaration, isConst: boolean): ExportInfo {
+function variableExport(
+  decl: ts.VariableDeclaration,
+  isConst: boolean,
+  range: { line: number; endLine: number },
+): ExportInfo {
   const name = (decl.name as ts.Identifier).text;
   // const foo = function(...) {...} / arrow → považujeme za function
   if (decl.initializer && (ts.isArrowFunction(decl.initializer) || ts.isFunctionExpression(decl.initializer))) {
@@ -169,9 +188,10 @@ function variableExport(decl: ts.VariableDeclaration, isConst: boolean): ExportI
       name,
       kind: 'function',
       signature: functionSignature(decl.initializer),
+      ...range,
     };
   }
-  return { name, kind: isConst ? 'const' : 'variable' };
+  return { name, kind: isConst ? 'const' : 'variable', ...range };
 }
 
 function functionSignature(

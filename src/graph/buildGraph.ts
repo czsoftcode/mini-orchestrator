@@ -360,20 +360,35 @@ function renderImport(imp: ImportInfo): string {
 function renderExport(exp: ExportInfo): string[] {
   const lines: string[] = [];
   const defaultMark = exp.isDefault ? ' (default)' : '';
+  const loc = lineSuffix(exp);
   if (exp.kind === 'function' && exp.signature) {
-    lines.push(`- function ${exp.name}${renderSignature(exp.signature)}${defaultMark}`);
+    lines.push(`- function ${exp.name}${renderSignature(exp.signature)}${defaultMark}${loc}`);
     return lines;
   }
   if (exp.kind === 'class') {
-    lines.push(`- class ${exp.name}${defaultMark}`);
+    lines.push(`- class ${exp.name}${defaultMark}${loc}`);
     for (const method of exp.methods ?? []) {
       const staticMark = method.isStatic ? 'static ' : '';
       lines.push(`  - ${staticMark}${method.name}${renderSignature(method.signature)}`);
     }
     return lines;
   }
-  lines.push(`- ${exp.kind} ${exp.name}${defaultMark}`);
+  lines.push(`- ${exp.kind} ${exp.name}${defaultMark}${loc}`);
   return lines;
+}
+
+/**
+ * Kotva na řádky zdrojáku: ` @L<start>-<end>` pro víceřádkové deklarace,
+ * ` @L<start>` pro jednořádkové (nebo když konec není znám). Když mapper řádek
+ * neurčil (`line` chybí), nepřidá nic. Slouží agentovi k cílenému `Read`
+ * (`offset` = start, `limit` = end − start + 1).
+ */
+function lineSuffix(exp: ExportInfo): string {
+  if (exp.line === undefined) return '';
+  if (exp.endLine !== undefined && exp.endLine > exp.line) {
+    return ` @L${exp.line}-${exp.endLine}`;
+  }
+  return ` @L${exp.line}`;
 }
 
 function renderSignature(sig: { parameters: { name: string; type?: string; optional?: boolean; rest?: boolean }[]; returnType?: string }): string {

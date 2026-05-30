@@ -2,7 +2,7 @@
   "id": 45,
   "title": "Sdílená instrukce o grafu",
   "goal": "Vytáhnout návod 'jak využít .mini/graph.json + graph/ při čtení kódu' do jednoho sdíleného bloku a konzistentně ho vložit do promptů, které dnes graf zmiňují nejednotně nebo vůbec (next, discuss, plan; rozsah do/auto doladit v diskusi), aby agent navigoval kód přes graf místo slepého Read/Grep; ověřitelné aktualizovanými snapshoty promptů + zelená brána.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Modul graphHint.ts s konstantou",
@@ -25,5 +25,14 @@
       "detail": "Aktualizovat snapshoty nextPhase/planPhase/discussPhase/sessionContext (next, plan); ověřit že autoPhase snapshoty se NEhnuly. npm run typecheck, npm test, npm run build."
     }
   ],
-  "startedAt": "2026-05-30T07:37:52.573Z"
+  "startedAt": "2026-05-30T07:37:52.573Z",
+  "resolvedVerify": [
+    "Sledovat, zda agent v next/discuss/plan reálně sahá po grafu"
+  ],
+  "completedAt": "2026-05-30T07:46:17.529Z",
+  "autoCommit": {
+    "preSha": "073937357dc63d9fa2b65884f81396866d1b2940",
+    "sha": "74f66d7a916fee05a566c81a173d928930611393",
+    "subject": "Fáze 45: Sdílená instrukce o grafu"
+  }
 }

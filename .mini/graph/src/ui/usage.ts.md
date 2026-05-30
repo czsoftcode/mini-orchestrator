@@ -7,5 +7,5 @@ Imports:
 - { log } from "./log.js"
 
 Exports:
-- function logUsage(response: AskResult): void
-- function logStreamSummary(result: StreamResult): void
+- function logUsage(response: AskResult): void @L7-24
+- function logStreamSummary(result: StreamResult): void @L32-61

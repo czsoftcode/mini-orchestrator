@@ -131,6 +131,21 @@ describe('mapFile', () => {
     expect(run?.signature.parameters[1]?.rest).toBe(true);
   });
 
+  it('captures 1-based line range of exports', () => {
+    // FIXTURE začíná prázdným řádkem (1), takže `import readFile` je řádek 2.
+    const greeter = graph.exports.find((e) => e.name === 'Greeter');
+    expect(greeter?.line).toBe(8);
+    expect(greeter?.endLine).toBe(10);
+
+    const version = graph.exports.find((e) => e.name === 'VERSION');
+    expect(version?.line).toBe(19);
+    expect(version?.endLine).toBe(19);
+
+    const add = graph.exports.find((e) => e.name === 'add');
+    expect(add?.line).toBe(22);
+    expect(add?.endLine).toBe(24);
+  });
+
   it('captures export default function', () => {
     const main = graph.exports.find((e) => e.isDefault === true);
     expect(main?.name).toBe('main');

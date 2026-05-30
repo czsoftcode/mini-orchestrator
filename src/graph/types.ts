@@ -40,6 +40,19 @@ export interface ExportInfo {
   methods?: MethodSignature[];
   /** True pro `export default ...` formy. */
   isDefault?: boolean;
+  /**
+   * Řádek (1-based), na kterém deklarace exportu začíná. Slouží jako kotva pro
+   * cílené čtení zdrojáku (`Read` s `offset`). Nepovinné — mapper ho nemusí umět
+   * spolehlivě určit.
+   */
+  line?: number;
+  /**
+   * Řádek (1-based), na kterém deklarace exportu končí. S `line` dává rozsah,
+   * z něhož se spočítá `limit` pro `Read` (= `endLine - line + 1`). Nepovinné:
+   * u TS přesné, u PHP/Rust best-effort (chybí, když konec nejde jednoznačně
+   * určit).
+   */
+  endLine?: number;
 }
 
 export interface ImportInfo {
