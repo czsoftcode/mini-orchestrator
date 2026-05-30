@@ -1,0 +1,25 @@
+{
+  "id": 35,
+  "title": "Slash command /mini:auto",
+  "goal": "Přidat do install-commands.ts nový command /mini:auto s vlastním body, který v jedné Claude session zřetězí kroky workflow: volitelně discuss (jen když je fáze složitá na rozhodnutí a discuss ještě neproběhl), pak plan, do a nakonec done --push — včetně testů a přegenerování commandů.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Do COMMAND_DEFS v install-commands.ts přidat položku auto (description „mini — celý cyklus fáze v jedné session\") s vlastním body, který instruuje Claude provést v jedné session sekvenci: nejdřív zvážit mini context discuss (spustit jen když je fáze složitá na rozhodnutí a discuss ještě neproběhl, jinak přeskočit), pak mini context plan, pak mini context do, nakonec mini context done a uložit přes mini done --apply --push. Výstup: renderCommandMd pro auto vrací md, jehož tělo obsahuje všechny čtyři kroky i --push a podmínku na discuss.",
+      "status": "done"
+    },
+    {
+      "title": "Doplnit hint na konci installCommands o /mini:auto. Výstup: vypsaný seznam dostupných commandů obsahuje /mini:auto.",
+      "status": "done"
+    },
+    {
+      "title": "Rozšířit install-commands.test.ts: do seznamu očekávaných souborů přidat auto.md; nový test, že auto.md zmiňuje sekvenci discuss→plan→do→done, podmínku na discuss i --push. Výstup: nové i upravené testy zelené.",
+      "status": "done"
+    },
+    {
+      "title": "Ověřit npm run typecheck + build + test; přegenerovat přes node dist/cli.js install-commands a ověřit, že vznikne .claude/commands/mini/auto.md. Výstup: vše zelené, soubor auto.md existuje.",
+      "status": "done"
+    }
+  ],
+  "startedAt": "2026-05-30T01:11:51.764Z"
+}

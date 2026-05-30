@@ -2,7 +2,7 @@
   "id": 34,
   "title": "Mini:next se ptá na plán",
   "goal": "Když /mini:next dostane prázdný nápad, session prompt přiměje Claude nejdřív se uživatele zeptat, zda má pro další fázi vlastní představu, nebo to má nechat na Claude — a teprve podle odpovědi navrhne fázi.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Do buildNextSessionPrompt (src/prompts/sessionContext.ts) přidat pro větev bez userHint instrukci: než Claude něco navrhne, ať se uživatele zeptá, zda má pro další fázi vlastní představu, nebo to má nechat na Claude — a teprve podle odpovědi pokračuje. Výstup: prompt bez nápadu obsahuje pokyn nejdřív se zeptat.",
@@ -21,5 +21,11 @@
       "status": "done"
     }
   ],
-  "startedAt": "2026-05-30T01:00:06.143Z"
+  "startedAt": "2026-05-30T01:00:06.143Z",
+  "completedAt": "2026-05-30T01:04:23.672Z",
+  "autoCommit": {
+    "preSha": "fe7d9598a846d27b1bda67f589c19f070e2cb3a1",
+    "sha": "204eb9808bbc520f3de91cc5e0e05e580d24ca61",
+    "subject": "Fáze 34: Mini:next se ptá na plán"
+  }
 }

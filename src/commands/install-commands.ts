@@ -64,6 +64,20 @@ Spusť v Bash \`mini status\` a jeho výstup (přehled fází projektu) předej 
 
 Spusť v Bash \`mini map\` — přegeneruje graf projektu (\`.mini/graph/\` + index \`.mini/graph.json\`) ze zdrojáků. Výsledek (cestu indexu a počet zmapovaných souborů) z výstupu předej uživateli v chatu. Stav fází v \`.mini/state.json\` to nijak nemění — graf je jen derivace ze zdrojáků.`,
   },
+  {
+    name: 'auto',
+    description: 'mini — celý cyklus fáze v jedné session',
+    body: `Tohle je krok **auto** workflow mini, spuštěný přímo v Claude Code. Projdeš **celý cyklus aktuální fáze** v jedné session — postupně discuss (volitelně), plan, do a done. Každý krok pustí \`mini context <name>\` a ty se řídíš vypsaným promptem; stav v \`.mini/\` měň jen příkazy \`mini ... --apply\`, nikdy needituj \`.mini/state.json\` ručně.
+
+Postupuj v tomhle pořadí, krok po kroku (další spusť až po dokončení předchozího):
+
+1. **discuss (jen podmíněně).** Spusť \`mini context discuss\` **pouze** když je fáze složitá na rozhodnutí (nejednoznačný cíl, víc možných směrů, potřeba něco vyjasnit s uživatelem) **a** diskuse pro ni ještě neproběhla. U přímočaré fáze discuss **přeskoč** a jdi rovnou na plan.
+2. **plan.** Spusť \`mini context plan\` a podle promptu rozmen fázi na kroky; ulož přes \`mini plan --apply\`. Když už fáze kroky má, plánování přeskoč.
+3. **do.** Spusť \`mini context do\` a implementuj fázi; průběžně i finálně postupuj přesně podle jeho instrukcí (zápis kroků přes \`mini do --apply --step-done\` a report do \`.mini/run/\`).
+4. **done.** Spusť \`mini context done\` a podle promptu posuň stav. Finální uložení udělej s nahráním na remote: \`mini done --apply --push\`.
+
+Mezi kroky uživateli krátce hlas, kam ses dostal. Když některý krok narazí na blocker, který sám neumíš obejít, zastav se a předej řízení uživateli — nezbytek cyklu nedotahuj na sílu.`,
+  },
 ];
 
 /** Vyrenderuje obsah jednoho .md commandu. */
@@ -139,6 +153,6 @@ export async function installCommands(cwd: string = process.cwd()): Promise<void
   const total = created + updated + unchanged;
   log.success(`Hotovo — ${total} commandů v ${COMMANDS_DIR}/ (${created} nových, ${updated} změněných).`);
   log.hint(
-    'Použij je v Claude Code: /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:status, /mini:map',
+    'Použij je v Claude Code: /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:auto, /mini:status, /mini:map',
   );
 }
