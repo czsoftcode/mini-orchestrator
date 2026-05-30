@@ -19,3 +19,7 @@ graph.json
 token-report.md
 # Zeštíhlené shrnutí poslední fáze pro `next` — odvozené z .mini/memory/.
 last-memory.md
+
+# Swap/backup soubory editorů (vim apod.) — vznikají při editaci, do gitu nepatří.
+*.sw[a-p]
+*~
