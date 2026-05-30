@@ -1,0 +1,34 @@
+{
+  "id": 56,
+  "title": "Mapa pro C#",
+  "goal": "Přidat csharpMapper (mapCSharpFile) parsující .cs soubory (usingy, namespace, třídy/struct/interface/enum/record, metody) a zapojit C# do buildGraph (Lang, detectLang na .cs, hasMappableProject přes .csproj/.sln) i graphHintu, vč. testů a zeleného buildu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Kostra csharpMapperu + stripCSharp",
+      "status": "done",
+      "detail": "mapCSharpFile(content, relPath) vrací FileGraph; stripCSharp nahradí komentáře (//, /* */), stringy (\"…\", verbatim @\"…\", interpolované $\"…\"/$@\"…\") a char literály mezerami stejné délky se zachováním \\n (čísla řádků sedí)."
+    },
+    {
+      "title": "Usingy a namespace",
+      "status": "done",
+      "detail": "extrakce using/using static/aliasů jako importy (source = cesta namespace); podpora block i file-scoped namespace Foo; — typy uvnitř se berou jako top-level."
+    },
+    {
+      "title": "Typy a členy",
+      "status": "done",
+      "detail": "top-level class/struct/interface/enum/record (vč. record class/struct) s public/internal jako exporty; public/internal metody jako methods se signaturou + static značka; do těl metod se nezanořuje."
+    },
+    {
+      "title": "Zapojení do buildGraph",
+      "status": "done",
+      "detail": "import + Lang o csharp, větev v mapByLang, detectLang mapuje .cs, hasMappableProject přes .csproj/.sln; doplnit C# do hlášek v map.ts a popisu v cli.ts."
+    },
+    {
+      "title": "Testy a zelený build",
+      "status": "done",
+      "detail": "csharpMapper.test.ts (usingy, namespace block/file-scoped, druhy typů, metody, strip stringů/komentářů, kotvy řádků); npm test i build/lint zelené."
+    }
+  ],
+  "startedAt": "2026-05-30T14:50:45.223Z"
+}

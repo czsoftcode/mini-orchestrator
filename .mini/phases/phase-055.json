@@ -2,7 +2,7 @@
   "id": 55,
   "title": "Done --bump none jako default",
   "goal": "Přidat k volbě --bump (u done i auto) hodnotu none, která se stane novou výchozí a verzi v package.json nenavýší; verze se zvedne jen při explicitním --bump patch|minor|major.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Přidat typ BumpChoice s none",
@@ -30,5 +30,11 @@
       "detail": "V commands/done.test.ts doplň: výchozí volání ({}) nebumpuje ani netaguje; explicitní patch|minor|major bumpuje jako dřív; none+push vrací chybu. Projdi auto.test.ts kvůli změně defaultu. Spusť npm test a npm run typecheck do zelena."
     }
   ],
-  "startedAt": "2026-05-30T14:11:27.780Z"
+  "startedAt": "2026-05-30T14:11:27.780Z",
+  "completedAt": "2026-05-30T14:33:14.281Z",
+  "autoCommit": {
+    "preSha": "fe504925d744c8414ea49122c72511b0ae1bad40",
+    "sha": "dde2408b9fdc01f5d4be64495e582ab16688f688",
+    "subject": "Fáze 55: Done --bump none jako default"
+  }
 }

@@ -7,9 +7,10 @@ import type { StepOutcome } from './types.js';
  * `mini map` — přegeneruje strojovou mapu projektu do `.mini/graph/`
  * (jeden soubor na zdroják) + index `.mini/graph.json`.
  *
- * Detekuje mapovatelný projekt (tsconfig.json/Cargo.toml/composer.json nebo
- * aspoň jeden `.ts`/`.tsx`/`.php`/`.rs` soubor) a v ostatních případech jen
- * tipne uživateli, ať si pustí `/graphify` v Claude session.
+ * Detekuje mapovatelný projekt (tsconfig.json/Cargo.toml/composer.json/… nebo
+ * aspoň jeden `.ts`/`.tsx`/`.php`/`.rs`/`.py`/`.go`/`.java`/`.cs` soubor)
+ * a v ostatních případech jen tipne uživateli, ať si pustí `/graphify`
+ * v Claude session.
  */
 export async function map(): Promise<StepOutcome> {
   const cwd = process.cwd();
@@ -21,12 +22,14 @@ export async function map(): Promise<StepOutcome> {
   }
 
   if (!(await hasMappableProject(cwd))) {
-    log.warn('V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs).');
+    log.warn(
+      'V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs, .py, .go, .java, .cs).',
+    );
     log.hint('Pro jiné jazyky zkus v Claude session: /graphify');
     return { ok: false, reason: 'not-mappable' };
   }
 
-  log.dim('Mapuji TS/PHP/Rust soubory…');
+  log.dim('Mapuji TS/PHP/Rust/Python/Go/Java/C# soubory…');
   const result = await buildGraph(cwd);
 
   if (result.fileCount === 0) {

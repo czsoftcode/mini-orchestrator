@@ -8,6 +8,14 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- Mapa znalostního grafu nově podporuje **C#** (`.cs`): vytáhnou se usingy
+  (`using`, `using static`, `global using` i aliasy `using Foo = A.B`) a top-level
+  typy uvnitř `namespace` (block i file-scoped) — `class`/`struct`/`interface`/
+  `enum`/`record` (vč. `record class`/`record struct`), s `public`/`internal`
+  metodami (signatury parametrů vč. `params`, default hodnot a `static`)
+  připojenými k typu a kotvami na řádky. Komentáře, XML doc, char literály
+  i stringy ve všech variantách (verbatim `@"…"`, interpolované `$"…"`, raw
+  `"""…"""`) se korektně ignorují. Projekt se rozpozná i podle `*.sln`/`*.csproj`.
 - `mini done`/`mini auto`: volba `--bump none` — uzavře fázi bez navýšení verze
   (vhodné pro dílčí fáze, kde se verze zvedne až na konci celku).
 - Mapa znalostního grafu nově podporuje **Javu** (`.java`): z tříd se vytáhnou
