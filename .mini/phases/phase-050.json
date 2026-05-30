@@ -2,7 +2,7 @@
   "id": 50,
   "title": "CHANGELOG.md v /mini:done",
   "goal": "Done session prompt (buildDoneSessionPrompt) dostane instrukci, aby Claude před 'mini done --apply' založil/aktualizoval CHANGELOG.md podle zásad keepachangelog 1.1.0 — sekce '## [verze] - YYYY-MM-DD' s Added/Changed/Fixed poskládanými z reportu hotové fáze — aby ho commit fáze pobral; ověřeno snapshot testem promptu.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Modul changelog.ts + stamp funkce",
@@ -25,5 +25,14 @@
       "detail": "tsc, vitest i lint zelené; nové/aktualizované testy procházejí."
     }
   ],
-  "startedAt": "2026-05-30T09:27:16.181Z"
+  "startedAt": "2026-05-30T09:27:16.181Z",
+  "resolvedVerify": [
+    "Reálný end-to-end tok /mini:done s nainstalovaným mini"
+  ],
+  "completedAt": "2026-05-30T09:40:12.812Z",
+  "autoCommit": {
+    "preSha": "3b793300e0c0218928955bb2c4092ec66bb1c34b",
+    "sha": "a10ba26554e91b144b97b56a0dc6b36ca53f6fbe",
+    "subject": "Fáze 50: CHANGELOG.md v /mini:done"
+  }
 }

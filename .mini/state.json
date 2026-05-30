@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 50,
+  "currentPhaseId": 51,
   "phases": [
     {
       "id": 1,
@@ -251,6 +251,11 @@
     {
       "id": 50,
       "title": "CHANGELOG.md v /mini:done",
+      "status": "done"
+    },
+    {
+      "id": 51,
+      "title": "Mapa pro Python",
       "status": "doing"
     }
   ],

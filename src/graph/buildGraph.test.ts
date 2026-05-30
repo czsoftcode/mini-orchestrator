@@ -128,21 +128,30 @@ describe('buildGraph', () => {
     expect(dirEntries).toEqual([]);
   });
 
-  it('mapuje i .php a .rs soubory vedle TS/TSX', async () => {
+  it('mapuje i .php, .rs a .py soubory vedle TS/TSX', async () => {
     await writeFixture(root, 'src/a.ts', `export const a = 1;\n`);
     await writeFixture(root, 'src/lib.rs', `pub fn run() -> u32 { 0 }\n`);
     await writeFixture(root, 'app/Service.php', `<?php\nclass Service {}\n`);
+    await writeFixture(root, 'app/worker.py', `def run():\n    return 1\n`);
     await writeFixture(root, 'vendor/x.php', `<?php\nclass Vendor {}\n`);
     await writeFixture(root, 'target/y.rs', `pub fn ignored() {}\n`);
+    await writeFixture(root, '.venv/lib/ignored.py', `def ignored():\n    pass\n`);
 
     const result = await buildGraph(root);
     const paths = result.files.map((f) => f.path);
-    expect(paths).toEqual(['app/Service.php', 'src/a.ts', 'src/lib.rs']);
+    expect(paths).toEqual(['app/Service.php', 'app/worker.py', 'src/a.ts', 'src/lib.rs']);
 
     expect(await readFile(join(root, GRAPH_DIR, 'app/Service.php.md'), 'utf-8')).toContain('## app/Service.php');
     expect(await readFile(join(root, GRAPH_DIR, 'src/lib.rs.md'), 'utf-8')).toContain('## src/lib.rs');
+    expect(await readFile(join(root, GRAPH_DIR, 'app/worker.py.md'), 'utf-8')).toContain('## app/worker.py');
     await expect(readFile(join(root, GRAPH_DIR, 'vendor/x.php.md'), 'utf-8')).rejects.toThrow();
     await expect(readFile(join(root, GRAPH_DIR, 'target/y.rs.md'), 'utf-8')).rejects.toThrow();
+    await expect(readFile(join(root, GRAPH_DIR, '.venv/lib/ignored.py.md'), 'utf-8')).rejects.toThrow();
+  });
+
+  it('hasMappableProject returns true when pyproject.toml exists', async () => {
+    await writeFixture(root, 'pyproject.toml', '[project]\nname = "x"\n');
+    expect(await hasMappableProject(root)).toBe(true);
   });
 
   it('hasMappableProject returns true when tsconfig exists', async () => {

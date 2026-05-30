@@ -1,0 +1,39 @@
+{
+  "id": 51,
+  "title": "Mapa pro Python",
+  "goal": "Přidat pythonMapper.ts, který z .py souborů vytáhne importy a top-level exporty (funkce, třídy, konstanty s kotvami na řádky), napojit ho na detectLang a shouldMap (marker pyproject.toml/setup.py) v buildGraph.ts a ověřit unit testy mapperu i snapshotem grafu.",
+  "status": "doing",
+  "steps": [
+    {
+      "title": "Stripping + odsazení helpery",
+      "status": "done",
+      "detail": "stripPythonCommentsAndStrings (triple-quoted \"\"\"/'''/, prefixy r/f/b/rb/fr, # komentáře → mezery stejné délky se zachováním \\n) + helpery lineAt, úroveň odsazení a blockEnd podle indentace. Unit testy: docstring s falešným def/class/# se nestane exportem."
+    },
+    {
+      "title": "Extrakce importů",
+      "status": "done",
+      "detail": "import a.b [as x] (source=modul, symbol=alias/poslední segment) i from mod import a, b as c, * (vč. relativních ./..mod a víceřádkových v závorkách/backslash) → ImportInfo[]. Pokryto unit testy."
+    },
+    {
+      "title": "Top-level exporty s kotvami",
+      "status": "done",
+      "detail": "top-level (sloupec 0) def/async def → function+signatura, class → class, UPPER_CASE/anotované přiřazení → const; jméno s _ prefixem skip; line = řádek deklarace (u dekorátorů první @decorator), endLine best-effort dle odsazení."
+    },
+    {
+      "title": "Metody tříd + signatury parametrů",
+      "status": "done",
+      "detail": "veřejné metody top-level tříd (jedna úroveň odsazení, mimo _) → ExportInfo.methods (MethodSignature); parser parametrů: type hinty, defaulty, *args/**kwargs→rest, / a * oddělovače, self/cls vynechat, -> T return."
+    },
+    {
+      "title": "Napojení do buildGraph.ts",
+      "status": "done",
+      "detail": "type Lang o 'python', case v mapByLang (import mapPythonFile), detectLang pro .py, marker pyproject.toml/setup.py v hasMappableProject, aktualizovat doc-komentáře (.ts/.tsx/.php/.rs)."
+    },
+    {
+      "title": "Zelená brána",
+      "status": "done",
+      "detail": "buildGraph.test.ts rozšířit o .py soubor + ignoraci (.venv), zkontrolovat/aktualizovat snapshoty (__snapshots__, příp. token measure); lint + typecheck + test zeleně."
+    }
+  ],
+  "startedAt": "2026-05-30T12:31:19.187Z"
+}

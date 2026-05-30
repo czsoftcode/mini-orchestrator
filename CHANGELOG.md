@@ -6,6 +6,17 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-05-30
+
+### Added
+
+- Mapa znalostního grafu nově podporuje **Python** (`.py`/`.pyi`): z modulu se
+  vytáhnou importy (`import`, `from ... import` vč. relativních, aliasů, `*` a
+  víceřádkových) a top-level exporty — funkce (`def`/`async def`) se signaturou,
+  třídy s veřejnými metodami a UPPER_CASE/anotované konstanty, s kotvami na řádky.
+  Projekt se rozpozná i podle `pyproject.toml`/`setup.py`; `.venv/` a
+  `__pycache__/` se ignorují.
+
 ## [1.1.0] - 2026-05-30
 
 ### Added

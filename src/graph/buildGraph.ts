@@ -3,6 +3,7 @@ import { dirname, join, posix, relative, sep } from 'node:path';
 import { isGitRepo, runGit } from '../git.js';
 import { mapFile } from './mapper.js';
 import { mapPhpFile } from './phpMapper.js';
+import { mapPythonFile } from './pythonMapper.js';
 import { mapRustFile } from './rustMapper.js';
 import type { ExportInfo, FileGraph, ImportInfo } from './types.js';
 
@@ -24,8 +25,9 @@ export const GRAPH_INDEX_VERSION = 1;
  * proto konzervativní — má pokrýt to nejhorší (`node_modules`, `dist`, …) i bez
  * gitu.
  *
- * `vendor/` (Composer) a `target/` (Cargo) jsou tu kvůli PHP a Rust projektům —
- * generované balíčky/buildy nikdo nechce v grafu.
+ * `vendor/` (Composer) a `target/` (Cargo) jsou tu kvůli PHP a Rust projektům,
+ * `.venv/` a `__pycache__/` kvůli Pythonu — generované balíčky/buildy/cache nikdo
+ * nechce v grafu.
  */
 const IGNORE_DIRS = new Set([
   'node_modules',
@@ -45,9 +47,11 @@ const IGNORE_DIRS = new Set([
   'out',
   'vendor',
   'target',
+  '.venv',
+  '__pycache__',
 ]);
 
-type Lang = 'ts' | 'php' | 'rust';
+type Lang = 'ts' | 'php' | 'rust' | 'python';
 
 /** Jeden záznam v indexu `graph.json`. */
 export interface GraphIndexEntry {
@@ -171,18 +175,22 @@ function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {
       return mapPhpFile(content, relPath);
     case 'rust':
       return mapRustFile(content, relPath);
+    case 'python':
+      return mapPythonFile(content, relPath);
   }
 }
 
 /**
  * Detekuje, jestli má smysl spouštět vlastní mapper: hledá `tsconfig.json`,
- * `Cargo.toml`, `composer.json` nebo alespoň jeden mapovatelný soubor
- * (.ts/.tsx/.php/.rs) v projektu (mimo ignorované adresáře).
+ * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py` nebo alespoň jeden
+ * mapovatelný soubor (.ts/.tsx/.php/.rs/.py) v projektu (mimo ignorované adresáře).
  */
 export async function hasMappableProject(cwd: string = process.cwd()): Promise<boolean> {
   if (await fileExists(join(cwd, 'tsconfig.json'))) return true;
   if (await fileExists(join(cwd, 'Cargo.toml'))) return true;
   if (await fileExists(join(cwd, 'composer.json'))) return true;
+  if (await fileExists(join(cwd, 'pyproject.toml'))) return true;
+  if (await fileExists(join(cwd, 'setup.py'))) return true;
   const files = await collectMappableFiles(cwd, {}, /* stopAfter */ 1);
   return files.length > 0;
 }
@@ -309,6 +317,7 @@ function detectLang(name: string): Lang | null {
   }
   if (name.endsWith('.php')) return 'php';
   if (name.endsWith('.rs')) return 'rust';
+  if (name.endsWith('.py') || name.endsWith('.pyi')) return 'python';
   return null;
 }
 

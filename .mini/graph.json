@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-30T09:00:30.397Z",
+  "generatedAt": "2026-05-30T09:40:17.473Z",
   "files": [
     {
       "path": "scripts/measure-prompt-tokens.ts",
@@ -390,6 +390,21 @@
         "ExportInfo",
         "ImportInfo",
         "FileGraph"
+      ]
+    },
+    {
+      "path": "src/changelog.test.ts",
+      "graphFile": ".mini/graph/src/changelog.test.ts.md",
+      "exports": []
+    },
+    {
+      "path": "src/changelog.ts",
+      "graphFile": ".mini/graph/src/changelog.ts.md",
+      "exports": [
+        "CHANGELOG_FILE",
+        "StampResult",
+        "todayIso",
+        "stampUnreleased"
       ]
     },
     {
