@@ -5,6 +5,7 @@ import { isInteractive } from '../ui/interactive.js';
 import { log } from '../ui/log.js';
 import { COMMANDS_DIR, type WriteCommandsResult, writeCommandsTo } from './commands.js';
 import { type ClaudeDetection, detectClaude, recommendedScope } from './detectClaude.js';
+import { installStatusline } from './statuslineSettings.js';
 
 /** Where the slash commands get installed. */
 export type InstallScope = 'project' | 'user';
@@ -106,4 +107,52 @@ async function chooseScope(detection: ClaudeDetection): Promise<InstallScope> {
     choices,
   });
   return (scope as InstallScope) ?? recommended;
+}
+
+export interface OfferStatuslineOptions {
+  /** Home directory; defaults to the real one. Injectable for tests. */
+  home?: string;
+  /** Whether we may prompt. Defaults to the TTY check; injectable for tests. */
+  interactive?: boolean;
+  /** Asks the yes/no question. Defaults to a `prompts` confirm; injectable for tests. */
+  confirm?: () => Promise<boolean>;
+}
+
+/**
+ * Offers to wire the mini status line into `~/.claude/settings.json`. Only does
+ * anything when (a) there is a TTY and (b) the user has no `statusLine` yet — an
+ * existing one (the user's, GSD's, Claude's) is never touched. Asks for a yes/no
+ * first, so the install stays opt-in. Safe to call from postinstall: returns
+ * quietly without a TTY and prints a hint when the user declines.
+ */
+export async function offerStatusline(options: OfferStatuslineOptions = {}): Promise<void> {
+  const interactive = options.interactive ?? isInteractive();
+  if (!interactive) return; // no TTY → skip silently
+
+  // Peek without writing: if a statusLine already exists, leave it and don't ask.
+  const preview = await installStatusline({ home: options.home, dryRun: true });
+  if (!preview.changed) return;
+
+  const confirm = options.confirm ?? defaultStatuslineConfirm;
+  if (!(await confirm())) {
+    log.hint('Skipped the status line. Add it later via ~/.claude/settings.json.');
+    return;
+  }
+
+  const res = await installStatusline({ home: options.home });
+  if (res.changed) {
+    log.success('Installed the mini status line into ~/.claude/settings.json.');
+    log.hint('Disable it anytime by removing the "statusLine" block from that file.');
+  }
+}
+
+async function defaultStatuslineConfirm(): Promise<boolean> {
+  const res = await ask({
+    type: 'confirm',
+    name: 'ok',
+    message:
+      'Show a mini status line in Claude Code (project dir, model, context-window usage)?',
+    initial: true,
+  });
+  return (res as { ok?: boolean }).ok === true;
 }

@@ -432,6 +432,11 @@
       "id": 86,
       "title": "npm postinstall installs slash commands",
       "status": "done"
+    },
+    {
+      "id": 87,
+      "title": "mini statusline auto-install",
+      "status": "done"
     }
   ],
   "models": {

@@ -1,6 +1,6 @@
 import { isInteractive } from '../ui/interactive.js';
 import { log } from '../ui/log.js';
-import { installSlashCommands } from './install.js';
+import { installSlashCommands, offerStatusline } from './install.js';
 
 /** The command users can run by hand to (re)install the slash commands. */
 export const MANUAL_HINT =
@@ -39,5 +39,13 @@ export async function runPostinstall(): Promise<void> {
     // A failed postinstall must not break `npm install`.
     log.warn(`Could not install the slash commands automatically: ${(err as Error).message}`);
     log.hint(MANUAL_HINT);
+  }
+
+  // Offer the status line separately — a failure here must likewise not break
+  // the install, and it should not prevent the slash commands above.
+  try {
+    await offerStatusline();
+  } catch (err) {
+    log.warn(`Could not set up the status line: ${(err as Error).message}`);
   }
 }

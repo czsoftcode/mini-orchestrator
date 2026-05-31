@@ -332,6 +332,16 @@ program
     if (!r.ok) process.exit(1);
   });
 
+program
+  .command('statusline')
+  .description(
+    'Renders the mini status line for Claude Code. Reads the status JSON on stdin and prints one line: shortened project dir, model, and context-window usage. Meant to be wired into ~/.claude/settings.json as a statusLine command, not run by hand.',
+  )
+  .action(async () => {
+    const { statusline } = await import('./commands/statusline.js');
+    await statusline();
+  });
+
 // Hidden fallback for installing the slash commands by hand — the normal path is
 // the npm `postinstall` hook. Stays available for when postinstall is skipped
 // (`--ignore-scripts`, `npm ci`, CI). Without --user/--project and with a TTY it

@@ -6,7 +6,21 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-05-31
+
 ### Added
+
+- **mini ships its own Claude Code status line.** A new `mini statusline` command
+  reads the status JSON Claude Code pipes on stdin and prints one line: the
+  (shortened) project directory, the model with its version, the context-window
+  size (`200k`/`1M`) and a colored gauge + percentage of the **context-window
+  usage** — recovered from the session transcript, since Claude Code does not
+  report token counts to the status line directly. Colors are raw ANSI (dir in
+  bold cyan, the gauge green/yellow/red by fill) so they survive the piped
+  output. On `npm install` the postinstall hook **offers** it (asks first) and
+  wires it into `~/.claude/settings.json` — but only when no `statusLine` exists
+  yet; an existing one (yours, GSD's, Claude's) is never overwritten, and without
+  a TTY it is skipped silently. Disable it by removing the `statusLine` block.
 
 - **The `/mini:*` slash commands are installed automatically by an npm `postinstall`
   hook.** After `npm install` of mini, the hook offers to install the commands and

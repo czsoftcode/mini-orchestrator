@@ -88,6 +88,7 @@ mini auto        # next → plan → do (with acceptEdits) → done; everything 
 | `mini update` | Brings the non-generated part of the project (the `.mini/` skeleton + slash commands) up to the current mini version; idempotent, does not touch generated files. `--dry-run` only shows what would change |
 | `mini install-commands` | Generates `.claude/commands/mini/*.md` (the `/mini:*` slash commands) into the project — see below |
 | `mini context <cmd>` | Prints the current session prompt for a cycle step (`next`/`discuss`/`plan`/`do`/`done`/`verify`) to stdout; called by the slash commands |
+| `mini statusline` | Renders the mini status line for Claude Code (reads the status JSON on stdin) — wired into `settings.json`, not run by hand; see below |
 
 ## mini commands directly in Claude Code
 
@@ -147,6 +148,35 @@ mini model reset                 # clears everything
 mini model sonnet                # default = sonnet for light things
 mini model do opus               # do = opus for complex coding
 ```
+
+## Status line
+
+mini ships its own Claude Code status line. It shows, on one line:
+
+```
+mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28%
+```
+
+— the (shortened) project directory, the model with its version, the
+context-window size (`200k`/`1M`), and a gauge plus percentage of the
+**context-window usage** (recovered from the session transcript, since Claude
+Code does not report token counts to the status line directly).
+
+**Install:** on `npm install` the postinstall hook offers it — but only when you
+have **no** status line configured yet, and only after asking. It is never
+forced and an existing status line (yours, GSD's, Claude's) is never touched. It
+writes a single `statusLine` entry into `~/.claude/settings.json`:
+
+```json
+{
+  "statusLine": { "type": "command", "command": "node \"…/mini/dist/cli.js\" statusline" }
+}
+```
+
+**Disable:** remove the `statusLine` block from `~/.claude/settings.json`.
+
+The renderer is the `mini statusline` command (reads the status JSON on stdin);
+you normally never run it by hand — Claude Code calls it on every refresh.
 
 **Note:** a "cheaper" model does not always mean saving on the Pro/Max limit. Cheaper models often need more iterations → a larger total token consumption. For `do` (real coding), Opus is usually the most economical anyway.
 

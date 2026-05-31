@@ -1,0 +1,47 @@
+{
+  "id": 87,
+  "title": "mini statusline auto-install",
+  "goal": "Add a statusline renderer (mini statusline) that reads the Claude Code JSON from stdin and prints a shortened project directory name + model + context-window usage in percent, and register it into ~/.claude/settings.json during postinstall only when the user has no statusLine configured yet (never overwrite an existing one, idempotent).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Statusline core: JSON + transcript usage",
+      "status": "done",
+      "detail": "New lean module src/statusline/: pure parse of the status JSON (cwd / workspace.current_dir, model.display_name, transcript_path) and usage extraction from the transcript JSONL (last message.usage, summing input_tokens + cache_read_input_tokens + cache_creation_input_tokens); model->window mapping (1M for Sonnet 4.x and Opus >=4.7 via version parse, else 200k) with auto-escalate when used > limit. Covered by vitest."
+    },
+    {
+      "title": "Render the statusline line",
+      "status": "done",
+      "detail": "Pure render function turning parsed data into one line: shortened basename (~24 chars + ellipsis), full model name with version, window label (1M/200k), a graphical bar (~10 cells) plus the numeric percent. Unit/snapshot tested."
+    },
+    {
+      "title": "mini statusline command in CLI",
+      "status": "done",
+      "detail": "Register a lean 'mini statusline' subcommand in cli.ts (+ --help): read JSON from stdin, call render, print the line. Keep imports minimal to avoid Node startup latency on every refresh."
+    },
+    {
+      "title": "Merge statusLine into settings.json",
+      "status": "done",
+      "detail": "Pure read-modify-write helper for ~/.claude/settings.json: add statusLine only when absent, preserve all other keys and 2-space indent, create the file if missing, recognize mini's own entry (idempotent), never overwrite a foreign one. Decide the command string (absolute mini bin path vs 'mini statusline'). Tested."
+    },
+    {
+      "title": "Postinstall asks and installs statusline",
+      "status": "done",
+      "detail": "Extend the postinstall/install flow: with a TTY and no existing statusLine, ask y/n then write via the merge helper; without a TTY skip silently; errors downgraded to a warning so npm install never fails. Tested."
+    },
+    {
+      "title": "Docs: enabling and disabling the statusline",
+      "status": "done",
+      "detail": "README: document that mini offers its statusline on install, what it shows, how to disable it (remove the statusLine block), and the 'mini statusline' command."
+    }
+  ],
+  "startedAt": "2026-05-31T19:43:06.111Z",
+  "resolvedVerify": [
+    "Status line looks right inside a live Claude Code session"
+  ],
+  "completedAt": "2026-05-31T20:01:10.635Z",
+  "autoCommit": {
+    "preSha": "5e9a128022507fbb4e832894ff1131bf8a0533c2",
+    "subject": "Phase 87: mini statusline auto-install"
+  }
+}
