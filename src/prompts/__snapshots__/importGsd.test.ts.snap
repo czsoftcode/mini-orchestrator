@@ -1,20 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildImportGsdPrompt > matches the full snapshot 1`] = `
-"Tento adresář obsahuje rozdělaný GSD projekt v .planning/. Tvůj úkol je vytáhnout z něj kostru pro nový (jednodušší) nástroj.
+"This directory contains a work-in-progress GSD project in .planning/. Your task is to extract a skeleton from it for a new (simpler) tool.
 
-Najdi tyto věci (smíš číst soubory přes Read/Glob/Grep, nezapisuj nic):
-1. Krátký popis projektu — co se staví, pro koho, hlavní omezení
-2. Seznam fází z roadmapu nebo z adresářové struktury, se stavem
+Find these things (you may read files via Read/Glob/Grep, do not write anything):
+1. A short project description — what is being built, for whom, main constraints
+2. A list of phases from the roadmap or the directory structure, with their status
 
-Typické soubory v GSD: .planning/PROJECT.md, .planning/ROADMAP.md, .planning/milestones/, .planning/phases/.
+Typical GSD files: .planning/PROJECT.md, .planning/ROADMAP.md, .planning/milestones/, .planning/phases/.
 
-Odpověz POUZE v tomto formátu, nic jiného nepiš. Každá hodnota musí být na JEDNOM řádku:
+Reply ONLY in this format, write nothing else. Each value must be on ONE line:
 
-NAME: <název projektu>
-WHAT: <2-3 věty o tom, co se staví — na jednom řádku>
-FOR_WHOM: <pro koho, nebo "-">
-CONSTRAINTS: <jazyk/framework/omezení, nebo "-">
+NAME: <project name>
+WHAT: <2-3 sentences about what is being built — on one line>
+FOR_WHOM: <for whom, or "-">
+CONSTRAINTS: <language/framework/constraints, or "-">
 
 PHASES:
 1 | done | Initial setup
@@ -22,13 +22,13 @@ PHASES:
 3 | doing | Profile page
 4 | todo | Notifications
 
-Pravidla pro PHASES:
-- Status musí být PŘESNĚ jeden z: done, doing, todo, skipped
-- Pořadí podle roadmapu, ID 1, 2, 3, … (přečísluj sekvenčně, ignoruj decimální čísla typu 1.1)
-- Hotové fáze (completed, archived, finished) → done
-- Rozdělané (in_progress, active) → doing
-- Budoucí (pending, planned, proposed) → todo
-- Zrušené (cancelled, canceled) → skipped
-- Pokud nemůžeš najít roadmap, zkus odvodit fáze z adresářové struktury (každá podsložka = fáze)
+Rules for PHASES:
+- Status must be EXACTLY one of: done, doing, todo, skipped
+- Order by the roadmap, ID 1, 2, 3, … (renumber sequentially, ignore decimal numbers like 1.1)
+- Finished phases (completed, archived, finished) → done
+- In-progress ones (in_progress, active) → doing
+- Future ones (pending, planned, proposed) → todo
+- Cancelled ones (cancelled, canceled) → skipped
+- If you cannot find a roadmap, try to derive the phases from the directory structure (each subfolder = a phase)
 "
 `;

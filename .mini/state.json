@@ -367,6 +367,11 @@
       "id": 73,
       "title": "Překlad lifecycle promptů do AJ",
       "status": "done"
+    },
+    {
+      "id": 74,
+      "title": "Překlad audit + import promptů do AJ",
+      "status": "done"
     }
   ],
   "models": {

@@ -13,6 +13,10 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
   response-kontrakt (`TITLE:`/`GOAL:`/`STEP:`) zůstává beze změny. Založen sdílený
   slovníček překladu `docs/i18n-glossary.md` jako opora pro další fáze. (Interaktivní
   slash-command cesta a sdílená nápověda ke grafu se přeloží v navazujících fázích.)
+- **Prompty `audit` a import GSD přeloženy do angličtiny.** Audit teď generuje
+  `.mini/codebase.md` s anglickými nadpisy sekcí (Overview / Directory structure /
+  Key modules / Technologies); import GSD má anglickou prózu. Strojové kontrakty
+  (`NAME:`/`WHAT:`/`FOR_WHOM:`/`CONSTRAINTS:`/`PHASES:` i stavová slova) zůstávají beze změny.
 - **`/mini:auto --discuss`** — flag vynutí krok `discuss` v každé fázi běhu
   (analogicky k `--verify`). Bez něj se `discuss` spouští jen podmíněně u složitých fází.
 - **Verify v autonomním `/mini:auto`** — cyklus teď mezi `do` a `done` spustí krok

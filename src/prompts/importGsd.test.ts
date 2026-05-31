@@ -9,10 +9,10 @@ describe('buildImportGsdPrompt', () => {
   it('includes the strict output schema (NAME/WHAT/FOR_WHOM/CONSTRAINTS + PHASES)', () => {
     const out = buildImportGsdPrompt();
 
-    expect(out).toContain('NAME: <název projektu>');
-    expect(out).toContain('WHAT: <2-3 věty');
-    expect(out).toContain('FOR_WHOM: <pro koho, nebo "-">');
-    expect(out).toContain('CONSTRAINTS: <jazyk/framework/omezení, nebo "-">');
+    expect(out).toContain('NAME: <project name>');
+    expect(out).toContain('WHAT: <2-3 sentences');
+    expect(out).toContain('FOR_WHOM: <for whom, or "-">');
+    expect(out).toContain('CONSTRAINTS: <language/framework/constraints, or "-">');
     expect(out).toContain('PHASES:');
   });
 

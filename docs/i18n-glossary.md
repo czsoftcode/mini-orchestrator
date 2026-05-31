@@ -44,11 +44,27 @@ narazíš na nový termín.
 | Fáze, kterou rozmenujeme       | Phase to break down            |
 | Kroky:                         | Steps:                         |
 | ← pracuj na tomhle             | ← work on this                 |
+| Jak postupovat                 | How to proceed                 |
+| Smíš použít                    | You may use                    |
+
+### Sekce `codebase.md` (audit) — nejsou parsované, volný překlad
+
+| Česky                  | Anglicky            |
+| ---------------------- | ------------------- |
+| přehled kódu           | code overview       |
+| Přehled                | Overview            |
+| Adresářová struktura   | Directory structure |
+| Klíčové moduly         | Key modules         |
+| Technologie            | Technologies        |
+| (neidentifikováno)     | (unidentified)      |
 
 ## Co se NEpřekládá
 
-- **Response-kontrakt** parsovaný parsery: `TITLE:`, `GOAL:`, `STEP:` — zůstává
-  beze změny (parsery na něj spoléhají).
+- **Response-kontrakt** parsovaný parsery: `TITLE:`, `GOAL:`, `STEP:` a u importu GSD
+  `NAME:`, `WHAT:`, `FOR_WHOM:`, `CONSTRAINTS:`, `PHASES:` — zůstává beze změny
+  (parsery na něj spoléhají).
+- Stavová slova v `PHASES:` (`done`/`doing`/`todo`/`skipped`) a mapovací klíče
+  cizích nástrojů (`completed`, `in_progress`, `pending`, `cancelled`, …).
 - Identifikátory v kódu (názvy funkcí, typů, klíčů stavu jako `done`/`doing`).
 
 ## Známé švy migrace (zatím nepřeloženo)

@@ -1,63 +1,64 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildAuditCodebasePrompt > renders project section and references codebase file path 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **audit existujícího kódu** — NEIMPLEMENTUJ žádné nové featury,
-nic nerefaktoruj, neupravuj zdrojový kód projektu. Tvým jediným výstupem je
-soubor \`.mini/codebase.md\`.
+"You are part of a tool that helps the user build a project incrementally.
+An **audit of existing code** is in progress — DO NOT implement any new features,
+do not refactor anything, do not modify the project's source code. Your only output
+is the file \`.mini/codebase.md\`.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Tvůj úkol
-Projdi existující kód v aktuálním adresáři a sestav (nebo aktualizuj) přehled
-projektu pro pozdější použití orchestrátorem v souboru \`.mini/codebase.md\`.
-Tento soubor slouží **tobě samotnému v dalších sessionech** (\`do\`/\`plan\`/\`next\`)
-jako rychlý přehled — místo opakovaného procházení \`src/\` si můžeš přečíst tenhle
-souhrn. Tomu odpovídá i tone: cesty, názvy modulů, technologie, krátké odrážky.
-Žádná dlouhá prosa pro člověka.
+# Your task
+Go through the existing code in the current directory and build (or update) an
+overview of the project for later use by the orchestrator in the file \`.mini/codebase.md\`.
+This file serves **you yourself in later sessions** (\`do\`/\`plan\`/\`next\`) as a quick
+overview — instead of repeatedly walking through \`src/\` you can read this summary.
+The tone matches that: paths, module names, technologies, short bullet points.
+No long prose for humans.
 
-## Pokud \`.mini/codebase.md\` už existuje
-1. **Tvoje úplně první akce** musí být \`Read\` na \`.mini/codebase.md\` — projdi
-   stávající obsah, ať víš, co už je popsané a co tam přidal ručně uživatel.
-2. **NEPŘEPISUJ celý soubor.** Použij \`Edit\`, ne \`Write\`. Opravuj jen sekce,
-   které neodpovídají reálnému stavu kódu.
-3. Ruční poznámky uživatele (komentáře, dodatky, sekce nad rámec šablony) **musíš
-   zachovat** — i kdyby na první pohled vypadaly nadbytečně. Když si nejsi jist,
-   nech je být.
+## If \`.mini/codebase.md\` already exists
+1. **Your very first action** must be \`Read\` on \`.mini/codebase.md\` — go through
+   the existing content so you know what is already described and what the user
+   added by hand.
+2. **DO NOT REWRITE the whole file.** Use \`Edit\`, not \`Write\`. Only fix sections
+   that do not match the real state of the code.
+3. The user's manual notes (comments, additions, sections beyond the template) **must
+   be preserved** — even if they look redundant at first glance. When in doubt,
+   leave them be.
 
-## Pokud \`.mini/codebase.md\` neexistuje
-Vytvoř ho přes \`Write\` s následující strukturou (názvy sekcí jsou fixní;
-sekci smíš nechat prázdnou, pokud k ní není co napsat):
+## If \`.mini/codebase.md\` does not exist
+Create it via \`Write\` with the following structure (section names are fixed;
+you may leave a section empty if there is nothing to write):
 
 \`\`\`
-# {název projektu} — přehled kódu
+# {project name} — code overview
 
-## Přehled
-(2-4 věty: co projekt dělá technicky — runtime, vstup/výstup, hlavní use case)
+## Overview
+(2-4 sentences: what the project does technically — runtime, input/output, main use case)
 
-## Adresářová struktura
-(stromem nebo odrážkami: top-level adresáře a jejich role)
+## Directory structure
+(as a tree or bullets: top-level directories and their roles)
 
-## Klíčové moduly
-(odrážky: cesta + jednovětý popis. Příklad: \`src/cli.ts\` — entrypoint, parsuje argumenty.)
+## Key modules
+(bullets: path + one-sentence description. Example: \`src/cli.ts\` — entrypoint, parses arguments.)
 
-## Technologie
-(odrážky: jazyk, framework, knihovny, build tooling, test runner — co je relevantní)
+## Technologies
+(bullets: language, framework, libraries, build tooling, test runner — whatever is relevant)
 \`\`\`
 
-## Jak postupovat
-- Začni od \`package.json\` / \`pyproject.toml\` / ekvivalentu — z toho zjistíš jazyk,
-  závislosti a entrypointy.
-- Pak projdi top-level adresáře (\`Glob\`, \`LS\`) a hlavní zdrojové soubory (\`Read\`).
-- Drž se faktů. Nehádej účel modulu, když je z kódu nejasný — radši ho v
-  \`Klíčové moduly\` vynech nebo napiš poctivě "(neidentifikováno)".
-- Soubory typu \`node_modules/\`, \`dist/\`, \`.git/\`, \`coverage/\` a podobné build
-  artefakty ignoruj.
+## How to proceed
+- Start from \`package.json\` / \`pyproject.toml\` / equivalent — from that you learn the
+  language, dependencies and entrypoints.
+- Then go through the top-level directories (\`Glob\`, \`LS\`) and the main source files (\`Read\`).
+- Stick to facts. Do not guess a module's purpose when it is unclear from the code —
+  rather leave it out of \`Key modules\` or honestly write "(unidentified)".
+- Ignore files like \`node_modules/\`, \`dist/\`, \`.git/\`, \`coverage/\` and similar build
+  artifacts.
 
-# Smíš použít
-\`Read\`, \`Grep\`, \`Glob\`, \`LS\` na čtení, \`Write\` na založení nového
-\`.mini/codebase.md\` a \`Edit\` na inkrementální update. Jiné nástroje nepotřebuješ.
+# You may use
+\`Read\`, \`Grep\`, \`Glob\`, \`LS\` for reading, \`Write\` to create a new
+\`.mini/codebase.md\`, and \`Edit\` for incremental updates. You don't need any other tools.
 "
 `;

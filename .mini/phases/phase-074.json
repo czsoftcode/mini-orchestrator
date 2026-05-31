@@ -1,0 +1,29 @@
+{
+  "id": 74,
+  "title": "Překlad audit + import promptů do AJ",
+  "goal": "Přeložit do angličtiny prompty auditCodebase.ts a importGsd.ts (ani jeden nepoužívá sdílený graph hint) a aktualizovat jejich snapshot testy; npm test a build zelené.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "auditCodebase.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit prózu, fixní šablonu sekcí (## Přehled→## Overview, …), Jak postupovat, Smíš použít. Cesta .mini/codebase.md beze změny. Upravit aserce v auditCodebase.test.ts (# Projekt, NEIMPLEMENTUJ, první akce, NEPŘEPISUJ, Ruční poznámky, názvy sekcí)."
+    },
+    {
+      "title": "importGsd.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit prózu a placeholdery v <…>. Zachovat kontrakt NAME:/WHAT:/FOR_WHOM:/CONSTRAINTS:/PHASES: i stavová slova a mapovací klíče (completed/in_progress/…). Upravit aserce v importGsd.test.ts."
+    },
+    {
+      "title": "Doplnit slovníček + ověřit",
+      "status": "done",
+      "detail": "Doplnit nové termíny do docs/i18n-glossary.md, přegenerovat snapshoty (vitest -u), pak celé npm test a build zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T13:16:38.339Z",
+  "completedAt": "2026-05-31T13:20:28.413Z",
+  "autoCommit": {
+    "preSha": "3d874ae712b07aec0d9b5531b871f09cc2b45523",
+    "subject": "Fáze 74: Překlad audit + import promptů do AJ"
+  }
+}
