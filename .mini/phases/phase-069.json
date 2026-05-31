@@ -2,7 +2,7 @@
   "id": 69,
   "title": "Flag --discuss pro mini:auto",
   "goal": "Přidat do slash commandu /mini:auto flag --discuss, který vynutí krok discuss v každé fázi běhu (analogicky k --verify): rozšířit argument-hint, sekci Argumenty běhu, úvodní oznámení i podmínku kroku discuss v install-commands.ts a doplnit testy.",
-  "status": "doing",
+  "status": "done",
   "steps": [
     {
       "title": "Flag --discuss do auto.md",
@@ -25,5 +25,11 @@
       "detail": "Krátce doplnit --discuss k /mini:auto v README (řádek příkazu i sekce Autonomní /mini:auto) a záznam do CHANGELOG Unreleased."
     }
   ],
-  "startedAt": "2026-05-30T22:08:12.890Z"
+  "startedAt": "2026-05-30T22:08:12.890Z",
+  "completedAt": "2026-05-30T22:10:39.823Z",
+  "autoCommit": {
+    "preSha": "e35eebf61bd397c5db6de539155ac8076b872e68",
+    "sha": "a576d904d00c76224d98c5fe0de8649f2c64f649",
+    "subject": "Fáze 69: Flag --discuss pro mini:auto"
+  }
 }

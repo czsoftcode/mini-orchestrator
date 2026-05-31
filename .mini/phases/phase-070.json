@@ -1,0 +1,44 @@
+{
+  "id": 70,
+  "title": "Done commitne všechny změny",
+  "goal": "Upravit finalizaci mini done tak, aby do commitu fáze spadl i memory záznam, přegenerovaný graf a finální stav (status done + currentPhaseId), takže po done nezůstanou viset žádné nezacommitované změny do další fáze.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "PhaseAutoCommit.sha volitelné",
+      "status": "done",
+      "detail": "src/state/types.ts: sha? optional; doc komentář — identita commitu přes preSha + parent, ne vlastní sha. Build prochází."
+    },
+    {
+      "title": "Reorder finalizace v done.ts",
+      "status": "done",
+      "detail": "memory + graf + save(state) PŘED jediným commitem fáze; commit poslední; autoCommit={preSha,subject} bez sha. Ošetřit dvojí save (done.ts:174 + tři finalizační cesty ~172/583/815). Výstup: git status po done čistý."
+    },
+    {
+      "title": "undo přes preSha",
+      "status": "done",
+      "detail": "src/commands/undo.ts: classifyRevert guard HEAD^===preSha místo HEAD===sha; findRevertedAutoCommit detekuje nový auto-commit bez závislosti na sha; zpětně kompat s legacy sha."
+    },
+    {
+      "title": "Memory bez vlastního sha",
+      "status": "done",
+      "detail": "writeMemory.ts buildPhaseMemoryMarkdown ř.145 tiskne subject (příp. preSha) místo autoCommit.sha."
+    },
+    {
+      "title": "Testy a build",
+      "status": "done",
+      "detail": "done.test.ts (čistý strom po done, autoCommit má preSha bez sha) + undo.test.ts (guard přes parent/preSha, legacy sha). npm test zelené, build OK."
+    },
+    {
+      "title": "CHANGELOG",
+      "status": "done",
+      "detail": "záznam do ## [Unreleased] (Changed: done commitne všechny změny najednou, undo identifikuje commit přes preSha)."
+    }
+  ],
+  "startedAt": "2026-05-31T11:06:52.648Z",
+  "completedAt": "2026-05-31T11:16:15.548Z",
+  "autoCommit": {
+    "preSha": "cf4f8fb306c1c99f9b7e12242e520506dd2611de",
+    "subject": "Fáze 70: Done commitne všechny změny"
+  }
+}

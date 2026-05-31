@@ -96,6 +96,18 @@ export async function headSha(cwd: string): Promise<string | null> {
 }
 
 /**
+ * SHA rodiče HEAD (`HEAD^`). Slouží `mini undo` k ověření, že commit fáze je
+ * pořád vrchní — `HEAD^ === autoCommit.preSha`. Vrací `null`, když rodič
+ * neexistuje (úplně první commit) nebo `git` selže.
+ */
+export async function headParentSha(cwd: string): Promise<string | null> {
+  const r = await runGit(['rev-parse', 'HEAD^'], cwd);
+  if (!r.ok) return null;
+  const sha = r.stdout.trim();
+  return sha.length > 0 ? sha : null;
+}
+
+/**
  * První řádek (subject) HEAD commit message. Slouží jako lidsky čitelný popis
  * commitu v UI undo.
  */

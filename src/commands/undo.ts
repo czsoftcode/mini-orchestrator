@@ -1,4 +1,4 @@
-import { headSha, isCleanWorkingTree, isGitRepo, softResetTo } from '../git.js';
+import { headParentSha, isCleanWorkingTree, isGitRepo, softResetTo } from '../git.js';
 import { exists, hasPrev, load, loadPrev, restorePrev } from '../state/store.js';
 import type { PhaseAutoCommit, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
@@ -7,8 +7,8 @@ import { log } from '../ui/log.js';
 /**
  * Rozhodnutí, zda lze bezpečně provést soft reset auto-commitu.
  *
- * `match` — HEAD pořád sedí na `autoCommit.sha` a pracovní strom je čistý;
- * undo může commit zrušit přes `git reset --soft preSha`.
+ * `match` — commit fáze je pořád vrchní (`HEAD^ === autoCommit.preSha`) a
+ * pracovní strom je čistý; undo může commit zrušit přes `git reset --soft preSha`.
  *
  * `mismatch` — buď se HEAD posunul (uživatel mezitím commitnul něco dalšího),
  * nebo má v pracovním stromě nestagované změny / untracked soubory. V obou
@@ -85,6 +85,10 @@ export async function undo(): Promise<void> {
  * Hledá fázi, která byla v `current` opatřena novým `autoCommit`, ale v `prev`
  * žádný (nebo jiný) auto-commit neměla. To je signál, že `mini done`
  * v posledním kroku auto-commitnul a `undo` mu může nabídnout revert.
+ *
+ * Identitu auto-commitu porovnáváme přes `preSha` (cíl soft resetu), ne přes
+ * `sha` — ten nové fáze v `state.json` neukládají (commit by nesl svůj vlastní
+ * sha; viz `PhaseAutoCommit`).
  */
 function findRevertedAutoCommit(
   current: ProjectState,
@@ -93,7 +97,7 @@ function findRevertedAutoCommit(
   for (const p of current.phases) {
     if (!p.autoCommit) continue;
     const pp = prev.phases.find((x) => x.id === p.id);
-    if (!pp?.autoCommit || pp.autoCommit.sha !== p.autoCommit.sha) {
+    if (!pp?.autoCommit || pp.autoCommit.preSha !== p.autoCommit.preSha) {
       return p.autoCommit;
     }
   }
@@ -108,8 +112,8 @@ async function classifyRevert(
   if (!(await isGitRepo(cwd))) {
     return { kind: 'mismatch', autoCommit, reason: 'nejsme v git repu' };
   }
-  const head = await headSha(cwd);
-  if (head !== autoCommit.sha) {
+  const parent = await headParentSha(cwd);
+  if (parent !== autoCommit.preSha) {
     return {
       kind: 'mismatch',
       autoCommit,

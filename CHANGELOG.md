@@ -17,6 +17,13 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Changed
 
+- **`mini done` commitne fázi v jednom commitu — po `done` ve worktree nic nevisí.**
+  Memory záznam, přegenerovaný graf i finální `state.json` (posun na `done`) vznikají
+  nově **před** commitem, takže je `git add -A` pobere do jediného commitu fáze.
+  Dřív se commitovalo dřív a tyhle artefakty zůstávaly viset do další fáze.
+  `mini undo` identifikuje commit fáze přes `preSha` (`HEAD^ === preSha`) místo
+  vlastního sha — ten se do commitnutého stavu už neukládá (závisel by sám na sobě;
+  starší fáze ho v `state.json` mají dál, zpětná kompatibilita zachována).
 - **`mini verify` / `/mini:verify` už není read-only** — po kontrole zapíše nálezy
   do run reportu (`## Nálezy z verify`), odkud se přes report dostanou i do paměti;
   u už uzavřené fáze je připíše i přímo do memory souboru. Stav fáze dál neposouvá.

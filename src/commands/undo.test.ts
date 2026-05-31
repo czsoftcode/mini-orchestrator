@@ -6,7 +6,7 @@ import { save } from '../state/store.js';
 import type { PhaseAutoCommit, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
 import {
-  headSha,
+  headParentSha,
   isCleanWorkingTree,
   isGitRepo,
   softResetTo,
@@ -24,6 +24,7 @@ vi.mock('../git.js', () => ({
   commitAll: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
   currentBranch: vi.fn(async () => null),
   headSha: vi.fn(async () => null),
+  headParentSha: vi.fn(async () => null),
   headSubject: vi.fn(async () => null),
   isCleanWorkingTree: vi.fn(async () => true),
   softResetTo: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
@@ -33,7 +34,7 @@ const { undo } = await import('./undo.js');
 
 const askMock = vi.mocked(ask);
 const isGitRepoMock = vi.mocked(isGitRepo);
-const headShaMock = vi.mocked(headSha);
+const headParentShaMock = vi.mocked(headParentSha);
 const isCleanWorkingTreeMock = vi.mocked(isCleanWorkingTree);
 const softResetToMock = vi.mocked(softResetTo);
 
@@ -64,8 +65,8 @@ describe('undo()', () => {
     askMock.mockResolvedValue({ confirm: true });
     isGitRepoMock.mockReset();
     isGitRepoMock.mockResolvedValue(false);
-    headShaMock.mockReset();
-    headShaMock.mockResolvedValue(null);
+    headParentShaMock.mockReset();
+    headParentShaMock.mockResolvedValue(null);
     isCleanWorkingTreeMock.mockReset();
     isCleanWorkingTreeMock.mockResolvedValue(true);
     softResetToMock.mockReset();
@@ -119,7 +120,7 @@ describe('undo()', () => {
       cwd,
     );
     isGitRepoMock.mockResolvedValue(true);
-    headShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.sha);
+    headParentShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.preSha);
     isCleanWorkingTreeMock.mockResolvedValue(true);
 
     await undo();
@@ -141,7 +142,7 @@ describe('undo()', () => {
       cwd,
     );
     isGitRepoMock.mockResolvedValue(true);
-    headShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.sha);
+    headParentShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.preSha);
     isCleanWorkingTreeMock.mockResolvedValue(true);
     askMock.mockResolvedValue({ confirm: false });
 
@@ -164,7 +165,7 @@ describe('undo()', () => {
     );
     isGitRepoMock.mockResolvedValue(true);
     // HEAD je jinde — uživatel mezitím commitnul něco dalšího.
-    headShaMock.mockResolvedValue('c'.repeat(40));
+    headParentShaMock.mockResolvedValue('c'.repeat(40));
     isCleanWorkingTreeMock.mockResolvedValue(true);
 
     await undo();
@@ -186,7 +187,7 @@ describe('undo()', () => {
       cwd,
     );
     isGitRepoMock.mockResolvedValue(true);
-    headShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.sha);
+    headParentShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.preSha);
     isCleanWorkingTreeMock.mockResolvedValue(false);
 
     await undo();
@@ -226,7 +227,7 @@ describe('undo()', () => {
       cwd,
     );
     isGitRepoMock.mockResolvedValue(true);
-    headShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.sha);
+    headParentShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.preSha);
     isCleanWorkingTreeMock.mockResolvedValue(true);
     softResetToMock.mockResolvedValue({
       ok: false,

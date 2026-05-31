@@ -34,6 +34,22 @@ describe('buildPhaseMemoryMarkdown', () => {
     expect(out.endsWith('\n')).toBe(true);
   });
 
+  it('auto-commit bez vlastního sha (nový tvar) ukáže jen subject', () => {
+    const phase: Phase = {
+      id: 70,
+      title: 'Done commitne všechny změny',
+      status: 'done',
+      // Nové fáze ukládají autoCommit bez `sha` (commit nese state.json se záznamem).
+      autoCommit: { preSha: 'aaa', subject: 'Fáze 70: Done commitne všechny změny' },
+    };
+
+    const out = buildPhaseMemoryMarkdown(phase, '', '');
+
+    expect(out).toContain('## Auto-commit');
+    expect(out).toContain('- Fáze 70: Done commitne všechny změny');
+    expect(out).not.toContain('`');
+  });
+
   it('vloží discuss a run obsah doslova jako sekce', () => {
     const phase: Phase = { id: 3, title: 'Krátká', status: 'done' };
 

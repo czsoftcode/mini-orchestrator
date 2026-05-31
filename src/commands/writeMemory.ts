@@ -142,7 +142,11 @@ export function buildPhaseMemoryMarkdown(
   if (phase.autoCommit) {
     parts.push('');
     parts.push('## Auto-commit');
-    parts.push(`- ${phase.autoCommit.subject} (\`${phase.autoCommit.sha}\`)`);
+    // Memory soubor je součástí commitu fáze, takže jeho vlastní sha tady znát
+    // nemůžeme (závisel by sám na sobě). Legacy fáze sha ještě mají — když je,
+    // ukážeme ho; jinak vystačíme se subjectem commitu.
+    const ref = phase.autoCommit.sha ? ` (\`${phase.autoCommit.sha}\`)` : '';
+    parts.push(`- ${phase.autoCommit.subject}${ref}`);
   }
 
   if (discussContent.trim()) {

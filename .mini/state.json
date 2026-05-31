@@ -1,7 +1,7 @@
 {
   "version": 2,
   "createdAt": "2026-05-23T21:56:38.809Z",
-  "currentPhaseId": 69,
+  "currentPhaseId": null,
   "phases": [
     {
       "id": 1,
@@ -346,7 +346,12 @@
     {
       "id": 69,
       "title": "Flag --discuss pro mini:auto",
-      "status": "doing"
+      "status": "done"
+    },
+    {
+      "id": 70,
+      "title": "Done commitne všechny změny",
+      "status": "done"
     }
   ],
   "models": {

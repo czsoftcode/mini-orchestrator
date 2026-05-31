@@ -19,15 +19,20 @@ export interface Step {
 /**
  * Záznam o auto-commitu, který `mini done` vytvořil po finalizaci fáze.
  *
- * Slouží `mini undo` k bezpečnému soft resetu: ověříme, že HEAD pořád sedí
- * na `sha` a pracovní strom je čistý, a teprve pak nabídneme revert. Subject
- * je tu pro lidsky čitelnou nabídku v UI.
+ * Slouží `mini undo` k bezpečnému soft resetu: ověříme, že commit fáze je pořád
+ * vrchní (`HEAD^ === preSha`) a pracovní strom je čistý, a teprve pak nabídneme
+ * revert na `preSha`. Subject je tu pro lidsky čitelnou nabídku v UI.
+ *
+ * Commit fáze obsahuje i `state.json` s tímhle záznamem, takže do něj nemůžeme
+ * uložit jeho vlastní výsledný `sha` (závisel by sám na sobě). Identitu commitu
+ * proto držíme přes `preSha` (HEAD před commitem, známé předem). Pole `sha` je
+ * volitelné kvůli zpětné kompatibilitě se staršími fázemi, které ho ještě mají.
  */
 export interface PhaseAutoCommit {
   /** SHA HEAD před auto-commitem — cíl soft resetu. */
   preSha: string;
-  /** SHA auto-commitu samotného. */
-  sha: string;
+  /** SHA auto-commitu samotného. Legacy — nové fáze ho neukládají (viz výše). */
+  sha?: string;
   /** Subject (první řádek) commit message. */
   subject: string;
 }

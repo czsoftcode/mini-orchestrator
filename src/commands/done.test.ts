@@ -857,15 +857,14 @@ steps:
     expect(msg).toBe('Fáze 1: Fáze ke commitu');
   });
 
-  it('uloží `phase.autoCommit` (preSha, sha, subject) po úspěšném commitu', async () => {
+  it('uloží `phase.autoCommit` (preSha, subject — bez vlastního sha) po úspěšném commitu', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
     commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
-    // headSha se volá 2× — před commitem (pre) a po commitu (post).
-    headShaMock
-      .mockResolvedValueOnce('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-      .mockResolvedValueOnce('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+    // headSha se volá jen jednou — preSha PŘED commitem. Vlastní sha commitu se
+    // neukládá (commit nese i state.json se záznamem, závisel by sám na sobě).
+    headShaMock.mockResolvedValue('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
 
     const r = await done({ auto: true });
 
@@ -874,9 +873,26 @@ steps:
     const phase = reloaded.phases[0];
     expect(phase?.autoCommit).toEqual({
       preSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       subject: 'Fáze 1: Fáze ke commitu',
     });
+    expect(phase?.autoCommit).not.toHaveProperty('sha');
+  });
+
+  it('memory, graf i finální state se zapíšou PŘED commitem (po `done` nic nevisí)', async () => {
+    await setupDoneAutoPhase();
+    isGitRepoMock.mockResolvedValue(true);
+    hasChangesMock.mockResolvedValue(true);
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockResolvedValue('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+
+    await done({ auto: true });
+
+    // Memory záznam musí proběhnout PŘED jediným commitem, aby do něj spadl.
+    expect(writePhaseMemoryMock).toHaveBeenCalledTimes(1);
+    expect(commitAllMock).toHaveBeenCalledTimes(1);
+    const memoryOrder = writePhaseMemoryMock.mock.invocationCallOrder[0]!;
+    const commitOrder = commitAllMock.mock.invocationCallOrder[0]!;
+    expect(memoryOrder).toBeLessThan(commitOrder);
   });
 
   it('selhání commitu nezapíše `phase.autoCommit`', async () => {

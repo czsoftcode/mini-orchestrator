@@ -198,13 +198,22 @@ export function buildPhaseCommitMessage(phase: Phase): string {
 }
 
 /**
- * Side-effecty, které proběhnou po finalizaci fáze jako `done`:
+ * Side-effecty, které proběhnou po finalizaci fáze jako `done`. Pořadí je
+ * záměrné: memory záznam, graf i finální `state.json` musí vzniknout **před**
+ * jediným commitem fáze, aby do něj spadly a po `done` ve worktree **nic
+ * neviselo** do další fáze. Commit je proto úplně poslední krok.
  *
- * 1. **Auto-commit** práce fáze (`commitPhaseWork`) — zapíše `phase.autoCommit`.
+ * 1. **Předběžný auto-commit** — `phase.autoCommit` se nastaví na `{ preSha,
+ *    subject }` z aktuálního HEAD (preSha = cíl pozdějšího `mini undo`). Vlastní
+ *    sha výsledného commitu do stavu neukládáme — commit ponese i `state.json`,
+ *    takže by záznam závisel sám na sobě (viz `PhaseAutoCommit`).
  * 2. **Memory záznam** (`writePhaseMemory`) — vytvoří `.mini/memory/phase-XXX.md`
  *    a aktualizuje shrnutí v `.mini/last-memory.md`.
  * 3. **Přegenerování grafu** (`regenerateGraph`) — aktualizuje `.mini/graph/`
- *    + `.mini/graph.json` podle nového stavu zdrojáků (po commitu).
+ *    + `.mini/graph.json` podle nového stavu zdrojáků.
+ * 4. **Uložení stavu** (`save`) — `state.json` s posunem na `done` + `autoCommit`.
+ * 5. **Commit** (`commitPhaseWork`) — jediný `git add -A && commit`, který pobere
+ *    kód, testy, `state.json`, per-fázový json, memory i graf. Po něm je strom čistý.
  *
  * Společné místo, aby se nezapomnělo zavolat z žádné ze tří finalizačních
  * cest v `done.ts` (`applyAutoReport`, `collectNotesAndSave`, `finalizePhase`).
@@ -212,8 +221,8 @@ export function buildPhaseCommitMessage(phase: Phase): string {
  * U `skipped` fáze se tahle funkce nevolá — commit ani memory nedávají smysl.
  *
  * Žádný side-effect nikdy nehází — chyby se logují jako warning a workflow
- * pokračuje. Memory soubor i graf jsou záměrně **mimo commit** (commit už
- * proběhl); uživatel je commitne ručně v dalším commitu.
+ * pokračuje. Selže-li commit, `commitPhaseWork` předběžný `autoCommit` zase
+ * zruší (žádný commit k vrácení neexistuje).
  */
 async function finalizePhaseSideEffects(
   phase: Phase,
@@ -221,9 +230,17 @@ async function finalizePhaseSideEffects(
   cwd: string,
   finalizeOpts: FinalizeOptions = {},
 ): Promise<void> {
-  await commitPhaseWork(phase, cwd, finalizeOpts);
+  if (await isGitRepo(cwd)) {
+    const preSha = await headSha(cwd);
+    if (preSha) {
+      const subject = buildPhaseCommitMessage(phase).split('\n')[0] ?? '';
+      phase.autoCommit = { preSha, subject };
+    }
+  }
   await writePhaseMemory(phase, state, cwd, { hasAutoCommit: phase.autoCommit !== undefined });
   await regenerateGraph(cwd);
+  await save(state, cwd);
+  await commitPhaseWork(phase, cwd, finalizeOpts);
 }
 
 /**
@@ -246,17 +263,22 @@ async function regenerateGraph(cwd: string): Promise<void> {
 }
 
 /**
- * Auto-commit po finalizaci fáze (`phase.status === 'done'`). Nikdy nehází —
- * gitové chyby jenom zalogujeme jako varování, aby přerušený commit nezablokoval
- * `mini done` (uživatel může commitnout ručně).
+ * Jediný commit fáze (`phase.status === 'done'`). Nikdy nehází — gitové chyby
+ * jenom zalogujeme jako varování, aby přerušený commit nezablokoval `mini done`
+ * (uživatel může commitnout ručně).
  *
- * Před commitem navýší verzi v `package.json` (default `patch`), aby ji `git
- * add -A` pobral do commitu fáze. Push se pouští **jen** s `finalizeOpts.push`
- * (opt-in) — jinak zůstává jako dosud jen hint `git push`.
+ * Volá se jako **úplně poslední** krok finalizace, kdy už memory, graf i
+ * `state.json` (včetně předběžného `phase.autoCommit`) leží na disku — `git add
+ * -A` je tak pobere do jednoho commitu a po `done` ve worktree nic nevisí.
  *
- * Pre-commit HEAD si pamatujeme přímo na `phase.autoCommit`, aby `mini undo`
- * mohl bezpečně udělat soft reset zpět. Volající musí po této funkci ještě
- * uložit state — autoCommit info pak skončí v `state.json`.
+ * Před commitem navýší verzi v `package.json` (default `none`), aby ji `git add
+ * -A` pobral do commitu. Push se pouští **jen** s `finalizeOpts.push` (opt-in) —
+ * jinak zůstává jako dosud jen hint `git push`.
+ *
+ * `phase.autoCommit` (preSha + subject) je nastavený už z
+ * `finalizePhaseSideEffects`; vlastní sha commitu do něj nedáváme (je uvnitř
+ * tohohle commitu). Když commit neproběhne (není repo / žádné změny / selhání),
+ * předběžný `autoCommit` zase zrušíme — undo by neměl co vracet.
  */
 async function commitPhaseWork(
   phase: Phase,
@@ -265,6 +287,7 @@ async function commitPhaseWork(
 ): Promise<void> {
   if (!(await isGitRepo(cwd))) {
     log.dim('Git repozitář nenalezen — commit přeskočen.');
+    delete phase.autoCommit;
     return;
   }
 
@@ -285,10 +308,9 @@ async function commitPhaseWork(
 
   if (!(await hasChanges(cwd))) {
     log.dim('Žádné změny v gitu — commit přeskočen.');
+    delete phase.autoCommit;
     return;
   }
-
-  const preSha = await headSha(cwd);
 
   const message = buildPhaseCommitMessage(phase);
   const r = await commitAll(cwd, message);
@@ -297,15 +319,11 @@ async function commitPhaseWork(
     const detail = r.stderr.trim() || r.stdout.trim();
     if (detail) log.dim(detail);
     log.hint('Commit můžeš dokončit ručně: git add -A && git commit');
+    delete phase.autoCommit;
     return;
   }
   const subject = message.split('\n')[0] ?? message;
   log.success(`Commit: ${subject}`);
-
-  const postSha = await headSha(cwd);
-  if (preSha && postSha) {
-    phase.autoCommit = { preSha, sha: postSha, subject };
-  }
 
   // Push jen na vyžádání (opt-in). Best-effort: chybějící remote/upstream nebo
   // odmítnutí jen zalogujeme, workflow nezablokujeme.
