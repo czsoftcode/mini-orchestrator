@@ -10,54 +10,53 @@ import { log } from '../ui/log.js';
 import type { StepOutcome } from './types.js';
 
 /**
- * `mini map` — přegeneruje strojovou mapu projektu do `.mini/graph/`
- * (jeden soubor na zdroják) + index `.mini/graph.json`.
+ * `mini map` — regenerates the machine-readable project map into `.mini/graph/`
+ * (one file per source file) + the index `.mini/graph.json`.
  *
- * Detekuje mapovatelný projekt (tsconfig.json/Cargo.toml/composer.json/… nebo
- * aspoň jeden `.ts`/`.tsx`/`.php`/`.rs`/`.py`/`.go`/`.java`/`.cs`/`.kt`/`.kts`/`.swift`/`.rb` soubor)
- * a v ostatních případech jen tipne uživateli, ať si pustí `/graphify`
- * v Claude session.
+ * Detects a mappable project (tsconfig.json/Cargo.toml/composer.json/… or at
+ * least one `.ts`/`.tsx`/`.php`/`.rs`/`.py`/`.go`/`.java`/`.cs`/`.kt`/`.kts`/`.swift`/`.rb` file)
+ * and otherwise just hints to the user to run `/graphify` in a Claude session.
  */
 export async function map(files?: string[]): Promise<StepOutcome> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    // V --file (hook) režimu drž hubu — hook může vyletět i mimo mini projekt.
+    // In --file (hook) mode stay quiet — the hook may fire outside a mini project too.
     if (files && files.length > 0) return { ok: false, reason: 'no-project' };
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('There is no project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
-  // Inkrementální cesta: přemapuj jen zadané soubory (uzel + záznam v indexu).
+  // Incremental path: remap only the given files (node + index record).
   if (files && files.length > 0) {
     return mapFiles(cwd, files);
   }
 
   if (!(await hasMappableProject(cwd))) {
     log.warn(
-      'V projektu nejsou žádné mapovatelné soubory (.ts, .tsx, .php, .rs, .py, .go, .java, .cs, .kt, .kts, .swift, .rb).',
+      'There are no mappable files in the project (.ts, .tsx, .php, .rs, .py, .go, .java, .cs, .kt, .kts, .swift, .rb).',
     );
-    log.hint('Pro jiné jazyky zkus v Claude session: /graphify');
+    log.hint('For other languages try in a Claude session: /graphify');
     return { ok: false, reason: 'not-mappable' };
   }
 
-  log.dim('Mapuji TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby soubory…');
+  log.dim('Mapping TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby files…');
   const result = await buildGraph(cwd);
 
   if (result.fileCount === 0) {
-    log.warn(`${GRAPH_INDEX} zapsán, ale žádné mapovatelné soubory nebyly nalezeny.`);
+    log.warn(`${GRAPH_INDEX} written, but no mappable files were found.`);
     return { ok: true };
   }
 
-  const word = result.fileCount === 1 ? 'soubor' : result.fileCount < 5 ? 'soubory' : 'souborů';
+  const word = result.fileCount === 1 ? 'file' : 'files';
   log.success(`${GRAPH_DIR}/ + ${GRAPH_INDEX}: ${result.fileCount} ${word}.`);
   return { ok: true };
 }
 
 /**
- * Inkrementálně přemapuje zadané soubory přes `updateGraphFile` a vypíše krátké
- * shrnutí. Chyba u jednoho souboru nezhatí ostatní — hook nesmí spadnout.
+ * Incrementally remaps the given files via `updateGraphFile` and prints a short
+ * summary. An error on one file does not spoil the others — the hook must not crash.
  */
 async function mapFiles(cwd: string, files: string[]): Promise<StepOutcome> {
   let updated = 0;
@@ -83,20 +82,20 @@ async function mapFiles(cwd: string, files: string[]): Promise<StepOutcome> {
           break;
       }
     } catch (err) {
-      log.warn(`Nepodařilo se přemapovat ${file}: ${(err as Error).message}`);
+      log.warn(`Failed to remap ${file}: ${(err as Error).message}`);
     }
   }
 
-  // Fallback znamená plný rebuild celého grafu (chyběl/poškozený index).
+  // A fallback means a full rebuild of the whole graph (a missing/corrupted index).
   if (fellBack) {
-    log.success(`${GRAPH_INDEX} chyběl → plný rebuild grafu.`);
+    log.success(`${GRAPH_INDEX} was missing → full graph rebuild.`);
     return { ok: true };
   }
 
   const parts: string[] = [];
-  if (updated > 0) parts.push(`${updated} aktualizováno`);
-  if (removed > 0) parts.push(`${removed} odebráno`);
-  if (skipped > 0) parts.push(`${skipped} přeskočeno`);
-  log.success(`Graf: ${parts.length > 0 ? parts.join(', ') : 'beze změny'}.`);
+  if (updated > 0) parts.push(`${updated} updated`);
+  if (removed > 0) parts.push(`${removed} removed`);
+  if (skipped > 0) parts.push(`${skipped} skipped`);
+  log.success(`Graph: ${parts.length > 0 ? parts.join(', ') : 'no change'}.`);
   return { ok: true };
 }

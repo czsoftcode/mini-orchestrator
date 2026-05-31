@@ -2,30 +2,30 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { log } from '../ui/log.js';
 
-/** Cílový adresář pro nativní slash commandy (relativně k projektu). */
+/** Target directory for the native slash commands (relative to the project). */
 export const COMMANDS_DIR = join('.claude', 'commands', 'mini');
 
 interface CommandDef {
-  /** Název souboru bez přípony i slash command (`/mini:<name>`). */
+  /** File name without extension, also the slash command (`/mini:<name>`). */
   name: string;
   description: string;
-  /** Volitelný `argument-hint` do frontmatteru. */
+  /** Optional `argument-hint` for the frontmatter. */
   argumentHint?: string;
-  /** Argument za `mini context <name>` (typicky `$ARGUMENTS` u next). */
+  /** Argument after `mini context <name>` (typically `$ARGUMENTS` for next). */
   contextArgs?: string;
   /**
-   * Vlastní tělo .md (text pod frontmatterem). Když chybí, použije se výchozí
-   * tělo cyklu, které pustí `mini context <name>`. Slouží read-only commandům
-   * jako `status`, které žádný session prompt přes `mini context` nemají.
+   * Custom .md body (the text under the frontmatter). When missing, the default
+   * cycle body is used, which runs `mini context <name>`. Serves read-only
+   * commands like `status` that have no session prompt via `mini context`.
    */
   body?: string;
 }
 
 /**
- * Definice commandů. Tělo workflow commandů je záměrně tenké: jen pustí
- * `mini context <name>` a předá řízení vypsanému promptu. Veškerá logika a
- * aktuální kontext žijí v mini (TS), ne ve zmraženém markdownu. Read-only
- * commandy (`status`) mají vlastní `body` a žádný `mini context` nevolají.
+ * Command definitions. The body of the workflow commands is deliberately thin:
+ * it just runs `mini context <name>` and hands control to the printed prompt. All
+ * the logic and current context live in mini (TS), not in frozen markdown.
+ * Read-only commands (`status`) have their own `body` and call no `mini context`.
  */
 const COMMAND_DEFS: CommandDef[] = [
   {
@@ -151,7 +151,7 @@ End the cycle (and briefly summarize what happened) when any of the boundaries o
   },
 ];
 
-/** Vyrenderuje obsah jednoho .md commandu. */
+/** Renders the content of a single .md command. */
 export function renderCommandMd(def: CommandDef): string {
   const front = [`description: ${def.description}`];
   if (def.argumentHint) {
@@ -176,7 +176,7 @@ ${body}
 }
 
 export interface InstallCommandsOptions {
-  /** Jen náhled — nic nezapisuj, vrať počty, jako by se zapsalo. */
+  /** Preview only — write nothing, return the counts as if it had been written. */
   dryRun?: boolean;
 }
 
@@ -187,10 +187,10 @@ export interface InstallCommandsResult {
 }
 
 /**
- * `mini install-commands` — vygeneruje `.claude/commands/mini/*.md` do aktuálního
- * projektu. Idempotentní: lze pustit opakovaně, přepíše jen to, co se liší, a
- * vypíše, co vzniklo / aktualizovalo se / zůstalo beze změny. S `dryRun` jen
- * spočítá a vypíše, co by se stalo, ale na disk nesáhne.
+ * `mini install-commands` — generates `.claude/commands/mini/*.md` into the current
+ * project. Idempotent: can be run repeatedly, overwrites only what differs, and
+ * prints what was created / updated / left unchanged. With `dryRun` it only counts
+ * and prints what would happen, without touching the disk.
  */
 export async function installCommands(
   cwd: string = process.cwd(),
@@ -230,21 +230,21 @@ export async function installCommands(
     const rel = join(COMMANDS_DIR, `${def.name}.md`);
     if (old === null) {
       created++;
-      log.success(dryRun ? `Vznikne: ${rel}` : `Vytvořeno: ${rel}`);
+      log.success(dryRun ? `Will be created: ${rel}` : `Created: ${rel}`);
     } else {
       updated++;
-      log.success(dryRun ? `Změní se: ${rel}` : `Aktualizováno: ${rel}`);
+      log.success(dryRun ? `Will change: ${rel}` : `Updated: ${rel}`);
     }
   }
 
   if (unchanged > 0) {
-    log.dim(`${unchanged} ${unchanged === 1 ? 'command beze změny' : 'commandů beze změny'}.`);
+    log.dim(`${unchanged} ${unchanged === 1 ? 'command' : 'commands'} unchanged.`);
   }
 
   const total = created + updated + unchanged;
-  log.success(`Hotovo — ${total} commandů v ${COMMANDS_DIR}/ (${created} nových, ${updated} změněných).`);
+  log.success(`Done — ${total} commands in ${COMMANDS_DIR}/ (${created} new, ${updated} changed).`);
   log.hint(
-    'Použij je v Claude Code: /mini:init, /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:auto, /mini:status, /mini:map, /mini:audit',
+    'Use them in Claude Code: /mini:init, /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:auto, /mini:status, /mini:map, /mini:audit',
   );
 
   return { created, updated, unchanged };

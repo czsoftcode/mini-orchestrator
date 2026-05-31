@@ -10,9 +10,9 @@ interface Preset {
 }
 
 const PRESETS: Preset[] = [
-  { alias: 'opus', hint: 'nejlepší kvalita, pomalejší, váží víc na limitu' },
-  { alias: 'sonnet', hint: 'vyvážený' },
-  { alias: 'haiku', hint: 'rychlý, levný, na jednoduché věci' },
+  { alias: 'opus', hint: 'best quality, slower, weighs more on the limit' },
+  { alias: 'sonnet', hint: 'balanced' },
+  { alias: 'haiku', hint: 'fast, cheap, for simple things' },
 ];
 
 const SCOPE_SET = new Set<string>(MODEL_SCOPES);
@@ -21,8 +21,8 @@ export async function model(arg1?: string, arg2?: string): Promise<void> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('There is no project in this directory.');
+    log.hint('Start with: mini init');
     return;
   }
 
@@ -43,7 +43,7 @@ export async function model(arg1?: string, arg2?: string): Promise<void> {
     delete state.model;
     delete state.models;
     await save(state, cwd);
-    log.success('Všechny modely smazány (Claude Code použije svůj default).');
+    log.success('All models cleared (Claude Code will use its default).');
     return;
   }
 
@@ -58,7 +58,7 @@ export async function model(arg1?: string, arg2?: string): Promise<void> {
   }
 
   if (arg2) {
-    log.error(`Neznámý rozsah: "${arg1}". Použij: ${MODEL_SCOPES.join(' / ')}.`);
+    log.error(`Unknown scope: "${arg1}". Use: ${MODEL_SCOPES.join(' / ')}.`);
     return;
   }
 
@@ -67,7 +67,7 @@ export async function model(arg1?: string, arg2?: string): Promise<void> {
 
 function showCurrent(state: ProjectState): void {
   console.log();
-  log.title('Modely pro tento projekt');
+  log.title('Models for this project');
   const m = state.models ?? {};
   const lines: string[] = [];
   for (const scope of MODEL_SCOPES) {
@@ -75,7 +75,7 @@ function showCurrent(state: ProjectState): void {
     if (value) {
       lines.push(`  ${scope.padEnd(11)} ${value}`);
     } else {
-      lines.push(`  ${scope.padEnd(11)} (zděděno z default / Claude Code)`);
+      lines.push(`  ${scope.padEnd(11)} (inherited from default / Claude Code)`);
     }
   }
   for (const l of lines) {
@@ -88,7 +88,7 @@ async function interactivePicker(state: ProjectState, cwd: string): Promise<void
   const { scope } = await ask<'scope'>({
     type: 'select',
     name: 'scope',
-    message: 'Pro co nastavujeme model?',
+    message: 'What are we setting the model for?',
     choices: MODEL_SCOPES.map((s) => ({ title: SCOPE_LABELS[s], value: s })),
   });
   await interactiveModelForScope(state, scope as ModelScope, cwd);
@@ -98,18 +98,18 @@ async function interactiveModelForScope(state: ProjectState, scope: ModelScope, 
   const { choice } = await ask<'choice'>({
     type: 'select',
     name: 'choice',
-    message: `Model pro "${scope}":`,
+    message: `Model for "${scope}":`,
     choices: [
-      { title: scope === 'default' ? 'Default — necháváno na Claude Code' : `Zděděno (smazat ${scope} override)`, value: '_unset' },
+      { title: scope === 'default' ? 'Default — left to Claude Code' : `Inherited (remove the ${scope} override)`, value: '_unset' },
       ...PRESETS.map((p) => ({ title: `${capitalize(p.alias)} — ${p.hint}`, value: p.alias })),
-      { title: 'Vlastní — zadáš celé ID modelu', value: '_custom' },
+      { title: 'Custom — you enter the full model ID', value: '_custom' },
     ],
   });
 
   if (choice === '_unset') {
     unsetScope(state, scope);
     await save(state, cwd);
-    log.success(`${scope}: zděděno z default / Claude Code.`);
+    log.success(`${scope}: inherited from default / Claude Code.`);
     return;
   }
 
@@ -118,9 +118,9 @@ async function interactiveModelForScope(state: ProjectState, scope: ModelScope, 
     const { id } = await ask<'id'>({
       type: 'text',
       name: 'id',
-      message: 'ID modelu (např. claude-sonnet-4-6):',
+      message: 'Model ID (e.g. claude-sonnet-4-6):',
       format: trim,
-      validate: nonEmpty('ID modelu nesmí být prázdné.'),
+      validate: nonEmpty('The model ID must not be empty.'),
     });
     newModel = id as string;
   } else {
@@ -137,7 +137,7 @@ async function setScope(state: ProjectState, scope: ModelScope, value: string, c
   if (v === 'default' || v === '_default' || v === 'unset') {
     unsetScope(state, scope);
     await save(state, cwd);
-    log.success(`${scope}: zděděno z default / Claude Code.`);
+    log.success(`${scope}: inherited from default / Claude Code.`);
     return;
   }
   setScopeRaw(state, scope, v);

@@ -8,6 +8,15 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **Hlášky utility příkazů přeloženy do angličtiny.** Runtime výstupy příkazů
+  `mini status / undo / init / import-gsd / model / stop / map / audit / update /
+  install-commands / migrate / migrate --renumber` jsou nově anglicky (labely
+  fází `[done]`/`[doing]`/…, nápovědy „Next: …", logy o vytvořených/změněných
+  souborech apod.). `mini init` a `mini import-gsd` nově zakládají `project.md`
+  s anglickými nadpisy (`## What I'm building` / `## Who it's for` /
+  `## Main constraints`); `mini status` přitom čte i starší české project.md.
+  Názvy příkazů, flagy, `/mini:*` reference a cesty beze změny. (Lifecycle
+  příkazy, paměť/reporty a graph mappery přijdou v navazujících fázích.)
 - **CLI help a UI hlášky přeloženy do angličtiny.** `mini --help`, popisy příkazů
   a options, chybové/validační hlášky i runtime výstupy (`src/cli.ts`, `src/ui/*`)
   jsou nově anglicky — nástroj míří na mezinárodní použití. Názvy příkazů, flagy,

@@ -12,32 +12,33 @@ interface InitAnswers {
   constraints: string;
 }
 
-/** Odpovědi pro neinteraktivní `mini init --apply` (z flagů, bez `ask`). */
+/** Answers for the non-interactive `mini init --apply` (from flags, no `ask`). */
 export interface ApplyInitOptions {
-  /** Název projektu; když chybí, vezme se název adresáře. */
+  /** Project name; when missing, the directory name is used. */
   name?: string;
-  /** Co se staví (povinné — validuje CLI). */
+  /** What is being built (required — validated by the CLI). */
   what?: string;
-  /** Pro koho to je (povinné — validuje CLI). */
+  /** Who it is for (required — validated by the CLI). */
   forWhom?: string;
-  /** Hlavní omezení (volitelné). */
+  /** Main constraints (optional). */
   constraints?: string;
-  /** Přepíše existující projekt bez ptaní. */
+  /** Overwrite an existing project without asking. */
   force?: boolean;
 }
 
 /**
- * Neinteraktivní inicializace pro `/mini:init` v Claude Code: odpovědi přijdou
- * flagy, žádné `ask` prompty. Na rozdíl od interaktivní cesty **nespouští**
- * audit sám — jen po uložení vypíše, zda jde o existující projekt (brownfield),
- * a nabídne další kroky (slash command pak nabídne `/mini:map` a `/mini:audit`).
+ * Non-interactive initialization for `/mini:init` in Claude Code: the answers come
+ * as flags, no `ask` prompts. Unlike the interactive path it does **not** run the
+ * audit itself — it only prints after saving whether this is an existing project
+ * (brownfield) and offers the next steps (the slash command then offers `/mini:map`
+ * and `/mini:audit`).
  */
 export async function applyInit(opts: ApplyInitOptions): Promise<{ ok: boolean }> {
   const cwd = process.cwd();
 
   if ((await exists(cwd)) && !opts.force) {
-    log.error('V tomto adresáři už projekt existuje (.mini/state.json).');
-    log.hint('Začít nanovo (stará historie fází se ztratí): mini init --apply --force …');
+    log.error('A project already exists in this directory (.mini/state.json).');
+    log.hint('Start over (the old phase history will be lost): mini init --apply --force …');
     return { ok: false };
   }
 
@@ -54,14 +55,14 @@ export async function applyInit(opts: ApplyInitOptions): Promise<{ ok: boolean }
   await save(newState(), cwd);
   await syncSkeleton(cwd);
 
-  log.success(`Projekt "${answers.name}" založen v .mini/`);
+  log.success(`Project "${answers.name}" created in .mini/`);
 
   if (await isBrownfield(cwd)) {
     console.log();
-    log.info('V adresáři už nějaký kód je.');
-    log.hint('Doporučené další kroky: mini map (graf projektu), pak mini audit (přehled codebase do .mini/codebase.md).');
+    log.info('There is already some code in the directory.');
+    log.hint('Recommended next steps: mini map (project graph), then mini audit (codebase overview into .mini/codebase.md).');
   } else {
-    log.hint('Další krok: mini next');
+    log.hint('Next step: mini next');
   }
 
   return { ok: true };
@@ -71,49 +72,49 @@ export async function init(): Promise<void> {
   const cwd = process.cwd();
 
   if (await exists(cwd)) {
-    log.warn('V tomto adresáři už projekt existuje (.mini/state.json).');
+    log.warn('A project already exists in this directory (.mini/state.json).');
     const { overwrite } = await ask<'overwrite'>({
       type: 'confirm',
       name: 'overwrite',
-      message: 'Přepsat a začít nanovo? (Stará historie fází se ztratí.)',
+      message: 'Overwrite and start over? (The old phase history will be lost.)',
       initial: false,
     });
     if (!overwrite) {
-      log.dim('Nic se nemění.');
+      log.dim('Nothing changes.');
       return;
     }
   }
 
-  log.title('Nový projekt');
-  log.hint('Odpověz na pár otázek. Vznikne .mini/project.md (1 stránka) + .mini/state.json.');
+  log.title('New project');
+  log.hint('Answer a few questions. This creates .mini/project.md (1 page) + .mini/state.json.');
 
   const answers = await ask<keyof InitAnswers>([
     {
       type: 'text',
       name: 'name',
-      message: 'Jak se projekt jmenuje?',
+      message: 'What is the project called?',
       initial: basename(cwd),
       format: trim,
-      validate: nonEmpty('Název nesmí být prázdný.'),
+      validate: nonEmpty('The name must not be empty.'),
     },
     {
       type: 'text',
       name: 'what',
-      message: 'Co stavíš? (1-2 věty)',
+      message: 'What are you building? (1-2 sentences)',
       format: trim,
-      validate: nonEmpty('Napiš aspoň pár slov.'),
+      validate: nonEmpty('Write at least a few words.'),
     },
     {
       type: 'text',
       name: 'forWhom',
-      message: 'Pro koho to je? (cílový uživatel)',
+      message: 'Who is it for? (target user)',
       format: trim,
-      validate: nonEmpty('Napiš aspoň pár slov.'),
+      validate: nonEmpty('Write at least a few words.'),
     },
     {
       type: 'text',
       name: 'constraints',
-      message: 'Hlavní omezení? (jazyk/framework/deadline — můžeš nechat prázdné)',
+      message: 'Main constraints? (language/framework/deadline — you can leave it empty)',
       initial: '',
       format: trim,
     },
@@ -124,19 +125,19 @@ export async function init(): Promise<void> {
   await writeProject(projectMd, cwd);
   await save(newState(), cwd);
 
-  // Statický skeleton (.mini/ adresáře + .gitignore) ze stejného zdroje pravdy
-  // jako `mini update` — project.md a state.json zůstávají generované výše.
+  // The static skeleton (.mini/ directories + .gitignore) from the same source of
+  // truth as `mini update` — project.md and state.json stay generated above.
   await syncSkeleton(cwd);
 
-  log.success(`Projekt "${(answers as InitAnswers).name}" založen v .mini/`);
+  log.success(`Project "${(answers as InitAnswers).name}" created in .mini/`);
 
   if (await isBrownfield(cwd)) {
     console.log();
-    log.info('V adresáři už nějaký kód je — můžu nechat Clauda projít projekt a vytvořit .mini/codebase.md (přehled pro pozdější use).');
+    log.info('There is already some code in the directory — I can let Claude go through the project and create .mini/codebase.md (an overview for later use).');
     const { runAudit } = await ask<'runAudit'>({
       type: 'confirm',
       name: 'runAudit',
-      message: 'Spustit teď mini audit?',
+      message: 'Run mini audit now?',
       initial: true,
     });
     if (runAudit) {
@@ -144,23 +145,23 @@ export async function init(): Promise<void> {
       await audit();
       return;
     }
-    log.hint('Můžeš spustit kdykoli: mini audit');
+    log.hint('You can run it anytime: mini audit');
   }
 
-  log.hint('Pro autonomní režim: zapni auto-update grafu po editaci (hook v .claude/settings.json) — viz README „Strojová mapa projektu".');
-  log.hint('Další krok: mini next');
+  log.hint('For autonomous mode: enable graph auto-update after edits (a hook in .claude/settings.json) — see README "Machine-readable project map".');
+  log.hint('Next step: mini next');
 }
 
 function renderProjectMd(d: InitAnswers): string {
   return `# ${d.name}
 
-## Co stavím
+## What I'm building
 ${d.what}
 
-## Pro koho
+## Who it's for
 ${d.forWhom}
 
-## Hlavní omezení
-${d.constraints || '(žádné)'}
+## Main constraints
+${d.constraints || '(none)'}
 `;
 }

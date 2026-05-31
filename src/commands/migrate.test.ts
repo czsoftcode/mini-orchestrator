@@ -14,8 +14,8 @@ const LEGACY = {
   currentPhaseId: 2,
   models: { default: 'claude-opus-4-7' },
   phases: [
-    { id: 1, title: 'První', status: 'done', goal: 'cíl 1', steps: [{ title: 'a', status: 'done' }] },
-    { id: 2, title: 'Druhá', status: 'doing', goal: 'cíl 2', steps: [{ title: 'b', status: 'doing' }] },
+    { id: 1, title: 'First', status: 'done', goal: 'goal 1', steps: [{ title: 'a', status: 'done' }] },
+    { id: 2, title: 'Second', status: 'doing', goal: 'goal 2', steps: [{ title: 'b', status: 'doing' }] },
   ],
 };
 
@@ -33,32 +33,32 @@ afterEach(async () => {
 });
 
 describe('mini migrate', () => {
-  it('rozdělí starý monolitický state.json (verze 1) do nového layoutu', async () => {
+  it('splits the old monolithic state.json (version 1) into the new layout', async () => {
     await writeLegacy();
 
     const r = await migrate(cwd);
     expect(r.ok).toBe(true);
 
-    // Hlavička: verze 2, lehký index, metadata zachována.
+    // Header: version 2, lightweight index, metadata preserved.
     const header = JSON.parse(await readFile(statePath(cwd), 'utf-8')) as StateHeader;
     expect(header.version).toBe(2);
     expect(header.currentPhaseId).toBe(2);
     expect(header.phases).toEqual([
-      { id: 1, title: 'První', status: 'done' },
-      { id: 2, title: 'Druhá', status: 'doing' },
+      { id: 1, title: 'First', status: 'done' },
+      { id: 2, title: 'Second', status: 'doing' },
     ]);
-    // detail v hlavičce není
+    // no detail in the header
     expect((header.phases[0] as Record<string, unknown>).steps).toBeUndefined();
 
-    // Soubory fází vznikly a drží plný detail.
+    // Phase files were created and hold the full detail.
     const files = await readdir(phasesDir(cwd));
     expect(files).toContain(phaseFileName(1));
     expect(files).toContain(phaseFileName(2));
-    expect((await loadPhase(cwd, 1))?.goal).toBe('cíl 1');
+    expect((await loadPhase(cwd, 1))?.goal).toBe('goal 1');
     expect((await loadPhase(cwd, 2))?.steps?.[0]?.status).toBe('doing');
   });
 
-  it('po migraci jde stav načíst přes load() a sedí', async () => {
+  it('after migration the state loads via load() and matches', async () => {
     await writeLegacy();
     await migrate(cwd);
 
@@ -67,10 +67,10 @@ describe('mini migrate', () => {
     expect(state.phases).toHaveLength(2);
     expect(state.currentPhaseId).toBe(2);
     expect(state.models?.default).toBe('claude-opus-4-7');
-    expect(state.phases[1]?.goal).toBe('cíl 2');
+    expect(state.phases[1]?.goal).toBe('goal 2');
   });
 
-  it('je idempotentní — druhý běh na verzi 2 je no-op', async () => {
+  it('is idempotent — a second run on version 2 is a no-op', async () => {
     await writeLegacy();
     await migrate(cwd);
     const headerAfterFirst = await readFile(statePath(cwd), 'utf-8');
@@ -80,12 +80,12 @@ describe('mini migrate', () => {
     expect(await readFile(statePath(cwd), 'utf-8')).toBe(headerAfterFirst);
   });
 
-  it('bez projektu vrátí ok:false', async () => {
+  it('returns ok:false without a project', async () => {
     const r = await migrate(cwd);
     expect(r).toEqual({ ok: false, reason: 'no-project' });
   });
 
-  it('migrace zachová model→models migraci při čtení', async () => {
+  it('migration keeps the model→models migration on read', async () => {
     await mkdir(join(cwd, '.mini'), { recursive: true });
     await writeFile(
       statePath(cwd),
@@ -95,7 +95,7 @@ describe('mini migrate', () => {
 
     await migrate(cwd);
 
-    // hlavička drží legacy `model`, loadHeader ho při čtení přesune do models.default
+    // the header holds the legacy `model`, loadHeader moves it into models.default on read
     const header = await loadHeader(cwd);
     expect(header.models?.default).toBe('legacy-m');
     expect(header.model).toBeUndefined();

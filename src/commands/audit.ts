@@ -14,21 +14,21 @@ export async function audit(): Promise<StepOutcome> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('There is no project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
   if (!(await isBrownfield(cwd))) {
-    log.warn('Není co auditovat — adresář je prázdný.');
-    log.hint('Audit má smysl až ve chvíli, kdy v projektu nějaký kód existuje.');
+    log.warn('Nothing to audit — the directory is empty.');
+    log.hint('An audit makes sense only once some code exists in the project.');
     return { ok: false, reason: 'greenfield' };
   }
 
   const [projectMd, state] = await Promise.all([readProject(cwd), load(cwd)]);
   const prompt = buildAuditCodebasePrompt(projectMd);
 
-  log.dim(`Procházím kód a aktualizuji ${CODEBASE_FILE}…`);
+  log.dim(`Going through the code and updating ${CODEBASE_FILE}…`);
 
   let response;
   try {
@@ -40,12 +40,12 @@ export async function audit(): Promise<StepOutcome> {
       model: resolveModel('audit', state),
     });
   } catch (err) {
-    log.error(`Claude se nepodařilo zeptat: ${(err as Error).message}`);
+    log.error(`Failed to ask Claude: ${(err as Error).message}`);
     return { ok: false, reason: 'claude-error' };
   }
 
   logUsage(response);
-  log.success(`${CODEBASE_FILE} aktualizováno.`);
-  log.hint('Můžeš si do souboru přidávat vlastní poznámky — další audit je zachová.');
+  log.success(`${CODEBASE_FILE} updated.`);
+  log.hint('You can add your own notes to the file — the next audit will keep them.');
   return { ok: true };
 }

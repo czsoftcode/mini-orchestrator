@@ -3,26 +3,26 @@ import { exists, stopPath } from '../state/store.js';
 import { log } from '../ui/log.js';
 
 export interface StopOptions {
-  /** Smaže stop signál místo jeho založení. */
+  /** Removes the stop signal instead of creating it. */
   clear?: boolean;
 }
 
 /**
- * Kooperativní stop pro autonomní `/mini:auto`.
+ * Cooperative stop for the autonomous `/mini:auto`.
  *
- * Bez flagu založí soubor `.mini/STOP` — autonomní běh ho na svých kontrolních
- * bodech přečte, dokončí rozdělaný krok, zapíše report a čistě skončí. Tvrdé
- * přerušení uprostřed kroku je dál na Esc/Ctrl+C.
+ * Without a flag it creates the file `.mini/STOP` — the autonomous run reads it at
+ * its checkpoints, finishes the current step, writes a report and exits cleanly.
+ * A hard interrupt mid-step is still Esc/Ctrl+C.
  *
- * S `--clear` signál smaže, aby další `/mini:auto` zase běžel.
+ * With `--clear` it removes the signal so the next `/mini:auto` runs again.
  *
- * Obě varianty jsou idempotentní (opakované volání nic nerozbije).
+ * Both variants are idempotent (repeated calls break nothing).
  */
 export async function stop(opts: StopOptions = {}): Promise<void> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
+    log.warn('There is no project in this directory.');
     return;
   }
 
@@ -30,12 +30,12 @@ export async function stop(opts: StopOptions = {}): Promise<void> {
 
   if (opts.clear) {
     await rm(path, { force: true });
-    log.success('Stop signál smazán — autonomní /mini:auto zase poběží.');
+    log.success('Stop signal removed — the autonomous /mini:auto will run again.');
     return;
   }
 
   await writeFile(path, `${new Date().toISOString()}\n`, 'utf-8');
-  log.success('Stop signál založen (.mini/STOP).');
-  log.hint('Autonomní /mini:auto dokončí rozdělaný krok a čistě skončí.');
-  log.hint('Zrušíš ho příkazem `mini stop --clear`.');
+  log.success('Stop signal created (.mini/STOP).');
+  log.hint('The autonomous /mini:auto will finish the current step and exit cleanly.');
+  log.hint('Remove it with `mini stop --clear`.');
 }

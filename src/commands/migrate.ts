@@ -11,7 +11,7 @@ import type { Phase, PhaseSummary, ProjectModels, StateHeader } from '../state/t
 import { log } from '../ui/log.js';
 import type { StepOutcome } from './types.js';
 
-/** Volný tvar starého monolitického `state.json` (verze 1). */
+/** Loose shape of the old monolithic `state.json` (version 1). */
 interface LegacyState {
   version?: number;
   createdAt?: string;
@@ -22,22 +22,22 @@ interface LegacyState {
 }
 
 /**
- * `mini migrate` — jednorázově převede starý monolitický `state.json` (verze 1)
- * na nový layout: hlavičku (lehký index + metadata) a detail každé fáze do
- * `.mini/phases/phase-<id>.json`.
+ * `mini migrate` — one-off conversion of the old monolithic `state.json` (version 1)
+ * to the new layout: a header (a lightweight index + metadata) and the detail of
+ * each phase into `.mini/phases/phase-<id>.json`.
  *
- * Crash-safe: nejdřív se zapíšou všechny soubory fází a teprve **nakonec**
- * hlavička (`state.json`) s `version: 2`. Dokud se hlavička nepřepíše, je projekt
- * pořád „verze 1", takže přerušená migrace se příštím během jen zopakuje.
- * Idempotentní: na už zmigrovaném stavu (verze 2) je to no-op.
+ * Crash-safe: first all phase files are written and only **at the end** the
+ * header (`state.json`) with `version: 2`. Until the header is rewritten, the
+ * project is still "version 1", so an interrupted migration just repeats on the
+ * next run. Idempotent: on an already migrated state (version 2) it is a no-op.
  *
- * Pozn.: do budoucna sem půjde přidat i migrace `graph.md` (taky roste), zatím
- * řeší jen `state.json`.
+ * Note: in the future a `graph.md` migration could go here too (it also grows);
+ * for now it only handles `state.json`.
  */
 export async function migrate(cwd: string = process.cwd()): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('There is no project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
@@ -46,23 +46,23 @@ export async function migrate(cwd: string = process.cwd()): Promise<StepOutcome>
   try {
     parsed = JSON.parse(raw) as LegacyState;
   } catch {
-    log.error('state.json se nepodařilo přečíst (není to validní JSON).');
+    log.error('Failed to read state.json (not valid JSON).');
     return { ok: false, reason: 'invalid-json' };
   }
 
   if (parsed.version === SCHEMA_VERSION) {
-    log.info('Stav už je v novém formátu (verze 2) — není co migrovat.');
+    log.info('The state is already in the new format (version 2) — nothing to migrate.');
     return { ok: true };
   }
 
   const phases = parsed.phases ?? [];
 
-  // Nejdřív detail každé fáze do .mini/phases/.
+  // First the detail of each phase into .mini/phases/.
   for (const phase of phases) {
     await savePhase(phase, cwd);
   }
 
-  // Až nakonec hlavička — tím se projekt „přepne" na verzi 2.
+  // The header last — this "switches" the project to version 2.
   const header: StateHeader = {
     version: SCHEMA_VERSION,
     createdAt: parsed.createdAt ?? new Date().toISOString(),
@@ -73,7 +73,7 @@ export async function migrate(cwd: string = process.cwd()): Promise<StepOutcome>
   if (parsed.models != null) header.models = parsed.models;
   await saveHeader(header, cwd);
 
-  const word = phases.length === 1 ? 'fáze' : 'fází';
-  log.success(`Migrováno: ${phases.length} ${word} do ${phasesDir(cwd)}, state.json je teď hlavička (verze 2).`);
+  const word = phases.length === 1 ? 'phase' : 'phases';
+  log.success(`Migrated: ${phases.length} ${word} into ${phasesDir(cwd)}, state.json is now a header (version 2).`);
   return { ok: true };
 }

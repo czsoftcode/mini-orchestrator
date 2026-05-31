@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 describe('installCommands', () => {
-  it('vygeneruje .md commandy pro init, pět příkazů cyklu, auto i read-only status a map', async () => {
+  it('generates .md commands for init, the five cycle commands, auto and the read-only status and map', async () => {
     await installCommands(cwd);
     const files = (await readdir(join(cwd, COMMANDS_DIR))).sort();
     expect(files).toEqual([
@@ -33,7 +33,7 @@ describe('installCommands', () => {
     ]);
   });
 
-  it('verify command volá mini context verify a popisuje UI/UX kontrolu', async () => {
+  it('the verify command calls mini context verify and describes the UI/UX review', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'verify.md'), 'utf-8');
     expect(md).toContain('mini context verify');
@@ -41,7 +41,7 @@ describe('installCommands', () => {
     expect(md).toContain('UI/UX');
   });
 
-  it('audit command volá mini audit, ne mini context', async () => {
+  it('the audit command calls mini audit, not mini context', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'audit.md'), 'utf-8');
     expect(md).toContain('mini audit');
@@ -49,7 +49,7 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
-  it('init command zakládá projekt přes mini init --apply a nabízí /mini:map a /mini:audit', async () => {
+  it('the init command creates a project via mini init --apply and offers /mini:map and /mini:audit', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'init.md'), 'utf-8');
     expect(md).toContain('mini init --apply');
@@ -59,7 +59,7 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
-  it('každý workflow command volá mini context <name>', async () => {
+  it('every workflow command calls mini context <name>', async () => {
     await installCommands(cwd);
     for (const name of ['next', 'discuss', 'plan', 'do', 'done']) {
       const md = await readFile(join(cwd, COMMANDS_DIR, `${name}.md`), 'utf-8');
@@ -68,7 +68,7 @@ describe('installCommands', () => {
     }
   });
 
-  it('status command volá mini status, ne mini context', async () => {
+  it('the status command calls mini status, not mini context', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'status.md'), 'utf-8');
     expect(md).toContain('mini status');
@@ -76,7 +76,7 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
-  it('map command volá mini map, ne mini context', async () => {
+  it('the map command calls mini map, not mini context', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'map.md'), 'utf-8');
     expect(md).toContain('mini map');
@@ -84,93 +84,93 @@ describe('installCommands', () => {
     expect(md).toContain('description:');
   });
 
-  it('auto command popisuje autonomní smyčku next→discuss→plan→do→verify→done s podmínkou na discuss', async () => {
+  it('the auto command describes the autonomous loop next→discuss→plan→do→verify→done with a condition on discuss', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // všechny kroky cyklu jako mini context volání (včetně next a verify)
+    // all cycle steps as mini context calls (including next and verify)
     for (const name of ['next', 'discuss', 'plan', 'do', 'verify', 'done']) {
       expect(md).toContain(`mini context ${name}`);
     }
-    // discuss je podmíněný, ne bezpodmínečný
+    // discuss is conditional, not unconditional
     expect(md).toMatch(/condition|only when|only if/i);
-    // done se ukládá bez automatického push na remote
+    // done is saved without an automatic push to the remote
     expect(md).toContain('mini done --apply');
     expect(md).not.toContain('mini done --apply --push');
     expect(md).toContain('description:');
   });
 
-  it('auto command je autonomní: argument-hint, --max-phases (default 1), --yolo a smyčka přes víc fází', async () => {
+  it('the auto command is autonomous: argument-hint, --max-phases (default 1), --yolo and a loop over multiple phases', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // argumenty běhu z $ARGUMENTS
+    // run arguments from $ARGUMENTS
     expect(md).toContain('argument-hint:');
     expect(md).toContain('$ARGUMENTS');
     expect(md).toContain('--max-phases');
     expect(md).toContain('--yolo');
     expect(md).toContain('--verify');
     expect(md).toContain('--discuss');
-    // default 1 fáze, když --max-phases chybí
+    // default 1 phase when --max-phases is missing
     expect(md).toMatch(/default 1|default.*1/i);
-    // autonomní běh přes víc fází (ne jen jedna fáze)
+    // an autonomous run over multiple phases (not just one phase)
     expect(md).toMatch(/autonom/i);
-    // tichý běh — žádné editační výpisy
+    // quiet run — no edit listings
     expect(md).toMatch(/edit listing|don't print|do not print/i);
-    // detekce hotového projektu
+    // detection of a finished project
     expect(md).toContain('TITLE: -');
   });
 
-  it('auto command vkládá verify mezi do a done: podmíněně u UI/UX a vynuceně přes --verify', async () => {
+  it('the auto command inserts verify between do and done: conditionally for UI/UX and forced via --verify', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // verify je v cyklu jako mini context volání a flag --verify ho vynutí
+    // verify is in the cycle as a mini context call and the --verify flag forces it
     expect(md).toContain('mini context verify');
     expect(md).toContain('--verify');
-    // krok je popsaný jako UI/UX a podmíněný (přeskočí se u vnitřní fáze)
+    // the step is described as UI/UX and conditional (skipped for an internal phase)
     expect(md).toMatch(/UI\/UX/);
     expect(md).toMatch(/skip/i);
-    // verify předchází done v textu cyklu
+    // verify precedes done in the cycle text
     expect(md.indexOf('mini context verify')).toBeLessThan(md.indexOf('mini context done'));
   });
 
-  it('auto command umí vynutit discuss přes --discuss', async () => {
+  it('the auto command can force discuss via --discuss', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // flag --discuss vynutí discuss v každé fázi (jinak podmíněný)
+    // the --discuss flag forces discuss in every phase (otherwise conditional)
     expect(md).toContain('--discuss');
-    // krok discuss zůstává podmíněný, pokud --discuss není
+    // the discuss step stays conditional when --discuss is absent
     expect(md).toMatch(/discuss/i);
     expect(md).toMatch(/skip/i);
   });
 
-  it('auto command popisuje stop háčky (kontrolní body + mini stop)', async () => {
+  it('the auto command describes the stop hooks (checkpoints + mini stop)', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
-    // stop flag soubor + příkaz, kterým ho uživatel zakládá + obě granularity kontroly
+    // the stop flag file + the command the user creates it with + both checkpoint granularities
     expect(md).toContain('.mini/STOP');
     expect(md).toMatch(/mini stop/);
     expect(md).toMatch(/between cycle steps/i);
     expect(md).toMatch(/step-done/);
   });
 
-  it('do command nejdřív nastartuje fázi (mini do --apply), pak context do, step-done a report', async () => {
+  it('the do command first starts the phase (mini do --apply), then context do, step-done and the report', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'do.md'), 'utf-8');
     expect(md).toContain('mini do --apply');
     expect(md).toContain('mini context do');
     expect(md).toContain('mini do --apply --step-done');
     expect(md).toContain('.mini/run/');
-    // init (`mini do --apply`) musí předcházet vypsání promptu (`mini context do`)
+    // the init (`mini do --apply`) must precede printing the prompt (`mini context do`)
     expect(md.indexOf('mini do --apply')).toBeLessThan(md.indexOf('mini context do'));
   });
 
-  it('next command předává $ARGUMENTS jako nápad', async () => {
+  it('the next command passes $ARGUMENTS as the idea', async () => {
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'next.md'), 'utf-8');
     expect(md).toContain('mini context next $ARGUMENTS');
     expect(md).toContain('argument-hint:');
   });
 
-  it('je idempotentní — druhé spuštění obsah nezmění', async () => {
+  it('is idempotent — the second run does not change the content', async () => {
     await installCommands(cwd);
     const before = await Promise.all(
       ['init', 'next', 'discuss', 'plan', 'do', 'done', 'status', 'map', 'audit', 'auto'].map((n) => readFile(join(cwd, COMMANDS_DIR, `${n}.md`), 'utf-8')),
@@ -182,12 +182,12 @@ describe('installCommands', () => {
     expect(after).toEqual(before);
   });
 
-  it('přepíše zastaralý obsah existujícího commandu', async () => {
+  it('overwrites the stale content of an existing command', async () => {
     await mkdir(join(cwd, COMMANDS_DIR), { recursive: true });
-    await writeFile(join(cwd, COMMANDS_DIR, 'next.md'), 'staré tělo', 'utf-8');
+    await writeFile(join(cwd, COMMANDS_DIR, 'next.md'), 'old body', 'utf-8');
     await installCommands(cwd);
     const md = await readFile(join(cwd, COMMANDS_DIR, 'next.md'), 'utf-8');
-    expect(md).not.toBe('staré tělo');
+    expect(md).not.toBe('old body');
     expect(md).toContain('mini context next');
   });
 });

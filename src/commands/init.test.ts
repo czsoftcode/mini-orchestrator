@@ -3,15 +3,15 @@ import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-// Prompty nahradíme pevnými odpověďmi, ať init běží neinteraktivně.
+// Replace the prompts with fixed answers so init runs non-interactively.
 vi.mock('../ui/ask.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../ui/ask.js')>();
   return {
     ...actual,
     ask: vi.fn(async () => ({
-      name: 'Testovací projekt',
-      what: 'Něco užitečného',
-      forWhom: 'Pro vývojáře',
+      name: 'Test project',
+      what: 'Something useful',
+      forWhom: 'For developers',
       constraints: 'TypeScript',
     })),
   };
@@ -43,32 +43,32 @@ afterEach(async () => {
 });
 
 describe('init', () => {
-  it('založí project.md + state.json a položí skeleton (.gitignore + adresáře)', async () => {
+  it('creates project.md + state.json and lays down the skeleton (.gitignore + directories)', async () => {
     await init();
 
-    // generované per-projekt soubory
+    // generated per-project files
     expect(await pathExists(join(cwd, '.mini', 'project.md'))).toBe(true);
     expect(await pathExists(join(cwd, '.mini', 'state.json'))).toBe(true);
     const projectMd = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
-    expect(projectMd).toContain('Testovací projekt');
+    expect(projectMd).toContain('Test project');
 
     // skeleton
     expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(true);
     for (const d of ['discuss', 'memory', 'phases', 'run']) {
       expect(await pathExists(join(cwd, '.mini', d))).toBe(true);
     }
-    // .gitkeep se do projektu nekopíruje
+    // .gitkeep is not copied into the project
     expect(await pathExists(join(cwd, '.mini', 'phases', '.gitkeep'))).toBe(false);
   });
 });
 
-describe('applyInit (neinteraktivní)', () => {
-  it('založí project.md + state.json a položí skeleton bez ask promptů', async () => {
+describe('applyInit (non-interactive)', () => {
+  it('creates project.md + state.json and lays down the skeleton without ask prompts', async () => {
     const r = await applyInit({
-      name: 'Z flagů',
-      what: 'Něco z flagů',
-      forWhom: 'Pro CI',
-      constraints: 'Bez interakce',
+      name: 'From flags',
+      what: 'Something from flags',
+      forWhom: 'For CI',
+      constraints: 'No interaction',
     });
 
     expect(r.ok).toBe(true);
@@ -76,44 +76,44 @@ describe('applyInit (neinteraktivní)', () => {
     expect(await pathExists(join(cwd, '.mini', 'state.json'))).toBe(true);
     expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(true);
     const projectMd = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
-    expect(projectMd).toContain('Z flagů');
-    expect(projectMd).toContain('Něco z flagů');
+    expect(projectMd).toContain('From flags');
+    expect(projectMd).toContain('Something from flags');
   });
 
-  it('název doplní z adresáře a prázdné omezení nahradí placeholderem', async () => {
-    await applyInit({ what: 'Co', forWhom: 'Pro koho' });
+  it('fills the name from the directory and replaces an empty constraint with a placeholder', async () => {
+    await applyInit({ what: 'What', forWhom: 'For whom' });
     const projectMd = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
-    // bez --name se vezme název temp adresáře
+    // without --name the temp directory name is used
     expect(projectMd).toContain(`# ${join(cwd).split('/').pop()}`);
-    expect(projectMd).toContain('(žádné)');
+    expect(projectMd).toContain('(none)');
   });
 
-  it('na existujícím projektu bez --force selže a nepřepíše', async () => {
-    await applyInit({ what: 'Původní', forWhom: 'A' });
+  it('fails and does not overwrite an existing project without --force', async () => {
+    await applyInit({ what: 'Original', forWhom: 'A' });
     const before = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
 
-    const r = await applyInit({ what: 'Nové', forWhom: 'B' });
+    const r = await applyInit({ what: 'New', forWhom: 'B' });
     expect(r.ok).toBe(false);
     const after = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
     expect(after).toBe(before);
   });
 
-  it('s --force existující projekt přepíše', async () => {
-    await applyInit({ what: 'Původní', forWhom: 'A' });
-    const r = await applyInit({ what: 'Nové znění', forWhom: 'B', force: true });
+  it('overwrites an existing project with --force', async () => {
+    await applyInit({ what: 'Original', forWhom: 'A' });
+    const r = await applyInit({ what: 'New wording', forWhom: 'B', force: true });
     expect(r.ok).toBe(true);
     const after = await readFile(join(cwd, '.mini', 'project.md'), 'utf-8');
-    expect(after).toContain('Nové znění');
+    expect(after).toContain('New wording');
   });
 
-  it('v brownfield adresáři nabídne v outputu mini map a mini audit', async () => {
+  it('offers mini map and mini audit in the output in a brownfield directory', async () => {
     await writeFile(join(cwd, 'index.ts'), 'export const x = 1;\n', 'utf-8');
     const logs: string[] = [];
     const spy = vi.spyOn(console, 'log').mockImplementation((...a: unknown[]) => {
       logs.push(a.join(' '));
     });
     try {
-      await applyInit({ what: 'Co', forWhom: 'Pro koho' });
+      await applyInit({ what: 'What', forWhom: 'For whom' });
     } finally {
       spy.mockRestore();
     }

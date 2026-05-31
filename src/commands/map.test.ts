@@ -70,13 +70,13 @@ describe('map command', () => {
     }
   });
 
-  it('--file přemapuje jen zadaný soubor (uzel + záznam v indexu)', async () => {
+  it('--file remaps only the given file (node + index record)', async () => {
     await writeFile(join(root, 'tsconfig.json'), '{}', 'utf-8');
     await mkdir(join(root, 'src'), { recursive: true });
     await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;', 'utf-8');
-    await map(); // plný build → index existuje
+    await map(); // full build → the index exists
 
-    // přidáme nový export do a.ts a přemapujeme jen ten soubor
+    // add a new export to a.ts and remap only that file
     await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\nexport const a2 = 2;', 'utf-8');
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     try {
@@ -93,7 +93,7 @@ describe('map command', () => {
     ]);
   });
 
-  it('--file v adresáři bez mini projektu tiše neuspěje (no spam)', async () => {
+  it('--file silently fails in a directory without a mini project (no spam)', async () => {
     await rm(join(root, '.mini', 'state.json'));
     const result = await map(['src/a.ts']);
     expect(result).toEqual({ ok: false, reason: 'no-project' });

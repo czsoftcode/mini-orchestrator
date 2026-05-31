@@ -11,24 +11,24 @@ import type { Phase, PhaseStatus, ProjectState, StepStatus } from '../state/type
 import { log } from '../ui/log.js';
 
 const PHASE_LABELS: Record<PhaseStatus, { label: string; color: (s: string) => string }> = {
-  done: { label: '[hotovo]', color: pc.green },
-  doing: { label: '[dělá se]', color: pc.yellow },
-  planned: { label: '[plán]', color: pc.cyan },
-  proposed: { label: '[návrh]', color: pc.dim },
-  skipped: { label: '[odlož.]', color: pc.dim },
+  done: { label: '[done]', color: pc.green },
+  doing: { label: '[doing]', color: pc.yellow },
+  planned: { label: '[planned]', color: pc.cyan },
+  proposed: { label: '[proposed]', color: pc.dim },
+  skipped: { label: '[skipped]', color: pc.dim },
 };
 
 const VERDICT_LABELS: Record<RunVerdict, { label: string; color: (s: string) => string }> = {
-  done: { label: 'hotovo', color: pc.green },
-  partial: { label: 'částečně', color: pc.yellow },
-  blocked: { label: 'zablokováno', color: pc.red },
+  done: { label: 'done', color: pc.green },
+  partial: { label: 'partial', color: pc.yellow },
+  blocked: { label: 'blocked', color: pc.red },
 };
 
 const STEP_LABELS: Record<StepStatus, { label: string; color: (s: string) => string }> = {
-  done: { label: '[hotovo]', color: pc.green },
-  doing: { label: '[dělá se]', color: pc.yellow },
-  todo: { label: '[čeká]', color: pc.dim },
-  skipped: { label: '[odlož.]', color: pc.dim },
+  done: { label: '[done]', color: pc.green },
+  doing: { label: '[doing]', color: pc.yellow },
+  todo: { label: '[todo]', color: pc.dim },
+  skipped: { label: '[skipped]', color: pc.dim },
 };
 
 const STATUS_WIDTH = 10;
@@ -37,45 +37,47 @@ export async function status(): Promise<void> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni příkazem: mini init');
+    log.warn('There is no project in this directory.');
+    log.hint('Start with: mini init');
     return;
   }
 
   const [projectMd, state] = await Promise.all([readProject(cwd), load(cwd)]);
 
   const titleMatch = projectMd.match(/^#\s+(.+)$/m);
-  const title = titleMatch?.[1]?.trim() ?? '(bez názvu)';
+  const title = titleMatch?.[1]?.trim() ?? '(untitled)';
 
   console.log();
   console.log(pc.bold(title));
 
-  const whatMatch = projectMd.match(/##\s+Co stavím\s*\n+([^\n]+)/);
+  // Match both the new English heading and the old Czech one (existing projects
+  // still have a Czech project.md — keep showing their "what" line).
+  const whatMatch = projectMd.match(/##\s+(?:What I'm building|Co stavím)\s*\n+([^\n]+)/);
   if (whatMatch?.[1]) {
     log.dim(`  ${whatMatch[1].trim()}`);
   }
   const modelLine = describeModels(state);
   if (modelLine) {
-    log.dim(`  Modely: ${modelLine}`);
+    log.dim(`  Models: ${modelLine}`);
   }
 
   console.log();
 
   if (state.phases.length === 0) {
-    log.dim('Žádné fáze.');
-    log.hint('Další: mini next');
+    log.dim('No phases.');
+    log.hint('Next: mini next');
     return;
   }
 
-  // Run report čteme jen pro aktuální fázi — jen u ní má smysl ukazovat, jak
-  // dopadla poslední auto session a co čeká na ruční ověření.
+  // We read the run report only for the current phase — only there does it make
+  // sense to show how the last auto session went and what is pending verification.
   let currentSummary: RunReportSummary | null = null;
   const current = state.phases.find((p) => p.id === state.currentPhaseId);
   if (current) {
     currentSummary = await readRunReportSummary(cwd, current.id);
   }
 
-  console.log(pc.bold('Fáze:'));
+  console.log(pc.bold('Phases:'));
   for (const phase of state.phases) {
     const isCurrent = phase.id === state.currentPhaseId;
     printPhase(phase, isCurrent, state, isCurrent ? currentSummary : null);
@@ -100,10 +102,10 @@ function printPhase(
     console.log(pc.dim(`              ${p.humanNotes}`));
   }
 
-  // Osiřelá doing fáze (uvázla ve stavu „dělá se" bez otevřené práce) — člověk
-  // ji jinak v seznamu snadno přehlédne. Žlutě ji odlišíme i s návodem.
+  // An orphaned doing phase (stuck in "doing" with no open work) — a human
+  // would otherwise easily miss it in the list. We highlight it in yellow with a hint.
   if (isOrphanedDoing(p, state.phases)) {
-    console.log(`              ${pc.yellow('⚠ uvázlo:')} ${pc.yellow(orphanedDoingNote(p, state.phases))}`);
+    console.log(`              ${pc.yellow('⚠ stuck:')} ${pc.yellow(orphanedDoingNote(p, state.phases))}`);
   }
 
   if (isCurrent && p.steps?.length) {
@@ -136,8 +138,8 @@ export function describeModels(state: ProjectState): string {
 }
 
 /**
- * Počet bodů k ručnímu ověření, které ještě nikdo neodbavil. Body vyřešené
- * dřívějším `mini done` (`phase.resolvedVerify`) se nepočítají.
+ * Number of items for manual verification that no one has handled yet. Items
+ * resolved by an earlier `mini done` (`phase.resolvedVerify`) are not counted.
  */
 export function openVerifyCount(verify: readonly RunReportVerifyItem[], phase: Phase): number {
   const resolved = new Set(phase.resolvedVerify ?? []);
@@ -145,46 +147,45 @@ export function openVerifyCount(verify: readonly RunReportVerifyItem[], phase: P
 }
 
 function pluralVerify(n: number): string {
-  if (n === 1) return 'bod';
-  if (n >= 2 && n <= 4) return 'body';
-  return 'bodů';
+  return n === 1 ? 'item' : 'items';
 }
 
 /**
- * Řádky se souhrnem run reportu pod aktuální fází: verdikt poslední auto
- * session a kolik bodů k ručnímu ověření ještě čeká. Picocolors barvy se mimo
- * TTY automaticky vypnou, takže výstup je v testech čistý text.
+ * Lines with the run report summary under the current phase: the verdict of the
+ * last auto session and how many items for manual verification are still pending.
+ * Picocolors colors turn off automatically outside a TTY, so the output is plain
+ * text in tests.
  */
 export function runReportSummaryLines(summary: RunReportSummary, phase: Phase): string[] {
   if (summary.unparseable) {
-    return [pc.dim('run report: existuje, ale nejde přečíst (poškozený YAML?)')];
+    return [pc.dim('run report: exists but cannot be read (corrupted YAML?)')];
   }
 
   const verdictPart = summary.verdict
-    ? `verdikt ${VERDICT_LABELS[summary.verdict].color(VERDICT_LABELS[summary.verdict].label)}`
-    : 'verdikt neznámý';
+    ? `verdict ${VERDICT_LABELS[summary.verdict].color(VERDICT_LABELS[summary.verdict].label)}`
+    : 'verdict unknown';
 
   const open = openVerifyCount(summary.verify, phase);
   let verifyPart: string;
   if (open > 0) {
-    verifyPart = pc.yellow(`${open} ${pluralVerify(open)} k ověření čeká`);
+    verifyPart = pc.yellow(`${open} ${pluralVerify(open)} pending verification`);
   } else if (summary.verify.length > 0) {
-    verifyPart = 'vše ověřeno';
+    verifyPart = 'all verified';
   } else {
-    verifyPart = 'bez bodů k ověření';
+    verifyPart = 'no items to verify';
   }
 
   return [pc.dim(`run report: ${verdictPart} · ${verifyPart}`)];
 }
 
 /**
- * Je fáze osiřelá `doing` — uvázlá ve stavu „dělá se", aniž by zbývala
- * otevřená práce? Dva případy:
- * - má podfáze a všechny jsou uzavřené (`done`/`skipped`) — rodič po opravné
- *   podfázi nikdo nedozavřel (viz W1),
- * - má kroky a všechny jsou uzavřené — auto session doběhla, ale `mini done`
- *   fázi ještě nezavřel.
- * Fáze bez kroků i bez podfází (čerstvě spuštěná) osiřelá není.
+ * Is the phase an orphaned `doing` — stuck in "doing" with no open work left?
+ * Two cases:
+ * - it has subphases and all are closed (`done`/`skipped`) — nobody closed the
+ *   parent after a fix subphase (see W1),
+ * - it has steps and all are closed — the auto session finished, but `mini done`
+ *   has not closed the phase yet.
+ * A phase with no steps and no subphases (freshly started) is not orphaned.
  */
 export function isOrphanedDoing(phase: Phase, phases: readonly Phase[]): boolean {
   if (phase.status !== 'doing') return false;
@@ -202,28 +203,28 @@ export function isOrphanedDoing(phase: Phase, phases: readonly Phase[]): boolean
 function orphanedDoingNote(phase: Phase, phases: readonly Phase[]): string {
   const subs = phases.filter((p) => p.id !== phase.id && Math.floor(p.id) === phase.id);
   if (subs.length > 0) {
-    return 'fáze „dělá se", ale všechny její podfáze jsou uzavřené — zavři ji přes mini done';
+    return 'phase "doing", but all its subphases are closed — close it via mini done';
   }
-  return 'fáze „dělá se", ale nemá otevřené kroky — zavři ji přes mini done';
+  return 'phase "doing", but it has no open steps — close it via mini done';
 }
 
 export function nextActionHint(state: ProjectState): string {
   if (state.currentPhaseId === null) {
-    return 'Další: mini next (navrhne první fázi)';
+    return 'Next: mini next (proposes the first phase)';
   }
   const current = state.phases.find((p) => p.id === state.currentPhaseId);
   if (!current) {
-    return 'Další: mini next';
+    return 'Next: mini next';
   }
   switch (current.status) {
     case 'proposed':
-      return 'Další: mini plan (rozmenit) nebo mini do (spustit přímo)';
+      return 'Next: mini plan (break it down) or mini do (run directly)';
     case 'planned':
     case 'doing':
-      return 'Další: mini do (pokračovat) | mini done (označit hotové)';
+      return 'Next: mini do (continue) | mini done (mark as done)';
     case 'done':
-      return 'Další: mini next (navrhnout další fázi)';
+      return 'Next: mini next (propose the next phase)';
     case 'skipped':
-      return 'Další: mini next';
+      return 'Next: mini next';
   }
 }

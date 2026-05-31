@@ -7,7 +7,7 @@ import { syncSkeleton, update } from './update.js';
 
 let cwd: string;
 
-/** Založí minimální projekt (jen .mini/state.json verze 2), jako po migraci. */
+/** Creates a minimal project (only .mini/state.json version 2), as after a migration. */
 async function makeProject(dir: string): Promise<void> {
   await mkdir(join(dir, '.mini'), { recursive: true });
   await writeFile(
@@ -35,7 +35,7 @@ afterEach(async () => {
 });
 
 describe('syncSkeleton', () => {
-  it('do prázdného .mini doplní adresáře + .gitignore (bez .gitkeep)', async () => {
+  it('fills an empty .mini with directories + .gitignore (without .gitkeep)', async () => {
     await makeProject(cwd);
     const res = await syncSkeleton(cwd);
 
@@ -47,24 +47,24 @@ describe('syncSkeleton', () => {
       expect(await pathExists(join(cwd, '.mini', d))).toBe(true);
     }
     expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(true);
-    // .gitkeep se do projektu nekopíruje
+    // .gitkeep is not copied into the project
     expect(await pathExists(join(cwd, '.mini', 'phases', '.gitkeep'))).toBe(false);
   });
 
-  it('.gitignore srovná obsahově na kanonickou podobu (přepíše ruční úpravu)', async () => {
+  it('syncs .gitignore by content to the canonical form (overwrites a manual edit)', async () => {
     await makeProject(cwd);
-    await writeFile(join(cwd, '.mini', '.gitignore'), 'moje vlastní řádka\n', 'utf-8');
+    await writeFile(join(cwd, '.mini', '.gitignore'), 'my own line\n', 'utf-8');
 
     const res = await syncSkeleton(cwd);
     expect(res.updatedFiles).toBe(1);
     expect(res.createdFiles).toBe(0);
 
-    // Zdroj na disku skeletonu je `gitignore` (bez tečky), cíl v projektu `.gitignore`.
+    // The skeleton source on disk is `gitignore` (no dot), the project target is `.gitignore`.
     const canonical = await readFile(join(await skeletonDir(), 'gitignore'), 'utf-8');
     expect(await readFile(join(cwd, '.mini', '.gitignore'), 'utf-8')).toBe(canonical);
   });
 
-  it('je idempotentní — druhý běh nic nezmění', async () => {
+  it('is idempotent — the second run changes nothing', async () => {
     await makeProject(cwd);
     await syncSkeleton(cwd);
     const res = await syncSkeleton(cwd);
@@ -75,7 +75,7 @@ describe('syncSkeleton', () => {
     expect(res.unchangedFiles).toBe(1);
   });
 
-  it('--dry-run nic nezapíše', async () => {
+  it('--dry-run writes nothing', async () => {
     await makeProject(cwd);
     const res = await syncSkeleton(cwd, { dryRun: true });
 
@@ -87,14 +87,14 @@ describe('syncSkeleton', () => {
 });
 
 describe('update', () => {
-  it('bez projektu skončí no-project a nic nezaloží', async () => {
+  it('ends with no-project and creates nothing without a project', async () => {
     const res = await update(cwd);
     expect(res).toEqual({ ok: false, reason: 'no-project' });
     expect(await pathExists(join(cwd, '.mini'))).toBe(false);
     expect(await pathExists(join(cwd, '.claude'))).toBe(false);
   });
 
-  it('srovná skeleton i slash commandy', async () => {
+  it('syncs both the skeleton and the slash commands', async () => {
     await makeProject(cwd);
     const res = await update(cwd);
 
@@ -108,7 +108,7 @@ describe('update', () => {
     expect(commands.length).toBe(11);
   });
 
-  it('--dry-run nic nezapíše ani pro commandy', async () => {
+  it('--dry-run writes nothing even for the commands', async () => {
     await makeProject(cwd);
     const res = await update(cwd, { dryRun: true });
 

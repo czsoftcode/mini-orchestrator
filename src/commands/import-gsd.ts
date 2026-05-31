@@ -44,7 +44,7 @@ export async function importGsd(): Promise<void> {
   try {
     await access(planningDir);
   } catch {
-    log.warn('V tomto adresáři není GSD projekt (chybí .planning/).');
+    log.warn('There is no GSD project in this directory (.planning/ is missing).');
     return;
   }
 
@@ -54,21 +54,21 @@ export async function importGsd(): Promise<void> {
     const oldState = await load(cwd);
     preservedModels = oldState.models;
     askModel = resolveModel('importGsd', oldState);
-    log.warn('V tomto adresáři už existuje mini projekt (.mini/state.json).');
+    log.warn('A mini project already exists in this directory (.mini/state.json).');
     const { ow } = await ask<'ow'>({
       type: 'confirm',
       name: 'ow',
-      message: 'Přepsat ho importem z GSD?',
+      message: 'Overwrite it with the GSD import?',
       initial: false,
     });
     if (!ow) {
-      log.dim('Nic se nemění.');
+      log.dim('Nothing changes.');
       return;
     }
   }
 
   const prompt = buildImportGsdPrompt();
-  log.dim('Čtu GSD projekt a sestavuju souhrn (~30-60s)…');
+  log.dim('Reading the GSD project and building a summary (~30-60s)…');
 
   let response;
   try {
@@ -79,7 +79,7 @@ export async function importGsd(): Promise<void> {
       model: askModel,
     });
   } catch (err) {
-    log.error(`Claude se nepodařilo zeptat: ${(err as Error).message}`);
+    log.error(`Failed to ask Claude: ${(err as Error).message}`);
     return;
   }
 
@@ -87,7 +87,7 @@ export async function importGsd(): Promise<void> {
 
   const parsed = parseResponse(response.text);
   if (!parsed) {
-    log.warn('Claude odpověděl ve formátu, který neumím přečíst:');
+    log.warn('Claude replied in a format I cannot read:');
     console.log(response.text);
     return;
   }
@@ -107,47 +107,47 @@ export async function importGsd(): Promise<void> {
   log.title(`Import: ${parsed.name}`);
   log.dim(`  ${parsed.what}`);
   if (parsed.forWhom) {
-    log.dim(`  Pro koho: ${parsed.forWhom}`);
+    log.dim(`  For whom: ${parsed.forWhom}`);
   }
   if (parsed.constraints) {
-    log.dim(`  Omezení: ${parsed.constraints}`);
+    log.dim(`  Constraints: ${parsed.constraints}`);
   }
   console.log();
   console.log(
-    `  Fází: ${parsed.phases.length} (hotové: ${counts.done}, dělají se: ${counts.doing}, čekají: ${counts.proposed}, odloženo: ${counts.skipped})`,
+    `  Phases: ${parsed.phases.length} (done: ${counts.done}, doing: ${counts.doing}, todo: ${counts.proposed}, skipped: ${counts.skipped})`,
   );
 
   console.log();
-  console.log('  Náhled:');
+  console.log('  Preview:');
   for (const [i, p] of parsed.phases.slice(0, 5).entries()) {
     console.log(`    ${i + 1}. [${p.status}] ${p.title}`);
   }
   if (parsed.phases.length > 5) {
-    console.log(`    … a dalších ${parsed.phases.length - 5}`);
+    console.log(`    … and ${parsed.phases.length - 5} more`);
   }
   console.log();
 
   const { ok } = await ask<'ok'>({
     type: 'confirm',
     name: 'ok',
-    message: 'Importovat?',
+    message: 'Import?',
     initial: true,
   });
   if (!ok) {
-    log.dim('Zrušeno.');
+    log.dim('Cancelled.');
     return;
   }
 
   const projectMd = `# ${parsed.name}
 
-## Co stavím
+## What I'm building
 ${parsed.what}
 
-## Pro koho
-${parsed.forWhom || '(nezadáno)'}
+## Who it's for
+${parsed.forWhom || '(not specified)'}
 
-## Hlavní omezení
-${parsed.constraints || '(žádné)'}
+## Main constraints
+${parsed.constraints || '(none)'}
 `;
 
   const state = newState();
@@ -170,8 +170,8 @@ ${parsed.constraints || '(žádné)'}
   await writeProject(projectMd, cwd);
   await save(state, cwd);
 
-  log.success('Importováno do .mini/.');
-  log.hint('Spusť: mini status');
+  log.success('Imported into .mini/.');
+  log.hint('Run: mini status');
 }
 
 function normalize(value: string | undefined): string {

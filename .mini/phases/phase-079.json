@@ -1,0 +1,39 @@
+{
+  "id": 79,
+  "title": "Anglické hlášky utility příkazů",
+  "goal": "Přeložit do angličtiny runtime hlášky i komentáře/JSDoc v utility/správních příkazech src/commands/*: status, undo, stop, model, audit, map, update, migrate, renumber, init, import-gsd, install-commands (vč. dotčených testů). Lifecycle příkazy (do/done/next/plan/auto/discuss/context), writeMemory, reporty/memory a graph mappery zůstávají na navazující fáze. Beze změny: názvy příkazů, flagy, /mini:* reference, cesty, response-kontrakt a stavová slova. Ověřit spuštěním příkazů a zelené npm test + build.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přeložit status + undo do AJ",
+      "status": "done",
+      "detail": "Runtime hlášky i komentáře/JSDoc v src/commands/status.ts a undo.ts + dotčené testy na EN. Beze změny stavová slova a cesty."
+    },
+    {
+      "title": "Přeložit init + import-gsd + model + stop",
+      "status": "done",
+      "detail": "Runtime hlášky i komentáře v src/commands/init.ts, import-gsd.ts, model.ts, stop.ts + dotčené testy. Beze změny názvy příkazů, flagy, cesty (.mini/STOP, .planning/), response-kontrakt importu."
+    },
+    {
+      "title": "Přeložit map + audit + update + install-commands",
+      "status": "done",
+      "detail": "Runtime hlášky i komentáře v src/commands/map.ts, audit.ts, update.ts, install-commands.ts + dotčené testy. Logy installCommands nově anglicky (dříve záměrně CZ). Beze změny cesty a názvy generovaných souborů."
+    },
+    {
+      "title": "Přeložit migrate + renumber",
+      "status": "done",
+      "detail": "Runtime hlášky i komentáře v src/commands/migrate.ts a renumber.ts + dotčené testy. Beze změny názvy souborů fází a klíče stavu."
+    },
+    {
+      "title": "Ověřit výstup a zelený build",
+      "status": "done",
+      "detail": "Spustit dotčené příkazy (mini status / map --dry-run apod.) — výstup anglicky; npm test i npm run build zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T15:13:54.841Z",
+  "completedAt": "2026-05-31T15:42:54.557Z",
+  "autoCommit": {
+    "preSha": "1b667adbbe97a436a63c13ddbd7059104e09cc21",
+    "subject": "Fáze 79: Anglické hlášky utility příkazů"
+  }
+}

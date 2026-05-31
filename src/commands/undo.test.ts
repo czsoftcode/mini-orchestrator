@@ -50,7 +50,7 @@ function makeState(phases: ProjectState['phases'], currentPhaseId: number | null
 const SAMPLE_AUTO_COMMIT: PhaseAutoCommit = {
   preSha: 'a'.repeat(40),
   sha: 'b'.repeat(40),
-  subject: 'Fáze 1: Hotovo',
+  subject: 'Phase 1: Done',
 };
 
 describe('undo()', () => {
@@ -78,20 +78,20 @@ describe('undo()', () => {
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('bez .mini ani nic neudělá', async () => {
+  it('does nothing without .mini', async () => {
     await undo();
     expect(askMock).not.toHaveBeenCalled();
     expect(softResetToMock).not.toHaveBeenCalled();
   });
 
-  it('bez state.prev.json jen vypíše varování', async () => {
+  it('only prints a warning without state.prev.json', async () => {
     await save(makeState([], null), cwd);
     await undo();
     expect(askMock).not.toHaveBeenCalled();
     expect(softResetToMock).not.toHaveBeenCalled();
   });
 
-  it('bez auto-commitu vrátí jen state (žádný soft reset)', async () => {
+  it('reverts only state without an auto-commit (no soft reset)', async () => {
     await save(
       makeState([{ id: 1, title: 'A', status: 'proposed' }], null),
       cwd,
@@ -107,7 +107,7 @@ describe('undo()', () => {
     expect(softResetToMock).not.toHaveBeenCalled();
   });
 
-  it('s auto-commitem + HEAD sedí + čistý strom → softReset proběhne', async () => {
+  it('with an auto-commit + matching HEAD + clean tree → softReset runs', async () => {
     await save(
       makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
       cwd,
@@ -129,7 +129,7 @@ describe('undo()', () => {
     expect(softResetToMock.mock.calls[0]).toEqual([cwd, SAMPLE_AUTO_COMMIT.preSha]);
   });
 
-  it('uživatel zamítne — žádný state revert ani soft reset', async () => {
+  it('user declines — no state revert and no soft reset', async () => {
     await save(
       makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
       cwd,
@@ -151,7 +151,7 @@ describe('undo()', () => {
     expect(softResetToMock).not.toHaveBeenCalled();
   });
 
-  it('HEAD se posunul → undo jen state, commit nezruší', async () => {
+  it('HEAD has moved → undo only state, the commit is not dropped', async () => {
     await save(
       makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
       cwd,
@@ -164,7 +164,7 @@ describe('undo()', () => {
       cwd,
     );
     isGitRepoMock.mockResolvedValue(true);
-    // HEAD je jinde — uživatel mezitím commitnul něco dalšího.
+    // HEAD is elsewhere — the user committed something else in the meantime.
     headParentShaMock.mockResolvedValue('c'.repeat(40));
     isCleanWorkingTreeMock.mockResolvedValue(true);
 
@@ -174,7 +174,7 @@ describe('undo()', () => {
     expect(softResetToMock).not.toHaveBeenCalled();
   });
 
-  it('dirty working tree → undo jen state, commit nezruší', async () => {
+  it('dirty working tree → undo only state, the commit is not dropped', async () => {
     await save(
       makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
       cwd,
@@ -195,7 +195,7 @@ describe('undo()', () => {
     expect(softResetToMock).not.toHaveBeenCalled();
   });
 
-  it('není git repo → undo jen state, commit nezruší', async () => {
+  it('not a git repo → undo only state, the commit is not dropped', async () => {
     await save(
       makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
       cwd,
@@ -214,7 +214,7 @@ describe('undo()', () => {
     expect(softResetToMock).not.toHaveBeenCalled();
   });
 
-  it('soft reset selže → undo state stále proběhne, jen vypíše warning', async () => {
+  it('soft reset fails → state undo still runs, only prints a warning', async () => {
     await save(
       makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
       cwd,
@@ -232,7 +232,7 @@ describe('undo()', () => {
     softResetToMock.mockResolvedValue({
       ok: false,
       stdout: '',
-      stderr: 'fatal: nelze resetovat',
+      stderr: 'fatal: cannot reset',
     });
 
     await undo();

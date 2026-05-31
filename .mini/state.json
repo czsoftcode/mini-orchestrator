@@ -392,6 +392,11 @@
       "id": 78,
       "title": "Anglické CLI + UI hlášky",
       "status": "done"
+    },
+    {
+      "id": 79,
+      "title": "Anglické hlášky utility příkazů",
+      "status": "done"
     }
   ],
   "models": {

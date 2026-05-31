@@ -6,11 +6,11 @@ import { log } from '../ui/log.js';
 import { installCommands } from './install-commands.js';
 import type { StepOutcome } from './types.js';
 
-/** Adresář stavu v projektu — kořen, do kterého se skeleton zrcadlí. */
+/** Project state directory — the root the skeleton is mirrored into. */
 const STATE_DIR = '.mini';
 
 export interface UpdateOptions {
-  /** Jen náhled — nic nezapisuj, jen vypiš, co by se stalo. */
+  /** Preview only — write nothing, just print what would happen. */
   dryRun?: boolean;
 }
 
@@ -31,14 +31,15 @@ async function pathExists(p: string): Promise<boolean> {
 }
 
 /**
- * Srovná statický skeleton `.mini/` (adresáře + `.gitignore`) do projektu:
- * - chybějící adresáře vytvoří (`.gitkeep` z repa se nekopíruje — viz assets.ts),
- * - soubory porovná obsahově a přepíše jen ty, co se liší (atomicky tmp+rename),
- * - ostatní nechá beze změny.
+ * Syncs the static `.mini/` skeleton (directories + `.gitignore`) into the project:
+ * - creates missing directories (`.gitkeep` from the repo is not copied — see assets.ts),
+ * - compares files by content and overwrites only those that differ (atomically tmp+rename),
+ * - leaves the rest unchanged.
  *
- * Skeleton soubory jsou mini-owned, takže update je vždy srovná na kanonickou
- * podobu (ruční úpravy přepíše — řeší git). Idempotentní: na už srovnaném
- * projektu nic nezapíše. S `dryRun` jen spočítá a vypíše, co by se stalo.
+ * Skeleton files are mini-owned, so update always brings them to the canonical
+ * form (manual edits get overwritten — git handles that). Idempotent: on an
+ * already synced project it writes nothing. With `dryRun` it only counts and
+ * prints what would happen.
  */
 export async function syncSkeleton(
   cwd: string = process.cwd(),
@@ -54,22 +55,22 @@ export async function syncSkeleton(
     unchangedFiles: 0,
   };
 
-  // Adresáře nejdřív (ať existuje rodič pro vnořené soubory), seřazené podle
-  // hloubky/cesty, aby se rodič založil před potomkem.
+  // Directories first (so the parent exists for nested files), sorted by
+  // depth/path so the parent is created before the child.
   const dirs = entries.filter((e) => e.kind === 'dir').sort((a, b) => a.relPath.localeCompare(b.relPath));
   for (const entry of dirs) {
     const target = join(cwd, STATE_DIR, entry.relPath);
     if (await pathExists(target)) continue;
     result.createdDirs++;
-    log.success(dryRun ? `Vznikne adresář: ${join(STATE_DIR, entry.relPath)}` : `Vytvořeno: ${join(STATE_DIR, entry.relPath)}/`);
+    log.success(dryRun ? `Directory will be created: ${join(STATE_DIR, entry.relPath)}` : `Created: ${join(STATE_DIR, entry.relPath)}/`);
     if (!dryRun) await mkdir(target, { recursive: true });
   }
 
   const files = entries.filter((e) => e.kind === 'file').sort((a, b) => a.relPath.localeCompare(b.relPath));
   for (const entry of files) {
-    // Obsah čteme ze zdrojového souboru na disku (`srcRelPath`), ale do projektu
-    // zapisujeme pod cílovým jménem (`relPath`) — liší se u přejmenovaných
-    // souborů jako `gitignore` → `.gitignore` (viz assets.ts:FILE_RENAMES).
+    // We read the content from the source file on disk (`srcRelPath`), but write
+    // it into the project under the target name (`relPath`) — these differ for
+    // renamed files like `gitignore` → `.gitignore` (see assets.ts:FILE_RENAMES).
     const content = await readFile(join(root, entry.srcRelPath), 'utf-8');
     const target = join(cwd, STATE_DIR, entry.relPath);
     const rel = join(STATE_DIR, entry.relPath);
@@ -95,46 +96,48 @@ export async function syncSkeleton(
 
     if (old === null) {
       result.createdFiles++;
-      log.success(dryRun ? `Vznikne: ${rel}` : `Vytvořeno: ${rel}`);
+      log.success(dryRun ? `Will be created: ${rel}` : `Created: ${rel}`);
     } else {
       result.updatedFiles++;
-      log.success(dryRun ? `Změní se: ${rel}` : `Aktualizováno: ${rel}`);
+      log.success(dryRun ? `Will change: ${rel}` : `Updated: ${rel}`);
     }
   }
 
   const unchanged = result.unchangedFiles;
   if (unchanged > 0) {
-    log.dim(`${unchanged} ${unchanged === 1 ? 'soubor skeletonu beze změny' : 'souborů skeletonu beze změny'}.`);
+    log.dim(`${unchanged} skeleton ${unchanged === 1 ? 'file' : 'files'} unchanged.`);
   }
 
   return result;
 }
 
 /**
- * `mini update` — srovná negenerovanou část projektu na aktuální verzi mini:
- * statický skeleton `.mini/` (adresáře + `.gitignore`) a slash commandy
- * `.claude/commands/mini/*.md`. Idempotentní; s `--dry-run` jen ukáže náhled.
+ * `mini update` — brings the non-generated part of the project up to the current
+ * mini version: the static `.mini/` skeleton (directories + `.gitignore`) and the
+ * slash commands `.claude/commands/mini/*.md`. Idempotent; with `--dry-run` it
+ * only shows a preview.
  *
- * Záměrně NEsahá na generované/per-projekt soubory (`project.md`, `state.json`,
- * `phases/`, `graph/`, …) ani neprovádí jednorázové migrace (`mini migrate`).
+ * It deliberately does NOT touch generated/per-project files (`project.md`,
+ * `state.json`, `phases/`, `graph/`, …) and does not run one-off migrations
+ * (`mini migrate`).
  */
 export async function update(
   cwd: string = process.cwd(),
   { dryRun = false }: UpdateOptions = {},
 ): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt (.mini/state.json).');
-    log.hint('Začni: mini init');
+    log.warn('There is no project in this directory (.mini/state.json).');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
-  log.title(dryRun ? 'mini update — náhled (nic se nezapíše)' : 'mini update');
+  log.title(dryRun ? 'mini update — preview (nothing will be written)' : 'mini update');
 
   log.info('Skeleton .mini/:');
   const skel = await syncSkeleton(cwd, { dryRun });
 
   console.log();
-  log.info('Slash commandy:');
+  log.info('Slash commands:');
   const cmds = await installCommands(cwd, { dryRun });
 
   const changed =
@@ -142,11 +145,11 @@ export async function update(
 
   console.log();
   if (changed === 0) {
-    log.success('Projekt je aktuální — nic k doplnění.');
+    log.success('The project is up to date — nothing to add.');
   } else if (dryRun) {
-    log.success(`Náhled: ${changed} ${changed === 1 ? 'položka' : 'položek'} k srovnání. Spusť bez --dry-run pro zápis.`);
+    log.success(`Preview: ${changed} ${changed === 1 ? 'item' : 'items'} to sync. Run without --dry-run to write.`);
   } else {
-    log.success(`Hotovo — projekt srovnán na aktuální verzi mini (${changed} ${changed === 1 ? 'změna' : 'změn'}).`);
+    log.success(`Done — project synced to the current mini version (${changed} ${changed === 1 ? 'change' : 'changes'}).`);
   }
 
   return { ok: true };

@@ -16,7 +16,7 @@ import type { ProjectState } from '../state/types.js';
 import { log } from '../ui/log.js';
 import type { StepOutcome } from './types.js';
 
-// Relativní cesty adresářů (DISCUSS_DIR/RUN_DIR/MEMORY_DIR jsou relativní k cwd).
+// Relative directory paths (DISCUSS_DIR/RUN_DIR/MEMORY_DIR are relative to cwd).
 const DIR_REL = {
   discuss: DISCUSS_DIR,
   run: RUN_DIR,
@@ -24,11 +24,11 @@ const DIR_REL = {
 } as const;
 
 export interface RenumberOptions {
-  /** Jen vypsat náhled, nic nezapisovat. */
+  /** Only print a preview, write nothing. */
   dryRun?: boolean;
   /**
-   * Potvrzení před zápisem. Vrací `true` = pokračovat. Když chybí (testy),
-   * pokračuje se rovnou. V `--dry-run` se nevolá.
+   * Confirmation before writing. Returns `true` = continue. When missing (tests),
+   * it continues straight away. Not called in `--dry-run`.
    */
   confirm?: () => Promise<boolean>;
 }
@@ -42,21 +42,21 @@ async function listDir(cwd: string, rel: string): Promise<string[]> {
 }
 
 /**
- * `mini migrate --renumber` — přečísluje fáze na souvislá celá čísla (1..N podle
- * pořadí ve `state.json`) a sjednotí názvy souborů ve všech čtyřech adresářích na
- * `phase-XXX`. `phases/` + hlavičku řeší přes `save()` (zápis nových id, prune
- * starých souborů i záloha pro `undo`); `discuss/`/`run/`/`memory/` přejmenuje
- * kolizně bezpečným enginem.
+ * `mini migrate --renumber` — renumbers the phases to consecutive integers (1..N
+ * by their order in `state.json`) and unifies file names in all four directories
+ * to `phase-XXX`. `phases/` + the header are handled via `save()` (writing new ids,
+ * pruning old files and a backup for `undo`); `discuss/`/`run/`/`memory/` are
+ * renamed by a collision-safe engine.
  *
- * Idempotentní: na už narovnaném projektu (id `1..N` a kanonické názvy) je no-op.
+ * Idempotent: on an already straightened project (ids `1..N` and canonical names) it is a no-op.
  */
 export async function renumber(
   cwd: string = process.cwd(),
   opts: RenumberOptions = {},
 ): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('There is no project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
@@ -65,7 +65,7 @@ export async function renumber(
     state = await load(cwd);
   } catch (err) {
     if (err instanceof LegacyStateError) {
-      log.error('Stav je ve starém formátu (verze 1). Nejdřív spusť `mini migrate`, pak `mini migrate --renumber`.');
+      log.error('The state is in the old format (version 1). First run `mini migrate`, then `mini migrate --renumber`.');
       return { ok: false, reason: 'legacy-state' };
     }
     throw err;
@@ -80,7 +80,7 @@ export async function renumber(
     listDir(cwd, DIR_REL.memory),
   ]);
 
-  // phases/ řeší save() — plán slouží jen k náhledu a kontrole kolizí.
+  // phases/ is handled by save() — the plan is only for the preview and collision check.
   const planPhases = planSimpleDir(phasesFiles, idMap);
   const planDiscuss = planSimpleDir(discussFiles, idMap);
   const planRun = planSimpleDir(runFiles, idMap);
@@ -94,11 +94,11 @@ export async function renumber(
     planMemory.renames.length;
 
   if (idChanges.length === 0 && totalRenames === 0) {
-    log.info('Číslování i názvy souborů jsou už v pořádku — není co přečíslovat.');
+    log.info('The numbering and file names are already fine — nothing to renumber.');
     return { ok: true };
   }
 
-  // Kolize → raději abort, ať se nic nepřepíše.
+  // Collisions → better abort so nothing gets overwritten.
   const dirsForCollision: { name: string; plan: DirPlan; files: string[] }[] = [
     { name: DIR_REL.discuss, plan: planDiscuss, files: discussFiles },
     { name: DIR_REL.run, plan: planRun, files: runFiles },
@@ -109,27 +109,27 @@ export async function renumber(
     const col = findCollisions(d.plan.renames, d.files);
     if (col.length > 0) {
       hasCollision = true;
-      log.error(`Kolize názvů v ${d.name}: ${col.join(', ')} — migrace zastavena, nic se nezměnilo.`);
+      log.error(`Name collision in ${d.name}: ${col.join(', ')} — migration stopped, nothing changed.`);
     }
   }
   if (hasCollision) {
-    log.hint('Vyřeš kolidující soubory ručně (přejmenuj/odstraň orphany) a spusť znovu.');
+    log.hint('Resolve the colliding files manually (rename/remove the orphans) and run again.');
     return { ok: false, reason: 'collision' };
   }
 
   printPreview(state, idMap, idChanges, { phases: planPhases, discuss: planDiscuss, run: planRun, memory: planMemory });
 
   if (opts.dryRun) {
-    log.dim('(--dry-run: nic se nezapsalo)');
+    log.dim('(--dry-run: nothing was written)');
     return { ok: true };
   }
 
   if (opts.confirm && !(await opts.confirm())) {
-    log.dim('Zrušeno.');
+    log.dim('Cancelled.');
     return { ok: false, reason: 'cancelled' };
   }
 
-  // 1) Stav + phases/ přes save(): nová id, prune starých .json, záloha pro undo.
+  // 1) State + phases/ via save(): new ids, prune old .json, backup for undo.
   const remapped: ProjectState = {
     ...state,
     currentPhaseId: state.currentPhaseId == null ? null : idMap.get(state.currentPhaseId) ?? null,
@@ -137,15 +137,15 @@ export async function renumber(
   };
   await save(remapped, cwd);
 
-  // 2) .md adresáře kolizně bezpečným enginem.
+  // 2) .md directories via the collision-safe engine.
   await executeRenames(join(cwd, DIR_REL.discuss), planDiscuss.renames);
   await executeRenames(join(cwd, DIR_REL.run), planRun.renames);
   await executeRenames(join(cwd, DIR_REL.memory), planMemory.renames);
 
   warnOrphans({ discuss: planDiscuss, run: planRun, memory: planMemory });
 
-  log.success(`Přečíslováno ${state.phases.length} fází na 1..${state.phases.length}, sjednoceny názvy souborů.`);
-  log.hint('Zkontroluj `git diff`/`git status`; případný návrat zpět: `mini undo` (stav) + git (soubory).');
+  log.success(`Renumbered ${state.phases.length} phases to 1..${state.phases.length}, file names unified.`);
+  log.hint('Check `git diff`/`git status`; to roll back: `mini undo` (state) + git (files).');
   return { ok: true };
 }
 
@@ -155,15 +155,15 @@ function printPreview(
   idChanges: ProjectState['phases'],
   plans: { phases: DirPlan; discuss: DirPlan; run: DirPlan; memory: DirPlan },
 ): void {
-  log.info(`Přečíslování ${state.phases.length} fází (zdroj pořadí: state.json):`);
+  log.info(`Renumbering ${state.phases.length} phases (order source: state.json):`);
   if (idChanges.length === 0) {
-    log.dim('  (id se nemění — sjednocují se jen názvy souborů)');
+    log.dim('  (ids do not change — only file names are unified)');
   } else {
     for (const p of idChanges) {
       log.dim(`  ${p.id} → ${idMap.get(p.id)}  ${p.title}`);
     }
   }
-  log.info('Přejmenování souborů:');
+  log.info('File renames:');
   log.dim(`  phases:  ${plans.phases.renames.length}`);
   log.dim(`  discuss: ${plans.discuss.renames.length}`);
   log.dim(`  run:     ${plans.run.renames.length}`);
@@ -178,6 +178,6 @@ function warnOrphans(plans: { discuss: DirPlan; run: DirPlan; memory: DirPlan })
     ...plans.memory.orphans,
   ];
   if (all.length > 0) {
-    log.warn(`Orphan soubory (id není ve state.json) zůstávají beze změny: ${all.join(', ')}`);
+    log.warn(`Orphan files (id not in state.json) stay unchanged: ${all.join(', ')}`);
   }
 }

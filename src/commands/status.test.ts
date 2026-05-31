@@ -20,7 +20,7 @@ function makeState(overrides: Partial<ProjectState> = {}): ProjectState {
 }
 
 function phase(id: number, status: Phase['status']): Phase {
-  return { id, title: `Fáze ${id}`, status };
+  return { id, title: `Phase ${id}`, status };
 }
 
 function summary(overrides: Partial<RunReportSummary> = {}): RunReportSummary {
@@ -28,82 +28,82 @@ function summary(overrides: Partial<RunReportSummary> = {}): RunReportSummary {
 }
 
 describe('nextActionHint', () => {
-  it('navrhne první fázi, když currentPhaseId je null', () => {
+  it('proposes the first phase when currentPhaseId is null', () => {
     const state = makeState({ currentPhaseId: null });
-    expect(nextActionHint(state)).toBe('Další: mini next (navrhne první fázi)');
+    expect(nextActionHint(state)).toBe('Next: mini next (proposes the first phase)');
   });
 
-  it('padá na obecný mini next, když currentPhaseId odkazuje na neexistující fázi', () => {
+  it('falls back to a generic mini next when currentPhaseId points to a missing phase', () => {
     const state = makeState({
       currentPhaseId: 99,
       phases: [phase(1, 'doing')],
     });
-    expect(nextActionHint(state)).toBe('Další: mini next');
+    expect(nextActionHint(state)).toBe('Next: mini next');
   });
 
-  it('u proposed fáze nabídne plan i do', () => {
+  it('offers plan and do for a proposed phase', () => {
     const state = makeState({
       currentPhaseId: 1,
       phases: [phase(1, 'proposed')],
     });
     expect(nextActionHint(state)).toBe(
-      'Další: mini plan (rozmenit) nebo mini do (spustit přímo)',
+      'Next: mini plan (break it down) or mini do (run directly)',
     );
   });
 
-  it('u planned fáze nabídne do i done', () => {
+  it('offers do and done for a planned phase', () => {
     const state = makeState({
       currentPhaseId: 1,
       phases: [phase(1, 'planned')],
     });
     expect(nextActionHint(state)).toBe(
-      'Další: mini do (pokračovat) | mini done (označit hotové)',
+      'Next: mini do (continue) | mini done (mark as done)',
     );
   });
 
-  it('u doing fáze nabídne do i done (stejně jako planned)', () => {
+  it('offers do and done for a doing phase (same as planned)', () => {
     const state = makeState({
       currentPhaseId: 1,
       phases: [phase(1, 'doing')],
     });
     expect(nextActionHint(state)).toBe(
-      'Další: mini do (pokračovat) | mini done (označit hotové)',
+      'Next: mini do (continue) | mini done (mark as done)',
     );
   });
 
-  it('u done fáze navrhne další fázi', () => {
+  it('proposes the next phase for a done phase', () => {
     const state = makeState({
       currentPhaseId: 1,
       phases: [phase(1, 'done')],
     });
-    expect(nextActionHint(state)).toBe('Další: mini next (navrhnout další fázi)');
+    expect(nextActionHint(state)).toBe('Next: mini next (propose the next phase)');
   });
 
-  it('u skipped fáze padá na obecný mini next', () => {
+  it('falls back to a generic mini next for a skipped phase', () => {
     const state = makeState({
       currentPhaseId: 1,
       phases: [phase(1, 'skipped')],
     });
-    expect(nextActionHint(state)).toBe('Další: mini next');
+    expect(nextActionHint(state)).toBe('Next: mini next');
   });
 });
 
 describe('describeModels', () => {
-  it('vrátí prázdný řetězec, když nejsou žádné modely', () => {
+  it('returns an empty string when there are no models', () => {
     expect(describeModels(makeState())).toBe('');
   });
 
-  it('vypíše default scope z models.default', () => {
+  it('prints the default scope from models.default', () => {
     const state = makeState({ models: { default: 'claude-opus-4-7' } });
     expect(describeModels(state)).toBe('default=claude-opus-4-7');
   });
 
-  it('ignoruje zastaralé pole `model` (migraci řeší store.load, ne describeModels)', () => {
+  it('ignores the deprecated `model` field (migration is handled by store.load, not describeModels)', () => {
     const state = makeState({ model: 'legacy-model' });
     expect(describeModels(state)).toBe('');
   });
 
-  it('vypíše scope-specifické override v pořadí MODEL_SCOPES', () => {
+  it('prints scope-specific overrides in MODEL_SCOPES order', () => {
     const state = makeState({
       models: {
         default: 'd',
@@ -120,7 +120,7 @@ describe('describeModels', () => {
     );
   });
 
-  it('vynechá scopy bez hodnoty (jen vyplněné se vypíšou)', () => {
+  it('omits scopes with no value (only filled ones are printed)', () => {
     const state = makeState({
       models: { default: 'd', do: 'do-m' },
     });
@@ -129,65 +129,65 @@ describe('describeModels', () => {
 });
 
 describe('openVerifyCount', () => {
-  it('vrátí 0, když nejsou žádné verify body', () => {
+  it('returns 0 when there are no verify items', () => {
     expect(openVerifyCount([], phase(1, 'doing'))).toBe(0);
   });
 
-  it('spočítá body, které ještě nikdo neodbavil', () => {
+  it('counts items that no one has handled yet', () => {
     const p: Phase = { ...phase(1, 'doing'), resolvedVerify: ['A'] };
     expect(openVerifyCount([{ title: 'A' }, { title: 'B' }, { title: 'C' }], p)).toBe(2);
   });
 
-  it('vrátí 0, když jsou všechny body vyřešené', () => {
+  it('returns 0 when all items are resolved', () => {
     const p: Phase = { ...phase(1, 'doing'), resolvedVerify: ['A', 'B'] };
     expect(openVerifyCount([{ title: 'A' }, { title: 'B' }], p)).toBe(0);
   });
 });
 
 describe('runReportSummaryLines', () => {
-  it('u poškozeného reportu vrátí jeden řádek o nečitelnosti', () => {
+  it('returns one line about unreadability for a corrupted report', () => {
     const lines = runReportSummaryLines(summary({ unparseable: true, verdict: null }), phase(1, 'doing'));
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toContain('nejde přečíst');
+    expect(lines[0]).toContain('cannot be read');
   });
 
-  it('ukáže verdikt a počet otevřených verify bodů', () => {
+  it('shows the verdict and the number of open verify items', () => {
     const lines = runReportSummaryLines(
       summary({ verdict: 'partial', verify: [{ title: 'A' }, { title: 'B' }] }),
       phase(1, 'doing'),
     );
-    expect(lines[0]).toContain('verdikt');
-    expect(lines[0]).toContain('částečně');
-    expect(lines[0]).toContain('2 body k ověření čeká');
+    expect(lines[0]).toContain('verdict');
+    expect(lines[0]).toContain('partial');
+    expect(lines[0]).toContain('2 items pending verification');
   });
 
-  it('řekne „vše ověřeno", když report měl verify body, ale všechny jsou vyřešené', () => {
+  it('says "all verified" when the report had verify items but all are resolved', () => {
     const p: Phase = { ...phase(1, 'doing'), resolvedVerify: ['A'] };
     const lines = runReportSummaryLines(summary({ verdict: 'done', verify: [{ title: 'A' }] }), p);
-    expect(lines[0]).toContain('vše ověřeno');
+    expect(lines[0]).toContain('all verified');
   });
 
-  it('řekne „bez bodů k ověření", když report žádné verify body neměl', () => {
+  it('says "no items to verify" when the report had no verify items', () => {
     const lines = runReportSummaryLines(summary({ verdict: 'done', verify: [] }), phase(1, 'doing'));
-    expect(lines[0]).toContain('bez bodů k ověření');
+    expect(lines[0]).toContain('no items to verify');
   });
 
-  it('u chybějícího verdiktu vypíše „verdikt neznámý"', () => {
+  it('prints "verdict unknown" for a missing verdict', () => {
     const lines = runReportSummaryLines(summary({ verdict: null }), phase(1, 'doing'));
-    expect(lines[0]).toContain('verdikt neznámý');
+    expect(lines[0]).toContain('verdict unknown');
   });
 });
 
 describe('isOrphanedDoing', () => {
-  it('není osiřelá, když fáze není doing', () => {
+  it('is not orphaned when the phase is not doing', () => {
     expect(isOrphanedDoing(phase(1, 'done'), [phase(1, 'done')])).toBe(false);
   });
 
-  it('není osiřelá doing fáze bez kroků i bez podfází (čerstvě spuštěná)', () => {
+  it('is not an orphaned doing phase with no steps and no subphases (freshly started)', () => {
     expect(isOrphanedDoing(phase(1, 'doing'), [phase(1, 'doing')])).toBe(false);
   });
 
-  it('je osiřelá, když má kroky a všechny jsou uzavřené', () => {
+  it('is orphaned when it has steps and all are closed', () => {
     const p: Phase = {
       ...phase(1, 'doing'),
       steps: [
@@ -198,7 +198,7 @@ describe('isOrphanedDoing', () => {
     expect(isOrphanedDoing(p, [p])).toBe(true);
   });
 
-  it('není osiřelá, když některý krok ještě zbývá', () => {
+  it('is not orphaned when some step still remains', () => {
     const p: Phase = {
       ...phase(1, 'doing'),
       steps: [
@@ -209,13 +209,13 @@ describe('isOrphanedDoing', () => {
     expect(isOrphanedDoing(p, [p])).toBe(false);
   });
 
-  it('je osiřelá, když má podfáze a všechny jsou uzavřené', () => {
+  it('is orphaned when it has subphases and all are closed', () => {
     const parent = phase(2, 'doing');
     const sub = { ...phase(2, 'done'), id: 2.1 };
     expect(isOrphanedDoing(parent, [parent, sub])).toBe(true);
   });
 
-  it('není osiřelá, když je nějaká podfáze ještě otevřená', () => {
+  it('is not orphaned when some subphase is still open', () => {
     const parent = phase(2, 'doing');
     const sub = { ...phase(2, 'doing'), id: 2.1 };
     expect(isOrphanedDoing(parent, [parent, sub])).toBe(false);

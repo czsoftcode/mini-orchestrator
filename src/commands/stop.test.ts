@@ -29,20 +29,20 @@ describe('stop', () => {
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('založí stop signál .mini/STOP', async () => {
+  it('creates the stop signal .mini/STOP', async () => {
     await save(newState(), cwd);
     await stop();
     expect(await fileExists(stopPath(cwd))).toBe(true);
   });
 
-  it('--clear smaže stop signál', async () => {
+  it('--clear removes the stop signal', async () => {
     await save(newState(), cwd);
     await writeFile(stopPath(cwd), 'x\n', 'utf-8');
     await stop({ clear: true });
     expect(await fileExists(stopPath(cwd))).toBe(false);
   });
 
-  it('je idempotentní v obou směrech', async () => {
+  it('is idempotent in both directions', async () => {
     await save(newState(), cwd);
     await stop();
     await stop();
@@ -52,7 +52,7 @@ describe('stop', () => {
     expect(await fileExists(stopPath(cwd))).toBe(false);
   });
 
-  it('bez projektu nic nezaloží', async () => {
+  it('creates nothing without a project', async () => {
     await stop();
     expect(await fileExists(stopPath(cwd))).toBe(false);
   });
