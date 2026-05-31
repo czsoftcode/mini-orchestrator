@@ -18,9 +18,9 @@ describe('buildNextPhasePrompt', () => {
   it('uses čerstvě-založený copy when there are no phases', () => {
     const out = buildNextPhasePrompt(PROJECT_MD, emptyState());
 
-    expect(out).toContain('# Postup');
-    expect(out).toContain('čerstvě založený');
-    expect(out).not.toContain('# Dosavadní postup');
+    expect(out).toContain('# Progress');
+    expect(out).toContain('brand new');
+    expect(out).not.toContain('# Progress so far');
     expect(out).toMatchSnapshot();
   });
 
@@ -73,16 +73,16 @@ describe('buildNextPhasePrompt', () => {
 
     const out = buildNextPhasePrompt(PROJECT_MD, state);
 
-    expect(out).toContain('# Dosavadní postup');
-    expect(out).toContain('- [hotovo] 1. Bootstrap');
-    expect(out).toContain('- [dělá se] 3. Snapshot testy');
-    expect(out).toContain('- [návrh] 4. Refactor');
-    expect(out).toContain('- [odloženo] 5. Experiment');
+    expect(out).toContain('# Progress so far');
+    expect(out).toContain('- [done] 1. Bootstrap');
+    expect(out).toContain('- [in progress] 3. Snapshot testy');
+    expect(out).toContain('- [proposed] 4. Refactor');
+    expect(out).toContain('- [skipped] 5. Experiment');
     // historie je zkomprimovaná na jeden řádek na fázi — žádné cíle, poznámky ani kroky
     expect(out).not.toContain('Cíl: CLI vrací --version');
     expect(out).not.toContain('Poznámka:');
     expect(out).not.toContain('Kroky:');
-    expect(out).toContain('TITLE: <stručný název, max 5 slov>');
+    expect(out).toContain('TITLE: <short name, max 5 words>');
     expect(out).toMatchSnapshot();
   });
 
@@ -90,21 +90,21 @@ describe('buildNextPhasePrompt', () => {
     const padded = `\n\n   ${PROJECT_MD}   \n\n`;
     const out = buildNextPhasePrompt(padded, emptyState());
 
-    expect(out).toContain(`# Projekt\n${PROJECT_MD}`);
-    expect(out).not.toContain('# Projekt\n\n\n');
+    expect(out).toContain(`# Project\n${PROJECT_MD}`);
+    expect(out).not.toContain('# Project\n\n\n');
   });
 
   it('includes user hint block when userHint is provided', () => {
     const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), '  chci přidat tmavý režim do UI  ');
 
-    expect(out).toContain('# Nápad uživatele');
+    expect(out).toContain("# User's idea");
     expect(out).toContain('chci přidat tmavý režim do UI');
     expect(out).not.toContain('"""\n  chci');
   });
 
   it('accepts options object form for userHint', () => {
     const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), { userHint: 'dark mode' });
-    expect(out).toContain('# Nápad uživatele');
+    expect(out).toContain("# User's idea");
     expect(out).toContain('dark mode');
   });
 
@@ -113,16 +113,16 @@ describe('buildNextPhasePrompt', () => {
     const out2 = buildNextPhasePrompt(PROJECT_MD, emptyState(), '   \n\t  ');
     const out3 = buildNextPhasePrompt(PROJECT_MD, emptyState());
 
-    expect(out1).not.toContain('# Nápad uživatele');
-    expect(out2).not.toContain('# Nápad uživatele');
-    expect(out3).not.toContain('# Nápad uživatele');
+    expect(out1).not.toContain("# User's idea");
+    expect(out2).not.toContain("# User's idea");
+    expect(out3).not.toContain("# User's idea");
   });
 
   it('includes last memory block when lastMemoryMd is provided', () => {
     const lastMemoryMd = '# Fáze 17 — Paměť\n\n## Co se udělalo\n- záznam paměti po fázi\n';
     const out = buildNextPhasePrompt(PROJECT_MD, emptyState(), { lastMemoryMd });
 
-    expect(out).toContain('# Poslední fáze');
+    expect(out).toContain('# Last phase');
     expect(out).toContain('## Co se udělalo');
     expect(out).toContain('záznam paměti po fázi');
   });
@@ -131,8 +131,8 @@ describe('buildNextPhasePrompt', () => {
     const out1 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { lastMemoryMd: '' });
     const out2 = buildNextPhasePrompt(PROJECT_MD, emptyState(), { lastMemoryMd: '   \n  ' });
 
-    expect(out1).not.toContain('# Poslední fáze');
-    expect(out2).not.toContain('# Poslední fáze');
+    expect(out1).not.toContain('# Last phase');
+    expect(out2).not.toContain('# Last phase');
   });
 
   it('combines last memory and user hint together', () => {
@@ -140,11 +140,11 @@ describe('buildNextPhasePrompt', () => {
       userHint: 'přidej tmavý režim',
       lastMemoryMd: '# Fáze 17\n\n## Co se udělalo\n',
     });
-    expect(out).toContain('# Poslední fáze');
-    expect(out).toContain('# Nápad uživatele');
+    expect(out).toContain('# Last phase');
+    expect(out).toContain("# User's idea");
     expect(out).toContain('přidej tmavý režim');
     // pořadí: poslední fáze pak nápad
-    expect(out.indexOf('# Poslední fáze')).toBeLessThan(out.indexOf('# Nápad uživatele'));
+    expect(out.indexOf('# Last phase')).toBeLessThan(out.indexOf("# User's idea"));
   });
 
   it('uses všech pět štítků fází', () => {
@@ -161,10 +161,10 @@ describe('buildNextPhasePrompt', () => {
 
     const out = buildNextPhasePrompt(PROJECT_MD, state);
 
-    expect(out).toContain('[hotovo] 1.');
-    expect(out).toContain('[dělá se] 2.');
-    expect(out).toContain('[plán] 3.');
-    expect(out).toContain('[návrh] 4.');
-    expect(out).toContain('[odloženo] 5.');
+    expect(out).toContain('[done] 1.');
+    expect(out).toContain('[in progress] 2.');
+    expect(out).toContain('[planned] 3.');
+    expect(out).toContain('[proposed] 4.');
+    expect(out).toContain('[skipped] 5.');
   });
 });

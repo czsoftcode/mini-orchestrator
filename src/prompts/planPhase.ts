@@ -8,29 +8,29 @@ export function buildPlanPhasePrompt(
 ): string {
   const notes = discussNotes?.trim();
   const notesBlock = notes
-    ? `\n# Poznámky k fázi (z diskuse)\n${notes}\n`
+    ? `\n# Phase notes (from discussion)\n${notes}\n`
     : '';
 
-  return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+  return `You are part of a tool that helps the user build a project incrementally.
 
-# Projekt
+# Project
 ${projectMd.trim()}
 
-# Fáze, kterou rozmenujeme
-**Fáze ${phase.id}: ${phase.title}**
-Cíl: ${phase.goal ?? '(nezadán)'}
+# Phase to break down
+**Phase ${phase.id}: ${phase.title}**
+Goal: ${phase.goal ?? '(not set)'}
 ${notesBlock}
-# Tvůj úkol
-Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
+# Your task
+Break this phase down into 3-7 concrete steps. Each step must have a clear, verifiable output (e.g. "API endpoint /tasks returns JSON" — not "build the backend").
 
-${GRAPH_USAGE_HINT} Nezapisuj nic.
+${GRAPH_USAGE_HINT} Do not write anything.
 
-Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
+Reply ONLY with a list of steps, one step per line, in the format:
 
-STEP: <stručný popis kroku, max 8 slov>
-STEP: <další krok>
+STEP: <short description of the step, max 8 words>
+STEP: <next step>
 ...
 
-Nic jiného nepiš.
+Write nothing else.
 `;
 }

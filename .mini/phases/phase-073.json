@@ -1,0 +1,39 @@
+{
+  "id": 73,
+  "title": "Překlad lifecycle promptů do AJ",
+  "goal": "Přeložit do angličtiny tři klíčové prompty životního cyklu fáze (nextPhase.ts, planPhase.ts, doPhase.ts) a aktualizovat jejich snapshot testy; u toho ustálit česko-anglický slovníček termínů (fáze→phase, krok→step, cíl→goal), o který se opřou další fáze překladu.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Slovníček CZ→EN",
+      "status": "done",
+      "detail": "Založit sdílený doc docs/i18n-glossary.md s kanonickými termíny (fáze→phase, krok→step, cíl→goal, hotovo→done, dělá se→in progress, čeká→todo, odloženo→skipped, plán→planned, návrh→proposed, Tvůj úkol→Your task, Projekt→Project). Opora pro tuto i další fáze."
+    },
+    {
+      "title": "nextPhase.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit instrukční text + PHASE_WORD + bloky (Dosavadní postup/Poslední fáze/Nápad uživatele). Zachovat kontrakt TITLE:/GOAL:. Upravit aserce v nextPhase.test.ts."
+    },
+    {
+      "title": "planPhase.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit text + nadpis Poznámky k fázi (z diskuse). Zachovat kontrakt STEP:. Upravit aserce v planPhase.test.ts."
+    },
+    {
+      "title": "doPhase.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit text + STEP_WORD + marker ← pracuj na tomhle + věty Implementuj…. Upravit aserce v doPhase.test.ts."
+    },
+    {
+      "title": "Přegenerovat snapshoty a ověřit",
+      "status": "done",
+      "detail": "npm test -- -u pro dotčené soubory, pak celé npm test a build zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T13:01:43.878Z",
+  "completedAt": "2026-05-31T13:12:16.872Z",
+  "autoCommit": {
+    "preSha": "3ac701851c068766d0211602e55907a175872837",
+    "subject": "Fáze 73: Překlad lifecycle promptů do AJ"
+  }
+}

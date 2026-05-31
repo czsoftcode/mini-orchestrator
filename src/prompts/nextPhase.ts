@@ -2,16 +2,16 @@ import type { PhaseStatus, ProjectState } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
 
 const PHASE_WORD: Record<PhaseStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  planned: 'plán',
-  proposed: 'návrh',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'in progress',
+  planned: 'planned',
+  proposed: 'proposed',
+  skipped: 'skipped',
 };
 
 export interface BuildNextPhaseOptions {
   userHint?: string;
-  /** Obsah `.mini/last-memory.md`, pokud existuje. Vloží se jako "# Poslední fáze". */
+  /** Obsah `.mini/last-memory.md`, pokud existuje. Vloží se jako "# Last phase". */
   lastMemoryMd?: string;
 }
 
@@ -29,37 +29,37 @@ export function buildNextPhasePrompt(
   );
 
   const history = historyLines.length > 0
-    ? `# Dosavadní postup\n${historyLines.join('\n')}\n`
-    : '# Postup\nProjekt je čerstvě založený, žádné fáze ještě nebyly.\n';
+    ? `# Progress so far\n${historyLines.join('\n')}\n`
+    : '# Progress\nThe project is brand new, there are no phases yet.\n';
 
   const memory = lastMemoryMd?.trim();
   const memoryBlock = memory
-    ? `# Poslední fáze\nShrnutí poslední dokončené fáze (co se udělalo, na co dát pozor):\n"""\n${memory}\n"""\n\n`
+    ? `# Last phase\nSummary of the last finished phase (what was done, what to watch out for):\n"""\n${memory}\n"""\n\n`
     : '';
 
   const hint = userHint?.trim();
   const hintBlock = hint
-    ? `# Nápad uživatele\nUživatel má představu, kterou chce v další fázi rozpracovat:\n"""\n${hint}\n"""\nPřesně z toho vyjdi — pojmenuj fázi a cíl tak, aby odpovídaly tomuto nápadu. Pokud je nápad příliš velký na jednu fázi (1-3 dny), vyber z něj první smysluplný kus.\n\n`
+    ? `# User's idea\nThe user has an idea they want to develop in the next phase:\n"""\n${hint}\n"""\nStart from exactly this — name the phase and goal so they match this idea. If the idea is too big for one phase (1-3 days), pick the first meaningful piece of it.\n\n`
     : '';
 
-  return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně po malých fázích.
+  return `You are part of a tool that helps the user build a project incrementally in small phases.
 
-# Projekt
+# Project
 ${projectMd.trim()}
 
 ${history}
-${memoryBlock}${hintBlock}# Tvůj úkol
-Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
-Není to roadmap — jen jedna věc, co dává smysl udělat hned.
+${memoryBlock}${hintBlock}# Your task
+Propose ONE next phase. It should be small (1-3 days of work), with a clear, verifiable goal.
+This is not a roadmap — just one thing that makes sense to do right now.
 
-${GRAPH_USAGE_HINT} Nezapisuj nic.
+${GRAPH_USAGE_HINT} Do not write anything.
 
-Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
+Reply ONLY in this format, write nothing else:
 
-TITLE: <stručný název, max 5 slov>
-GOAL: <1 věta o tom, kdy je fáze "hotová" — co konkrétně bude fungovat>
+TITLE: <short name, max 5 words>
+GOAL: <1 sentence about when the phase is "done" — what concretely will work>
 
-Pokud projekt považuješ za dokončený, odpověz:
+If you consider the project finished, reply:
 TITLE: -
 GOAL: -
 `;

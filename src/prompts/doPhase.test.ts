@@ -20,12 +20,12 @@ describe('buildDoPhasePrompt', () => {
       focusedStep: null,
     });
 
-    expect(out).toContain('**Fáze 1: Bootstrap**');
-    expect(out).toContain('Cíl: CLI vrací --version');
-    expect(out).toContain('(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)');
-    expect(out).toContain('Implementuj celou fázi tak, aby splňovala cíl.');
-    expect(out).not.toContain('← pracuj na tomhle');
-    expect(out).not.toContain('Implementuj krok:');
+    expect(out).toContain('**Phase 1: Bootstrap**');
+    expect(out).toContain('Goal: CLI vrací --version');
+    expect(out).toContain('(The phase is not broken down into steps — work on the whole phase at once.)');
+    expect(out).toContain('Implement the whole phase so that it meets the goal.');
+    expect(out).not.toContain('← work on this');
+    expect(out).not.toContain('Implement the step:');
     expect(out).toMatchSnapshot();
   });
 
@@ -50,14 +50,14 @@ describe('buildDoPhasePrompt', () => {
       focusedStep,
     });
 
-    expect(out).toContain('- [hotovo] rozhodnout framework');
-    expect(out).toContain('- [dělá se] napsat snapshoty   ← pracuj na tomhle');
-    expect(out).toContain('- [čeká] spustit npm test');
-    expect(out).toContain('- [odloženo] starý nápad');
-    expect(out).toContain('Implementuj krok: "napsat snapshoty".');
-    expect(out).not.toContain('Implementuj celou fázi');
+    expect(out).toContain('- [done] rozhodnout framework');
+    expect(out).toContain('- [in progress] napsat snapshoty   ← work on this');
+    expect(out).toContain('- [todo] spustit npm test');
+    expect(out).toContain('- [skipped] starý nápad');
+    expect(out).toContain('Implement the step: "napsat snapshoty".');
+    expect(out).not.toContain('Implement the whole phase');
     // marker appears exactly once
-    expect(out.match(/← pracuj na tomhle/g)?.length).toBe(1);
+    expect(out.match(/← work on this/g)?.length).toBe(1);
     expect(out).toMatchSnapshot();
   });
 
@@ -79,10 +79,10 @@ describe('buildDoPhasePrompt', () => {
       focusedStep: null,
     });
 
-    expect(out).toContain('- [čeká] odstranit dead code');
-    expect(out).toContain('- [čeká] aktualizovat README');
-    expect(out).not.toContain('← pracuj na tomhle');
-    expect(out).toContain('Implementuj celou fázi tak, aby splňovala cíl.');
+    expect(out).toContain('- [todo] odstranit dead code');
+    expect(out).toContain('- [todo] aktualizovat README');
+    expect(out).not.toContain('← work on this');
+    expect(out).toContain('Implement the whole phase so that it meets the goal.');
     expect(out).toMatchSnapshot();
   });
 
@@ -99,7 +99,7 @@ describe('buildDoPhasePrompt', () => {
       focusedStep: null,
     });
 
-    expect(out).toContain('Cíl: (nezadán)');
+    expect(out).toContain('Goal: (not set)');
   });
 
   it('renders step detail on an indented line, with the focus marker still on the title', () => {
@@ -131,15 +131,15 @@ describe('buildDoPhasePrompt', () => {
     });
 
     // Detail jde na odsazený řádek pod title.
-    expect(out).toContain('- [hotovo] rozhodnout framework\n    vitest; běží přes npm test');
+    expect(out).toContain('- [done] rozhodnout framework\n    vitest; běží přes npm test');
     // U focusedStep zůstává marker na řádku s title, detail je až pod ním.
     expect(out).toContain(
-      '- [dělá se] napsat snapshoty   ← pracuj na tomhle\n    snapshot test pokrývá prompt',
+      '- [in progress] napsat snapshoty   ← work on this\n    snapshot test pokrývá prompt',
     );
     // Krok bez detailu zůstává jednořádkový.
-    expect(out).toContain('- [čeká] bez detailu\n');
+    expect(out).toContain('- [todo] bez detailu\n');
     // marker se objeví právě jednou
-    expect(out.match(/← pracuj na tomhle/g)?.length).toBe(1);
+    expect(out.match(/← work on this/g)?.length).toBe(1);
     expect(out).toMatchSnapshot();
   });
 
@@ -160,7 +160,7 @@ describe('buildDoPhasePrompt', () => {
 
     // buildDoPhasePrompt compares by reference, so a lookalike must NOT be marked,
     // and the prompt still tells Claude which step to implement.
-    expect(out).not.toContain('← pracuj na tomhle');
-    expect(out).toContain('Implementuj krok: "krok A".');
+    expect(out).not.toContain('← work on this');
+    expect(out).toContain('Implement the step: "krok A".');
   });
 });

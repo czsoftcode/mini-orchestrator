@@ -1,10 +1,10 @@
 import type { Phase, Step, StepStatus } from '../state/types.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  todo: 'čeká',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'in progress',
+  todo: 'todo',
+  skipped: 'skipped',
 };
 
 export interface DoPhaseContext {
@@ -20,35 +20,35 @@ export function buildDoPhasePrompt(ctx: DoPhaseContext): string {
   let stepsBlock: string;
   if (phase.steps?.length) {
     const lines = phase.steps.map((s) => {
-      const marker = s === focusedStep ? '   ← pracuj na tomhle' : '';
+      const marker = s === focusedStep ? '   ← work on this' : '';
       const head = `- [${STEP_WORD[s.status]}] ${s.title}${marker}`;
       return s.detail ? `${head}\n    ${s.detail}` : head;
     });
-    stepsBlock = `\nKroky:\n${lines.join('\n')}\n`;
+    stepsBlock = `\nSteps:\n${lines.join('\n')}\n`;
   } else {
-    stepsBlock = '\n(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)\n';
+    stepsBlock = '\n(The phase is not broken down into steps — work on the whole phase at once.)\n';
   }
 
   const taskLine = focusedStep
-    ? `Implementuj krok: "${focusedStep.title}".`
-    : `Implementuj celou fázi tak, aby splňovala cíl.`;
+    ? `Implement the step: "${focusedStep.title}".`
+    : `Implement the whole phase so that it meets the goal.`;
 
   const notes = discussNotes?.trim();
   const notesBlock = notes
-    ? `\n# Poznámky k fázi (z diskuse)\n${notes}\n`
+    ? `\n# Phase notes (from discussion)\n${notes}\n`
     : '';
 
-  return `# Projekt
+  return `# Project
 ${projectMd.trim()}
 
-# Aktuální fáze
-**Fáze ${phase.id}: ${phase.title}**
-Cíl: ${phase.goal ?? '(nezadán)'}
+# Current phase
+**Phase ${phase.id}: ${phase.title}**
+Goal: ${phase.goal ?? '(not set)'}
 ${stepsBlock}${notesBlock}
-# Tvůj úkol
+# Your task
 ${taskLine}
 
-Soubory si přečti sám podle potřeby — nepředávám ti je předem.
-Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+Read the files yourself as needed — they are not handed to you up front.
+When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 `;
 }

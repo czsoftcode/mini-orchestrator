@@ -1,58 +1,58 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildNextPhasePrompt > renders one-line history per phase, without goals/notes/steps 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně po malých fázích.
+"You are part of a tool that helps the user build a project incrementally in small phases.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Dosavadní postup
-- [hotovo] 1. Bootstrap
-- [hotovo] 2. Stav v JSON
-- [dělá se] 3. Snapshot testy
-- [návrh] 4. Refactor
-- [odloženo] 5. Experiment
+# Progress so far
+- [done] 1. Bootstrap
+- [done] 2. Stav v JSON
+- [in progress] 3. Snapshot testy
+- [proposed] 4. Refactor
+- [skipped] 5. Experiment
 
-# Tvůj úkol
-Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
-Není to roadmap — jen jedna věc, co dává smysl udělat hned.
+# Your task
+Propose ONE next phase. It should be small (1-3 days of work), with a clear, verifiable goal.
+This is not a roadmap — just one thing that makes sense to do right now.
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Do not write anything.
 
-Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
+Reply ONLY in this format, write nothing else:
 
-TITLE: <stručný název, max 5 slov>
-GOAL: <1 věta o tom, kdy je fáze "hotová" — co konkrétně bude fungovat>
+TITLE: <short name, max 5 words>
+GOAL: <1 sentence about when the phase is "done" — what concretely will work>
 
-Pokud projekt považuješ za dokončený, odpověz:
+If you consider the project finished, reply:
 TITLE: -
 GOAL: -
 "
 `;
 
 exports[`buildNextPhasePrompt > uses čerstvě-založený copy when there are no phases 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně po malých fázích.
+"You are part of a tool that helps the user build a project incrementally in small phases.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Postup
-Projekt je čerstvě založený, žádné fáze ještě nebyly.
+# Progress
+The project is brand new, there are no phases yet.
 
-# Tvůj úkol
-Navrhni JEDNU další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem.
-Není to roadmap — jen jedna věc, co dává smysl udělat hned.
+# Your task
+Propose ONE next phase. It should be small (1-3 days of work), with a clear, verifiable goal.
+This is not a roadmap — just one thing that makes sense to do right now.
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Do not write anything.
 
-Odpověz POUZE v tomto formátu (česky), nic jiného nepiš:
+Reply ONLY in this format, write nothing else:
 
-TITLE: <stručný název, max 5 slov>
-GOAL: <1 věta o tom, kdy je fáze "hotová" — co konkrétně bude fungovat>
+TITLE: <short name, max 5 words>
+GOAL: <1 sentence about when the phase is "done" — what concretely will work>
 
-Pokud projekt považuješ za dokončený, odpověz:
+If you consider the project finished, reply:
 TITLE: -
 GOAL: -
 "

@@ -16,12 +16,12 @@ describe('buildPlanPhasePrompt', () => {
 
     const out = buildPlanPhasePrompt(PROJECT_MD, phase);
 
-    expect(out).toContain('**Fáze 2: Snapshot testy**');
+    expect(out).toContain('**Phase 2: Snapshot testy**');
     expect(out).toContain(
-      'Cíl: src/prompts/*.ts mají snapshot testy a npm test prochází',
+      'Goal: src/prompts/*.ts mají snapshot testy a npm test prochází',
     );
-    expect(out).toContain('STEP: <stručný popis kroku, max 8 slov>');
-    expect(out).not.toContain('(nezadán)');
+    expect(out).toContain('STEP: <short description of the step, max 8 words>');
+    expect(out).not.toContain('(not set)');
     expect(out).toMatchSnapshot();
   });
 
@@ -34,8 +34,8 @@ describe('buildPlanPhasePrompt', () => {
 
     const out = buildPlanPhasePrompt(PROJECT_MD, phase);
 
-    expect(out).toContain('**Fáze 7: Refactor CLI**');
-    expect(out).toContain('Cíl: (nezadán)');
+    expect(out).toContain('**Phase 7: Refactor CLI**');
+    expect(out).toContain('Goal: (not set)');
     expect(out).toMatchSnapshot();
   });
 
@@ -43,8 +43,8 @@ describe('buildPlanPhasePrompt', () => {
     const phase: Phase = { id: 1, title: 'P1', status: 'planned' };
     const out = buildPlanPhasePrompt(`\n\n  ${PROJECT_MD}  \n\n`, phase);
 
-    expect(out).toContain(`# Projekt\n${PROJECT_MD}\n`);
-    expect(out).not.toContain('# Projekt\n\n');
+    expect(out).toContain(`# Project\n${PROJECT_MD}\n`);
+    expect(out).not.toContain('# Project\n\n');
   });
 
   it('inserts discuss notes block when notes are provided', () => {
@@ -64,7 +64,7 @@ shrnout diskusi do souboru
 
     const out = buildPlanPhasePrompt(PROJECT_MD, phase, notes);
 
-    expect(out).toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).toContain('# Phase notes (from discussion)');
     expect(out).toContain('## Klíčová rozhodnutí');
     expect(out).toContain('shrnout diskusi do souboru');
     expect(out).toMatchSnapshot();
@@ -77,9 +77,9 @@ shrnout diskusi do souboru
     const nullNotes = buildPlanPhasePrompt(PROJECT_MD, phase, null);
     const blankNotes = buildPlanPhasePrompt(PROJECT_MD, phase, '   \n  \n');
 
-    expect(noNotes).not.toContain('# Poznámky k fázi (z diskuse)');
-    expect(nullNotes).not.toContain('# Poznámky k fázi (z diskuse)');
-    expect(blankNotes).not.toContain('# Poznámky k fázi (z diskuse)');
+    expect(noNotes).not.toContain('# Phase notes (from discussion)');
+    expect(nullNotes).not.toContain('# Phase notes (from discussion)');
+    expect(blankNotes).not.toContain('# Phase notes (from discussion)');
     expect(nullNotes).toBe(noNotes);
     expect(blankNotes).toBe(noNotes);
   });

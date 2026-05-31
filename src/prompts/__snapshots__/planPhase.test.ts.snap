@@ -1,43 +1,43 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildPlanPhasePrompt > falls back to (nezadán) when phase has no goal 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+"You are part of a tool that helps the user build a project incrementally.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Fáze, kterou rozmenujeme
-**Fáze 7: Refactor CLI**
-Cíl: (nezadán)
+# Phase to break down
+**Phase 7: Refactor CLI**
+Goal: (not set)
 
-# Tvůj úkol
-Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
+# Your task
+Break this phase down into 3-7 concrete steps. Each step must have a clear, verifiable output (e.g. "API endpoint /tasks returns JSON" — not "build the backend").
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Do not write anything.
 
-Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
+Reply ONLY with a list of steps, one step per line, in the format:
 
-STEP: <stručný popis kroku, max 8 slov>
-STEP: <další krok>
+STEP: <short description of the step, max 8 words>
+STEP: <next step>
 ...
 
-Nic jiného nepiš.
+Write nothing else.
 "
 `;
 
 exports[`buildPlanPhasePrompt > inserts discuss notes block when notes are provided 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+"You are part of a tool that helps the user build a project incrementally.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Fáze, kterou rozmenujeme
-**Fáze 8: Poznámky z diskuze**
-Cíl: plan a do čtou notes
+# Phase to break down
+**Phase 8: Poznámky z diskuze**
+Goal: plan a do čtou notes
 
-# Poznámky k fázi (z diskuse)
+# Phase notes (from discussion)
 # Fáze 8 — Poznámky z diskuze
 
 ## Záměr
@@ -46,43 +46,43 @@ shrnout diskusi do souboru
 ## Klíčová rozhodnutí
 - soubor je markdown bez schématu
 
-# Tvůj úkol
-Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
+# Your task
+Break this phase down into 3-7 concrete steps. Each step must have a clear, verifiable output (e.g. "API endpoint /tasks returns JSON" — not "build the backend").
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Do not write anything.
 
-Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
+Reply ONLY with a list of steps, one step per line, in the format:
 
-STEP: <stručný popis kroku, max 8 slov>
-STEP: <další krok>
+STEP: <short description of the step, max 8 words>
+STEP: <next step>
 ...
 
-Nic jiného nepiš.
+Write nothing else.
 "
 `;
 
 exports[`buildPlanPhasePrompt > renders phase with explicit goal 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
+"You are part of a tool that helps the user build a project incrementally.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Fáze, kterou rozmenujeme
-**Fáze 2: Snapshot testy**
-Cíl: src/prompts/*.ts mají snapshot testy a npm test prochází
+# Phase to break down
+**Phase 2: Snapshot testy**
+Goal: src/prompts/*.ts mají snapshot testy a npm test prochází
 
-# Tvůj úkol
-Rozmen tuto fázi na 3-7 konkrétních kroků. Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend").
+# Your task
+Break this phase down into 3-7 concrete steps. Each step must have a clear, verifiable output (e.g. "API endpoint /tasks returns JSON" — not "build the backend").
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Nezapisuj nic.
+Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Do not write anything.
 
-Odpověz POUZE seznamem kroků, jeden krok na řádek, ve formátu:
+Reply ONLY with a list of steps, one step per line, in the format:
 
-STEP: <stručný popis kroku, max 8 slov>
-STEP: <další krok>
+STEP: <short description of the step, max 8 words>
+STEP: <next step>
 ...
 
-Nic jiného nepiš.
+Write nothing else.
 "
 `;

@@ -362,6 +362,11 @@
       "id": 72,
       "title": "Aktualizace README dle skutečnosti",
       "status": "done"
+    },
+    {
+      "id": 73,
+      "title": "Překlad lifecycle promptů do AJ",
+      "status": "done"
     }
   ],
   "models": {

@@ -1,88 +1,88 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildDoPhasePrompt > handles a phase that has no steps (works on whole phase) 1`] = `
-"# Projekt
+"# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Aktuální fáze
-**Fáze 1: Bootstrap**
-Cíl: CLI vrací --version
+# Current phase
+**Phase 1: Bootstrap**
+Goal: CLI vrací --version
 
-(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)
+(The phase is not broken down into steps — work on the whole phase at once.)
 
-# Tvůj úkol
-Implementuj celou fázi tak, aby splňovala cíl.
+# Your task
+Implement the whole phase so that it meets the goal.
 
-Soubory si přečti sám podle potřeby — nepředávám ti je předem.
-Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+Read the files yourself as needed — they are not handed to you up front.
+When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 "
 `;
 
 exports[`buildDoPhasePrompt > renders step detail on an indented line, with the focus marker still on the title 1`] = `
-"# Projekt
+"# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Aktuální fáze
-**Fáze 6: Detail v krocích**
-Cíl: detail se vykreslí
+# Current phase
+**Phase 6: Detail v krocích**
+Goal: detail se vykreslí
 
-Kroky:
-- [hotovo] rozhodnout framework
+Steps:
+- [done] rozhodnout framework
     vitest; běží přes npm test
-- [dělá se] napsat snapshoty   ← pracuj na tomhle
+- [in progress] napsat snapshoty   ← work on this
     snapshot test pokrývá prompt
-- [čeká] bez detailu
+- [todo] bez detailu
 
-# Tvůj úkol
-Implementuj krok: "napsat snapshoty".
+# Your task
+Implement the step: "napsat snapshoty".
 
-Soubory si přečti sám podle potřeby — nepředávám ti je předem.
-Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+Read the files yourself as needed — they are not handed to you up front.
+When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 "
 `;
 
 exports[`buildDoPhasePrompt > renders steps with a focus marker on the focused step only 1`] = `
-"# Projekt
+"# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Aktuální fáze
-**Fáze 3: Snapshot testy**
-Cíl: prompty mají testy
+# Current phase
+**Phase 3: Snapshot testy**
+Goal: prompty mají testy
 
-Kroky:
-- [hotovo] rozhodnout framework
-- [dělá se] napsat snapshoty   ← pracuj na tomhle
-- [čeká] spustit npm test
-- [odloženo] starý nápad
+Steps:
+- [done] rozhodnout framework
+- [in progress] napsat snapshoty   ← work on this
+- [todo] spustit npm test
+- [skipped] starý nápad
 
-# Tvůj úkol
-Implementuj krok: "napsat snapshoty".
+# Your task
+Implement the step: "napsat snapshoty".
 
-Soubory si přečti sám podle potřeby — nepředávám ti je předem.
-Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+Read the files yourself as needed — they are not handed to you up front.
+When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 "
 `;
 
 exports[`buildDoPhasePrompt > renders steps without any focus marker when focusedStep is null 1`] = `
-"# Projekt
+"# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Aktuální fáze
-**Fáze 4: Cleanup**
-Cíl: tests projdou
+# Current phase
+**Phase 4: Cleanup**
+Goal: tests projdou
 
-Kroky:
-- [čeká] odstranit dead code
-- [čeká] aktualizovat README
+Steps:
+- [todo] odstranit dead code
+- [todo] aktualizovat README
 
-# Tvůj úkol
-Implementuj celou fázi tak, aby splňovala cíl.
+# Your task
+Implement the whole phase so that it meets the goal.
 
-Soubory si přečti sám podle potřeby — nepředávám ti je předem.
-Když budeš mít hotovo, ukonči session (napiš /exit nebo stiskni Ctrl+D). Uživatel pak ověří ručně příkazem \`mini done\`.
+Read the files yourself as needed — they are not handed to you up front.
+When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 "
 `;
