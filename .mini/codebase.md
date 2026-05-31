@@ -1,93 +1,118 @@
 # mini — přehled kódu
 
 ## Přehled
-Mini je CLI orchestrátor nad Claude Code, který drží stav projektu (fáze + kroky) v `.mini/state.json` a každému subcommandu (`init`, `next`, `plan`, `do`, `done`, `auto`, `discuss`, `audit`, `map`, `status`, `undo`, `import-gsd`, `model`) generuje cílený prompt a spouští binárku `claude` (subprocess) buď v one-shot JSON režimu (`ask`), interaktivně (`work`) nebo se streamovaným NDJSON výstupem (`stream`). Po dokončené fázi (`mini done`) běží tři side-effecty: git auto-commit (`src/git.ts`), zápis paměti (`.mini/memory/`) a přegenerování strojové mapy projektu (`.mini/graph.md` přes vlastní TS/PHP/Rust mappery v `src/graph/`). Runtime Node ≥20, ESM, TypeScript. Distribuce: lokální `~/.local/bin/mini` symlink přes `scripts/install-local.sh`.
+Mini je CLI orchestrátor nad Claude Code (npm balík `mini-orchestrator`, příkaz `mini`). Drží stav projektu (fáze + kroky) v layoutu verze 2: lehká hlavička `.mini/state.json` (index fází + metadata) + detail každé fáze zvlášť v `.mini/phases/phase-XXX.json`. Pracuje ve dvou režimech:
+1. **Nativní slash commandy** (primární cesta): `mini install-commands` / `mini update` vygenerují `.claude/commands/mini/*.md`; jejich tenké tělo uvnitř běžící Claude Code session spustí `mini context <cmd>`, který vypíše aktuální session prompt na stdout. Claude se jím řídí, agentně pracuje a stav ukládá zpět neinteraktivními `mini <cmd> --apply` příkazy. V tomhle režimu mini binárku `claude` nespouští — běží uvnitř ní.
+2. **Klasický subprocess režim**: `mini` spustí binárku `claude` jako subprocess — one-shot JSON (`ask`), interaktivně (`work`) nebo streamovaný NDJSON (`stream`). Používají ho `discuss`, `audit`, `import-gsd` a interaktivní fallbacky.
+Po uzavřené fázi (`done` / `--apply`) běží side-effecty v pevném pořadí: zápis paměti (`.mini/memory/`), regenerace strojové mapy (`.mini/graph/` + index `.mini/graph.json`), volitelný bump verze v `package.json` + stamp `CHANGELOG.md`, a jako poslední jediný git auto-commit celé fáze (volitelně `--push` + git tag `v<verze>`). Autonomní `/mini:auto` umí kooperativní stop přes soubor `.mini/STOP`. Runtime Node ≥20, ESM, TypeScript.
 
 ## Adresářová struktura
-- `src/` — všechen zdrojový kód (rootDir v `tsconfig.json`)
+- `src/` — všechen zdrojový kód (rootDir v `tsconfig.json`); ke každému modulu je vedle `*.test.ts` (vitest)
   - `src/cli.ts` — entrypoint (`bin: mini`), commander dispatch
-  - `src/git.ts` — tenký wrapper nad `git` subprocess (auto-commit, soft reset, dotazy)
+  - `src/version.ts` — verze nástroje + semver bump `package.json`
+  - `src/changelog.ts` — práce s `CHANGELOG.md` (keepachangelog, stamp Unreleased)
+  - `src/assets.ts` — lokace statického skeletonu `.mini/` (init/update)
+  - `src/git.ts` — tenký wrapper nad `git` subprocess (commit, push, tag, soft reset, dotazy)
   - `src/commands/` — jeden soubor na subcommand + sdílené typy
   - `src/claude/` — wrappery nad `claude` CLI subprocess
-  - `src/prompts/` — buildery promptů (čisté funkce, žádné I/O)
-  - `src/state/` — `.mini/` persistence, parsery, detekce brownfieldu
-  - `src/graph/` — strojová mapa projektu: TS/PHP/Rust mappery + render do `.mini/graph.md`
-  - `src/ui/` — formátování konzolového výstupu, prompts wrapper
-- `scripts/install-local.sh` — build + install do `~/.local/share/mini/versions/<v>/`
-- `dist/` — build output (gitignored, generováno `tsc`)
-- `.mini/` — runtime data projektu (state, project.md, discuss/, run/, memory/, codebase.md, graph.md, last-memory.md)
+  - `src/prompts/` — buildery promptů (čisté funkce, žádné I/O); headless i session prompty
+  - `src/state/` — `.mini/` persistence (layout v2), parsery, detekce brownfieldu, přečíslování
+  - `src/graph/` — strojová mapa projektu: mappery 10 jazyků + render do `.mini/graph/` + index
+  - `src/ui/` — formátování konzolového výstupu, prompts wrapper, detekce TTY
+  - `src/tokens/` — měření token ceny promptů jednotlivých příkazů
+- `assets/skeleton/.mini/` — statická kostra `.mini/` (prázdné adresáře přes `.gitkeep` + `gitignore` bez tečky); zdroj pravdy pro `init`/`update`. `scripts/copy-assets.mjs` ji při buildu kopíruje do `dist/skeleton/`
+- `scripts/` — `copy-assets.mjs` (build krok), `install-local.sh` (lokální instalace), `measure-prompt-tokens.ts`
+- `dist/` — build output (gitignored; `tsc` + skeleton)
+- `.mini/` — runtime data projektu: `state.json` (hlavička v2), `state.prev.json`, `phases/` + `phases-prev/`, `project.md`, `discuss/`, `run/`, `memory/`, `graph/` + `graph.json`, `codebase.md`, `last-memory.md`, `STOP` (stop signál), `token-report.md`
 
 ## Klíčové moduly
 
 ### Entrypoint a CLI
-- `src/cli.ts` — commander definice všech subcommandů, dynamický `import()` handlerů (rychlejší startup)
+- `src/cli.ts` — commander definice všech subcommandů, dynamický `import()` handlerů (rychlejší startup). Subcommandy: `init`, `next`, `plan`, `do`, `done`, `auto`, `discuss`, `undo`, `status`, `stop`, `import-gsd`, `migrate`, `audit`, `map`, `context`, `update`, `install-commands`, `model`. Většina mutujících má `--apply` (neinteraktivní headless mód pro slash commandy); helpery `parseMaxTurns`/`parseBumpLevel`/`ensurePushHasBump`/`readHookFilePath`
+- `src/version.ts` — `readPackageVersion()` (verze nástroje z vlastního `package.json`), `bumpSemver`/`bumpPackageVersion` (textová náhrada jen hodnoty `"version"`), typy `BumpLevel`/`BumpChoice`
+- `src/changelog.ts` — `CHANGELOG_FILE`, `todayIso()`, `stampUnreleased()` (zaklapne `## [Unreleased]` do datované sekce při minor/major vydání; patche se kumulují)
+- `src/assets.ts` — najde statický skeleton `.mini/` (dist nebo repo), `readSkeletonEntries()`; `FILE_RENAMES` (`gitignore` → `.gitignore`, npm-safe), `GITKEEP`
 
-### Commands (každý exportuje async funkci, většina vrací `StepOutcome`)
-- `src/commands/types.ts` — `StepOutcome` (ok/reason discriminated union) a `AutoOptions`
-- `src/commands/init.ts` — interaktivní založení projektu (project.md + state.json); pokud je brownfield, nabídne hned `audit`
-- `src/commands/next.ts` — návrh další fáze (manual / hint / Claude estimate); parsuje `TITLE:`/`GOAL:`
-- `src/commands/plan.ts` — rozmen aktuální fáze na 3-7 kroků; parsuje `STEP:` řádky
-- `src/commands/do.ts` — pošle Claudovi prompt fáze/kroku; podporuje `--stream`, `--max-turns`, auto režim s `acceptEdits`
-- `src/commands/done.ts` — verifikace fáze/kroku; v auto módu čte `.mini/run/phase-{id}.md` přes `applyAutoReport()` a fallbackuje do interaktivu při chybě parsování. Po finalizaci fáze jako `done` volá `finalizePhaseSideEffects()` → git auto-commit (`commitPhaseWork`, zapíše `phase.autoCommit`), `writePhaseMemory()` a `regenerateGraph()`. Body `verify` z reportu řeší `handleVerify()` (pass/skip/issue/block); blocker založí opravnou podfázi s float ID (`insertFixSubphase`, 21 → 21.1)
-- `src/commands/auto.ts` — chain `next → plan → (do → done){retry}`; max `MAX_PHASE_ITERATIONS = 3` průchodů na fázi, mezi pokusy přejmenuje report na `.prev.md` jako kontext pro Clauda
-- `src/commands/discuss.ts` — diskusní session (allowedTools = R/G/G/LS/Write), Claude na konci zapíše poznámky do `.mini/discuss/phase-{id}.md`
-- `src/commands/audit.ts` — spouští Clauda nad existujícím kódem, výstup `.mini/codebase.md` (TENTO soubor); blokovaný na greenfieldu
-- `src/commands/map.ts` — `mini map`; přegeneruje `.mini/graph.md` přes `buildGraph()`. Detekuje mapovatelný projekt (`hasMappableProject`), jinak nasměruje na `/graphify`
+### Commands (každý exportuje async funkci, většina vrací `StepOutcome`; mutující mají i `apply*` variantu)
+- `src/commands/types.ts` — `StepOutcome` (ok/reason discriminated union), `AutoOptions`, `FinalizeOptions` (`bump`/`push`)
+- `src/commands/context.ts` — `mini context <cmd>` ([next|discuss|plan|do|done|verify]); vypíše aktuální **session prompt na stdout** pro nativní `/mini:` slash commandy. Čte granulárně (hlavička + jen aktuální fáze). Buildery z `prompts/sessionContext.ts` (+ `autoPhase` pro `do`)
+- `src/commands/init.ts` — interaktivní založení projektu (`init`) i headless `applyInit()` (z flagů). Založí project.md + stav + skeleton; brownfield → nabídne `map`/`audit`
+- `src/commands/next.ts` — návrh další fáze (interaktivní `next` přes Claude) + `applyNewPhase(title, goal)` pro `--apply`
+- `src/commands/plan.ts` — rozmen fáze na 3-7 kroků; `parseStepsFromStdin()` (formát `title :: detail`) + `applyPlanSteps()`
+- `src/commands/do.ts` — interaktivní `doPhase` (`--stream`, `--max-turns`, acceptEdits) + headless `applyDoStart()` (fázi na `doing`, založí `.mini/run/`) a `applyStepDone(title)` (průběžné odškrtnutí kroku)
+- `src/commands/done.ts` — finalizace fáze. `applyAutoReport()` čte `.mini/run/phase-{id}.md`, posune kroky, uzavře fázi; `applyDone()` (headless, `--accept-verify`/`--bump`/`--push`) **nepadá do interaktivu**, kdežto `done({auto})` ano. `finalizePhaseSideEffects()` → memory → graf → `save` → `commitPhaseWork` (bump verze, stamp changelog při vydání, jediný commit, opt-in `push` + `tagVersion`). `handleVerify()` řeší body k ručnímu ověření (pass/skip/issue/block, respektuje TTY přes `isInteractive` a `phase.resolvedVerify`); blocker → opravná podfáze s float ID (`insertFixSubphase`, 21 → 21.1). `closeOrphanedDoingParents` dozavře rodiče po hotových podfázích
+- `src/commands/auto.ts` — chain `next → plan → (do → done){retry}` (interaktivní auto mód; samostatný od nativního `/mini:auto`, který řídí slash command)
+- `src/commands/discuss.ts` — diskusní session (subprocess `claude`), Claude na konci zapíše poznámky do `.mini/discuss/phase-{id}.md`
+- `src/commands/audit.ts` — spustí Clauda nad existujícím kódem, výstup `.mini/codebase.md` (TENTO soubor); blokovaný na greenfieldu
+- `src/commands/map.ts` — `mini map` (plný rebuild přes `buildGraph()`), `--file <cesta>` (inkrementálně přes `updateGraphFile()`), `--hook` (cesta z PostToolUse JSON na stdin). Detekuje mapovatelný projekt, jinak nasměruje na `/graphify`
+- `src/commands/stop.ts` — `mini stop` / `--clear`: zakládá/maže kooperativní stop signál `.mini/STOP` pro autonomní `/mini:auto`
+- `src/commands/migrate.ts` — `mini migrate`: jednorázový převod monolitického `state.json` (v1) na layout v2 (hlavička + `phases/`). Crash-safe (hlavička až nakonec), idempotentní
+- `src/commands/renumber.ts` — `mini migrate --renumber [--dry-run]`: přečíslování fází na souvislá celá čísla + sjednocení názvů souborů (orchestruje čistou logiku z `state/renumber.ts`)
+- `src/commands/update.ts` — `mini update [--dry-run]`: srovná negenerovanou část projektu na aktuální verzi mini — `syncSkeleton()` (skeleton `.mini/`) + `installCommands()` (slash commandy). Idempotentní, nesahá na generované soubory
+- `src/commands/install-commands.ts` — `mini install-commands`: vygeneruje `.claude/commands/mini/*.md`. `COMMAND_DEFS` drží tělo každého slash commandu (vč. dlouhého těla `auto`), `renderCommandMd()`. `COMMANDS_DIR = .claude/commands/mini`
 - `src/commands/import-gsd.ts` — jednorázový import GSD projektu z `.planning/`; parsuje `NAME:`/`WHAT:`/`PHASES:`, mapuje statusy přes `STATUS_MAP`
 - `src/commands/status.ts` — barevný přehled fází a kroků (picocolors) + hint na další akci
-- `src/commands/undo.ts` — restore `state.prev.json` → `state.json` s diff popisem; když poslední fáze měla `autoCommit` a HEAD pořád sedí + čistý strom (`classifyRevert`), nabídne i `git reset --soft preSha`
-- `src/commands/writeMemory.ts` — **není CLI command**, volá ho `done` po fázi. Zapíše `.mini/memory/phase-{id}-{ts}.md` + aktualizuje symlink `.mini/last-memory.md`. Default skládá soubor přímo v TS (`buildPhaseMemoryMarkdown`, bez Claude API); Clauda zavolá jen když je scope `memory` explicitně nastaven. Nice-to-have — nikdy nehází
+- `src/commands/undo.ts` — restore `state.prev.json` → `state.json` (a `phases-prev/` → `phases/`); když poslední fáze měla `autoCommit` a HEAD pořád sedí + čistý strom (`classifyRevert`), nabídne i `git reset --soft preSha`
+- `src/commands/writeMemory.ts` — **není CLI command**, volá ho `done` po fázi. Zapíše `.mini/memory/phase-{id}.md` + aktualizuje `.mini/last-memory.md`. Default skládá soubor přímo v TS (`buildPhaseMemoryMarkdown`, bez Claude API); Clauda zavolá jen když je scope `memory` explicitně nastaven. Nice-to-have — nikdy nehází
 - `src/commands/model.ts` — `mini model [scope] [name]`; per-scope override (`default`/`next`/`plan`/`do`/`importGsd`/`audit`/`memory`)
 
 ### Claude wrappery (`src/claude/`)
 - `src/claude/ask.ts` — `claude -p --output-format json`, stdin prompt, parsuje `result`/`usage`/`cost`; default timeout 5 min
 - `src/claude/work.ts` — `claude` s `stdio: 'inherit'` (plně interaktivní session); typ `PermissionMode`
 - `src/claude/stream.ts` — `claude -p --output-format stream-json --verbose`, vlastní `createLineBuffer()` na NDJSON, `parseStreamEvent()` mapuje system-init/assistant/user/result do typovaných eventů s `RawEnvelope` pro raw přístup
+- `src/claude/spawnError.ts` — `describeSpawnError()` / `CLAUDE_NOT_FOUND_MESSAGE`: sjednocená hláška při ENOENT (chybí `claude` v PATH) napříč ask/work/stream
 
 ### Prompts (`src/prompts/`) — čisté buildery, jeden soubor na prompt
-- `auditCodebase.ts` (`buildAuditCodebasePrompt`, exportuje `CODEBASE_FILE = '.mini/codebase.md'`)
-- `nextPhase.ts` — historie fází + volitelný `userHint`, výstupní formát `TITLE:`/`GOAL:`
-- `planPhase.ts` — fáze + discuss notes, výstup `STEP:` řádky
-- `doPhase.ts` — interaktivní `do`; vyznačuje `focusedStep` značkou „← pracuj na tomhle"
-- `autoPhase.ts` — auto `do`; vynucuje YAML front matter report do `.mini/run/phase-{id}.md` (statusy kroků, `verdict`, sekce `verify` s body k ručnímu ověření); podporuje `AutoPhaseRetryContext` pro 2./3. pokus
+- **`sessionContext.ts`** — session prompty pro nativní `/mini:` commandy (běží v Claude session, ukládají přes `--apply`): `buildNextSessionPrompt`, `buildPlanSessionPrompt`, `buildDoneSessionPrompt` (vč. instrukcí k CHANGELOG a bump/push), `buildVerifySessionPrompt`
+- `graphHint.ts` — `GRAPH_USAGE_HINT`: sdílená instrukce „jak číst kód přes strojovou mapu" (index → mapy → cílený Read přes `@L` kotvy); použito v next/discuss/plan
+- `auditCodebase.ts` (`buildAuditCodebasePrompt`, `CODEBASE_FILE = '.mini/codebase.md'`)
+- `nextPhase.ts` — headless next; historie fází + `userHint`, výstup `TITLE:`/`GOAL:`
+- `planPhase.ts` — headless plan; fáze + discuss notes, výstup `STEP:` řádky
+- `doPhase.ts` — interaktivní `do`; vyznačuje `focusedStep`
+- `autoPhase.ts` — auto/nativní `do`; vynucuje YAML front-matter report do `.mini/run/phase-{id}.md` (statusy kroků, `verdict`, sekce `verify`); podporuje `useDiscussNotesRef`/`useProjectRef` (reference mód) a `AutoPhaseRetryContext`
 - `discussPhase.ts` — diskuse + povinný zápis poznámek
-- `importGsd.ts` — kostra GSD projektu, výstup `NAME:`/`WHAT:`/`FOR_WHOM:`/`CONSTRAINTS:`/`PHASES:`
-- `writeMemory.ts` (`buildWriteMemoryPrompt`, exportuje `MEMORY_DIR = '.mini/memory'`, `LAST_MEMORY_FILE = '.mini/last-memory.md'`) — prompt pro Claude režim zápisu paměti (sekce Co se udělalo / Klíčová rozhodnutí / Otevřené konce); použije se jen při explicitním `memory` scope
+- `importGsd.ts` — kostra GSD projektu (`NAME:`/`WHAT:`/`FOR_WHOM:`/`CONSTRAINTS:`/`PHASES:`)
+- `writeMemory.ts` (`buildWriteMemoryPrompt`, `MEMORY_DIR = '.mini/memory'`, `LAST_MEMORY_FILE = '.mini/last-memory.md'`) — prompt pro Claude režim zápisu paměti; jen při explicitním `memory` scope
 
 ### Git (`src/git.ts`)
-- Tenký wrapper nad `git` subprocess (`execFile`). `runGit()` nikdy nehází — `ok: false` pokrývá nenulový exit i ENOENT. Helpery: `isGitRepo`/`hasChanges`/`commitAll` (`add -A` + commit)/`currentBranch`/`headSha`/`headSubject`/`isCleanWorkingTree`/`softResetTo` (`reset --soft`)
+- Tenký wrapper nad `git` subprocess (`execFile`). `runGit()` nikdy nehází — `ok: false` pokrývá nenulový exit i ENOENT. Helpery: `isGitRepo`/`hasChanges`/`commitAll` (`add -A` + commit)/`push`/`createTag`/`pushTag`/`currentBranch`/`headSha`/`headParentSha`/`headSubject`/`isCleanWorkingTree`/`softResetTo` (`reset --soft`)
 
-### Graph (`src/graph/`) — strojová mapa projektu (`.mini/graph.md`)
+### Graph (`src/graph/`) — strojová mapa projektu (`.mini/graph/` + `.mini/graph.json`)
 - `types.ts` — `FileGraph`, `ExportInfo`/`ExportKind`, `ImportInfo`, `FunctionSignature`/`MethodSignature`/`Parameter`
-- `buildGraph.ts` (`GRAPH_FILE = '.mini/graph.md'`) — `buildGraph()` projde projekt (`walk`, ignoruje build/VCS adresáře vč. `vendor`/`target`), namapuje `.ts`/`.tsx`/`.php`/`.rs` a atomicky zapíše markdown (`renderGraphMarkdown`). `hasMappableProject()` detekuje tsconfig/Cargo.toml/composer.json nebo aspoň jeden mapovatelný soubor
-- `mapper.ts` — TS/TSX mapper přes `ts.createSourceFile` (syntaktický průchod, žádný typový resolver); textové signatury z anotací v kódu
-- `phpMapper.ts` — regex PHP mapper (smaže komentáře/stringy, brace-counting na top-level `use`/`class`/`interface`/`trait`/`function` + veřejné metody)
-- `rustMapper.ts` — regex Rust mapper (top-level `use`/`pub fn|struct|enum|trait`, ignoruje `impl`/`mod` vnitřek)
+- `buildGraph.ts` — `GRAPH_DIR = '.mini/graph'`, `GRAPH_INDEX = '.mini/graph.json'`. `buildGraph()` posbírá mapovatelné soubory (v git repu přes `git ls-files`, jinak `walk` + `IGNORE_DIRS`), namapuje a atomicky zapíše **per-file mapy** (`.mini/graph/<cesta>.md`) + lehký JSON index. `updateGraphFile()` inkrementálně přemapuje jeden soubor (hot path pro `--hook`). `hasMappableProject()` detekuje konfig 10 jazyků nebo aspoň jeden mapovatelný soubor. Render přes `renderFileGraph()` s kotvami `@L<start>-<end>`. Starý monolitický `.mini/graph.md` (`LEGACY_GRAPH_FILE`) se maže
+- Mappery (jeden na jazyk): `mapper.ts` (TS/TSX přes `ts.createSourceFile`), `phpMapper.ts`, `rustMapper.ts`, `pythonMapper.ts`, `goMapper.ts`, `javaMapper.ts`, `csharpMapper.ts`, `kotlinMapper.ts`, `swiftMapper.ts`, `rubyMapper.ts` (mimo TS jde o regex/textové mappery)
 
 ### State (`src/state/`)
-- `types.ts` — `Step`, `Phase` (vč. volitelného `autoCommit: PhaseAutoCommit` a `humanNotes`), `PhaseAutoCommit` (`preSha`/`sha`/`subject` pro bezpečný soft reset v undo), `ProjectState` (verze 1), `ProjectModels`, `StepStatus`, `PhaseStatus`
-- `store.ts` — atomické `save()` (tmp + rename), automatická záloha do `state.prev.json`, helpers `load`/`loadPrev`/`restorePrev`/`exists`/`hasPrev`/`readProject`/`writeProject`
-- `models.ts` — `MODEL_SCOPES` (vč. `memory`), `SCOPE_LABELS`, `resolveModel(scope, state)` (per-scope → default → legacy `model` → undefined), `getDefaultModel`
-- `brownfield.ts` — `isBrownfield(cwd)`; ignoruje `.git`/`.mini`/`.planning`/`node_modules`/`dist`/`build`/`.next`/`.cache`/`.turbo`/`coverage`/`.DS_Store`
-- `discussNotes.ts` — čtení `.mini/discuss/phase-{id}.md` (vrací `null` při ENOENT)
-- `runReport.ts` — kontrakt reportu z auto session: typy `RunStepStatus`/`RunVerdict`/`RunReport`/`RunReportVerifyItem` (body k ručnímu ověření, volitelné), vlastní minimální YAML parser (žádný runtime dep), `parseRunReport()` strict-validuje phase ID + step titles, `RunReportParseError` shazuje do interaktivního fallbacku
+- `types.ts` — layout **verze 2**: `Phase` (vč. `autoCommit: PhaseAutoCommit`, `humanNotes`, `resolvedVerify`, `detail` na kroku), `Step`, `PhaseAutoCommit` (`preSha`/`sha?`/`subject`), `ProjectState` (`version: 2`), `StateHeader` + `PhaseSummary` (lehký index v `state.json`), `ProjectModels`, statusy
+- `store.ts` — `SCHEMA_VERSION = 2`, `LegacyStateError` (v1 → `mini migrate`). Granulární I/O: `loadHeader`/`saveHeader`, `loadPhase`/`savePhase`, `loadFullState` (= `load`), atomické zápisy (tmp+rename, `writeJsonIfChanged`). `save()` zazálohuje do `state.prev.json` + `phases-prev/` (diferenčně), rozseká stav na hlavičku + soubory fází, prune osiřelých. `phaseStem(id)` (padding `phase-001`), `stopPath`, `restorePrev`, `readProject`/`writeProject`, `newState`
+- `renumber.ts` — čistá logika přečíslování (parser `parsePhaseFile`, `buildRenumberMap`, plánovače `planSimpleDir`/`planMemoryDir`, `findCollisions`, kolizně bezpečné `executeRenames` přes dočasné názvy)
+- `models.ts` — `MODEL_SCOPES`, `SCOPE_LABELS`, `resolveModel` (per-scope → default → legacy `model`), `getDefaultModel`
+- `brownfield.ts` — `isBrownfield(cwd)`; ignoruje VCS/build/cache adresáře
+- `discussNotes.ts` — čtení `.mini/discuss/phase-{id}.md` (`null` při ENOENT)
+- `runReport.ts` — kontrakt reportu z auto/do session: `RunStepStatus`/`RunVerdict`/`RunReport`/`RunReportVerifyItem`, vlastní minimální YAML parser, `parseRunReport()`/`readRunReport()` strict-validují phase ID + step titles, `RunReportParseError`, `runReportPath`/`runReportExists`
 
 ### UI (`src/ui/`)
-- `log.ts` — `log.info/success/warn/error/dim/title/hint` s picocolors prefixy `[ok]`/`[!]`/`[x]`
+- `log.ts` — `log.info/success/warn/error/dim/title/hint` s picocolors prefixy
 - `ask.ts` — wrapper nad `prompts` s `onCancel → exit(130)`; helpers `nonEmpty()`, `trim()`
-- `streamRender.ts` — `createStreamRenderer()` factory pro průběžné tisknutí stream eventů (model, tool uses s prvním smysluplným argumentem, chybové výsledky)
-- `usage.ts` — `logUsage()` (po `ask`) a `logStreamSummary()` (po stream session) — tokeny, cache hits, USD náklad
+- `interactive.ts` — `isInteractive()` (TTY check); verify se bez TTY nezavře tiše jako pass
+- `streamRender.ts` — `createStreamRenderer()` pro průběžný tisk stream eventů
+- `usage.ts` — `logUsage()` / `logStreamSummary()` — tokeny, cache hits, USD náklad
+
+### Tokens (`src/tokens/`)
+- `measure.ts` — měření token ceny promptů příkazů (heuristika délka/4): `measureAll()`, rozpad na šablonu vs. vkládaný kontext po blocích, render do `.mini/token-report.md` i konzole. Runner: `scripts/measure-prompt-tokens.ts`
 
 ## Technologie
+- **Balík:** `mini-orchestrator` (npm), bin `mini` → `dist/cli.js`; publikuje se jen `dist` + `README.md`, `prepublishOnly` buildí
 - **Jazyk:** TypeScript 5.6, strict + `noUncheckedIndexedAccess` + `noImplicitOverride`, target ES2022, module NodeNext (čisté ESM s `.js` importy)
 - **Runtime:** Node ≥20 (`engines`), `"type": "module"`
-- **CLI framework:** [commander](https://www.npmjs.com/package/commander) ^12.1.0 (s `InvalidArgumentError` pro vlastní parser `--max-turns`)
+- **CLI framework:** [commander](https://www.npmjs.com/package/commander) ^12.1.0 (s `InvalidArgumentError` pro vlastní parsery `--max-turns`/`--bump`)
 - **Interaktivní prompty:** [prompts](https://www.npmjs.com/package/prompts) ^2.4.2
 - **Barvy:** [picocolors](https://www.npmjs.com/package/picocolors) ^1.1.1
-- **TypeScript jako runtime dep:** balík `typescript` je v `dependencies` (ne jen dev) — `src/graph/mapper.ts` ho používá za běhu (`import ts`) k syntaktickému parsování TS/TSX souborů do mapy
-- **Build:** `tsc` (out `dist/`)
+- **TypeScript jako runtime dep:** balík `typescript` je v `dependencies` (ne jen dev) — `src/graph/mapper.ts` ho používá za běhu (`import ts`) k syntaktickému parsování TS/TSX do mapy (ostatní jazyky jdou přes vlastní regex mappery, bez deps)
+- **Build:** `tsc -p tsconfig.build.json` + `scripts/copy-assets.mjs` (zkopíruje `assets/skeleton/` → `dist/skeleton/`); out `dist/`
 - **Dev runner:** `tsx` (`npm run dev` = `tsx src/cli.ts`)
-- **Test runner:** [vitest](https://vitest.dev/) ^4.1.7 (snapshot testy v `src/prompts/__snapshots__/`)
-- **Externí závislost runtime:** binárka `claude` (Claude Code CLI) musí být v `PATH` — commandy `do`/`next`/`plan`/`discuss`/`audit`/`import-gsd`/`auto` (a `done` při explicitním `memory` scope) ji spawnují přes `child_process.spawn`
-- **Volitelná externí závislost:** binárka `git` — auto-commit po fázi a soft reset v undo (`src/git.ts`); chybí-li, side-effecty se tiše přeskočí (nikdy neshodí workflow)
-- **Instalace:** `npm run install-local` → `~/.local/bin/mini` symlink na `~/.local/share/mini/versions/<v>/dist/cli.js` (verzované, rollback přes ruční smazání)
+- **Test runner:** [vitest](https://vitest.dev/) ^4.1.7; ke každému modulu `*.test.ts`, snapshot testy v `__snapshots__/` (prompts, graph, tokens)
+- **Externí závislost runtime:** binárka `claude` (Claude Code CLI) v `PATH` — subprocess režim (`do`/`discuss`/`audit`/`import-gsd`/`auto`) ji spawnuje; nativní `/mini:` commandy už běží uvnitř Claude Code a `claude` nespouštějí
+- **Volitelná externí závislost:** binárka `git` — auto-commit/push/tag po fázi a soft reset v undo (`src/git.ts`); chybí-li, side-effecty se tiše přeskočí
+- **Instalace:** `npm install -g mini-orchestrator` (publish vyžaduje 2FA OTP); pro vývoj `npm run install-local` (`scripts/install-local.sh`)
+- **Nativní integrace s Claude Code:** `mini install-commands` / `mini update` generují `.claude/commands/mini/*.md` (slash commandy `/mini:*`), které volají `mini context <cmd>`; volitelný PostToolUse hook na `mini map --hook` udržuje graf aktuální

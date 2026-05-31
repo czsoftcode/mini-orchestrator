@@ -27,6 +27,11 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 - **`mini verify` / `/mini:verify` už není read-only** — po kontrole zapíše nálezy
   do run reportu (`## Nálezy z verify`), odkud se přes report dostanou i do paměti;
   u už uzavřené fáze je připíše i přímo do memory souboru. Stav fáze dál neposouvá.
+- **README sjednocen se skutečným stavem nástroje.** Doplněny chybějící příkazy
+  (`mini stop`/`migrate`/`update`) i verzování/CHANGELOG/tag u `done`; strom
+  `.mini/` aktualizován na layout v2 (`phases/`, `graph.json` + `graph/`); opraven
+  popis memory (soubor `phase-{id}.md` bez timestampu, `last-memory.md` je krátké
+  shrnutí, ne symlink).
 
 ### Fixed
 

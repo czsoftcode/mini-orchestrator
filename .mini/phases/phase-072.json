@@ -1,0 +1,44 @@
+{
+  "id": 72,
+  "title": "Aktualizace README dle skutečnosti",
+  "goal": "Projít aktuální stav projektu (s oporou v .mini/codebase.md) a uvést README.md do souladu se skutečností — opravit a odstranit zastaralé informace.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Úvod a tvrzení o souborech",
+      "status": "done",
+      "detail": "Opravit nepřesné \"jen dva soubory na projekt (project.md + state.json)\" v úvodu README tak, aby odpovídalo v2 layoutu (lehká hlavička state.json + phases/, plus codebase/graph/memory). Zachovat hlavní myšlenku úspory tokenů."
+    },
+    {
+      "title": "Doplnit chybějící příkazy do tabulky",
+      "status": "done",
+      "detail": "Do tabulky Příkazy přidat mini stop, mini migrate a mini update s odpovídajícím popisem; ověřit proti src/cli.ts, že výčet sedí."
+    },
+    {
+      "title": "Opravit memory napříč README",
+      "status": "done",
+      "detail": "Nahradit zastaralý název phase-{id}-{timestamp}.md za phase-{id}.md (kolizní sufix -2/-3) a popis last-memory.md ze symlinku na krátké shrnutí nejnovějšího záznamu; opravit na všech místech (popis done, strom, FAQ memory)."
+    },
+    {
+      "title": "Aktualizovat strom souborů v projektu",
+      "status": "done",
+      "detail": "Do bloku Soubory v projektu doplnit v2 prvky: phases/ (detail fází), graph/ + graph.json (strojová mapa), STOP signál; popisky souborů uvést do souladu se skutečností."
+    },
+    {
+      "title": "Doplnit verzování, CHANGELOG a tag",
+      "status": "done",
+      "detail": "Do popisu mini done (a FAQ o commitu po fázi) doplnit, že done umí bump verze v package.json, zapsat CHANGELOG.md a při --push vytvořit git tag verze; uvést default --bump none."
+    },
+    {
+      "title": "Finální průchod a kontrola",
+      "status": "done",
+      "detail": "Přečíst celé README odshora dolů, zkontrolovat interní odkazy (kotvy), konzistenci termínů a že nezůstaly další zjevné zastaralosti; drobné stylistické sjednocení."
+    }
+  ],
+  "startedAt": "2026-05-31T12:42:53.147Z",
+  "completedAt": "2026-05-31T12:49:51.450Z",
+  "autoCommit": {
+    "preSha": "8ec7ba6e2aae858bf32678aea09e3d43ce67dcaa",
+    "subject": "Fáze 72: Aktualizace README dle skutečnosti"
+  }
+}

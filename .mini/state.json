@@ -357,6 +357,11 @@
       "id": 71,
       "title": "Skeleton .gitignore přežije npm publish",
       "status": "done"
+    },
+    {
+      "id": 72,
+      "title": "Aktualizace README dle skutečnosti",
+      "status": "done"
     }
   ],
   "models": {
