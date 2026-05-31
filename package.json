@@ -1,6 +1,6 @@
 {
   "name": "mini-orchestrator",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Mini orchestrator on top of Claude Code — keeps the project state and sends Claude only the essentials.",
   "license": "MIT",
   "type": "module",
@@ -9,11 +9,13 @@
   },
   "files": [
     "dist",
+    "scripts/postinstall.mjs",
     "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
     "prepublishOnly": "npm run build",
+    "postinstall": "node scripts/postinstall.mjs",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
     "typecheck": "tsc --noEmit",

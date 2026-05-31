@@ -1,0 +1,42 @@
+{
+  "id": 86,
+  "title": "npm postinstall installs slash commands",
+  "goal": "Remove the public 'mini install-commands' command and install the /mini:* slash commands via an npm postinstall hook: detect Claude Code (installed? local vs global), interactively ask whether to install into the user-level ~/.claude/commands/mini or the project .claude/commands/mini, and copy idempotently. Keep a hidden fallback install path and skip silently (with a hint) when there is no TTY.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Extract slash-command generator into shared module",
+      "status": "done",
+      "detail": "Move COMMAND_DEFS, CommandDef and renderCommandMd out of install-commands.ts into a new shared module, plus a helper writeCommandsTo(targetDir, {dryRun}) doing the idempotent diff-based write into any directory. installCommands and update both reuse it. Existing snapshot/unit tests stay green."
+    },
+    {
+      "title": "Add Claude Code detection helper",
+      "status": "done",
+      "detail": "A function that reports whether 'claude' is installed and whether it is global (resolvable on PATH) or local (node_modules/.bin/claude). Covered by a unit test."
+    },
+    {
+      "title": "Add install routine with project-vs-user target",
+      "status": "done",
+      "detail": "Resolve ~/.claude/commands/mini via os.homedir(); interactive prompt (only when stdin.isTTY) to choose project vs user, default derived from the detected scope; reuses writeCommandsTo."
+    },
+    {
+      "title": "Wire npm postinstall (non-interactive-safe)",
+      "status": "done",
+      "detail": "Built JS entry in dist/ and a postinstall script in package.json; with no TTY it silently skips and prints a hint with the exact manual command; covered by build/prepublishOnly."
+    },
+    {
+      "title": "Remove public install-commands, keep hidden fallback",
+      "status": "done",
+      "detail": "Drop the public command from cli.ts/help/README; keep a manual install path reachable (hidden command or via mini update); update install-commands.test.ts accordingly."
+    }
+  ],
+  "startedAt": "2026-05-31T18:36:05.327Z",
+  "resolvedVerify": [
+    "Interactive postinstall prompt on a real npm install"
+  ],
+  "completedAt": "2026-05-31T19:10:14.673Z",
+  "autoCommit": {
+    "preSha": "925a8775181eda120161878a2a84787f73aeaccf",
+    "subject": "Phase 86: npm postinstall installs slash commands"
+  }
+}

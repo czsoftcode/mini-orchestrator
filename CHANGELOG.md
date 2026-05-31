@@ -8,6 +8,15 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **The `/mini:*` slash commands are installed automatically by an npm `postinstall`
+  hook.** After `npm install` of mini, the hook offers to install the commands and
+  asks where — the user-level `~/.claude/commands/mini` (all projects) or the current
+  project's `.claude/commands/mini` — defaulting to the scope detected from how Claude
+  Code is installed (a project-local `node_modules/.bin/claude` suggests the project,
+  otherwise the user level). It is non-interactive-safe: without a TTY (CI, `npm ci`,
+  piped install) it writes nothing and only prints a hint with the manual command, and
+  any error is downgraded so it never fails the install.
+
 - **mini-orchestrator is now released under the MIT License.** A root `LICENSE` file
   (MIT, © 2026 Stanislav Kremeň) makes GitHub show the "MIT" badge in the repo sidebar,
   the `"license": "MIT"` field in `package.json` makes npmjs.com display it on the
@@ -21,6 +30,14 @@ All notable changes to this project are recorded here. The format is based on
   `mini --version`.
 
 ### Changed
+
+- **`mini install-commands` is now a hidden manual fallback, not the primary install
+  path.** Installing the slash commands is normally handled by the `postinstall` hook
+  (see Added); the command stays available (hidden from `--help`) for when the hook is
+  skipped (`--ignore-scripts`, `npm ci`, CI). It gained `--user` / `--project` to pick
+  the location non-interactively and `--dry-run` for a preview. The generator was
+  extracted into a shared module (`src/install/commands.ts`) reused by the hook,
+  `mini update` and this command, so their output can't drift.
 
 - **`scripts/install-local.sh` is now fully English.** Its header comments and all
   runtime output (`→ installing into …`, `→ production npm install (runtime deps only)`,

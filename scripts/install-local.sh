@@ -25,7 +25,11 @@ mkdir -p "$HOME/.local/bin"
 cp -r dist package.json "$INSTALL_DIR/"
 
 echo "→ production npm install (runtime deps only)"
-(cd "$INSTALL_DIR" && npm install --omit=dev --no-audit --no-fund --silent)
+# --ignore-scripts: only dist/ + package.json are copied here, not scripts/, so the
+# package's own `postinstall` (scripts/postinstall.mjs, the slash-command hook)
+# would crash with MODULE_NOT_FOUND. That hook is for end users installing mini via
+# npm, not for the local install of the tool itself.
+(cd "$INSTALL_DIR" && npm install --omit=dev --no-audit --no-fund --silent --ignore-scripts)
 
 chmod +x "$INSTALL_DIR/dist/cli.js"
 ln -sfn "$INSTALL_DIR/dist/cli.js" "$BIN_PATH"

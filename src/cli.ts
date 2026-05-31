@@ -332,12 +332,20 @@ program
     if (!r.ok) process.exit(1);
   });
 
+// Hidden fallback for installing the slash commands by hand — the normal path is
+// the npm `postinstall` hook. Stays available for when postinstall is skipped
+// (`--ignore-scripts`, `npm ci`, CI). Without --user/--project and with a TTY it
+// asks where to install; without a TTY it uses the detected default.
 program
-  .command('install-commands')
-  .description('Generates .claude/commands/mini/*.md (the /mini:* slash commands) into the current project. Idempotent — can be run repeatedly.')
-  .action(async () => {
-    const { installCommands } = await import('./commands/install-commands.js');
-    await installCommands();
+  .command('install-commands', { hidden: true })
+  .description('Installs the /mini:* slash commands. Idempotent. Asks project vs user when interactive; override with --user/--project.')
+  .option('--user', 'Install into the user-level ~/.claude/commands/mini (all projects).')
+  .option('--project', 'Install into the current project .claude/commands/mini.')
+  .option('--dry-run', 'Preview only — print what would be created/changed, but write nothing.')
+  .action(async (opts: { user?: boolean; project?: boolean; dryRun?: boolean }) => {
+    const { installSlashCommands } = await import('./install/install.js');
+    const scope = opts.user ? 'user' : opts.project ? 'project' : undefined;
+    await installSlashCommands({ scope, dryRun: opts.dryRun });
   });
 
 program

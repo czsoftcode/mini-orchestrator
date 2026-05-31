@@ -427,6 +427,11 @@
       "id": 85,
       "title": "English install-local + dev note",
       "status": "done"
+    },
+    {
+      "id": 86,
+      "title": "npm postinstall installs slash commands",
+      "status": "done"
     }
   ],
   "models": {
