@@ -21,4 +21,4 @@ const dest = new URL('dist/skeleton/', root);
 await rm(fileURLToPath(dest), { recursive: true, force: true });
 await cp(fileURLToPath(src), fileURLToPath(dest), { recursive: true });
 
-console.log('→ assety zkopírovány: assets/skeleton → dist/skeleton');
+console.log('→ assets copied: assets/skeleton → dist/skeleton');

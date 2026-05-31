@@ -14,7 +14,19 @@ All notable changes to this project are recorded here. The format is based on
   package page, and the README's license section links to `./LICENSE`. npm always
   includes `LICENSE` in the published tarball, so it ships with the package too.
 
+- **README documents the local dev install.** A note under "From git / for development"
+  describes `npm run install-local`: it builds and installs mini under `~/.local`
+  (a `~/.local/bin/mini` symlink + a versioned directory with the package files and
+  production deps), keeps older versions around for rollback, and is verified with
+  `mini --version`.
+
 ### Changed
+
+- **`scripts/install-local.sh` is now fully English.** Its header comments and all
+  runtime output (`→ installing into …`, `→ production npm install (runtime deps only)`,
+  `mini X installed.`, `Try: mini --version`) were translated from Czech. The stray
+  Czech build line in `scripts/copy-assets.mjs` (`assety zkopírovány`) was translated to
+  `assets copied` as well.
 
 - **`CLAUDE.md` is now fully English.** The project instructions are written in English
   so any developer of the public tool can read the conventions without translating. The

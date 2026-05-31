@@ -33,6 +33,19 @@ npm run build
 node dist/cli.js --help        # or: alias mini='node $(pwd)/dist/cli.js'
 ```
 
+To install your local build onto your `PATH` (the same layout Claude Code uses), run:
+
+```bash
+npm run install-local
+```
+
+It builds the project and installs it under `~/.local`:
+
+- `~/.local/bin/mini` → symlink to the built CLI
+- `~/.local/share/mini/versions/<version>/` → the package's own files and production deps
+
+Older versions are kept around so you can roll back — delete them manually if they get in the way. Make sure `~/.local/bin` is on your `PATH`, then verify with `mini --version`.
+
 ## Quick start
 
 ```bash

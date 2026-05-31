@@ -422,6 +422,11 @@
       "id": 84,
       "title": "English CLAUDE.md instructions",
       "status": "done"
+    },
+    {
+      "id": 85,
+      "title": "English install-local + dev note",
+      "status": "done"
     }
   ],
   "models": {
