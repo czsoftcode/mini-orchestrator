@@ -1,0 +1,34 @@
+{
+  "id": 83,
+  "title": "MIT license + visibility",
+  "goal": "mini-orchestrator ships under the MIT license: a root LICENSE file (auto-detected and shown by GitHub), the \"license\": \"MIT\" field in package.json (shown on npmjs.com), and a matching note in the README replacing the current placeholder.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add root LICENSE file (MIT)",
+      "status": "done",
+      "detail": "Standard MIT license text at the repo root with copyright \"2026 Stanislav Kremeň\"; GitHub auto-detects it and shows \"MIT\" in the repo sidebar."
+    },
+    {
+      "title": "Set \"license\": \"MIT\" in package.json",
+      "status": "done",
+      "detail": "Add the license field so npmjs.com shows MIT on the package page; verifiable via npm pkg get license."
+    },
+    {
+      "title": "Update README license section",
+      "status": "done",
+      "detail": "Replace the \"## License / attribution\" placeholder (\"Your own.\") with a short MIT note linking to ./LICENSE."
+    },
+    {
+      "title": "Verify license visibility, build and tests",
+      "status": "done",
+      "detail": "npm pack --dry-run lists LICENSE in the tarball (npm includes it regardless of the files whitelist); npm run build and npm test stay green."
+    }
+  ],
+  "startedAt": "2026-05-31T17:08:16.381Z",
+  "completedAt": "2026-05-31T17:11:29.429Z",
+  "autoCommit": {
+    "preSha": "704ec82cab5872f31afc60ef5b8829b876e0d28a",
+    "subject": "Phase 83: MIT license + visibility"
+  }
+}

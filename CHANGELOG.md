@@ -6,6 +6,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **mini-orchestrator is now released under the MIT License.** A root `LICENSE` file
+  (MIT, © 2026 Stanislav Kremeň) makes GitHub show the "MIT" badge in the repo sidebar,
+  the `"license": "MIT"` field in `package.json` makes npmjs.com display it on the
+  package page, and the README's license section links to `./LICENSE`. npm always
+  includes `LICENSE` in the published tarball, so it ships with the package too.
+
 ## [1.5.0] - 2026-05-31
 
 ### Added

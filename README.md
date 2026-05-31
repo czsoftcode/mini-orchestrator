@@ -293,6 +293,8 @@ Yes, `mini` just runs `claude` as a subprocess — authentication is handled by 
 - If Claude proposes nonsense in `mini next` in auto, **press Ctrl+C** and run without auto
 - After every phase, `mini status` shows the overall progress
 
-## License / attribution
+## License
 
-Your own. Generated in collaboration with Claude Code.
+Released under the [MIT License](./LICENSE) — © 2026 Stanislav Kremeň. Free to
+use, modify and distribute; keep the copyright and license notice. Built in
+collaboration with Claude Code.

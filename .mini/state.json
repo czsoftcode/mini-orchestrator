@@ -412,6 +412,11 @@
       "id": 82,
       "title": "Anglické lifecycle příkazy",
       "status": "done"
+    },
+    {
+      "id": 83,
+      "title": "MIT license + visibility",
+      "status": "done"
     }
   ],
   "models": {
