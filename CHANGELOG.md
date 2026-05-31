@@ -28,6 +28,14 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
   do run reportu (`## Nálezy z verify`), odkud se přes report dostanou i do paměti;
   u už uzavřené fáze je připíše i přímo do memory souboru. Stav fáze dál neposouvá.
 
+### Fixed
+
+- **Po instalaci z npm `mini init` zakládá `.mini/.gitignore`.** Skeleton drží
+  gitignore pod npm-safe jménem `gitignore` (bez tečky) — `npm publish` totiž
+  soubory `.gitignore` z tarballu vyřazuje, takže na novém počítači ve skeletonu
+  chyběl a `mini init`/`mini update` ho do projektu nezaložily. Do projektu se
+  i nadále zapisuje jako `.gitignore` (přejmenování řeší `assets.ts:FILE_RENAMES`).
+
 ## [1.4.0] - 2026-05-30
 
 ### Added

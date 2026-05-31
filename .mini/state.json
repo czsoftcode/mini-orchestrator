@@ -352,6 +352,11 @@
       "id": 70,
       "title": "Done commitne všechny změny",
       "status": "done"
+    },
+    {
+      "id": 71,
+      "title": "Skeleton .gitignore přežije npm publish",
+      "status": "done"
     }
   ],
   "models": {

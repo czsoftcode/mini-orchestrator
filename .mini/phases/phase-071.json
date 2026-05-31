@@ -1,0 +1,44 @@
+{
+  "id": 71,
+  "title": "Skeleton .gitignore přežije npm publish",
+  "goal": "npm publish vyřazuje soubory .gitignore z balíčku, takže po instalaci z npm chybí ve skeletonu a mini init/update ho do projektu nezaloží; uložit skeletonový gitignore pod neutrálním jménem (npm-safe) a při init/update ho do cílového projektu zapsat jako .gitignore.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přejmenovat skeleton .gitignore na gitignore",
+      "status": "done",
+      "detail": "git mv assets/skeleton/.mini/.gitignore assets/skeleton/.mini/gitignore; npm publish soubor .gitignore z tarballu vyřazuje, neutrální jméno gitignore přežije."
+    },
+    {
+      "title": "Mapování zdroj→cíl v assets.ts",
+      "status": "done",
+      "detail": "SkeletonEntry rozšířit o srcRelPath (cesta na disku); readSkeletonEntries u souboru gitignore vrátí relPath=.gitignore a srcRelPath=gitignore, jinak zdroj=cíl."
+    },
+    {
+      "title": "syncSkeleton čte ze zdroje, píše na cíl",
+      "status": "done",
+      "detail": "update.ts čte obsah z join(root, srcRelPath), zapisuje a loguje na relPath (.gitignore); platí pro init i update."
+    },
+    {
+      "title": "Ověřit copy-assets.mjs a komentáře",
+      "status": "done",
+      "detail": "copy-assets kopíruje celý adresář (gitignore se přenese); srovnat komentáře v assets.ts/update.ts/copy-assets zmiňující .gitignore."
+    },
+    {
+      "title": "Testy a npm pack kontrola",
+      "status": "done",
+      "detail": "assets.test (na disku gitignore → cíl .gitignore), init.test/update.test (v projektu vznikne .gitignore); npm pack --dry-run potvrdí, že tarball .gitignore neobsahuje; vitest zelené."
+    },
+    {
+      "title": "CHANGELOG a rebuild dist",
+      "status": "done",
+      "detail": "záznam do CHANGELOG.md, npm run build přegeneruje dist/skeleton s gitignore."
+    }
+  ],
+  "startedAt": "2026-05-31T11:54:37.335Z",
+  "completedAt": "2026-05-31T11:58:45.606Z",
+  "autoCommit": {
+    "preSha": "71634d5e09a186ecb7f345b6d8361fd4a6cb03d6",
+    "subject": "Fáze 71: Skeleton .gitignore přežije npm publish"
+  }
+}

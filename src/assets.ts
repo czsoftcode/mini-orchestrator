@@ -13,6 +13,9 @@ import { fileURLToPath } from 'node:url';
  * - ze zdrojáku (dev/testy přes tsx/vitest, `src/assets.ts`) → repo
  *   `assets/skeleton/.mini`.
  *
+ * Gitignore drží skeleton pod npm-safe jménem `gitignore` (bez tečky) a do
+ * projektu ho zapisuje jako `.gitignore` — viz `FILE_RENAMES` níže.
+ *
  * Cesty se odvozují od umístění tohoto modulu (`import.meta.url`) jako u
  * `version.ts`. Kandidáty zkoušíme v pořadí a vrátíme první, který existuje —
  * funguje to v obou režimech bez ohledu na to, jestli proběhl build.
@@ -26,9 +29,27 @@ const SKELETON_CANDIDATES = [
  * cílového projektu se NEkopíruje — `mini init/update` adresář jen `mkdir`nou. */
 export const GITKEEP = '.gitkeep';
 
+/**
+ * Přejmenování souborů skeletonu (zdroj na disku → cíl v projektu).
+ *
+ * `npm publish` ze svého tarballu vyřazuje soubory pojmenované `.gitignore`
+ * (slouží mu k filtrování obsahu balíčku a samy se nebalí), takže po instalaci
+ * z npm by `.gitignore` ve skeletonu chyběl a `mini init/update` by ho nezaložil.
+ * Proto skeleton drží gitignore pod neutrálním jménem `gitignore` (to npm zabalí)
+ * a do projektu ho zapisuje jako `.gitignore`. Klíč i hodnota jsou cesty
+ * relativní ke kořeni skeletonu (`.mini/`).
+ */
+const FILE_RENAMES: Record<string, string> = {
+  gitignore: '.gitignore',
+};
+
 export interface SkeletonEntry {
-  /** Cesta relativní ke kořeni skeletonu (`.mini/`), s nativním oddělovačem. */
+  /** Cílová cesta v projektu, relativní ke kořeni `.mini/` (nativní oddělovač). */
   relPath: string;
+  /** Cesta zdrojového souboru na disku skeletonu, relativní k jeho kořeni.
+   * Liší se od `relPath` jen u přejmenovaných souborů (viz `FILE_RENAMES`);
+   * jinak je shodná. Z ní se čte obsah, na `relPath` se zapisuje. */
+  srcRelPath: string;
   kind: 'dir' | 'file';
 }
 
@@ -63,12 +84,14 @@ export async function readSkeletonEntries(): Promise<SkeletonEntry[]> {
     const dirents = await readdir(absDir, { withFileTypes: true });
     for (const d of dirents) {
       const abs = join(absDir, d.name);
+      const srcRelPath = relative(root, abs);
       if (d.isDirectory()) {
-        entries.push({ relPath: relative(root, abs), kind: 'dir' });
+        entries.push({ relPath: srcRelPath, srcRelPath, kind: 'dir' });
         await walk(abs);
       } else if (d.isFile()) {
         if (d.name === GITKEEP) continue;
-        entries.push({ relPath: relative(root, abs), kind: 'file' });
+        const relPath = FILE_RENAMES[srcRelPath] ?? srcRelPath;
+        entries.push({ relPath, srcRelPath, kind: 'file' });
       }
     }
   }

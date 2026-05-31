@@ -59,7 +59,8 @@ describe('syncSkeleton', () => {
     expect(res.updatedFiles).toBe(1);
     expect(res.createdFiles).toBe(0);
 
-    const canonical = await readFile(join(await skeletonDir(), '.gitignore'), 'utf-8');
+    // Zdroj na disku skeletonu je `gitignore` (bez tečky), cíl v projektu `.gitignore`.
+    const canonical = await readFile(join(await skeletonDir(), 'gitignore'), 'utf-8');
     expect(await readFile(join(cwd, '.mini', '.gitignore'), 'utf-8')).toBe(canonical);
   });
 

@@ -67,7 +67,10 @@ export async function syncSkeleton(
 
   const files = entries.filter((e) => e.kind === 'file').sort((a, b) => a.relPath.localeCompare(b.relPath));
   for (const entry of files) {
-    const content = await readFile(join(root, entry.relPath), 'utf-8');
+    // Obsah čteme ze zdrojového souboru na disku (`srcRelPath`), ale do projektu
+    // zapisujeme pod cílovým jménem (`relPath`) — liší se u přejmenovaných
+    // souborů jako `gitignore` → `.gitignore` (viz assets.ts:FILE_RENAMES).
+    const content = await readFile(join(root, entry.srcRelPath), 'utf-8');
     const target = join(cwd, STATE_DIR, entry.relPath);
     const rel = join(STATE_DIR, entry.relPath);
 
