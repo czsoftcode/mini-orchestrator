@@ -1,7 +1,7 @@
 {
   "name": "mini-orchestrator",
   "version": "1.4.1",
-  "description": "Mini orchestrator nad Claude Code — drží stav projektu a posílá Claudovi jen to nejnutnější.",
+  "description": "Mini orchestrator on top of Claude Code — keeps the project state and sends Claude only the essentials.",
   "type": "module",
   "bin": {
     "mini": "dist/cli.js"

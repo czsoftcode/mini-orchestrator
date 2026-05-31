@@ -6,13 +6,13 @@ export async function ask<T extends string = string>(
 ): Promise<Answers<T>> {
   return basePrompts(questions, {
     onCancel: () => {
-      log.dim('Zrušeno.');
+      log.dim('Cancelled.');
       process.exit(130);
     },
   });
 }
 
-export function nonEmpty(label = 'Pole nesmí být prázdné.') {
+export function nonEmpty(label = 'Field must not be empty.') {
   return (value: string): true | string => {
     return value.trim().length > 0 ? true : label;
   };

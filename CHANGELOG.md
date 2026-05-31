@@ -8,6 +8,14 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **CLI help a UI hlášky přeloženy do angličtiny.** `mini --help`, popisy příkazů
+  a options, chybové/validační hlášky i runtime výstupy (`src/cli.ts`, `src/ui/*`)
+  jsou nově anglicky — nástroj míří na mezinárodní použití. Názvy příkazů, flagy,
+  `/mini:*` reference a cesty zůstávají beze změny. Aktualizováno i `package.json`
+  `description` a slovníček `docs/i18n-glossary.md` (nová sekce CLI/UI termínů).
+  Jazykové pravidlo v `CLAUDE.md` nově říká: celý program je anglicky, česky
+  zůstává jen chat a commity. (Runtime hlášky v `commands/*` a dalších modulech
+  se přeloží v navazujících fázích.)
 - **Interní prompty `next`/`plan`/`do` přeloženy do angličtiny.** Headless cesta
   (`mini next/plan/do` přes API) generuje instrukce pro Claude nově anglicky;
   response-kontrakt (`TITLE:`/`GOAL:`/`STEP:`) zůstává beze změny. Založen sdílený

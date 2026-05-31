@@ -387,6 +387,11 @@
       "id": 77,
       "title": "Překlad slash-command .md do AJ",
       "status": "done"
+    },
+    {
+      "id": 78,
+      "title": "Anglické CLI + UI hlášky",
+      "status": "done"
     }
   ],
   "models": {

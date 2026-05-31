@@ -1,13 +1,14 @@
 /**
- * Je aktuální proces napojený na interaktivní terminál (TTY)?
+ * Is the current process attached to an interactive terminal (TTY)?
  *
- * Auto mód se u bodů k ručnímu ověření ptá člověka i bez `--auto` promptu
- * (verify se záměrně neobchází). Jenže bez TTY (CI, pipe, chybějící terminál)
- * `prompts` vrátí `undefined` a odpověď se vyhodnotí jako `pass` — fáze by se
- * tiše zavřela bez skutečného ověření. Proto interaktivitu nejdřív zkontrolujeme
- * a v neinteraktivním prostředí se zachováme bezpečně (fázi nezavřeme).
+ * Auto mode asks a human at items for manual verification even without the
+ * `--auto` prompt (verify is intentionally never bypassed). But without a TTY
+ * (CI, pipe, missing terminal) `prompts` returns `undefined` and the answer is
+ * evaluated as `pass` — the phase would silently close without real
+ * verification. So we check interactivity first and behave safely in a
+ * non-interactive environment (we do not close the phase).
  *
- * Vyčleněno do vlastního modulu, aby šlo chování v testech mockovat.
+ * Extracted into its own module so the behavior can be mocked in tests.
  */
 export function isInteractive(): boolean {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY);

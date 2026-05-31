@@ -6,11 +6,26 @@
 
 - všech odpovědí v chatu (vysvětlení, otázky, shrnutí)
 - commit messages
-- chybových hlášek a logů v kódu (UI projektu už beztak je česky)
-- komentářů v kódu (když nějaké výjimečně napíšeš)
 
-Anglicky můžeš nechat:
+## Jazyk programu
+
+**Vše uvnitř programu je anglicky** — nástroj má být mezinárodní a veřejně k
+dispozici. Anglicky tedy piš:
+
+- UI texty, CLI help, výstupy a logy příkazů
+- chybové hlášky
+- komentáře a JSDoc v kódu
+
+Česky zůstává **jen** tento `CLAUDE.md` a naše komunikace v chatu + commit
+messages (viz výše).
+
+> Pozn.: Část kódu může být ještě česky — překlad probíhá postupně po fázích.
+> Když nějaký český text v programu potkáš, přelož ho do angličtiny.
+
+Beze změny (nepřekládá se):
 
 - identifikátory v kódu (názvy funkcí, proměnných, typů, soubory)
-- standardní technické termíny bez zaužívaného českého ekvivalentu (např. `Promise`, `snapshot test`, `parser`)
+- standardní technické termíny (`Promise`, `snapshot test`, `parser`, …)
 - citace cizích chybových hlášek a výstupů nástrojů
+- response-kontrakt parserů (`TITLE:`, `GOAL:`, `STEP:`, …) a stavová slova
+  (`done`/`doing`/`todo`/…)

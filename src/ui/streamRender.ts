@@ -5,19 +5,19 @@ import type { StreamEvent, ToolUse } from '../claude/stream.js';
 import { log } from './log.js';
 
 export interface StreamRenderer {
-  /** Předej této metodě každou událost ze streamu (volá ji `streamWithClaude` přes `onEvent`). */
+  /** Pass every stream event to this method (`streamWithClaude` calls it via `onEvent`). */
   onEvent: (event: StreamEvent) => void;
 }
 
 /**
- * Vytvoří renderer, který průběžně tiskne, co Claude právě dělá:
- * - "system-init" → krátká hlavička s modelem a pracovním adresářem,
- * - "assistant"   → text (zkrácený na první řádek) a každý použitý nástroj jako "→ Name argument",
- * - "user"        → jen chybné výsledky nástrojů (úspěšné jsou ticho — následuje další asistentův krok),
- * - "result"      → ignoruje (závěrečný souhrn vykreslí jiný kus UI),
- * - "unknown"     → ignoruje.
+ * Creates a renderer that prints, live, what Claude is currently doing:
+ * - "system-init" → a short header with the model and working directory,
+ * - "assistant"   → text (truncated to the first line) and each used tool as "→ Name argument",
+ * - "user"        → only failed tool results (successful ones are silent — the next assistant step follows),
+ * - "result"      → ignored (the final summary is rendered by another piece of UI),
+ * - "unknown"     → ignored.
  *
- * Renderer si drží stav (mapování id → název nástroje), proto jde o factory, ne čistou funkci.
+ * The renderer holds state (id → tool name mapping), so it is a factory, not a pure function.
  */
 export function createStreamRenderer(): StreamRenderer {
   const toolNamesById = new Map<string, string>();
@@ -34,8 +34,8 @@ export function createStreamRenderer(): StreamRenderer {
             parts.push(`cwd: ${event.cwd}`);
           }
           const detail = parts.length > 0 ? ` (${parts.join(', ')})` : '';
-          log.dim(`Claude session spuštěna${detail}.`);
-          // Prázdný řádek odděluje hlavičku session od proudu akcí, který následuje.
+          log.dim(`Claude session started${detail}.`);
+          // A blank line separates the session header from the stream of actions that follows.
           console.log();
           return;
         }
@@ -62,7 +62,7 @@ export function createStreamRenderer(): StreamRenderer {
               continue;
             }
             const name = result.toolUseId ? toolNamesById.get(result.toolUseId) : undefined;
-            const label = name ? `${name} selhal` : 'nástroj selhal';
+            const label = name ? `${name} failed` : 'tool failed';
             const tail = result.contentPreview ? `: ${shorten(result.contentPreview)}` : '';
             console.log(`${pc.red('  ↳')} ${label}${tail}`);
           }
@@ -98,7 +98,7 @@ function formatToolInput(tool: ToolUse): string {
   }
   const obj = tool.input as Record<string, unknown>;
 
-  // Pojmenované argumenty, které dávají nejlepší smysl pro běžné nástroje.
+  // Named arguments that make the most sense for common tools.
   const named =
     pickString(obj, 'file_path') ??
     pickString(obj, 'path') ??
@@ -112,7 +112,7 @@ function formatToolInput(tool: ToolUse): string {
     return shorten(named);
   }
 
-  // Jinak ukaž první stringovou hodnotu, ať máme aspoň něco.
+  // Otherwise show the first string value, so we have at least something.
   for (const value of Object.values(obj)) {
     if (typeof value === 'string' && value.length > 0) {
       return shorten(value);

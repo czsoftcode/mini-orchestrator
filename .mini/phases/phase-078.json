@@ -1,0 +1,39 @@
+{
+  "id": 78,
+  "title": "Anglické CLI + UI hlášky",
+  "goal": "Přeložit do angličtiny veřejně viditelnou runtime vrstvu: popisy příkazů/options a help v src/cli.ts a výstupní/interaktivní řetězce v src/ui/* (ask, interactive, streamRender, usage). Komentáře/JSDoc smí v této fázi zůstat česky (přijdou na řadu později). Ověřit přes mini --help a zelené npm test + build.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přeložit src/cli.ts do AJ",
+      "status": "done",
+      "detail": ".description příkazů, texty .option, validační/chybové hlášky (parseMaxTurns, parseBumpLevel, ensurePushHasBump, requireOption), renumber confirm + všechny komentáře/JSDoc. Beze změny: názvy příkazů, flagy, /mini:* reference, cesty, identifikátory."
+    },
+    {
+      "title": "Přeložit src/ui/* do AJ",
+      "status": "done",
+      "detail": "Runtime řetězce i komentáře v ask.ts (Zrušeno., default label), streamRender.ts (Claude session spuštěna, … selhal, nástroj selhal + JSDoc), usage.ts (tokenů, z cache, v API, Souhrn streamu + JSDoc), interactive.ts (JSDoc). pluralTurns zjednodušit na turn/turns."
+    },
+    {
+      "title": "Upravit UI testy na anglické řetězce",
+      "status": "done",
+      "detail": "streamRender.test.ts (asserty ř. 29, 68) a usage.test.ts (asserty ř. 39–42) přepsat na EN výstupy. Fixtury simulující Claudův text (Pracuji na tom, další řádek) nechat beze změny."
+    },
+    {
+      "title": "Přeložit meta soubory",
+      "status": "done",
+      "detail": "package.json description (konzistentní s root popisem v cli.ts), upravit jazykové pravidlo v CLAUDE.md (program anglicky; česky jen chat a commity), přepsat zastaralý předpoklad v docs/i18n-glossary.md a přidat sekci CLI/UI termínů."
+    },
+    {
+      "title": "Ověřit výstup a zelený build",
+      "status": "done",
+      "detail": "mini --help čte hezky anglicky; npm test i npm run build zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T14:44:27.829Z",
+  "completedAt": "2026-05-31T15:07:44.218Z",
+  "autoCommit": {
+    "preSha": "057530354ea6a95981156960962856bc767398e4",
+    "subject": "Fáze 78: Anglické CLI + UI hlášky"
+  }
+}

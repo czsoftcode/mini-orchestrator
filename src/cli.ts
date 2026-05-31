@@ -7,39 +7,39 @@ const program = new Command();
 function parseMaxTurns(value: string): number {
   const n = Number(value);
   if (!Number.isInteger(n) || n <= 0) {
-    throw new InvalidArgumentError('Musí to být celé kladné číslo (např. 5).');
+    throw new InvalidArgumentError('Must be a positive integer (e.g. 5).');
   }
   return n;
 }
 
 function parseBumpLevel(value: string): 'patch' | 'minor' | 'major' | 'none' {
   if (value !== 'patch' && value !== 'minor' && value !== 'major' && value !== 'none') {
-    throw new InvalidArgumentError('Musí být none, patch, minor nebo major.');
+    throw new InvalidArgumentError('Must be none, patch, minor or major.');
   }
   return value;
 }
 
 /**
- * `--push` je vydání, takže vyžaduje explicitní úroveň verze. Default `none`
- * (ani `--bump none`) s pushem nedává smysl — neměli bychom co otagovat. Hlášku
- * vypíšeme a ukončíme proces.
+ * `--push` is a release, so it requires an explicit version level. The default
+ * `none` (or `--bump none`) with push makes no sense — there would be nothing to
+ * tag. Print a message and exit the process.
  */
 function ensurePushHasBump(bump: string | undefined, push: boolean | undefined): void {
   if (push && (bump === undefined || bump === 'none')) {
-    console.error('Při --push musíš zvolit úroveň verze: --bump patch | minor | major.');
+    console.error('With --push you must choose a version level: --bump patch | minor | major.');
     process.exit(1);
   }
 }
 
-/** Sběrač pro opakovatelný `--file` u příkazu `map`. */
+/** Collector for the repeatable `--file` option of the `map` command. */
 function collectFile(value: string, previous: string[]): string[] {
   return [...previous, value];
 }
 
 /**
- * Vytáhne cestu editovaného souboru z hook JSON na stdin (PostToolUse Edit/Write).
- * Payload má tvar `{ tool_input: { file_path: "…" } }`. Cokoli nečitelného nebo
- * bez cesty → `null` (hook pak tiše no-opuje, nikdy neblokuje).
+ * Extracts the edited file path from the hook JSON on stdin (PostToolUse Edit/Write).
+ * The payload has the shape `{ tool_input: { file_path: "…" } }`. Anything unreadable
+ * or without a path → `null` (the hook then silently no-ops, never blocks).
  */
 async function readHookFilePath(): Promise<string | null> {
   let raw: string;
@@ -57,7 +57,7 @@ async function readHookFilePath(): Promise<string | null> {
   }
 }
 
-/** Přečte celý stdin do řetězce. Pro neinteraktivní `--apply` příkazy. */
+/** Reads the whole stdin into a string. For non-interactive `--apply` commands. */
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
   for await (const chunk of process.stdin) {
@@ -69,7 +69,7 @@ async function readStdin(): Promise<string> {
 function requireOption(value: string | undefined, flag: string): string {
   const v = (value ?? '').trim();
   if (v.length === 0) {
-    console.error(`Chybí povinný parametr ${flag}.`);
+    console.error(`Missing required option ${flag}.`);
     process.exit(1);
   }
   return v;
@@ -77,18 +77,18 @@ function requireOption(value: string | undefined, flag: string): string {
 
 program
   .name('mini')
-  .description('Mini orchestrátor nad Claude Code — drží stav projektu a posílá Claudovi jen to nejnutnější.')
+  .description('Mini orchestrator on top of Claude Code — keeps the project state and sends Claude only the essentials.')
   .version(readPackageVersion());
 
 program
   .command('init')
-  .description('Založí nový projekt v aktuálním adresáři.')
-  .option('--apply', 'Neinteraktivně založ projekt z flagů (bez otázek). Pro /mini:init.')
-  .option('--name <name>', 'Název projektu (s --apply; default název adresáře).')
-  .option('--what <what>', 'Co stavíš (s --apply).')
-  .option('--for-whom <forWhom>', 'Pro koho to je (s --apply).')
-  .option('--constraints <constraints>', 'Hlavní omezení (s --apply; volitelné).')
-  .option('--force', 'Přepiš existující projekt bez ptaní (s --apply).')
+  .description('Creates a new project in the current directory.')
+  .option('--apply', 'Non-interactively create the project from flags (no questions). For /mini:init.')
+  .option('--name <name>', 'Project name (with --apply; defaults to the directory name).')
+  .option('--what <what>', 'What you are building (with --apply).')
+  .option('--for-whom <forWhom>', 'Who it is for (with --apply).')
+  .option('--constraints <constraints>', 'Main constraints (with --apply; optional).')
+  .option('--force', 'Overwrite an existing project without asking (with --apply).')
   .action(
     async (opts: {
       apply?: boolean;
@@ -119,10 +119,10 @@ program
 
 program
   .command('next')
-  .description('Navrhne, co by mělo přijít jako další fáze.')
-  .option('--apply', 'Neinteraktivně ulož fázi z --title/--goal (bez Claude). Pro /mini:next.')
-  .option('--title <title>', 'Název nové fáze (s --apply).')
-  .option('--goal <goal>', 'Cíl nové fáze (s --apply).')
+  .description('Proposes what should come as the next phase.')
+  .option('--apply', 'Non-interactively save a phase from --title/--goal (no Claude). For /mini:next.')
+  .option('--title <title>', 'Title of the new phase (with --apply).')
+  .option('--goal <goal>', 'Goal of the new phase (with --apply).')
   .action(async (opts: { apply?: boolean; title?: string; goal?: string }) => {
     if (opts.apply) {
       const title = requireOption(opts.title, '--title');
@@ -138,8 +138,8 @@ program
 
 program
   .command('plan')
-  .description('Rozmění aktuální fázi na konkrétní kroky.')
-  .option('--apply', 'Neinteraktivně ulož kroky čtené ze stdin (jeden na řádek `title :: detail`, detail volitelný, bez Claude). Pro /mini:plan.')
+  .description('Breaks the current phase down into concrete steps.')
+  .option('--apply', 'Non-interactively save steps read from stdin (one per line `title :: detail`, detail optional, no Claude). For /mini:plan.')
   .action(async (opts: { apply?: boolean }) => {
     if (opts.apply) {
       const { applyPlanSteps, parseStepsFromStdin } = await import('./commands/plan.js');
@@ -154,11 +154,11 @@ program
 
 program
   .command('do')
-  .description('Spustí Claude Code na aktuální fázi nebo kroku.')
-  .option('--stream', 'Spustit Claude v neinteraktivním print-módu se streamovaným JSON výstupem (průběžně zobrazí aktuální akci, na konci shrne cenu a tokeny).')
-  .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
-  .option('--apply', 'Neinteraktivně označ fázi jako rozdělanou a založ .mini/run/ (bez Claude). Pro /mini:do.')
-  .option('--step-done <title>', 'S --apply: označ jeden krok aktuální fáze za hotový (průběžný zápis během /mini:do).')
+  .description('Runs Claude Code on the current phase or step.')
+  .option('--stream', 'Run Claude in non-interactive print mode with streamed JSON output (shows the current action live, summarizes cost and tokens at the end).')
+  .option('--max-turns <n>', 'Maximum number of Claude Code responses in the session — after N responses the session stops automatically (saves tokens).', parseMaxTurns)
+  .option('--apply', 'Non-interactively mark the phase as in progress and create .mini/run/ (no Claude). For /mini:do.')
+  .option('--step-done <title>', 'With --apply: mark one step of the current phase as done (live tracking during /mini:do).')
   .action(async (opts: { stream?: boolean; maxTurns?: number; apply?: boolean; stepDone?: string }) => {
     if (opts.apply) {
       if (opts.stepDone !== undefined) {
@@ -178,11 +178,11 @@ program
 
 program
   .command('done')
-  .description('Lidská verifikace — zeptá se, jestli to funguje, a posune stav.')
-  .option('--apply', 'Neinteraktivně posuň stav podle reportu (bez dotazů). Pro /mini:done.')
-  .option('--accept-verify', 'S --apply: body k ručnímu ověření ber jako odsouhlasené (verifikace proběhla v chatu).')
-  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: none | patch | minor | major (default none — verzi nenavyšovat). Při --push je povinný patch | minor | major.', parseBumpLevel)
-  .option('--push', 'Po commitu fáze pushnout na remote (git push). Vyžaduje --bump patch | minor | major.')
+  .description('Human verification — asks whether it works and moves the state forward.')
+  .option('--apply', 'Non-interactively move the state according to the report (no questions). For /mini:done.')
+  .option('--accept-verify', 'With --apply: treat items for manual verification as approved (verification happened in the chat).')
+  .option('--bump <level>', 'Version bump level in package.json when closing the phase: none | patch | minor | major (default none — do not bump). With --push patch | minor | major is required.', parseBumpLevel)
+  .option('--push', 'After committing the phase, push to the remote (git push). Requires --bump patch | minor | major.')
   .action(async (opts: { apply?: boolean; acceptVerify?: boolean; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean }) => {
     ensurePushHasBump(opts.bump, opts.push);
     if (opts.apply) {
@@ -201,10 +201,10 @@ program
 
 program
   .command('auto')
-  .description('Auto chain: next → plan → (do → done){pro každý krok}. Fázi dotáhne sám, ale u bodů k ručnímu ověření (verify) se zastaví a zeptá člověka — není to plně bezobslužný běh.')
-  .option('--max-turns <n>', 'Maximální počet odpovědí Claude Code v každé session — po N odpovědích se session automaticky zastaví (šetří tokeny).', parseMaxTurns)
-  .option('--bump <level>', 'Úroveň navýšení verze v package.json při uzavření fáze: none | patch | minor | major (default none — verzi nenavyšovat). Při --push je povinný patch | minor | major.', parseBumpLevel)
-  .option('--push', 'Po commitu fáze pushnout na remote (git push). Vyžaduje --bump patch | minor | major.')
+  .description('Auto chain: next → plan → (do → done){for each step}. Drives the phase on its own, but stops and asks a human at items for manual verification (verify) — it is not a fully unattended run.')
+  .option('--max-turns <n>', 'Maximum number of Claude Code responses in each session — after N responses the session stops automatically (saves tokens).', parseMaxTurns)
+  .option('--bump <level>', 'Version bump level in package.json when closing the phase: none | patch | minor | major (default none — do not bump). With --push patch | minor | major is required.', parseBumpLevel)
+  .option('--push', 'After committing the phase, push to the remote (git push). Requires --bump patch | minor | major.')
   .action(async (opts: { maxTurns?: number; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean }) => {
     ensurePushHasBump(opts.bump, opts.push);
     const { auto } = await import('./commands/auto.js');
@@ -213,7 +213,7 @@ program
 
 program
   .command('discuss')
-  .description('Otevře interaktivní session Claude Code zaměřenou na aktuální fázi — lze prodiskutovat záměr před plánováním.')
+  .description('Opens an interactive Claude Code session focused on the current phase — lets you discuss the intent before planning.')
   .action(async () => {
     const { discuss } = await import('./commands/discuss.js');
     await discuss();
@@ -221,7 +221,7 @@ program
 
 program
   .command('undo')
-  .description('Vrátí poslední změnu stavu o krok zpět.')
+  .description('Reverts the last state change by one step.')
   .action(async () => {
     const { undo } = await import('./commands/undo.js');
     await undo();
@@ -229,7 +229,7 @@ program
 
 program
   .command('status')
-  .description('Ukáže, kde se v projektu právě nacházíme.')
+  .description('Shows where we currently are in the project.')
   .action(async () => {
     const { status } = await import('./commands/status.js');
     await status();
@@ -238,9 +238,9 @@ program
 program
   .command('stop')
   .description(
-    'Založí kooperativní stop signál (.mini/STOP) — autonomní /mini:auto dokončí rozdělaný krok a čistě skončí. S --clear signál smaže.',
+    'Creates a cooperative stop signal (.mini/STOP) — an autonomous /mini:auto finishes the current step and exits cleanly. With --clear it removes the signal.',
   )
-  .option('--clear', 'Smaže stop signál místo jeho založení.')
+  .option('--clear', 'Removes the stop signal instead of creating it.')
   .action(async (opts: { clear?: boolean }) => {
     const { stop } = await import('./commands/stop.js');
     await stop({ clear: opts.clear });
@@ -248,7 +248,7 @@ program
 
 program
   .command('import-gsd')
-  .description('Jednorázový import rozdělaného GSD projektu z .planning/.')
+  .description('One-off import of an in-progress GSD project from .planning/.')
   .action(async () => {
     const { importGsd } = await import('./commands/import-gsd.js');
     await importGsd();
@@ -256,9 +256,9 @@ program
 
 program
   .command('migrate')
-  .description('Převede starý monolitický state.json (verze 1) na nový layout (.mini/phases/ + hlavička). Idempotentní — na už zmigrovaném stavu nedělá nic.')
-  .option('--renumber', 'Přečísluj fáze na souvislá celá čísla (1..N podle pořadí ve state.json) a sjednoť názvy souborů ve phases/discuss/run/memory na phase-XXX. Idempotentní.')
-  .option('--dry-run', 'S --renumber: jen vypiš náhled mapování a přejmenování, nic nezapisuj.')
+  .description('Converts the old monolithic state.json (version 1) to the new layout (.mini/phases/ + header). Idempotent — does nothing on an already migrated state.')
+  .option('--renumber', 'Renumber the phases to consecutive integers (1..N by their order in state.json) and unify file names in phases/discuss/run/memory to phase-XXX. Idempotent.')
+  .option('--dry-run', 'With --renumber: only print a preview of the mapping and renames, write nothing.')
   .action(async (opts: { renumber?: boolean; dryRun?: boolean }) => {
     if (opts.renumber) {
       const { renumber } = await import('./commands/renumber.js');
@@ -267,7 +267,7 @@ program
         const res = await ask({
           type: 'confirm',
           name: 'ok',
-          message: 'Provést přečíslování a přejmenování souborů?',
+          message: 'Perform the renumbering and file renaming?',
           initial: false,
         });
         return (res as { ok?: boolean }).ok === true;
@@ -283,7 +283,7 @@ program
 
 program
   .command('audit')
-  .description('Projde existující kód a vytvoří/aktualizuje .mini/codebase.md (přehled pro pozdější Claude session).')
+  .description('Goes through the existing code and creates/updates .mini/codebase.md (an overview for later Claude sessions).')
   .action(async () => {
     const { audit } = await import('./commands/audit.js');
     await audit();
@@ -291,22 +291,22 @@ program
 
 program
   .command('map')
-  .description('Přegeneruje strojovou mapu projektu do .mini/graph/ + index .mini/graph.json — exporty, importy a signatury TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby souborů.')
+  .description('Regenerates the machine-readable project map into .mini/graph/ + the index .mini/graph.json — exports, imports and signatures of TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby files.')
   .option(
-    '--file <cesta>',
-    'Inkrementálně přemapuj jen daný soubor (uzel + záznam v indexu), lze opakovat. Bez tohoto flagu proběhne plný rebuild.',
+    '--file <path>',
+    'Incrementally remap only the given file (node + index record), can be repeated. Without this flag a full rebuild runs.',
     collectFile,
     [],
   )
   .option(
     '--hook',
-    'Přečti cestu editovaného souboru z hook JSON na stdin (PostToolUse Edit/Write) a inkrementálně ji přemapuj. Tiše no-opuje, když payload cestu nemá.',
+    'Read the edited file path from the hook JSON on stdin (PostToolUse Edit/Write) and remap it incrementally. Silently no-ops when the payload has no path.',
   )
   .action(async (opts: { file: string[]; hook?: boolean }) => {
     const { map } = await import('./commands/map.js');
     if (opts.hook) {
       const fromHook = await readHookFilePath();
-      // Žádná cesta (jiný tool / nečitelný payload) → tiché no-op, ne plný rebuild.
+      // No path (different tool / unreadable payload) → silent no-op, not a full rebuild.
       if (!fromHook) return;
       await map([...opts.file, fromHook]);
       return;
@@ -316,7 +316,7 @@ program
 
 program
   .command('context <cmd> [args...]')
-  .description('Vypíše na stdout aktuální session prompt pro daný krok (next|discuss|plan|do|done). Slouží nativním /mini: slash commandům v Claude Code.')
+  .description('Prints the current session prompt for the given step (next|discuss|plan|do|done) to stdout. Serves the native /mini: slash commands in Claude Code.')
   .action(async (cmd: string, args: string[]) => {
     const { context } = await import('./commands/context.js');
     await context(cmd, args);
@@ -324,8 +324,8 @@ program
 
 program
   .command('update')
-  .description('Srovná negenerovanou část projektu na aktuální verzi mini: statický skeleton .mini/ (adresáře + .gitignore) a slash commandy .claude/commands/mini/*.md. Idempotentní — vytvoří chybějící, přepíše změněné, ostatní nechá.')
-  .option('--dry-run', 'Jen náhled — vypiš, co by se vytvořilo/změnilo, ale nic nezapisuj.')
+  .description('Brings the non-generated part of the project up to the current mini version: the static .mini/ skeleton (directories + .gitignore) and the slash commands .claude/commands/mini/*.md. Idempotent — creates the missing, overwrites the changed, leaves the rest.')
+  .option('--dry-run', 'Preview only — print what would be created/changed, but write nothing.')
   .action(async (opts: { dryRun?: boolean }) => {
     const { update } = await import('./commands/update.js');
     const r = await update(process.cwd(), { dryRun: opts.dryRun });
@@ -334,7 +334,7 @@ program
 
 program
   .command('install-commands')
-  .description('Vygeneruje .claude/commands/mini/*.md (slash commandy /mini:*) do aktuálního projektu. Idempotentní — lze pustit opakovaně.')
+  .description('Generates .claude/commands/mini/*.md (the /mini:* slash commands) into the current project. Idempotent — can be run repeatedly.')
   .action(async () => {
     const { installCommands } = await import('./commands/install-commands.js');
     await installCommands();
@@ -342,7 +342,7 @@ program
 
 program
   .command('model [scope] [name]')
-  .description('Model pro projekt. Příklady: "mini model" (interaktivně), "mini model show", "mini model sonnet" (default), "mini model do opus", "mini model do default" (zruší override), "mini model reset".')
+  .description('Model for the project. Examples: "mini model" (interactive), "mini model show", "mini model sonnet" (default), "mini model do opus", "mini model do default" (clears the override), "mini model reset".')
   .action(async (scope?: string, name?: string) => {
     const { model } = await import('./commands/model.js');
     await model(scope, name);

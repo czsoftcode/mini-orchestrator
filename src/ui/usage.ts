@@ -12,22 +12,22 @@ export function logUsage(response: AskResult): void {
   const total = u.inputTokens + u.outputTokens + u.cacheCreationTokens + u.cacheReadTokens;
 
   const parts: string[] = [];
-  parts.push(`${formatTokens(total)} tokenů`);
+  parts.push(`${formatTokens(total)} tokens`);
   parts.push(`${u.outputTokens.toLocaleString()} output`);
   if (u.cacheReadTokens > 0) {
-    parts.push(`${formatTokens(u.cacheReadTokens)} z cache`);
+    parts.push(`${formatTokens(u.cacheReadTokens)} from cache`);
   }
   if (response.costUsd !== undefined && response.costUsd > 0) {
-    parts.push(`~$${response.costUsd.toFixed(3)} v API`);
+    parts.push(`~$${response.costUsd.toFixed(3)} in API`);
   }
   log.dim(`  (${parts.join(' · ')})`);
 }
 
 /**
- * Závěrečný souhrn po doběhnutí Claude streamu (`mini do --stream`).
- * Vypíše dobu trvání, počet odpovědí, tokeny a cenu — vše, co je k dispozici.
- * Když výsledek neobsahuje žádné metriky (např. proces spadl dřív, než došlo k `result`),
- * tiše nic netiskne, aby uživatele nezatěžoval prázdným řádkem.
+ * Final summary after the Claude stream finishes (`mini do --stream`).
+ * Prints the duration, number of turns, tokens and cost — everything available.
+ * When the result contains no metrics (e.g. the process crashed before a `result`),
+ * it prints nothing silently, so it does not bother the user with an empty line.
  */
 export function logStreamSummary(result: StreamResult): void {
   const parts: string[] = [];
@@ -41,23 +41,23 @@ export function logStreamSummary(result: StreamResult): void {
   if (result.usage) {
     const u = result.usage;
     const total = u.inputTokens + u.outputTokens + u.cacheCreationTokens + u.cacheReadTokens;
-    parts.push(`${formatTokens(total)} tokenů`);
+    parts.push(`${formatTokens(total)} tokens`);
     parts.push(`${u.outputTokens.toLocaleString()} output`);
     if (u.cacheReadTokens > 0) {
-      parts.push(`${formatTokens(u.cacheReadTokens)} z cache`);
+      parts.push(`${formatTokens(u.cacheReadTokens)} from cache`);
     }
   }
   if (result.costUsd !== undefined && result.costUsd > 0) {
-    parts.push(`~$${result.costUsd.toFixed(3)} v API`);
+    parts.push(`~$${result.costUsd.toFixed(3)} in API`);
   }
 
   if (parts.length === 0) {
     return;
   }
-  // Souhrn musí jasně vystoupit z proudu akcí výše — proto bold label oddělený
-  // od (tlumených) metrik. Volající (`mini do --stream`) před tím tiskne prázdný
-  // řádek, takže blok je opticky oddělený od poslední akce.
-  console.log(`${pc.bold('Souhrn streamu')} ${pc.dim('·')} ${pc.dim(parts.join(' · '))}`);
+  // The summary must clearly stand out from the stream of actions above — hence a
+  // bold label separated from the (dimmed) metrics. The caller (`mini do --stream`)
+  // prints a blank line before this, so the block is visually separated from the last action.
+  console.log(`${pc.bold('Stream summary')} ${pc.dim('·')} ${pc.dim(parts.join(' · '))}`);
 }
 
 function formatTokens(n: number): string {
@@ -81,7 +81,5 @@ function formatDuration(ms: number): string {
 }
 
 function pluralTurns(n: number): string {
-  if (n === 1) return 'odpověď';
-  if (n >= 2 && n <= 4) return 'odpovědi';
-  return 'odpovědí';
+  return n === 1 ? 'turn' : 'turns';
 }

@@ -16,12 +16,12 @@ describe('logStreamSummary', () => {
     vi.restoreAllMocks();
   });
 
-  it('netiskne nic, když výsledek nemá žádné metriky', () => {
+  it('prints nothing when the result has no metrics', () => {
     logStreamSummary({ exitCode: 0 } satisfies StreamResult);
     expect(logs).toHaveLength(0);
   });
 
-  it('vypíše souhrn s jasným labelem oddělitelným od proudu akcí', () => {
+  it('prints a summary with a clear label separable from the stream of actions', () => {
     logStreamSummary({
       exitCode: 0,
       durationMs: 12_345,
@@ -36,10 +36,10 @@ describe('logStreamSummary', () => {
     });
     expect(logs).toHaveLength(1);
     const line = logs[0]!;
-    expect(line).toContain('Souhrn streamu');
-    expect(line).toContain('3 odpovědi');
+    expect(line).toContain('Stream summary');
+    expect(line).toContain('3 turns');
     expect(line).toContain('output');
-    expect(line).toContain('z cache');
+    expect(line).toContain('from cache');
     expect(line).toContain('$0.012');
   });
 });

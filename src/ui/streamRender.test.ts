@@ -21,17 +21,17 @@ describe('createStreamRenderer', () => {
     for (const e of events) r.onEvent(e);
   }
 
-  it('hlavičku session odděluje prázdným řádkem od proudu akcí', () => {
+  it('separates the session header from the stream of actions with a blank line', () => {
     feed([
       { kind: 'system-init', model: 'claude-x', cwd: '/tmp/p', raw: {} },
     ]);
     expect(logs).toHaveLength(2);
-    expect(logs[0]).toContain('Claude session spuštěna');
+    expect(logs[0]).toContain('Claude session started');
     expect(logs[0]).toContain('claude-x');
     expect(logs[1]).toBe('');
   });
 
-  it('vypíše náhled textu a každý použitý nástroj s argumentem', () => {
+  it('prints a text preview and each used tool with its argument', () => {
     feed([
       {
         kind: 'assistant',
@@ -47,7 +47,7 @@ describe('createStreamRenderer', () => {
     expect(joined).toContain('/a/b.ts');
   });
 
-  it('z výsledků nástrojů hlásí jen chyby (úspěch je ticho)', () => {
+  it('reports only errors from tool results (success is silent)', () => {
     feed([
       {
         kind: 'assistant',
@@ -65,12 +65,12 @@ describe('createStreamRenderer', () => {
       },
     ]);
     const joined = logs.join('\n');
-    expect(joined).toContain('Bash selhal');
+    expect(joined).toContain('Bash failed');
     expect(joined).toContain('command not found');
     expect(joined).not.toContain('ok');
   });
 
-  it('result a unknown události ignoruje', () => {
+  it('ignores result and unknown events', () => {
     feed([
       { kind: 'result', raw: {} },
       { kind: 'unknown', type: 'whatever', raw: {} },
