@@ -1,238 +1,239 @@
 # Changelog
 
-Všechny podstatné změny v tomto projektu jsou zaznamenány zde. Formát vychází
-z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
-[sémantické verzování](https://semver.org/lang/cs/).
+All notable changes to this project are recorded here. The format is based on
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
+[semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
 ### Added
 
-- **Paměť fáze (`.mini/memory/phase-XXX.md`) se generuje anglicky.** Generátor
-  `buildPhaseMemoryMarkdown` píše nově anglické nadpisy (`# Phase`, `**Goal:**`,
-  `## Steps`, `## User's note`, `## Auto-commit`, `## Discussion`) a stavy kroků
-  `done/doing/todo/skipped`. Shrnutí pro prompt `next` (`summarizeMemoryForNext`)
-  čte anglickou i **starší českou** paměť (existující archiv se nerozbije).
-  `phase-XXX.json` beze změny.
-- **Hlášky utility příkazů přeloženy do angličtiny.** Runtime výstupy příkazů
+- **`README.md` and `CHANGELOG.md` translated to English.** Both public docs are now
+  fully English, keeping the code blocks, command/flag names, paths, links and the
+  Keep a Changelog structure; the README's internal anchor links were updated to the
+  new English heading slugs. From now on, new `CHANGELOG.md` entries (phase records via
+  `/mini:done`) are written in English — the convention is noted in `CLAUDE.md`.
+- **The phase memory (`.mini/memory/phase-XXX.md`) is generated in English.** The
+  `buildPhaseMemoryMarkdown` generator now writes English headings (`# Phase`,
+  `**Goal:**`, `## Steps`, `## User's note`, `## Auto-commit`, `## Discussion`) and
+  the step statuses `done/doing/todo/skipped`. The summary for the `next` prompt
+  (`summarizeMemoryForNext`) reads both English and **older Czech** memory (the
+  existing archive is not broken). `phase-XXX.json` unchanged.
+- **The utility command messages are translated to English.** The runtime output of
   `mini status / undo / init / import-gsd / model / stop / map / audit / update /
-  install-commands / migrate / migrate --renumber` jsou nově anglicky (labely
-  fází `[done]`/`[doing]`/…, nápovědy „Next: …", logy o vytvořených/změněných
-  souborech apod.). `mini init` a `mini import-gsd` nově zakládají `project.md`
-  s anglickými nadpisy (`## What I'm building` / `## Who it's for` /
-  `## Main constraints`); `mini status` přitom čte i starší české project.md.
-  Názvy příkazů, flagy, `/mini:*` reference a cesty beze změny. (Lifecycle
-  příkazy, paměť/reporty a graph mappery přijdou v navazujících fázích.)
-- **CLI help a UI hlášky přeloženy do angličtiny.** `mini --help`, popisy příkazů
-  a options, chybové/validační hlášky i runtime výstupy (`src/cli.ts`, `src/ui/*`)
-  jsou nově anglicky — nástroj míří na mezinárodní použití. Názvy příkazů, flagy,
-  `/mini:*` reference a cesty zůstávají beze změny. Aktualizováno i `package.json`
-  `description` a slovníček `docs/i18n-glossary.md` (nová sekce CLI/UI termínů).
-  Jazykové pravidlo v `CLAUDE.md` nově říká: celý program je anglicky, česky
-  zůstává jen chat a commity. (Runtime hlášky v `commands/*` a dalších modulech
-  se přeloží v navazujících fázích.)
-- **Interní prompty `next`/`plan`/`do` přeloženy do angličtiny.** Headless cesta
-  (`mini next/plan/do` přes API) generuje instrukce pro Claude nově anglicky;
-  response-kontrakt (`TITLE:`/`GOAL:`/`STEP:`) zůstává beze změny. Založen sdílený
-  slovníček překladu `docs/i18n-glossary.md` jako opora pro další fáze. (Interaktivní
-  slash-command cesta a sdílená nápověda ke grafu se přeloží v navazujících fázích.)
-- **Prompty `audit` a import GSD přeloženy do angličtiny.** Audit teď generuje
-  `.mini/codebase.md` s anglickými nadpisy sekcí (Overview / Directory structure /
-  Key modules / Technologies); import GSD má anglickou prózu. Strojové kontrakty
-  (`NAME:`/`WHAT:`/`FOR_WHOM:`/`CONSTRAINTS:`/`PHASES:` i stavová slova) zůstávají beze změny.
-- **Prompty pro zápis paměti a autonomní (`auto`) běh přeloženy do angličtiny.**
-  Memory prompt i auto session prompt (a tím i interaktivní `/mini:do` / `/mini:auto`)
-  jsou nově anglicky. Strojový kontrakt YAML reportu (`phase`/`verdict`/`steps`/
-  `status`/`verify` + jejich hodnoty) zůstává beze změny.
-- **Překlad instrukcí dokončen — všechny prompty jsou anglicky.** Přeloženy
-  i interaktivní session prompty (`/mini:next`, `/mini:plan`, `/mini:done`,
-  `/mini:verify`), `discuss` prompt a sdílená nápověda ke grafu. Šablona diskuzních
-  poznámek i sekce „Verify findings" jsou anglicky a summarizer `last-memory` je
-  rozpoznává (česká paměť z dřívějška se chytá dál). Sdílený slovníček je
-  v `docs/i18n-glossary.md`.
-- **Slash-command soubory `/mini:*` přeloženy do angličtiny.** Popisy i těla
-  generovaných `.claude/commands/mini/*.md` (zdroj `install-commands.ts`) jsou
-  nově anglicky vč. autonomního `auto`. Příkazy, flagy a `$ARGUMENTS` beze změny;
-  logy CLI zůstávají české.
-- **`/mini:auto --discuss`** — flag vynutí krok `discuss` v každé fázi běhu
-  (analogicky k `--verify`). Bez něj se `discuss` spouští jen podmíněně u složitých fází.
-- **Verify v autonomním `/mini:auto`** — cyklus teď mezi `do` a `done` spustí krok
-  `verify` u **UI/UX fází** (Claude posoudí z cíle/kroků/reportu). Nový flag
-  **`--verify`** ho vynutí v každé fázi. Nálezy se zapíšou do reportu (a tím i do
-  paměti) a případné problémy se opraví ještě v téže fázi před uzavřením.
+  install-commands / migrate / migrate --renumber` is now English (phase labels
+  `[done]`/`[doing]`/…, the "Next: …" hints, logs about created/changed files, etc.).
+  `mini init` and `mini import-gsd` now create `project.md` with English headings
+  (`## What I'm building` / `## Who it's for` / `## Main constraints`); `mini status`
+  still reads older Czech project.md too. Command names, flags, `/mini:*` references
+  and paths unchanged. (Lifecycle commands, memory/reports and the graph mappers come
+  in the following phases.)
+- **CLI help and UI messages translated to English.** `mini --help`, command and
+  option descriptions, error/validation messages and runtime output (`src/cli.ts`,
+  `src/ui/*`) are now English — the tool is aiming at international use. Command names,
+  flags, `/mini:*` references and paths stay unchanged. `package.json` `description`
+  and the glossary `docs/i18n-glossary.md` (a new CLI/UI terms section) were updated
+  too. The language rule in `CLAUDE.md` now says: the whole program is English, only
+  the chat and commits stay Czech. (Runtime messages in `commands/*` and other modules
+  will be translated in the following phases.)
+- **The internal `next`/`plan`/`do` prompts translated to English.** The headless path
+  (`mini next/plan/do` via the API) now generates the instructions for Claude in
+  English; the response contract (`TITLE:`/`GOAL:`/`STEP:`) stays unchanged. A shared
+  translation glossary `docs/i18n-glossary.md` was created as a basis for the next
+  phases. (The interactive slash-command path and the shared graph hint will be
+  translated in the following phases.)
+- **The `audit` and GSD import prompts translated to English.** Audit now generates
+  `.mini/codebase.md` with English section headings (Overview / Directory structure /
+  Key modules / Technologies); the GSD import has English prose. The machine contracts
+  (`NAME:`/`WHAT:`/`FOR_WHOM:`/`CONSTRAINTS:`/`PHASES:` and the status words) stay unchanged.
+- **The memory-writing and autonomous (`auto`) run prompts translated to English.**
+  The memory prompt and the auto session prompt (and thus the interactive
+  `/mini:do` / `/mini:auto`) are now English. The machine contract of the YAML report
+  (`phase`/`verdict`/`steps`/`status`/`verify` + their values) stays unchanged.
+- **Instruction translation completed — all prompts are English.** The interactive
+  session prompts (`/mini:next`, `/mini:plan`, `/mini:done`, `/mini:verify`), the
+  `discuss` prompt and the shared graph hint were translated too. The discussion
+  notes template and the "Verify findings" section are English and the `last-memory`
+  summarizer recognizes them (older Czech memory is still caught). The shared glossary
+  is in `docs/i18n-glossary.md`.
+- **The `/mini:*` slash-command files translated to English.** The descriptions and
+  bodies of the generated `.claude/commands/mini/*.md` (source `install-commands.ts`)
+  are now English including the autonomous `auto`. Commands, flags and `$ARGUMENTS`
+  unchanged; the CLI logs stayed Czech.
+- **`/mini:auto --discuss`** — the flag forces the `discuss` step in every phase of the
+  run (analogous to `--verify`). Without it, `discuss` runs only conditionally for hard phases.
+- **Verify in the autonomous `/mini:auto`** — the cycle now runs the `verify` step
+  between `do` and `done` for **UI/UX phases** (Claude judges from the goal/steps/report).
+  A new flag **`--verify`** forces it in every phase. The findings are written into the
+  report (and thus into memory) and any problems are fixed within the same phase before closing.
 
 ### Changed
 
-- **`mini done` commitne fázi v jednom commitu — po `done` ve worktree nic nevisí.**
-  Memory záznam, přegenerovaný graf i finální `state.json` (posun na `done`) vznikají
-  nově **před** commitem, takže je `git add -A` pobere do jediného commitu fáze.
-  Dřív se commitovalo dřív a tyhle artefakty zůstávaly viset do další fáze.
-  `mini undo` identifikuje commit fáze přes `preSha` (`HEAD^ === preSha`) místo
-  vlastního sha — ten se do commitnutého stavu už neukládá (závisel by sám na sobě;
-  starší fáze ho v `state.json` mají dál, zpětná kompatibilita zachována).
-- **`mini verify` / `/mini:verify` už není read-only** — po kontrole zapíše nálezy
-  do run reportu (`## Nálezy z verify`), odkud se přes report dostanou i do paměti;
-  u už uzavřené fáze je připíše i přímo do memory souboru. Stav fáze dál neposouvá.
-- **README sjednocen se skutečným stavem nástroje.** Doplněny chybějící příkazy
-  (`mini stop`/`migrate`/`update`) i verzování/CHANGELOG/tag u `done`; strom
-  `.mini/` aktualizován na layout v2 (`phases/`, `graph.json` + `graph/`); opraven
-  popis memory (soubor `phase-{id}.md` bez timestampu, `last-memory.md` je krátké
-  shrnutí, ne symlink).
+- **`mini done` commits the phase in a single commit — nothing dangles in the worktree
+  after `done`.** The memory record, the regenerated graph and the final `state.json`
+  (the move to `done`) are now created **before** the commit, so `git add -A` picks them
+  up into a single phase commit. Previously the commit happened earlier and these artifacts
+  dangled until the next phase. `mini undo` identifies the phase commit via `preSha`
+  (`HEAD^ === preSha`) instead of its own sha — that one is no longer stored in the
+  committed state (it would depend on itself; older phases still have it in `state.json`,
+  backward compatibility preserved).
+- **`mini verify` / `/mini:verify` is no longer read-only** — after the review it writes
+  the findings into the run report (`## Verify findings`), from where they reach memory
+  through the report too; for an already closed phase it also appends them directly to the
+  memory file. It still does not move the phase state.
+- **README unified with the actual state of the tool.** Missing commands were added
+  (`mini stop`/`migrate`/`update`) along with the versioning/CHANGELOG/tag for `done`;
+  the `.mini/` tree was updated to layout v2 (`phases/`, `graph.json` + `graph/`); the
+  memory description was fixed (the `phase-{id}.md` file without a timestamp,
+  `last-memory.md` is a short summary, not a symlink).
 
 ### Fixed
 
-- **Po instalaci z npm `mini init` zakládá `.mini/.gitignore`.** Skeleton drží
-  gitignore pod npm-safe jménem `gitignore` (bez tečky) — `npm publish` totiž
-  soubory `.gitignore` z tarballu vyřazuje, takže na novém počítači ve skeletonu
-  chyběl a `mini init`/`mini update` ho do projektu nezaložily. Do projektu se
-  i nadále zapisuje jako `.gitignore` (přejmenování řeší `assets.ts:FILE_RENAMES`).
+- **After an npm install, `mini init` creates `.mini/.gitignore`.** The skeleton keeps
+  the gitignore under the npm-safe name `gitignore` (no dot) — `npm publish` excludes
+  `.gitignore` files from the tarball, so on a fresh machine it was missing from the
+  skeleton and `mini init`/`mini update` did not create it in the project. It is still
+  written into the project as `.gitignore` (the rename is handled by
+  `assets.ts:FILE_RENAMES`).
 
 ## [1.4.0] - 2026-05-30
 
 ### Added
 
-- **`mini verify` / `/mini:verify`** — hloubková UI/UX kontrola fáze člověkem.
-  Claude tě interaktivně provede vizuální/UX kontrolou (připraví scénu, projde
-  `verify` body z reportu, doplní širší UX procházku a posbírá nálezy). Cílí na
-  aktuální fázi, jinak na poslední uzavřenou. Je **read-only** — stav neposouvá,
-  to zůstává na `done`.
-- **`mini stop`** — kooperativní zastavení autonomního `/mini:auto`. Založí signál
-  `.mini/STOP` (z druhého terminálu); běžící `/mini:auto` ho na hranicích kroků
-  přečte, dokončí rozdělaný krok, zapíše report a čistě skončí. `mini stop --clear`
-  signál smaže. Obě varianty jsou idempotentní.
-- **Autonomní `/mini:auto`** — slash command teď dotáhne víc fází za sebou
-  (`next → discuss(podmíněně) → plan → do → done → opakuj`) s `--max-phases N`
-  (default 1) a `--yolo`. Zastaví se a zeptá u kroků vyžadujících člověka (`next`,
-  `discuss`, body k ručnímu ověření v `done`), u `do` běží tiše (nepřevypráví
-  editace). Kooperativní stop háčky (`.mini/STOP`) čte na hranicích kroků — signál
-  zakládá `mini stop` (viz výše).
-- **`.claude/settings.json`** s allowlistem (`mini:*`, build/test, git), aby
-  autonomní běh neotravoval s potvrzováním příkazů.
-- **`mini map --file <cesta>`** — inkrementální update grafu: přemapuje jen jeden
-  soubor (uzel `.mini/graph/<cesta>.md` + záznam v `graph.json`, atomicky přes
-  tmp+rename, se zachováním pořadí) místo plného rebuildu. Lze opakovat pro víc
-  souborů. Zmizelý soubor odebere uzel i záznam; nemapovatelné přípony a ignorované
-  adresáře jsou no-op; chybějící index spadne na plný build. Protože uzly grafu jsou
-  per-file, výsledek je identický s plným rebuildem dotčeného souboru.
-- **`mini map --hook`** — pro autonomní režim: přečte cestu editovaného souboru
-  z PostToolUse hook JSON na stdin a inkrementálně ji přemapuje (bez závislosti na
-  `jq`). Bez cesty tiše no-opuje. README popisuje snippet do `.claude/settings.json`,
-  který po každém `Edit`/`Write` drží graf čerstvý; `mini init` na něj upozorní.
-- **`/mini:init`** — inicializace projektu přímo z Claude Code: slash command se
-  v session zeptá na čtyři věci (název, co stavíš, pro koho, omezení), uloží projekt
-  přes nové neinteraktivní `mini init --apply --name/--what/--for-whom/--constraints
-  [--force]` a podle obsahu adresáře nabídne další kroky — u existujícího kódu
-  `/mini:map` a `/mini:audit`, jinak `/mini:next`.
-- **`/mini:audit`** — slash command, který pustí `mini audit` (přehled existující
-  codebase do `.mini/codebase.md`) přímo z Claude Code.
+- **`mini verify` / `/mini:verify`** — an in-depth UI/UX review of the phase by a human.
+  Claude interactively guides you through a visual/UX review (sets the scene, goes through
+  the `verify` items from the report, adds a broader UX walkthrough and collects findings).
+  It targets the current phase, otherwise the last closed one. It is **read-only** — it does
+  not move the state, that stays with `done`.
+- **`mini stop`** — a cooperative stop of the autonomous `/mini:auto`. It creates the signal
+  `.mini/STOP` (from a second terminal); a running `/mini:auto` reads it at the step boundaries,
+  finishes the current step, writes a report and exits cleanly. `mini stop --clear` removes the
+  signal. Both variants are idempotent.
+- **The autonomous `/mini:auto`** — the slash command now completes several phases in a row
+  (`next → discuss(conditionally) → plan → do → done → repeat`) with `--max-phases N`
+  (default 1) and `--yolo`. It stops and asks at the steps that require a human (`next`,
+  `discuss`, the items for manual verification in `done`), and runs quietly for `do` (it does
+  not retell the edits). It reads the cooperative stop hooks (`.mini/STOP`) at the step
+  boundaries — the signal is created by `mini stop` (see above).
+- **`.claude/settings.json`** with an allowlist (`mini:*`, build/test, git), so the
+  autonomous run does not bother you with command confirmations.
+- **`mini map --file <path>`** — an incremental graph update: it remaps just one file (the
+  node `.mini/graph/<path>.md` + the record in `graph.json`, atomically via tmp+rename,
+  preserving order) instead of a full rebuild. Can be repeated for several files. A disappeared
+  file removes the node and the record; non-mappable extensions and ignored directories are a
+  no-op; a missing index falls back to a full build. Because the graph nodes are per-file, the
+  result is identical to a full rebuild of the affected file.
+- **`mini map --hook`** — for autonomous mode: it reads the edited file path from the PostToolUse
+  hook JSON on stdin and remaps it incrementally (no dependency on `jq`). Without a path it
+  silently no-ops. The README describes a snippet for `.claude/settings.json` that keeps the
+  graph fresh after every `Edit`/`Write`; `mini init` points to it.
+- **`/mini:init`** — project initialization directly from Claude Code: the slash command asks in
+  the session for four things (name, what you're building, for whom, constraints), saves the
+  project via the new non-interactive `mini init --apply --name/--what/--for-whom/--constraints
+  [--force]` and, based on the directory content, offers the next steps — for existing code
+  `/mini:map` and `/mini:audit`, otherwise `/mini:next`.
+- **`/mini:audit`** — a slash command that runs `mini audit` (an overview of the existing
+  codebase into `.mini/codebase.md`) directly from Claude Code.
 
 ## [1.3.0] - 2026-05-30
 
 ### Added
 
-- **`mini update`** — srovná negenerovanou část projektu na aktuální verzi mini:
-  statický skeleton `.mini/` (adresáře + `.gitignore`) a slash commandy
-  `.claude/commands/mini/*.md`. Idempotentní — vytvoří chybějící, přepíše změněné
-  (skeleton soubory jsou mini-owned), ostatní nechá beze změny a vypíše souhrn.
-  `--dry-run` ukáže náhled bez zápisu. Skeleton žije jako shipovaný asset
-  (`assets/skeleton/` → `dist/skeleton`) a je jediný zdroj pravdy: čerpá z něj
-  i `mini init` a snadno se rozšiřuje o další statické soubory.
-- **`mini migrate --renumber`** — přečísluje fáze na souvislá celá čísla
-  (1..N podle pořadí ve `state.json`) a sjednotí názvy souborů ve všech čtyřech
-  adresářích (`phases/`, `discuss/`, `run/`, `memory/`) na kanonický `phase-XXX`.
-  Narovná projekty se smíšeným/legacy číslováním (např. desetinná „opravná" id
-  `1.1`…`28.1` vedle celých). Zvládá různá stará schémata názvů (paddované
-  i nepaddované, `.prev.md`, memory s timestampem). Idempotentní; `--dry-run`
-  ukáže náhled mapování bez zápisu, jinak se před změnou ptá na potvrzení.
-  Orphany (soubory bez záznamu ve stavu) nechává být s varováním, při kolizi
-  cílových názvů se zastaví, aby nic nepřepsal.
-- Mapa znalostního grafu nově podporuje **Ruby** (`.rb`): vytáhnou se importy
-  (`require` i `require_relative`, vč. závorkové formy) a top-level deklarace —
-  `def` (se signaturou parametrů vč. splat `*`/`**`, keyword `key:`, default
-  hodnot, `&block` i endless metod `def x = …`) a typy `class` (kind `class`)
-  a `module` (kind `module`). Default viditelnost je `public`; holé
-  `private`/`protected` i `private def …` skryjí následující členy. Viditelné
-  instanční i třídní metody (`def self.x`) a atributy
-  (`attr_reader`/`attr_writer`/`attr_accessor`) se připojí k typu s kotvami na
-  řádky. Komentáře (`#` i blokové `=begin`/`=end`) a stringy se ignorují.
-  Projekt se rozpozná i podle `Gemfile`.
-- Mapa znalostního grafu nově podporuje **Swift** (`.swift`): vytáhnou se
-  importy (vč. submodulů `import Foo.Bar` a kindových `import struct Foo.Bar`)
-  a top-level deklarace — `func` (se signaturou parametrů, default hodnot,
-  variadik `Int...`, generik, `async`/`throws` i `where` klauzule) a typy
-  `class`/`struct`/`enum`/`protocol`/`extension`/`actor`. Default viditelnost je
-  `internal`; `private`/`fileprivate` se vynechá (`private(set)` zůstává
-  viditelné). Viditelné metody se připojí k typu s kotvami na řádky,
-  `static`/`class func` jsou označené. Komentáře (vč. **vnořených** block
-  komentářů), doc komentáře i stringy (vč. víceřádkových `"""…"""` a raw
-  `#"…"#`) se korektně ignorují. Projekt se rozpozná i podle `Package.swift`.
-- Mapa znalostního grafu nově podporuje **Kotlin** (`.kt`/`.kts`): vytáhnou se
-  importy (vč. wildcard `import a.b.*` a aliasů `import a.b.C as D`) a top-level
-  deklarace — `fun` (se signaturou parametrů, default hodnot, `vararg`, generik
-  i extension receiveru) a typy `class`/`interface`/`object`/`enum class`/
-  `data class`/`sealed class|interface`/`annotation class`. Default viditelnost
-  je `public`; `private`/`internal` se vynechá. Viditelné metody se připojí
-  k typu s kotvami na řádky. Komentáře (vč. **vnořených** block komentářů), KDoc,
-  char literály i stringy (vč. raw `"""…"""`) se korektně ignorují. Projekt se
-  rozpozná i podle `build.gradle.kts`.
-- Mapa znalostního grafu nově podporuje **C#** (`.cs`): vytáhnou se usingy
-  (`using`, `using static`, `global using` i aliasy `using Foo = A.B`) a top-level
-  typy uvnitř `namespace` (block i file-scoped) — `class`/`struct`/`interface`/
-  `enum`/`record` (vč. `record class`/`record struct`), s `public`/`internal`
-  metodami (signatury parametrů vč. `params`, default hodnot a `static`)
-  připojenými k typu a kotvami na řádky. Komentáře, XML doc, char literály
-  i stringy ve všech variantách (verbatim `@"…"`, interpolované `$"…"`, raw
-  `"""…"""`) se korektně ignorují. Projekt se rozpozná i podle `*.sln`/`*.csproj`.
-- `mini done`/`mini auto`: volba `--bump none` — uzavře fázi bez navýšení verze
-  (vhodné pro dílčí fáze, kde se verze zvedne až na konci celku).
-- Mapa znalostního grafu nově podporuje **Javu** (`.java`): z tříd se vytáhnou
-  importy (`import`, `import static` i wildcard `import a.b.*`) a top-level typy —
-  `class`/`interface`/`enum`/`record`/`@interface` deklarované jako `public`/`protected`,
-  s `public`/`protected` metodami (vč. signatur parametrů, varargs a `static`)
-  připojenými k typu a kotvami na řádky. Komentáře, javadoc, stringy i text bloky
-  (`"""…"""`) se korektně ignorují. Projekt se rozpozná i podle `pom.xml` nebo
-  `build.gradle`(`.kts`).
-- Mapa znalostního grafu nově podporuje **Go** (`.go`): z balíčku se vytáhnou
-  importy (single i blokový `import ( … )` vč. aliasů, `_` blank a `.` dot importů)
-  a top-level exporty — funkce se signaturou, `struct`/`interface`, typové aliasy
-  a `const`/`var` (i seskupené), exportované podle velkého počátečního písmene.
-  Metody se připojují k receiver typu, vše s kotvami na řádky. Projekt se rozpozná
-  i podle `go.mod`.
+- **`mini update`** — brings the non-generated part of the project up to the current mini
+  version: the static `.mini/` skeleton (directories + `.gitignore`) and the slash commands
+  `.claude/commands/mini/*.md`. Idempotent — creates the missing, overwrites the changed
+  (the skeleton files are mini-owned), leaves the rest unchanged and prints a summary.
+  `--dry-run` shows a preview without writing. The skeleton lives as a shipped asset
+  (`assets/skeleton/` → `dist/skeleton`) and is the single source of truth: `mini init` draws
+  from it too and it is easily extended with more static files.
+- **`mini migrate --renumber`** — renumbers the phases to consecutive integers (1..N by their
+  order in `state.json`) and unifies the file names in all four directories (`phases/`,
+  `discuss/`, `run/`, `memory/`) to the canonical `phase-XXX`. It straightens projects with
+  mixed/legacy numbering (e.g. decimal "fix" ids `1.1`…`28.1` next to integers). It handles
+  various old name schemes (padded and unpadded, `.prev.md`, memory with a timestamp).
+  Idempotent; `--dry-run` shows a preview of the mapping without writing, otherwise it asks for
+  confirmation before the change. It leaves orphans (files with no record in the state) alone
+  with a warning, and stops on a collision of target names so it overwrites nothing.
+- The knowledge graph map now supports **Ruby** (`.rb`): it extracts the imports (`require`
+  and `require_relative`, including the parenthesized form) and top-level declarations —
+  `def` (with a parameter signature including splat `*`/`**`, keyword `key:`, default values,
+  `&block` and endless methods `def x = …`) and the types `class` (kind `class`) and `module`
+  (kind `module`). The default visibility is `public`; bare `private`/`protected` and
+  `private def …` hide the following members. Visible instance and class methods (`def self.x`)
+  and attributes (`attr_reader`/`attr_writer`/`attr_accessor`) are attached to the type with
+  line anchors. Comments (`#` and block `=begin`/`=end`) and strings are ignored. The project is
+  also recognized by `Gemfile`.
+- The knowledge graph map now supports **Swift** (`.swift`): it extracts the imports (including
+  submodules `import Foo.Bar` and kinded `import struct Foo.Bar`) and top-level declarations —
+  `func` (with a parameter signature, default values, variadics `Int...`, generics,
+  `async`/`throws` and `where` clauses) and the types `class`/`struct`/`enum`/`protocol`/
+  `extension`/`actor`. The default visibility is `internal`; `private`/`fileprivate` is omitted
+  (`private(set)` stays visible). Visible methods are attached to the type with line anchors,
+  `static`/`class func` are marked. Comments (including **nested** block comments), doc comments
+  and strings (including multiline `"""…"""` and raw `#"…"#`) are correctly ignored. The project
+  is also recognized by `Package.swift`.
+- The knowledge graph map now supports **Kotlin** (`.kt`/`.kts`): it extracts the imports
+  (including wildcard `import a.b.*` and aliases `import a.b.C as D`) and top-level declarations
+  — `fun` (with a parameter signature, default values, `vararg`, generics and the extension
+  receiver) and the types `class`/`interface`/`object`/`enum class`/`data class`/
+  `sealed class|interface`/`annotation class`. The default visibility is `public`;
+  `private`/`internal` is omitted. Visible methods are attached to the type with line anchors.
+  Comments (including **nested** block comments), KDoc, char literals and strings (including raw
+  `"""…"""`) are correctly ignored. The project is also recognized by `build.gradle.kts`.
+- The knowledge graph map now supports **C#** (`.cs`): it extracts the usings (`using`,
+  `using static`, `global using` and aliases `using Foo = A.B`) and top-level types inside a
+  `namespace` (block and file-scoped) — `class`/`struct`/`interface`/`enum`/`record` (including
+  `record class`/`record struct`), with `public`/`internal` methods (parameter signatures
+  including `params`, default values and `static`) attached to the type and line anchors.
+  Comments, XML doc, char literals and strings in all variants (verbatim `@"…"`, interpolated
+  `$"…"`, raw `"""…"""`) are correctly ignored. The project is also recognized by
+  `*.sln`/`*.csproj`.
+- `mini done`/`mini auto`: the `--bump none` option — closes the phase without bumping the
+  version (suitable for partial phases, where the version is raised only at the end of the whole unit).
+- The knowledge graph map now supports **Java** (`.java`): from the classes it extracts the
+  imports (`import`, `import static` and wildcard `import a.b.*`) and top-level types —
+  `class`/`interface`/`enum`/`record`/`@interface` declared as `public`/`protected`, with
+  `public`/`protected` methods (including parameter signatures, varargs and `static`) attached to
+  the type and line anchors. Comments, javadoc, strings and text blocks (`"""…"""`) are correctly
+  ignored. The project is also recognized by `pom.xml` or `build.gradle`(`.kts`).
+- The knowledge graph map now supports **Go** (`.go`): from the package it extracts the imports
+  (single and block `import ( … )` including aliases, `_` blank and `.` dot imports) and
+  top-level exports — functions with a signature, `struct`/`interface`, type aliases and
+  `const`/`var` (also grouped), exported by the capital initial letter. Methods are attached to
+  the receiver type, all with line anchors. The project is also recognized by `go.mod`.
 
 ### Changed
 
-- **`mini init`** nově zakládá `.mini/` z téhož skeletonu jako `mini update`
-  (adresáře `phases/`, `memory/`, `discuss/`, `run/` + `.gitignore`); `project.md`
-  a `state.json` se dál generují zvlášť.
-- **Výchozí chování `--bump` je nově `none`** (dřív `patch`): `mini done` ani
-  `mini auto` už verzi v `package.json` ve výchozím stavu nenavyšují. Pro
-  povýšení použij `--bump patch|minor|major`.
-- `--push` nově vyžaduje explicitní `--bump patch|minor|major` — push bez úrovně
-  verze (nebo s `none`) skončí chybou. Push = vydání, proto musí mít verzi pro tag.
-- **Sjednocené názvy souborů fází** ve všech adresářích `.mini/`: `discuss/`,
-  `memory/` i `run/` nově používají stejný formát `phase-XXX` (3 číslice
-  s nulovým paddingem) jako `phases/`. Z názvu memory zmizel ISO timestamp;
-  opakovaný záznam téže fáze se odliší příponou `-2`, `-3`, … místo data.
-  Existující soubory byly přejmenovány.
+- **`mini init`** now creates `.mini/` from the same skeleton as `mini update` (the directories
+  `phases/`, `memory/`, `discuss/`, `run/` + `.gitignore`); `project.md` and `state.json` are
+  still generated separately.
+- **The default behavior of `--bump` is now `none`** (previously `patch`): neither `mini done`
+  nor `mini auto` bumps the version in `package.json` by default anymore. To raise it, use
+  `--bump patch|minor|major`.
+- `--push` now requires an explicit `--bump patch|minor|major` — a push without a version level
+  (or with `none`) ends with an error. A push = a release, so it must have a version for the tag.
+- **Unified phase file names** across all `.mini/` directories: `discuss/`, `memory/` and `run/`
+  now use the same format `phase-XXX` (3 digits with zero padding) as `phases/`. The ISO
+  timestamp disappeared from the memory name; a repeated record of the same phase is distinguished
+  by the suffix `-2`, `-3`, … instead of the date. Existing files were renamed.
 
 ## [1.2.0] - 2026-05-30
 
 ### Added
 
-- Mapa znalostního grafu nově podporuje **Python** (`.py`/`.pyi`): z modulu se
-  vytáhnou importy (`import`, `from ... import` vč. relativních, aliasů, `*` a
-  víceřádkových) a top-level exporty — funkce (`def`/`async def`) se signaturou,
-  třídy s veřejnými metodami a UPPER_CASE/anotované konstanty, s kotvami na řádky.
-  Projekt se rozpozná i podle `pyproject.toml`/`setup.py`; `.venv/` a
-  `__pycache__/` se ignorují.
+- The knowledge graph map now supports **Python** (`.py`/`.pyi`): from the module it extracts the
+  imports (`import`, `from ... import` including relative, aliases, `*` and multiline) and
+  top-level exports — functions (`def`/`async def`) with a signature, classes with public methods
+  and UPPER_CASE/annotated constants, with line anchors. The project is also recognized by
+  `pyproject.toml`/`setup.py`; `.venv/` and `__pycache__/` are ignored.
 
 ## [1.1.0] - 2026-05-30
 
 ### Added
 
-- `/mini:done` nově vytváří a udržuje `CHANGELOG.md` ve formátu Keep a Changelog
-  1.1.0: Claude z reportu hotové fáze zapisuje změny pod `## [Unreleased]`
-  (sekce `Added` / `Changed` / `Fixed`). Při vydání s `--bump minor`/`major`
-  a `--push` se obsah `## [Unreleased]` zaklapne do datované sekce
-  `## [verze] - datum` (shodné s git tagem) a nahoru se vloží nová prázdná
-  `## [Unreleased]`; patche se kumulují v `Unreleased` až do dalšího vydání.
+- `/mini:done` now creates and maintains `CHANGELOG.md` in the Keep a Changelog 1.1.0 format:
+  from the report of a finished phase, Claude writes the changes under `## [Unreleased]`
+  (the `Added` / `Changed` / `Fixed` sections). On a release with `--bump minor`/`major` and
+  `--push`, the content of `## [Unreleased]` is folded into a dated section `## [version] - date`
+  (matching the git tag) and a new empty `## [Unreleased]` is inserted on top; patches accumulate
+  in `Unreleased` until the next release.

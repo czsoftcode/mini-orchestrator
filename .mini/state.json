@@ -402,6 +402,11 @@
       "id": 80,
       "title": "Anglická paměť fáze (writeMemory)",
       "status": "done"
+    },
+    {
+      "id": 81,
+      "title": "Anglický README + CHANGELOG",
+      "status": "done"
     }
   ],
   "models": {

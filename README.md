@@ -1,177 +1,177 @@
 # mini
 
-Minimalistický CLI orchestrátor postavený nad **Claude Code**. Drží stav projektu, posílá Claudovi jen to nejnutnější a využívá tvoje Pro/Max předplatné (žádné API klíče).
+A minimalist CLI orchestrator built on top of **Claude Code**. It keeps the project state, sends Claude only the essentials, and uses your Pro/Max subscription (no API keys).
 
-Vznikl jako jednodušší alternativa k [GSD](https://github.com/gsd-build/get-shit-done), který spotřebovává moc tokenů — generuje hromadu MD souborů (`RESEARCH.md`, `PLAN.md`, `VERIFICATION.md`, …) a opakovaně je čte. `mini` drží **minimální stav** (`project.md` na jednu stránku + lehká hlavička `state.json` s detailem fází v `.mini/phases/`) a posílá Claudovi typicky 1 stránku + aktuální úkol.
+It was created as a simpler alternative to [GSD](https://github.com/gsd-build/get-shit-done), which consumes too many tokens — it generates a pile of MD files (`RESEARCH.md`, `PLAN.md`, `VERIFICATION.md`, …) and reads them repeatedly. `mini` keeps a **minimal state** (a one-page `project.md` + a lightweight `state.json` header with phase detail in `.mini/phases/`) and sends Claude typically 1 page + the current task.
 
-## Co potřebuješ
+## Requirements
 
-- [Claude Code](https://claude.com/claude-code) (přihlášený přes Pro/Max nebo s API klíčem)
+- [Claude Code](https://claude.com/claude-code) (signed in via Pro/Max or with an API key)
 - Node.js 20+
 
-## Instalace
+## Installation
 
 ```bash
 npm install -g mini-orchestrator@latest
 ```
 
-Příkaz se jmenuje `mini`. Aktualizace: stejný příkaz znovu. Odinstalace: `npm uninstall -g mini-orchestrator`.
+The command is called `mini`. To update: run the same command again. To uninstall: `npm uninstall -g mini-orchestrator`.
 
-Instalace bez `sudo`: nasměruj globální npm prefix do domovského adresáře (jednorázově) a měj jeho `bin` v `PATH`:
+Installing without `sudo`: point the global npm prefix into your home directory (one-off) and have its `bin` on your `PATH`:
 
 ```bash
-npm config set prefix "$HOME/.local" --location=user   # ~/.local/bin musí být v PATH
+npm config set prefix "$HOME/.local" --location=user   # ~/.local/bin must be on PATH
 ```
 
-### Z gitu / pro vývoj
+### From git / for development
 
 ```bash
 git clone https://github.com/czsoftcode/mini-orchestrator.git
 cd mini-orchestrator
 npm install
 npm run build
-node dist/cli.js --help        # nebo: alias mini='node $(pwd)/dist/cli.js'
+node dist/cli.js --help        # or: alias mini='node $(pwd)/dist/cli.js'
 ```
 
 ## Quick start
 
 ```bash
-mkdir muj-projekt && cd muj-projekt
+mkdir my-project && cd my-project
 
-mini init        # 4 otázky → vznikne .mini/project.md a .mini/state.json
-mini next        # Claude navrhne první fázi
-mini do          # spustí Claude Code session na fázi
-                 # … pracuješ v Claude … /exit
-mini done        # "funguje to?" → posune stav
-mini next        # další fáze …
+mini init        # 4 questions → creates .mini/project.md and .mini/state.json
+mini next        # Claude proposes the first phase
+mini do          # starts a Claude Code session on the phase
+                 # … you work in Claude … /exit
+mini done        # "does it work?" → moves the state forward
+mini next        # next phase …
 ```
 
-Nebo zkratka:
+Or the shortcut:
 
 ```bash
-mini auto        # next → plan → do (s acceptEdits) → done; vše bez ptaní kromě finálního "funguje to?"
+mini auto        # next → plan → do (with acceptEdits) → done; everything without asking except the final "does it work?"
 ```
 
-## Příkazy
+## Commands
 
-| Příkaz | Co dělá |
+| Command | What it does |
 |--------|---------|
-| `mini init` | Založí nový projekt (project.md + prázdný state). V brownfield adresáři na konci nabídne spustit `mini audit`. |
-| `mini next` | Claude navrhne další fázi |
-| `mini audit` | Projde existující kód a vytvoří/aktualizuje `.mini/codebase.md` (přehled projektu pro pozdější Claude session) |
-| `mini map` | Přegeneruje strojovou mapu projektu (`.mini/graph.json` + `.mini/graph/`). S `--file <cesta>` přemapuje jen jeden soubor (lze opakovat); s `--hook` čte cestu z hook JSON na stdin — viz [Strojová mapa projektu](#strojová-mapa-projektu-graf) |
-| `mini discuss` | Volitelná diskuse o aktuální fázi před plánováním — Claude uloží shrnutí do `.mini/discuss/phase-{id}.md`, které pak `plan` a `do` použijí jako kontext |
-| `mini plan` | Claude rozmění aktuální fázi na 3-7 kroků |
-| `mini do` | Sestaví prompt, ukáže ti ho, spustí interaktivní Claude Code |
-| `mini done` | Lidská verifikace ("funguje?"), posune stav, najde další fázi; po dokončení fáze volitelně bumpne verzi v `package.json` a zaklapne `CHANGELOG.md`, automaticky commitne práci do gitu (default `--bump none`, s `--push` i tag `v<verze>`) a zapíše memory záznam (`.mini/memory/phase-{id}.md`) |
-| `mini verify` | Hloubková UI/UX kontrola fáze člověkem — Claude tě interaktivně provede vizuální/UX kontrolou (vyjde z `verify` bodů reportu) a nálezy zapíše do reportu (u uzavřené fáze i do paměti); stav fáze neposouvá. Cílí na aktuální fázi, jinak na poslední uzavřenou |
-| `mini auto` | Chain: next → plan → do (acceptEdits) → done, vše bez ptaní kromě done |
-| `mini status` | Co je projekt, kde jsme, modely, fáze a kroky |
-| `mini undo` | Vrátí poslední změnu stavu (1 krok zpět, žádná hluboká historie); pokud `mini done` v posledním kroku auto-commitnul a HEAD pořád sedí na čistém stromě, nabídne i revert commitu (`git reset --soft`) |
-| `mini stop` | Založí kooperativní stop signál `.mini/STOP` pro autonomní `/mini:auto` (typicky z druhého terminálu); `--clear` ho zruší — viz [Autonomní `/mini:auto`](#autonomní-miniauto) |
-| `mini model …` | Per-projekt / per-scope volba modelu (viz níže) |
-| `mini import-gsd` | Jednorázový import rozdělaného GSD projektu z `.planning/` |
-| `mini migrate` | Jednorázový převod starého monolitického `state.json` na layout v2 (lehká hlavička + `.mini/phases/`); s `--renumber` přečísluje fáze na souvislá čísla a sjednotí názvy souborů |
-| `mini update` | Srovná negenerovanou část projektu (skeleton `.mini/` + slash commandy) na aktuální verzi mini; idempotentní, nesahá na generované soubory. `--dry-run` jen ukáže, co by se změnilo |
-| `mini install-commands` | Vygeneruje `.claude/commands/mini/*.md` (slash commandy `/mini:*`) do projektu — viz níže |
-| `mini context <cmd>` | Vypíše na stdout aktuální session prompt pro krok cyklu (`next`/`discuss`/`plan`/`do`/`done`/`verify`); volají ho slash commandy |
+| `mini init` | Creates a new project (project.md + empty state). In a brownfield directory it offers to run `mini audit` at the end. |
+| `mini next` | Claude proposes the next phase |
+| `mini audit` | Goes through the existing code and creates/updates `.mini/codebase.md` (a project overview for later Claude sessions) |
+| `mini map` | Regenerates the machine-readable project map (`.mini/graph.json` + `.mini/graph/`). With `--file <path>` it remaps just one file (can be repeated); with `--hook` it reads the path from the hook JSON on stdin — see [Machine-readable project map](#machine-readable-project-map-graph) |
+| `mini discuss` | Optional discussion of the current phase before planning — Claude saves a summary into `.mini/discuss/phase-{id}.md`, which `plan` and `do` then use as context |
+| `mini plan` | Claude breaks the current phase down into 3-7 steps |
+| `mini do` | Builds the prompt, shows it to you, starts an interactive Claude Code |
+| `mini done` | Human verification ("does it work?"), moves the state, finds the next phase; after finishing a phase it optionally bumps the version in `package.json` and folds `CHANGELOG.md`, automatically commits the work to git (default `--bump none`, with `--push` also a tag `v<version>`) and writes a memory record (`.mini/memory/phase-{id}.md`) |
+| `mini verify` | In-depth UI/UX review of the phase by a human — Claude interactively guides you through a visual/UX review (based on the report's `verify` items) and writes the findings into the report (and, for a closed phase, into memory); it does not move the phase state. It targets the current phase, otherwise the last closed one |
+| `mini auto` | Chain: next → plan → do (acceptEdits) → done, everything without asking except done |
+| `mini status` | What the project is, where we are, models, phases and steps |
+| `mini undo` | Reverts the last state change (1 step back, no deep history); if `mini done` auto-committed in the last step and HEAD still sits on a clean tree, it also offers to revert the commit (`git reset --soft`) |
+| `mini stop` | Creates a cooperative stop signal `.mini/STOP` for the autonomous `/mini:auto` (typically from a second terminal); `--clear` removes it — see [Autonomous `/mini:auto`](#autonomous-miniauto) |
+| `mini model …` | Per-project / per-scope model choice (see below) |
+| `mini import-gsd` | One-off import of an in-progress GSD project from `.planning/` |
+| `mini migrate` | One-off conversion of the old monolithic `state.json` to the v2 layout (lightweight header + `.mini/phases/`); with `--renumber` it renumbers phases to consecutive numbers and unifies file names |
+| `mini update` | Brings the non-generated part of the project (the `.mini/` skeleton + slash commands) up to the current mini version; idempotent, does not touch generated files. `--dry-run` only shows what would change |
+| `mini install-commands` | Generates `.claude/commands/mini/*.md` (the `/mini:*` slash commands) into the project — see below |
+| `mini context <cmd>` | Prints the current session prompt for a cycle step (`next`/`discuss`/`plan`/`do`/`done`/`verify`) to stdout; called by the slash commands |
 
-## mini příkazy přímo v Claude Code
+## mini commands directly in Claude Code
 
-Celý cyklus `next → discuss → plan → do → done` jde projet i **přímo z Claude Code** přes nativní slash commandy, aniž by se uvnitř session spouštěl vnořený Claude.
-
-```bash
-mini install-commands     # jednorázově v cílovém projektu
-```
-
-Vznikne `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map,audit,auto}.md`. Pak v Claude Code:
-
-```
-/mini:init           # založí projekt (otázky v chatu) → nabídne /mini:map a /mini:audit
-/mini:next [nápad]   # navrhne a uloží další fázi
-/mini:discuss        # prodiskutuje fázi, uloží poznámky
-/mini:plan           # rozmení fázi na kroky
-/mini:do             # implementuje fázi a zapíše report
-/mini:done           # lidská verifikace v chatu → posune stav
-/mini:verify         # hloubková UI/UX kontrola fáze člověkem; nálezy zapíše do reportu (a paměti)
-/mini:auto [args]    # autonomní režim: dotáhne víc fází za sebou (--max-phases N, --yolo, --verify, --discuss)
-/mini:map            # přegeneruje graf projektu
-/mini:status         # přehled fází (read-only)
-/mini:audit          # přehled existující codebase do .mini/codebase.md
-```
-
-### Autonomní `/mini:auto`
-
-`/mini:auto` projede celý cyklus fáze (`next → discuss(podmíněně) → plan → do → verify(podmíněně) → done`) a po dokončení jedné fáze plynule pokračuje další — **semi-autonomně**:
-
-- **`--max-phases N`** (default 1) — kolik fází nejvýš dotáhnout za sebou; `--yolo` = běh bez zbytečného doptávání (funguje jen v session spuštěné s `--permission-mode acceptEdits`).
-- **`--verify`** — vynutí krok `verify` v každé fázi. Bez něj auto spustí `verify` jen u **UI/UX fází** (posoudí z cíle/kroků/reportu): provede člověka hloubkovou kontrolou mezi `do` a `done`, nálezy zapíše do reportu (a tím i do paměti) a případné problémy opraví ještě v téže fázi před uzavřením.
-- **`--discuss`** — vynutí krok `discuss` v každé fázi. Bez něj auto spustí `discuss` jen u **složitých fází** (nejednoznačný cíl, víc směrů).
-- **Zastaví se a zeptá** u kroků, kde je potřeba člověk: `next` (vezme tvůj nápad na fázi), `discuss` (u složitých fází nebo s `--discuss`), `verify` (UI/UX kontrola) a u bodů k **ručnímu ověření** v `done`.
-- **Tichý běh u `do`** — nepřevypráví každou editaci do chatu, jen krátce hlásí postup.
-- **Kooperativní stop:** na hranicích kroků kontroluje stop signál (`.mini/STOP`) a čistě skončí; pro tvrdé přerušení uprostřed kroku použij Esc/Ctrl+C. Signál založíš příkazem `mini stop` (z druhého terminálu), zrušíš ho `mini stop --clear`.
-
-Pozn.: tohle je slash varianta řízená Claudem v jedné session. CLI `mini auto` (níže) je samostatná cesta, která pouští Claude jako podproces a dotahuje **jednu** fázi.
-
-Jak to funguje: tělo `.md` commandu je tenké — jen pustí `mini context <cmd>`, který vypíše vždy aktuální prompt včetně kontextu projektu. Agentní práci dělá Claude v běžící session; **stavové operace** (`.mini/state.json`, reporty, posun fáze) provádějí neinteraktivní pod-příkazy `mini … --apply`, takže stav zůstává v otestovaném TS. `install-commands` je idempotentní — pusť ho znovu po aktualizaci mini. CLI `mini …` přes terminál zůstává beze změny; slash commandy jsou doplněk, ne náhrada.
-
-## Modely
-
-Nastavení per projekt v `.mini/state.json`. Lze nastavit zvlášť pro `next`, `plan`, `do`, `importGsd`, `audit`, `memory` nebo společně přes `default`.
+The whole cycle `next → discuss → plan → do → done` can also be run **directly from Claude Code** via the native slash commands, without spawning a nested Claude inside the session.
 
 ```bash
-mini model                       # interaktivně (scope → model)
-mini model show                  # tabulka aktuálního nastavení
+mini install-commands     # one-off in the target project
+```
+
+This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map,audit,auto}.md`. Then in Claude Code:
+
+```
+/mini:init           # creates the project (questions in the chat) → offers /mini:map and /mini:audit
+/mini:next [idea]    # proposes and saves the next phase
+/mini:discuss        # discusses the phase, saves notes
+/mini:plan           # breaks the phase into steps
+/mini:do             # implements the phase and writes a report
+/mini:done           # human verification in the chat → moves the state
+/mini:verify         # in-depth UI/UX review of the phase by a human; writes findings into the report (and memory)
+/mini:auto [args]    # autonomous mode: completes several phases in a row (--max-phases N, --yolo, --verify, --discuss)
+/mini:map            # regenerates the project graph
+/mini:status         # overview of the phases (read-only)
+/mini:audit          # overview of the existing codebase into .mini/codebase.md
+```
+
+### Autonomous `/mini:auto`
+
+`/mini:auto` goes through the whole phase cycle (`next → discuss(conditionally) → plan → do → verify(conditionally) → done`) and after finishing one phase smoothly continues with the next — **semi-autonomously**:
+
+- **`--max-phases N`** (default 1) — how many phases at most to complete in a row; `--yolo` = a run without unnecessary asking (works only in a session started with `--permission-mode acceptEdits`).
+- **`--verify`** — forces the `verify` step in every phase. Without it, auto runs `verify` only for **UI/UX phases** (judged from the goal/steps/report): it guides a human through an in-depth review between `do` and `done`, writes the findings into the report (and thus into memory) and fixes any problems within the same phase before closing.
+- **`--discuss`** — forces the `discuss` step in every phase. Without it, auto runs `discuss` only for **hard phases** (an ambiguous goal, multiple directions).
+- **Stops and asks** at the steps where a human is needed: `next` (takes your phase idea), `discuss` (for hard phases or with `--discuss`), `verify` (UI/UX review) and at the items for **manual verification** in `done`.
+- **Quiet run for `do`** — it does not retell every edit into the chat, just briefly reports progress.
+- **Cooperative stop:** at the step boundaries it checks the stop signal (`.mini/STOP`) and finishes cleanly; for a hard interrupt mid-step use Esc/Ctrl+C. You create the signal with `mini stop` (from a second terminal), remove it with `mini stop --clear`.
+
+Note: this is the slash variant driven by Claude in a single session. The CLI `mini auto` (below) is a separate path that runs Claude as a subprocess and completes **one** phase.
+
+How it works: the `.md` command body is thin — it just runs `mini context <cmd>`, which always prints the current prompt including the project context. The agentic work is done by Claude in the running session; the **state operations** (`.mini/state.json`, reports, moving the phase) are performed by the non-interactive sub-commands `mini … --apply`, so the state stays in tested TS. `install-commands` is idempotent — run it again after updating mini. The CLI `mini …` via the terminal stays unchanged; the slash commands are an add-on, not a replacement.
+
+## Models
+
+Configured per project in `.mini/state.json`. Can be set separately for `next`, `plan`, `do`, `importGsd`, `audit`, `memory`, or jointly via `default`.
+
+```bash
+mini model                       # interactively (scope → model)
+mini model show                  # a table of the current settings
 mini model sonnet                # default = sonnet
 mini model do opus               # do (Claude session) = opus
 mini model plan haiku            # plan = haiku
-mini model do default            # zruší override (zdědí default)
-mini model reset                 # smaže všechno
+mini model do default            # clears the override (inherits default)
+mini model reset                 # clears everything
 ```
 
-**Doporučená kombinace pro úsporu:**
+**Recommended combination for saving:**
 ```bash
-mini model sonnet                # default = sonnet pro lehké věci
-mini model do opus               # do = opus na složité kódování
+mini model sonnet                # default = sonnet for light things
+mini model do opus               # do = opus for complex coding
 ```
 
-**Pozor:** "levnější" model neznamená vždy úsporu na Pro/Max limitu. Levnější modely často potřebují víc iterací → větší celková spotřeba tokenů. Pro `do` (skutečné kódování) bývá Opus i tak nejvýhodnější.
+**Note:** a "cheaper" model does not always mean saving on the Pro/Max limit. Cheaper models often need more iterations → a larger total token consumption. For `do` (real coding), Opus is usually the most economical anyway.
 
-Po každém volání Claude (next/plan/import-gsd) uvidíš:
+After every Claude call (next/plan/import-gsd) you'll see:
 
 ```
-  (20.4k tokenů · 5 output · 14.1k z cache · ~$0.028 v API)
+  (20.4k tokens · 5 output · 14.1k from cache · ~$0.028 in API)
 ```
 
-## Co se posílá Claudovi
+## What gets sent to Claude
 
-`mini do` typicky pošle ~600-1000 tokenů (1 stránka `project.md` + aktuální fáze + 5 kroků). Žádná historie starých fází, žádné staré plány, žádné verifikační zprávy.
+`mini do` typically sends ~600-1000 tokens (1 page of `project.md` + the current phase + 5 steps). No history of old phases, no old plans, no verification reports.
 
-Pokud Claude potřebuje pochopit existující kód, **přečte si soubory sám** přes `Read`/`Glob`/`Grep` — to je levnější než předem nahrávat všechno do kontextu.
+If Claude needs to understand the existing code, **it reads the files itself** via `Read`/`Glob`/`Grep` — that is cheaper than loading everything into context up front.
 
-## Strojová mapa projektu (graf)
+## Machine-readable project map (graph)
 
-`mini map` projde zdrojáky a vytvoří **strojovou mapu** projektu:
+`mini map` goes through the source files and creates a **machine-readable map** of the project:
 
-- `.mini/graph.json` — lehký index: pro každý soubor cesta, jeho uzel a názvy exportů,
-- `.mini/graph/<cesta>.md` — uzel na soubor: importy, exporty a signatury s kotvami na řádky (`@L<start>-<end>`).
+- `.mini/graph.json` — a lightweight index: for each file its path, its node and the export names,
+- `.mini/graph/<path>.md` — a node per file: imports, exports and signatures with anchors to lines (`@L<start>-<end>`).
 
-Slouží Claudovi k **orientaci bez čtení celých souborů**: z indexu najde, kde symbol je, z uzlu na kterých řádcích, a teprve pak cíleně přečte jen ten úsek. Oba soubory jsou derivace zdrojáků (gitignorované) — kdykoli je lze přegenerovat.
+It helps Claude **navigate without reading whole files**: from the index it finds where a symbol is, from the node which lines, and only then reads just that section. Both files are derivations of the source files (gitignored) — they can be regenerated anytime.
 
-### Inkrementální update (`--file`)
+### Incremental update (`--file`)
 
-Plný `mini map` přemapuje celý strom. Pro úzké změny je tu inkrementální cesta, která sáhne **jen na jeden uzel**:
+A full `mini map` remaps the whole tree. For narrow changes there is an incremental path that touches **only one node**:
 
 ```bash
-mini map --file src/foo.ts          # přemapuje jen src/foo.ts (uzel + záznam v indexu)
-mini map --file a.ts --file b.ts    # víc souborů najednou
+mini map --file src/foo.ts          # remaps only src/foo.ts (node + index record)
+mini map --file a.ts --file b.ts    # several files at once
 ```
 
-Protože uzly grafu jsou čistě per-file (žádné zpětné hrany), výsledek je identický s plným rebuildem dotčeného souboru — jen mnohem rychleji. Když `graph.json` ještě neexistuje, `--file` spadne na plný build. Nemapovatelné přípony a ignorované adresáře (`node_modules`, `dist`, …) jsou no-op; když zdroják mezitím zmizel, odebere se i jeho uzel.
+Because the graph nodes are purely per-file (no back edges), the result is identical to a full rebuild of the affected file — just much faster. When `graph.json` does not exist yet, `--file` falls back to a full build. Non-mappable extensions and ignored directories (`node_modules`, `dist`, …) are a no-op; when a source file has disappeared in the meantime, its node is removed too.
 
-### Auto-update po editaci (hook)
+### Auto-update after an edit (hook)
 
-Pro **autonomní režim** se vyplatí držet graf čerstvý po každé editaci. Slouží k tomu PostToolUse hook, který po každém `Edit`/`Write` přemapuje jen dotčený soubor (lokální operace, žádné tokeny). Do `.claude/settings.json` cílového projektu přidej:
+For **autonomous mode** it pays off to keep the graph fresh after every edit. A PostToolUse hook does that — after every `Edit`/`Write` it remaps just the affected file (a local operation, no tokens). Add this to the `.claude/settings.json` of the target project:
 
 ```json
 {
@@ -188,111 +188,111 @@ Pro **autonomní režim** se vyplatí držet graf čerstvý po každé editaci. 
 }
 ```
 
-`mini map --hook` si cestu editovaného souboru přečte z hook JSON na stdin sám (žádná závislost na `jq`); `>/dev/null 2>&1 || true` drží hook tichý a neblokující i bez nainstalovaného `mini`. Mazání a přejmenování souborů (přes shell) hook nezachytí — na ně občas pusť plný `mini map` jako rekonciliaci.
+`mini map --hook` reads the edited file path from the hook JSON on stdin itself (no dependency on `jq`); `>/dev/null 2>&1 || true` keeps the hook quiet and non-blocking even without `mini` installed. The hook does not catch file deletions and renames (via the shell) — for those occasionally run a full `mini map` as a reconciliation.
 
-## Soubory v projektu
+## Files in the project
 
 ```
-muj-projekt/
+my-project/
 └── .mini/
-    ├── project.md                       # 1 stránka — co stavíš, pro koho, omezení
-    ├── codebase.md                      # přehled existujícího kódu (vytvoří/aktualizuje `mini audit`)
-    ├── state.json                       # lehká hlavička: index fází, statusy, modely (layout v2)
-    ├── state.prev.json                  # backup hlavičky pro `mini undo` (jen 1 krok zpět)
+    ├── project.md                       # 1 page — what you're building, for whom, constraints
+    ├── codebase.md                      # overview of the existing code (created/updated by `mini audit`)
+    ├── state.json                       # lightweight header: phase index, statuses, models (layout v2)
+    ├── state.prev.json                  # header backup for `mini undo` (only 1 step back)
     ├── phases/
-    │   └── phase-{id}.json              # detail jedné fáze — kroky, report, verify (layout v2)
-    ├── graph.json                       # lehký index strojové mapy (viz níže)
+    │   └── phase-{id}.json              # detail of one phase — steps, report, verify (layout v2)
+    ├── graph.json                       # lightweight index of the machine-readable map (see below)
     ├── graph/
-    │   └── <cesta>.md                   # uzel mapy na soubor — importy, exporty, signatury
-    ├── last-memory.md                   # krátké shrnutí nejnovějšího memory záznamu (vstup promptu `next`)
+    │   └── <path>.md                    # map node per file — imports, exports, signatures
+    ├── last-memory.md                   # short summary of the latest memory record (input of the `next` prompt)
     ├── discuss/
-    │   └── phase-{id}.md                # volitelné poznámky z `mini discuss` (Záměr / Klíčová rozhodnutí / Pozor na)
+    │   └── phase-{id}.md                # optional notes from `mini discuss` (Intent / Key decisions / Watch out for)
     ├── run/
-    │   └── phase-{id}.md                # report z `mini auto` (YAML statusy + volný text)
+    │   └── phase-{id}.md                # report from `mini auto` (YAML statuses + free text)
     └── memory/
-        └── phase-{id}.md                # shrnutí hotové fáze (Co se udělalo / Klíčová rozhodnutí / Otevřené konce)
+        └── phase-{id}.md                # summary of a finished phase (What was done / Key decisions / Loose ends)
 ```
 
-`state.json` je jen **lehká hlavička** (index fází, statusy, modely); detail každé fáze (kroky, report, verify) leží zvlášť v `.mini/phases/phase-{id}.json`. `mini undo` zálohuje obojí (`state.prev.json` + `phases-prev/`). `graph.json` + `graph/` jsou derivace zdrojáků (gitignorované) — kdykoli je přegeneruje `mini map`. Autonomní `/mini:auto` navíc čte stop signál `.mini/STOP` (zakládá `mini stop`).
+`state.json` is only a **lightweight header** (phase index, statuses, models); the detail of each phase (steps, report, verify) lives separately in `.mini/phases/phase-{id}.json`. `mini undo` backs up both (`state.prev.json` + `phases-prev/`). `graph.json` + `graph/` are derivations of the source files (gitignored) — `mini map` regenerates them anytime. The autonomous `/mini:auto` additionally reads the stop signal `.mini/STOP` (created by `mini stop`).
 
-`project.md` můžeš ručně upravovat. Stav je lépe měnit přes mini příkazy než ruční editací JSONu. Soubory v `discuss/` jsou volné markdownové poznámky — můžeš je libovolně editovat nebo smazat; `plan` a `do` je čtou, pokud existují, jinak je prostě vynechají. Soubory v `run/` zapisuje Claude na konci každé auto session — `done` z nich vyčte statusy kroků (viz [Auto režim](#auto-režim)).
+You can edit `project.md` by hand. The state is better changed via the mini commands than by editing the JSON by hand. The files in `discuss/` are free markdown notes — you can edit or delete them at will; `plan` and `do` read them if they exist, otherwise they simply skip them. The files in `run/` are written by Claude at the end of every auto session — `done` reads the step statuses from them (see [Auto mode](#auto-mode)).
 
-`codebase.md` (volitelný, vzniká přes `mini audit`) je technický přehled projektu — adresářová struktura, klíčové moduly, technologie. Žádný prompt ho automaticky neinjektuje; Claude si ho v `do`/`plan`/`next` sessionech sám přečte přes `Read`, místo aby pokaždé znova procházel `src/`. Ruční poznámky v něm `mini audit` zachová. Spouštěj ho ad hoc, kdykoli má pocit, že je zastaralý.
+`codebase.md` (optional, created by `mini audit`) is a technical overview of the project — directory structure, key modules, technologies. No prompt injects it automatically; Claude reads it itself in `do`/`plan`/`next` sessions via `Read`, instead of going through `src/` again every time. `mini audit` keeps the manual notes in it. Run it ad hoc, whenever it feels stale.
 
-Soubory v `.mini/memory/` (`phase-{id}.md`, při opakovaném `done` téže fáze s rozlišovačem `phase-{id}-2.md`, `-3`, …) zapisuje na konci `mini done` (i `mini auto`) po finalizaci fáze jako `done`. Ve výchozím stavu je `mini` poskládá přímo v TypeScriptu z dat fáze (metadata + doslovný obsah discuss a run reportu) — bez volání Claude API; krátkou print-mode Claude session použije jen tehdy, když je explicitně nastaven `memory` scope (`mini model memory …`). Doplňují `git log` o vrstvu, kterou tam nenajdeš — **proč** se zvolilo řešení X místo Y, jaké otevřené konce zůstaly, na co si dát pozor v dalších fázích. Memory záznamy jsou append-only a `mini undo` do nich nezasahuje. `last-memory.md` drží **krátké shrnutí** nejnovějšího záznamu (čte ho prompt `next`). U `skipped` fáze se memory nepíše. Soubor vzniká **mimo commit** — když ho chceš mít ve verzi, commitni ho ručně.
+The files in `.mini/memory/` (`phase-{id}.md`, with a discriminator `phase-{id}-2.md`, `-3`, … on a repeated `done` of the same phase) are written at the end of `mini done` (and `mini auto`) after finalizing the phase as `done`. By default `mini` assembles them directly in TypeScript from the phase data (metadata + the verbatim content of the discuss and run report) — without calling the Claude API; it uses a short print-mode Claude session only when the `memory` scope is explicitly set (`mini model memory …`). They complement `git log` with a layer you won't find there — **why** solution X was chosen over Y, what loose ends remained, what to watch out for in the next phases. Memory records are append-only and `mini undo` does not touch them. `last-memory.md` holds a **short summary** of the latest record (read by the `next` prompt). For a `skipped` phase, memory is not written. The file is created **outside the commit** — when you want it versioned, commit it by hand.
 
-## Auto režim
+## Auto mode
 
-`mini auto` automatizuje jednu fázi:
+`mini auto` automates one phase:
 
-1. `[1/4]` Navrhne další fázi (nebo pokračuje na rozdělané) — bez ptaní
-2. `[2/4]` Rozmění na kroky (nebo přeskočí, pokud už kroky má) — bez ptaní
-3. `[3/4]` Spustí Claude Code s `--permission-mode acceptEdits` (Edit/Write bez ptaní, Bash se pořád ptá) — bez ptaní
-4. `[4/4]` Verifikace: zeptá se **tě**, jestli to funguje
+1. `[1/4]` Proposes the next phase (or continues an in-progress one) — without asking
+2. `[2/4]` Breaks it into steps (or skips if it already has steps) — without asking
+3. `[3/4]` Starts Claude Code with `--permission-mode acceptEdits` (Edit/Write without asking, Bash still asks) — without asking
+4. `[4/4]` Verification: asks **you** whether it works
 
-Auto **vždy** končí na lidské verifikaci v `done` — to je tvůj checkpoint.
+Auto **always** ends at the human verification in `done` — that's your checkpoint.
 
-### Jeden Claude session na celou fázi
+### One Claude session for the whole phase
 
-Na rozdíl od interaktivního `mini do` (které spustíš ručně na jeden krok) pouští auto **jeden Claude session na celou fázi**. Důvod: každý restart Clauda znamená znovurozkoukávání projektu (Read/Glob, načítání kontextu) bez přidané hodnoty.
+Unlike the interactive `mini do` (which you start manually for one step), auto runs **one Claude session for the whole phase**. The reason: every Claude restart means re-exploring the project (Read/Glob, loading context) with no added value.
 
-Než session skončí, Claude zapíše report do `.mini/run/phase-{id}.md`. Report má dvě části:
+Before the session ends, Claude writes a report into `.mini/run/phase-{id}.md`. The report has two parts:
 
-- **YAML front matter** se statusy kroků (`done` / `skipped` / `blocked` / `todo`) a celkovým verdiktem fáze (`done` / `partial` / `blocked`) — z něj `done({auto})` posune stav v `state.json`.
-- **Volný text** pod YAML blokem — krátké shrnutí pro tebe (co se povedlo, na co Claude narazil, otevřené otázky).
+- **YAML front matter** with the step statuses (`done` / `skipped` / `blocked` / `todo`) and the overall phase verdict (`done` / `partial` / `blocked`) — `done({auto})` moves the state in `state.json` from it.
+- **Free text** below the YAML block — a short summary for you (what went well, what Claude ran into, open questions).
 
-Pokud po session zbydou neuzavřené kroky (Claude nestihl, nebo report chybí), auto pustí další pokus — celkem **maximálně 3 průchody**. Druhý a třetí pokus dostanou v promptu odkaz na zálohovaný report (`phase-{id}.prev.md`), aby Claude věděl, kde předchozí pokus skončil. Po vyčerpání limitu auto skončí s warningem a předá štafetu tobě.
+If unclosed steps remain after the session (Claude didn't finish, or the report is missing), auto runs another attempt — **at most 3 passes** in total. The second and third attempt get a link to the backed-up report (`phase-{id}.prev.md`) in the prompt, so Claude knows where the previous attempt ended. After exhausting the limit, auto finishes with a warning and hands the baton to you.
 
-Když Claude session ukončí bez reportu (crash, `--max-turns`, ručně `/exit` bez zápisu), auto si nedovolí naslepo cokoli označit — sjede do interaktivního `done` a zeptá se tě per krok.
+When a Claude session ends without a report (a crash, `--max-turns`, a manual `/exit` without writing), auto won't blindly mark anything — it drops into the interactive `done` and asks you per step.
 
-Reporty v `.mini/run/` zůstávají po finalizaci fáze jako historie — můžeš si je číst zpětně.
+The reports in `.mini/run/` stay as history after the phase is finalized — you can read them back later.
 
-## Import z GSD
+## Import from GSD
 
-V adresáři s `.planning/`:
+In a directory with `.planning/`:
 
 ```bash
 mini import-gsd
 ```
 
-Claude přečte `PROJECT.md` a roadmap, vytvoří `.mini/project.md` a `.mini/state.json`. Importuje jen kostru — fáze + statusy. Detailní MD soubory v `.planning/` zůstávají, ale `mini` je ignoruje.
+Claude reads `PROJECT.md` and the roadmap, creates `.mini/project.md` and `.mini/state.json`. It imports only the skeleton — phases + statuses. The detailed MD files in `.planning/` stay, but `mini` ignores them.
 
 ## FAQ
 
-**Proč se Claude Code ptá pokaždé na povolení?**
-V `mini do` je defaultně klasický permission mode (klikáš na každý Edit/Bash). V `mini auto` se používá `acceptEdits` — Edit/Write už neptá, ale Bash pořád ano (žádné náhodné `rm -rf`).
+**Why does Claude Code ask for permission every time?**
+In `mini do` the classic permission mode is the default (you click on every Edit/Bash). In `mini auto`, `acceptEdits` is used — Edit/Write no longer ask, but Bash still does (no random `rm -rf`).
 
-**Co když chci jednu fázi udělat, ale ne tak, jak ji Claude navrhl?**
-`mini next` → "Upravit a přidat" → editujete název a cíl ručně. Nebo přidáš ručně do `state.json`.
+**What if I want to do a phase, but not the way Claude proposed it?**
+`mini next` → "Edit and add" → you edit the title and goal by hand. Or you add it to `state.json` by hand.
 
-**Co když je fáze "hotová" ale má todo kroky?**
-`mini done` → "Označit fázi za hotovou" → zbylé kroky se označí jako `skipped` a posune se na další fázi.
+**What if a phase is "done" but has todo steps?**
+`mini done` → "Mark the phase as done" → the remaining steps are marked `skipped` and it moves to the next phase.
 
-**Můžu pozastavit a vrátit se zítra?**
-Ano. Stav je v `.mini/state.json`, můžeš commitnout do gitu nebo si dát na cloud. `mini status` ti řekne, kde jste skončili.
+**Can I pause and come back tomorrow?**
+Yes. The state is in `.mini/state.json`, you can commit it to git or put it on the cloud. `mini status` tells you where you left off.
 
-**Commit a push po fázi?**
-Když `mini done` (nebo `mini auto`) finalizuje fázi jako `done`, automaticky spustí `git add -A && git commit` se zprávou `Fáze {id}: {title}` (případně s tělem z poznámky). Pokud cwd není git repo, není co commitnout, nebo commit selže (např. pre-commit hook), pokračuje se dál a uživatel si commit dotáhne ručně. Push se nikdy nedělá automaticky — po commitu uvidíš hint `git push`, který spustíš sám.
+**Commit and push after a phase?**
+When `mini done` (or `mini auto`) finalizes a phase as `done`, it automatically runs `git add -A && git commit` with the message `Phase {id}: {title}` (optionally with a body from the note). If the cwd is not a git repo, there is nothing to commit, or the commit fails (e.g. a pre-commit hook), it continues and you finish the commit by hand. The push is never done automatically — after the commit you'll see a `git push` hint that you run yourself.
 
-**Bump verze, CHANGELOG a tag?**
-Verzi v `package.json` `done` ve výchozím stavu **nebumpuje** (`--bump none`). S `--bump patch|minor|major` ji před commitem zvedne a u `minor`/`major` zaklapne sekci `## [Unreleased]` v `CHANGELOG.md` do datované verze (patche se kumulují). `--push` po commitu navíc pushne a vytvoří git tag `v<verze>` — proto `--push` vyžaduje explicitní `--bump` (bez něj by tag neměl novou verzi). Vše je opt-in: bez flagů done jen commitne práci fáze.
+**Version bump, CHANGELOG and tag?**
+By default `done` does **not** bump the version in `package.json` (`--bump none`). With `--bump patch|minor|major` it raises it before the commit and, for `minor`/`major`, folds the `## [Unreleased]` section in `CHANGELOG.md` into a dated version (patches accumulate). `--push` additionally pushes after the commit and creates a git tag `v<version>` — that's why `--push` requires an explicit `--bump` (without it the tag would have no new version). Everything is opt-in: without flags, done just commits the phase work.
 
-**Memory záznam po fázi?**
-Po finalizaci fáze jako `done` (a po auto-commitu) se zapíše `.mini/memory/phase-{id}.md` se shrnutím **co se udělalo / klíčová rozhodnutí / otevřené konce**, a do `last-memory.md` jeho krátké shrnutí pro prompt `next`. Ve výchozím stavu se memory skládá přímo v `mini` bez volání Clauda (zadarmo a okamžitě); Claude print-mode session se použije jen při explicitně nastaveném `memory` scope. Memory je nice-to-have — když zápis selže, vypíše se warning a workflow pokračuje. Když si `memory` scope zapneš, doporučujeme lacinější model (`mini model memory haiku`), protože se spouští po každé hotové fázi.
+**Memory record after a phase?**
+After finalizing a phase as `done` (and after the auto-commit), `.mini/memory/phase-{id}.md` is written with a summary of **what was done / key decisions / loose ends**, and its short summary for the `next` prompt goes into `last-memory.md`. By default memory is assembled directly in `mini` without calling Claude (free and instant); a Claude print-mode session is used only when the `memory` scope is explicitly set. Memory is nice-to-have — when the write fails, a warning is printed and the workflow continues. When you turn on the `memory` scope, we recommend a cheaper model (`mini model memory haiku`), because it runs after every finished phase.
 
-**Undo po auto-commitu?**
-`mini undo` si pamatuje pre-commit HEAD u poslední auto-commitované fáze (v `state.json` na `phase.autoCommit`). Když po `mini done` zavoláš `mini undo`, nabídne ti vedle revertu state.json i `git reset --soft` zpět na předchozí commit — ale jen pokud HEAD pořád sedí na auto-commitu a pracovní strom je čistý. Když si mezitím commitnul něco dalšího nebo máš rozdělané změny, undo vrátí jen `state.json` a vypíše hint, jak commit zrušit ručně.
+**Undo after the auto-commit?**
+`mini undo` remembers the pre-commit HEAD of the last auto-committed phase (in `state.json` at `phase.autoCommit`). When you call `mini undo` after `mini done`, it offers — alongside reverting state.json — a `git reset --soft` back to the previous commit, but only if HEAD still sits on the auto-commit and the working tree is clean. If you committed something else in the meantime or have uncommitted changes, undo reverts only `state.json` and prints a hint on how to drop the commit by hand.
 
-**Funguje to s API klíčem místo Pro/Max?**
-Ano, `mini` jen spouští `claude` jako podproces — autentizaci řeší samotný Claude Code podle toho, jak je nastavený.
+**Does it work with an API key instead of Pro/Max?**
+Yes, `mini` just runs `claude` as a subprocess — authentication is handled by Claude Code itself, based on how it's configured.
 
-## Workflow tipy
+## Workflow tips
 
-- Začni `mini auto` na první 1-2 fáze, abys viděl, jak ti to sedí
-- Pak přepínej mezi `mini auto` (rychlé) a klasickým `mini do` (kontrola)
-- Pokud Claude navrhne hloupost v `mini next` v auto, **stiskni Ctrl+C** a spusť bez auto
-- Po každé fázi `mini status` ukáže celkový pokrok
+- Start with `mini auto` for the first 1-2 phases to see how it suits you
+- Then switch between `mini auto` (fast) and the classic `mini do` (control)
+- If Claude proposes nonsense in `mini next` in auto, **press Ctrl+C** and run without auto
+- After every phase, `mini status` shows the overall progress
 
-## Licence / atribuce
+## License / attribution
 
-Tvoje vlastní. Generováno za spolupráce Claude Code.
+Your own. Generated in collaboration with Claude Code.

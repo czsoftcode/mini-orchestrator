@@ -1,0 +1,34 @@
+{
+  "id": 81,
+  "title": "Anglický README + CHANGELOG",
+  "goal": "Přeložit README.md a CHANGELOG.md kompletně do angličtiny (zachovat code-bloky, názvy příkazů/flagů, cesty, odkazy a keepachangelog 1.1.0 strukturu vč. nadpisů Added/Changed/Fixed a [Unreleased]) a zakotvit konvenci, že nové zápisky do CHANGELOG.md i projektová dokumentace se píšou anglicky (doplnit do CLAUDE.md a docs/i18n-glossary.md). Ověřit, že v obou souborech nezůstala česká próza a že struktura/odkazy/příklady sedí.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přeložit README.md do AJ",
+      "status": "done",
+      "detail": "Všechny sekce a próza anglicky (Co potřebuješ → Requirements, Instalace → Installation, Quick start, Příkazy → Commands, Modely → Models, Strojová mapa, Soubory v projektu, Auto režim, Import z GSD, FAQ, Workflow tipy, Licence). Zachovat code-bloky, názvy příkazů/flagů, cesty, odkazy a hierarchii nadpisů."
+    },
+    {
+      "title": "Přeložit CHANGELOG.md do AJ",
+      "status": "done",
+      "detail": "[Unreleased] i všechny datované verze (1.4.0 .. 1.1.0). Zachovat keepachangelog 1.1.0 strukturu, verze+data, nadpisy Added/Changed/Fixed, názvy příkazů/flagů a cesty; přeložit jen prózu zápisků (vč. úvodní věty o formátu a odkazů na CZ semver lokalizaci → EN)."
+    },
+    {
+      "title": "Zakotvit konvenci anglických docs",
+      "status": "done",
+      "detail": "Do CLAUDE.md doplnit, že projektová dokumentace (README, CHANGELOG) a nové CHANGELOG zápisky se píšou anglicky; aktualizovat docs/i18n-glossary.md (sekce/Stav migrace)."
+    },
+    {
+      "title": "Ověřit překlad a zelený build",
+      "status": "done",
+      "detail": "grep diakritiky v README.md a CHANGELOG.md čistý (kromě případných citací); struktura nadpisů a odkazy sedí; npm run build a npm test zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T16:13:19.657Z",
+  "completedAt": "2026-05-31T16:21:47.699Z",
+  "autoCommit": {
+    "preSha": "c20104edff161a731b72106bcff1077e52d3c244",
+    "subject": "Fáze 81: Anglický README + CHANGELOG"
+  }
+}

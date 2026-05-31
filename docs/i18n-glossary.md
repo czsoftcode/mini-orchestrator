@@ -166,13 +166,17 @@ generují anglické instrukce (sdílený `GRAPH_USAGE_HINT` včetně) a slash-co
 Překlad **programu** (CLI + UI + komentáře) běží od fáze 78:
 - **hotovo (fáze 78):** `src/cli.ts` a `src/ui/*` (runtime hlášky i komentáře),
   `package.json` description, jazykové pravidlo v `CLAUDE.md`.
-- **zbývá:** runtime hlášky a komentáře v `src/commands/*`, reporty/memory
-  (`src/state/*`, `commands/writeMemory.ts`), graph mappery (`src/graph/*`) a
-  další moduly.
-
-Záměrně **česky** zůstává interní produkce paměťové koláže
-`buildPhaseMemoryMarkdown` v `commands/writeMemory.ts` (nadpisy `## Diskuse`,
-`## Run report`, `## Kroky`, `## Poznámka uživatele`, `## Auto-commit`, `**Cíl:**`).
-Není to prompt — je to skládání dat, která mini vlastní; konzument
-`summarizeMemoryForNext` se na ty kotvy váže. Případný překlad je samostatná
-změna mimo „překlad instrukcí".
+- **hotovo (fáze 79):** utility/správní příkazy `src/commands/*` (status, undo,
+  init, import-gsd, model, stop, map, audit, update, install-commands, migrate,
+  renumber) — runtime hlášky i komentáře; nadpisy `project.md` (init, import-gsd)
+  na `## What I'm building` / `## Who it's for` / `## Main constraints`.
+- **hotovo (fáze 80):** paměťová koláž `buildPhaseMemoryMarkdown` v
+  `commands/writeMemory.ts` — nadpisy `# Phase` / `**Goal:**` / `## Steps` /
+  `## User's note` / `## Auto-commit` / `## Discussion`, `STEP_WORD` na
+  `done/doing/todo/skipped`. Konzument `summarizeMemoryForNext` čte EN i starou
+  CZ paměť (legacy alias `Diskuse`, dvojjazyčné matchery).
+- **hotovo (fáze 81):** projektová dokumentace `README.md` a `CHANGELOG.md`
+  přeložena; nové zápisky do `CHANGELOG.md` se píšou anglicky (viz `CLAUDE.md`).
+- **zbývá:** lifecycle příkazy (`do`/`done`/`next`/`plan`/`auto`/`discuss`/
+  `context`), `src/state/*` (vč. `SCOPE_LABELS`), graph mappery (`src/graph/*`)
+  a další moduly.

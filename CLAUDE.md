@@ -15,6 +15,8 @@ dispozici. Anglicky tedy piš:
 - UI texty, CLI help, výstupy a logy příkazů
 - chybové hlášky
 - komentáře a JSDoc v kódu
+- **projektovou dokumentaci** (`README.md`, `CHANGELOG.md`) — včetně **nových
+  zápisků do `CHANGELOG.md`** (záznamy fází přes `/mini:done` piš anglicky)
 
 Česky zůstává **jen** tento `CLAUDE.md` a naše komunikace v chatu + commit
 messages (viz výše).
