@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { commitAll, createTag, hasChanges, headSha, isGitRepo, push, pushTag } from '../git.js';
 import { buildGraph, GRAPH_DIR, hasMappableProject } from '../graph/buildGraph.js';
 import { CHANGELOG_FILE, stampUnreleased, todayIso } from '../changelog.js';
-import { bumpPackageVersion } from '../version.js';
+import { bumpProjectVersion } from '../projectVersion.js';
 import type { BumpLevel } from '../version.js';
 import {
   RunReportParseError,
@@ -358,8 +358,8 @@ async function commitPhaseWork(
  * push logic — git errors (an existing tag, a missing remote) are only logged
  * as a warning.
  *
- * When the project has no version (`version === null` — another language
- * without `package.json`), we silently skip; there is nothing to tag against.
+ * When there is no version (`version === null` — the bump found nothing to
+ * write), we silently skip; there is nothing to tag against.
  */
 async function tagVersion(cwd: string, version: string | null): Promise<void> {
   if (!version) return;
@@ -391,8 +391,8 @@ async function tagVersion(cwd: string, version: string | null): Promise<void> {
  * that gets pushed.
  *
  * Never blocks done — a missing file, a missing `## [Unreleased]` section, or an
- * empty Unreleased is only logged. When the project has no version (`version ===
- * null` — another language without `package.json`), we silently skip.
+ * empty Unreleased is only logged. When there is no version (`version === null`
+ * — the bump found nothing to write), we silently skip.
  */
 async function stampChangelog(cwd: string, version: string | null): Promise<void> {
   if (!version) return;
@@ -426,15 +426,22 @@ async function stampChangelog(cwd: string, version: string | null): Promise<void
 }
 
 /**
- * Best-effort version bump in `package.json` before the phase commit. When the
- * project has no `package.json` (another language), it silently skips. A write
- * error is only logged — it must not block finalization.
+ * Best-effort version bump before the phase commit. The version is written to
+ * the place that matches the project's language (`package.json`, `Cargo.toml`,
+ * `pyproject.toml`, `setup.py`, `composer.json`, `__version__`); when no known
+ * manifest carries a version, the language-agnostic `VERSION` fallback file is
+ * used (and created with `0.1.0` if missing) — see `bumpProjectVersion`. A read
+ * or write error is only logged — it must not block finalization.
  */
 async function bumpVersion(cwd: string, level: BumpLevel): Promise<string | null> {
   try {
-    const r = await bumpPackageVersion(cwd, level);
+    const r = await bumpProjectVersion(cwd, level);
     if (r) {
-      log.dim(`Version: ${r.from} → ${r.to} (${level}).`);
+      if (r.created) {
+        log.dim(`Version: created ${r.source} at ${r.to}.`);
+      } else {
+        log.dim(`Version: ${r.from} → ${r.to} (${level}, ${r.source}).`);
+      }
       return r.to;
     }
   } catch (err) {

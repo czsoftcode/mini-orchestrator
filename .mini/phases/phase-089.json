@@ -1,0 +1,44 @@
+{
+  "id": 89,
+  "title": "Verze podle jazyka projektu",
+  "goal": "V done se verze navyšuje na místě podle jazyka projektu (package.json, Cargo.toml, composer.json, pyproject.toml…); pokud žádná konvence nesedí, použije se/vytvoří soubor VERSION v kořeni a tag/stamp/push verzi čtou odtud.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Modul projectVersion s detekci zdroje",
+      "status": "done",
+      "detail": "Nova fce bumpProjectVersion(cwd, level) v src/projectVersion.ts; pevna priorita package.json > Cargo.toml > pyproject.toml > setup.py > composer.json > __version__ > VERSION; vrati prvni nalezeny zdroj jako { from, to, source } nebo null kdyz neni kam zapsat. Pokryto unit testem na vyber zdroje."
+    },
+    {
+      "title": "Zapis verze na miste per format",
+      "status": "done",
+      "detail": "Textova nahrada jen hodnoty semveru (zadny JSON/TOML reformat, jednoradkovy diff): package.json, Cargo.toml v sekci [package], pyproject.toml v [project]/[tool.poetry], setup.py version=, composer.json jen kdyz pole version existuje, __version__ = 'x.y.z' cilene. Dynamicka/chybejici verze => preskoc na dalsi zdroj."
+    },
+    {
+      "title": "Fallback VERSION + auto-create 0.1.0",
+      "status": "done",
+      "detail": "Kdyz zadny manifest nesedi, cist/psat holy jednoradkovy semver z VERSION v koreni; kdyz neexistuje, vytvorit s pocatecni verzi 0.1.0 (bump uroven se pri vytvoreni ignoruje). Dalsi done cte a navysuje normalne."
+    },
+    {
+      "title": "Napojit done.ts na novy detektor",
+      "status": "done",
+      "detail": "bumpVersion() vola bumpProjectVersion misto bumpPackageVersion; tagVersion/stampChangelog dostavaji verzi z vybraneho zdroje; log uvede zdroj (napr. 'Version: 1.2.0 -> 1.3.0 (minor, Cargo.toml)'). Vse best-effort, done nesmi spadnout."
+    },
+    {
+      "title": "Testy projectVersion a done",
+      "status": "done",
+      "detail": "Per zdroj (package/Cargo/pyproject/setup.py/composer/__version__/VERSION), priorita pri vice manifestech, auto-create VERSION 0.1.0, composer bez version a pyproject dynamic => fallback, odolnost vuci chybe zapisu."
+    },
+    {
+      "title": "Dokumentace README + CHANGELOG",
+      "status": "done",
+      "detail": "Popsat v README verzovani podle jazyka projektu a fallback VERSION; pridat zaznam do ## [Unreleased] v CHANGELOG.md (anglicky)."
+    }
+  ],
+  "startedAt": "2026-05-31T20:49:00.866Z",
+  "completedAt": "2026-05-31T20:54:14.527Z",
+  "autoCommit": {
+    "preSha": "3c811dbe86e843f94899fad4c3b3d845f126c547",
+    "subject": "Phase 89: Verze podle jazyka projektu"
+  }
+}

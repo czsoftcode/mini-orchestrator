@@ -442,6 +442,11 @@
       "id": 88,
       "title": "Global install instaluje bez TTY",
       "status": "done"
+    },
+    {
+      "id": 89,
+      "title": "Verze podle jazyka projektu",
+      "status": "done"
     }
   ],
   "models": {

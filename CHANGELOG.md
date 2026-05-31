@@ -6,6 +6,22 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-05-31
+
+### Added
+
+- **Version bump now follows the project's language.** When `done` raises the
+  version (`--bump patch|minor|major`), it writes it to the place that matches
+  the project instead of only `package.json`. Sources are tried in a fixed
+  priority and the first one carrying a version wins: `package.json` →
+  `Cargo.toml` (`[package]`) → `pyproject.toml` (`[project]`/`[tool.poetry]`) →
+  `setup.py` → `composer.json` (only when a `version` field already exists) →
+  `__version__ = "x.y.z"` (in a common Python location) → a language-agnostic
+  `VERSION` file. When no manifest carries a version, `VERSION` is used and, if
+  it does not exist, created with `0.1.0`. The tag (`--push`) and `CHANGELOG`
+  stamp read the version from the same source. Writes stay a single-line
+  textual replacement — no JSON/TOML reformatting.
+
 ### Fixed
 
 - **A global install (`npm i -g`) now sets up Claude Code automatically.**
