@@ -14,6 +14,15 @@ All notable changes to this project are recorded here. The format is based on
   package page, and the README's license section links to `./LICENSE`. npm always
   includes `LICENSE` in the published tarball, so it ships with the package too.
 
+### Changed
+
+- **`CLAUDE.md` is now fully English.** The project instructions are written in English
+  so any developer of the public tool can read the conventions without translating. The
+  file keeps the i18n policy (everything inside the program is English) and the
+  "left untouched" list (identifiers, technical terms, quoted foreign output, parser
+  response contract & status words); the maintainer's personal "communicate in Czech"
+  rule was removed (it lives in the maintainer's global `~/.claude/CLAUDE.md`).
+
 ## [1.5.0] - 2026-05-31
 
 ### Added

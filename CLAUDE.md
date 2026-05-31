@@ -1,33 +1,24 @@
-# Instrukce pro Claude Code v tomto projektu
+# Instructions for Claude Code in this project
 
-## Jazyk komunikace
+## Project language
 
-**Komunikuj se mnou v češtině, ne v angličtině.** Týká se to:
+**Everything inside the program is written in English** — the tool is meant to
+be international and publicly available. So write in English:
 
-- všech odpovědí v chatu (vysvětlení, otázky, shrnutí)
-- commit messages
+- UI texts, CLI help, command output and logs
+- error messages
+- comments and JSDoc in the code
+- **project documentation** (`README.md`, `CHANGELOG.md`) — including **new
+  entries in `CHANGELOG.md`** (write phase records via `/mini:done` in English)
 
-## Jazyk programu
+> Note: Some of the code may still be in Czech — the translation is happening
+> gradually, phase by phase. Whenever you come across Czech text in the program,
+> translate it into English.
 
-**Vše uvnitř programu je anglicky** — nástroj má být mezinárodní a veřejně k
-dispozici. Anglicky tedy piš:
+Left untouched (not translated):
 
-- UI texty, CLI help, výstupy a logy příkazů
-- chybové hlášky
-- komentáře a JSDoc v kódu
-- **projektovou dokumentaci** (`README.md`, `CHANGELOG.md`) — včetně **nových
-  zápisků do `CHANGELOG.md`** (záznamy fází přes `/mini:done` piš anglicky)
-
-Česky zůstává **jen** tento `CLAUDE.md` a naše komunikace v chatu + commit
-messages (viz výše).
-
-> Pozn.: Část kódu může být ještě česky — překlad probíhá postupně po fázích.
-> Když nějaký český text v programu potkáš, přelož ho do angličtiny.
-
-Beze změny (nepřekládá se):
-
-- identifikátory v kódu (názvy funkcí, proměnných, typů, soubory)
-- standardní technické termíny (`Promise`, `snapshot test`, `parser`, …)
-- citace cizích chybových hlášek a výstupů nástrojů
-- response-kontrakt parserů (`TITLE:`, `GOAL:`, `STEP:`, …) a stavová slova
-  (`done`/`doing`/`todo`/…)
+- identifiers in the code (function, variable and type names, file names)
+- standard technical terms (`Promise`, `snapshot test`, `parser`, …)
+- quoted foreign error messages and tool output
+- the parsers' response contract (`TITLE:`, `GOAL:`, `STEP:`, …) and status
+  words (`done`/`doing`/`todo`/…)

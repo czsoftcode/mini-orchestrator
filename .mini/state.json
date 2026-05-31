@@ -417,6 +417,11 @@
       "id": 83,
       "title": "MIT license + visibility",
       "status": "done"
+    },
+    {
+      "id": 84,
+      "title": "English CLAUDE.md instructions",
+      "status": "done"
     }
   ],
   "models": {

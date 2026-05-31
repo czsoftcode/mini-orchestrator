@@ -1,0 +1,29 @@
+{
+  "id": 84,
+  "title": "English CLAUDE.md instructions",
+  "goal": "Translate the project's CLAUDE.md fully into English so it suits any developer of the public mini-orchestrator, dropping the personal 'communicate in Czech' rule (the maintainer moves that preference to their global ~/.claude/CLAUDE.md), while keeping the i18n policy that everything inside the program stays English.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Translate CLAUDE.md body to English",
+      "status": "done",
+      "detail": "Rewrite the heading and the program-language / i18n policy (English UI, CLI help, logs, error messages, comments/JSDoc, README & CHANGELOG incl. /mini:done entries) and the do-not-translate list (identifiers, technical terms, foreign error quotes, parser response-contract & status words) fully in English."
+    },
+    {
+      "title": "Drop the personal Czech-communication rule",
+      "status": "done",
+      "detail": "Remove the 'Jazyk komunikace / communicate in Czech' section and rephrase the 'Czech stays only in this CLAUDE.md' note so the file no longer carries the maintainer's personal preference (it moves to the global ~/.claude/CLAUDE.md)."
+    },
+    {
+      "title": "Verify English-only & consistency",
+      "status": "done",
+      "detail": "Confirm no Czech text remains in CLAUDE.md, the i18n policy still reads coherently for an outside developer, and the file doesn't contradict README.md / docs/i18n-glossary.md."
+    }
+  ],
+  "startedAt": "2026-05-31T17:32:58.709Z",
+  "completedAt": "2026-05-31T17:37:45.801Z",
+  "autoCommit": {
+    "preSha": "dc00add65efe65ffb895342996c865a05dd237a2",
+    "subject": "Phase 84: English CLAUDE.md instructions"
+  }
+}
