@@ -1,0 +1,42 @@
+{
+  "id": 88,
+  "title": "Global install instaluje bez TTY",
+  "goal": "Při globální instalaci (npm i -g, detekováno přes npm_config_global) postinstall i bez TTY tiše nainstaluje /mini:* příkazy do user scope (~/.claude/commands/mini) a nastaví statusline jen pokud žádný neexistuje, místo aby pouze vypsal hint; u lokální neinteraktivní instalace (CI) zůstane chování beze změny.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Helper isGlobalInstall()",
+      "status": "done",
+      "detail": "cista funkce vracejici true kdyz process.env.npm_config_global === 'true' (npm to nastavi pri npm i -g); injektovatelne pro testy"
+    },
+    {
+      "title": "Postinstall: na global install nainstaluj prikazy i bez TTY",
+      "status": "done",
+      "detail": "v runPostinstall pri !isInteractive() ale global volej installSlashCommands (padne na user scope pres recommendedScope) misto predcasneho returnu; lokalni neinteraktivni (CI) zustane jen hint"
+    },
+    {
+      "title": "Postinstall: na global install nastav statusline bez dotazu",
+      "status": "done",
+      "detail": "bezpromptova vetev zavola installStatusline() (zapise jen kdyz zadny statusLine neexistuje, idempotentni), uspech zaloguj; foreign statusLine se nikdy neprepise"
+    },
+    {
+      "title": "Testy postinstallu pro global vs lokalni install",
+      "status": "done",
+      "detail": "global -> prikazy v ~/.claude/commands/mini + statusline; lokalni neinteraktivni -> nezapise nic (stavajici chovani)"
+    },
+    {
+      "title": "Dokumentace: npm i -g instaluje do user scope + statusline",
+      "status": "done",
+      "detail": "kratka poznamka v README ze globalni instalace nastavi prikazy a statusline neinteraktivne"
+    }
+  ],
+  "startedAt": "2026-05-31T20:16:22.982Z",
+  "resolvedVerify": [
+    "Real `npm i -g mini-orchestrator` on a clean machine sets up commands + statusline"
+  ],
+  "completedAt": "2026-05-31T20:23:52.587Z",
+  "autoCommit": {
+    "preSha": "2e2547fedd04614c49184c486bf71341797fd840",
+    "subject": "Phase 88: Global install instaluje bez TTY"
+  }
+}

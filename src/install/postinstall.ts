@@ -7,6 +7,18 @@ export const MANUAL_HINT =
   'Install the /mini:* slash commands anytime with:  mini install-commands  (or: npx mini install-commands)';
 
 /**
+ * Is this a global install (`npm i -g`)? npm sets `npm_config_global=true` for
+ * the lifecycle scripts of a global install. We use it to decide whether to set
+ * things up automatically even without a TTY: a global install is an explicit,
+ * user-wide intent, whereas a local (project / CI) install should stay quiet.
+ *
+ * `env` is injectable so tests don't have to mutate `process.env`.
+ */
+export function isGlobalInstall(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.npm_config_global === 'true';
+}
+
+/**
  * npm `postinstall` entry. Runs after `npm install` of the package (invoked by
  * the guarded launcher `scripts/postinstall.mjs`, which calls this function).
  *
@@ -26,15 +38,24 @@ export async function runPostinstall(): Promise<void> {
   }
 
   const cwd = process.env.INIT_CWD ?? process.cwd();
+  const interactive = isInteractive();
 
-  if (!isInteractive()) {
-    // No TTY — don't hang the install. Just leave a breadcrumb.
+  // A global install (`npm i -g`) is an explicit, user-wide intent: set things
+  // up automatically even without a TTY. A local / CI install without a TTY
+  // stays quiet (only a breadcrumb) so it never surprises a scripted install.
+  const auto = !interactive && isGlobalInstall();
+
+  if (!interactive && !auto) {
+    // No TTY and not a global install — don't hang or surprise the install.
     log.dim(MANUAL_HINT);
     return;
   }
 
   try {
-    await installSlashCommands({ cwd });
+    // For a non-interactive global install force the user scope: there is no
+    // project here, and a stray local `claude` in INIT_CWD must not steer the
+    // detected default to project scope.
+    await installSlashCommands(auto ? { cwd, scope: 'user' } : { cwd });
   } catch (err) {
     // A failed postinstall must not break `npm install`.
     log.warn(`Could not install the slash commands automatically: ${(err as Error).message}`);
@@ -42,9 +63,11 @@ export async function runPostinstall(): Promise<void> {
   }
 
   // Offer the status line separately — a failure here must likewise not break
-  // the install, and it should not prevent the slash commands above.
+  // the install, and it should not prevent the slash commands above. In the
+  // non-interactive global case we install it without prompting (assume yes);
+  // `offerStatusline` still never overwrites an existing `statusLine`.
   try {
-    await offerStatusline();
+    await offerStatusline(auto ? { interactive: true, confirm: async () => true } : {});
   } catch (err) {
     log.warn(`Could not set up the status line: ${(err as Error).message}`);
   }

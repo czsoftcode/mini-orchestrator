@@ -437,6 +437,11 @@
       "id": 87,
       "title": "mini statusline auto-install",
       "status": "done"
+    },
+    {
+      "id": 88,
+      "title": "Global install instaluje bez TTY",
+      "status": "done"
     }
   ],
   "models": {

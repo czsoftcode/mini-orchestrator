@@ -6,6 +6,18 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+
+- **A global install (`npm i -g`) now sets up Claude Code automatically.**
+  Previously the postinstall hook bailed out without a TTY, so a global install
+  installed neither the `/mini:*` slash commands nor the status line (npm runs
+  lifecycle scripts without a terminal). A global install is now detected
+  (`npm_config_global`) and, even without a TTY, installs the slash commands into
+  the user scope (`~/.claude/commands/mini`) and wires the status line into
+  `~/.claude/settings.json` (only when none exists — a foreign `statusLine` is
+  never touched). A local / CI install without a TTY is unchanged: it stays quiet
+  and only prints a hint.
+
 ## [1.6.0] - 2026-05-31
 
 ### Added

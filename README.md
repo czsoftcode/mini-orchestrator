@@ -17,6 +17,8 @@ npm install -g mini-orchestrator@latest
 
 The command is called `mini`. To update: run the same command again. To uninstall: `npm uninstall -g mini-orchestrator`.
 
+A global install (`npm i -g`) sets up Claude Code automatically — even though npm runs the postinstall hook without a terminal: it writes the `/mini:*` slash commands into `~/.claude/commands/mini` (user scope, for all projects) and wires the mini status line into `~/.claude/settings.json` (only when you have no `statusLine` yet — an existing one is never touched). A local / CI install stays quiet and only prints a hint; run `mini install-commands` there by hand.
+
 Installing without `sudo`: point the global npm prefix into your home directory (one-off) and have its `bin` on your `PATH`:
 
 ```bash
@@ -163,9 +165,11 @@ context-window size (`200k`/`1M`), and a gauge plus percentage of the
 Code does not report token counts to the status line directly).
 
 **Install:** on `npm install` the postinstall hook offers it — but only when you
-have **no** status line configured yet, and only after asking. It is never
-forced and an existing status line (yours, GSD's, Claude's) is never touched. It
-writes a single `statusLine` entry into `~/.claude/settings.json`:
+have **no** status line configured yet. In an interactive install it asks first;
+a global install (`npm i -g`) sets it up without asking, since it runs without a
+terminal. Either way it is never forced and an existing status line (yours,
+GSD's, Claude's) is never touched. It writes a single `statusLine` entry into
+`~/.claude/settings.json`:
 
 ```json
 {
