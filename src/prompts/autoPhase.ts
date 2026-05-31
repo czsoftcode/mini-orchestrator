@@ -2,10 +2,10 @@ import { phaseStem } from '../state/store.js';
 import type { Phase, StepStatus } from '../state/types.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  todo: 'čeká',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'in progress',
+  todo: 'todo',
+  skipped: 'skipped',
 };
 
 export interface AutoPhaseRetryContext {
@@ -65,7 +65,7 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
   // session — projekt je v rámci session neměnný, takže „už ho máš, nenačítej".
   let projectBlock: string;
   if (useProjectRef) {
-    projectBlock = `Projekt je popsán v \`.mini/project.md\`. Pokud jsi ho v této session už četl (typicky při \`/mini:plan\` nebo na začátku \`auto\`), **znovu ho nenačítej** — máš ho v kontextu. Jinak si ho teď přečti přes Read tool.`;
+    projectBlock = `The project is described in \`.mini/project.md\`. If you already read it in this session (typically during \`/mini:plan\` or at the start of \`auto\`), **do not read it again** — you have it in context. Otherwise read it now via the Read tool.`;
   } else {
     projectBlock = projectMd.trim();
   }
@@ -76,9 +76,9 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
       const head = `- [${STEP_WORD[s.status]}] ${s.title}`;
       return s.detail ? `${head}\n    ${s.detail}` : head;
     });
-    stepsBlock = `\nKroky (vodítko k práci — neupravuj je v žádném souboru, slouží jen jako plán a referenční názvy pro report):\n${lines.join('\n')}\n`;
+    stepsBlock = `\nSteps (a guide for the work — do not edit them in any file, they only serve as the plan and reference names for the report):\n${lines.join('\n')}\n`;
   } else {
-    stepsBlock = '\n(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)\n';
+    stepsBlock = '\n(The phase is not broken down into steps — work on the whole phase at once.)\n';
   }
 
   // Poznámky z diskuse: buď inline (default), nebo jen odkaz s read-once
@@ -87,10 +87,10 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
   let notesBlock: string;
   if (useDiscussNotesRef) {
     const notesPath = `.mini/discuss/${phaseStem(phase.id)}.md`;
-    notesBlock = `\n# Poznámky k fázi (z diskuse)\nPoznámky z diskuse k této fázi jsou v \`${notesPath}\`. Pokud jsi je v této session už četl (typicky při \`/mini:plan\` nebo na začátku \`auto\`), **znovu je nenačítej** — máš je v kontextu. Jinak si je teď přečti přes Read tool.\n`;
+    notesBlock = `\n# Phase notes (from discussion)\nThe discussion notes for this phase are in \`${notesPath}\`. If you already read them in this session (typically during \`/mini:plan\` or at the start of \`auto\`), **do not read them again** — you have them in context. Otherwise read them now via the Read tool.\n`;
   } else {
     const notes = discussNotes?.trim();
-    notesBlock = notes ? `\n# Poznámky k fázi (z diskuse)\n${notes}\n` : '';
+    notesBlock = notes ? `\n# Phase notes (from discussion)\n${notes}\n` : '';
   }
 
   // Průběžný zápis: po každém dokončeném kroku ať Claude označí krok hotový
@@ -98,20 +98,20 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
   // finální report jinak vzniká až úplně na konci. Dává smysl jen u fází
   // rozmenených na kroky.
   const progressBlock = phase.steps?.length
-    ? `\n# Průběžný zápis kroků
-Jakmile dokončíš jeden krok, **hned** ho označ za hotový (ještě než se pustíš do dalšího):
+    ? `\n# Tracking step progress
+As soon as you finish one step, mark it done **immediately** (before you start the next one):
 
 \`\`\`
-mini do --apply --step-done "<přesný název kroku ze sekce Kroky>"
+mini do --apply --step-done "<exact step name from the Steps section>"
 \`\`\`
 
-Název kopíruj znak po znaku ze sekce "Kroky" výše. Když session spadne, ve stavu pak bude vidět, kam až ses dostal. Finální report na konci (viz níže) zapiš tak jako tak — průběžný zápis ho nenahrazuje.
+Copy the name character by character from the "Steps" section above. If the session crashes, the state will then show how far you got. Write the final report at the end (see below) regardless — tracking progress does not replace it.
 `
     : '';
 
   const retryBlock = retry
-    ? `\n# Opakovaný pokus (průchod ${retry.iteration})
-V některém z předchozích průchodů se nepodařilo dotáhnout všechny kroky. Co už je hotové (nebo odložené) uvidíš v sekci "Kroky" níže — soustřeď se na zbývající. Předchozí report najdeš v \`${retry.previousReportPath}\` — přečti si ho, ať víš, kde předchozí pokus skončil a na co narazil. Nový report (viz níže) předchozí přepíše.
+    ? `\n# Retry (iteration ${retry.iteration})
+In one of the previous iterations not all steps were finished. What is already done (or skipped) you'll see in the "Steps" section below — focus on the remaining ones. You'll find the previous report in \`${retry.previousReportPath}\` — read it so you know where the previous attempt ended and what it ran into. The new report (see below) overwrites the previous one.
 `
     : '';
 
@@ -124,37 +124,37 @@ V některém z předchozích průchodů se nepodařilo dotáhnout všechny kroky
       .map((s) => `  - title: "${escapeYamlDouble(s.title)}"\n    status: done`)
       .join('\n');
   } else {
-    sampleSteps = '  []  # fáze nemá kroky — nech prázdný seznam';
+    sampleSteps = '  []  # the phase has no steps — leave an empty list';
   }
 
-  return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **auto session** — máš v jednom průchodu implementovat celou fázi.
+  return `You are part of a tool that helps the user build a project incrementally.
+An **auto session** is in progress — you are to implement the whole phase in one pass.
 
-# Projekt
+# Project
 ${projectBlock}
 ${retryBlock}
-# Aktuální fáze
-**Fáze ${phase.id}: ${phase.title}**
-Cíl: ${phase.goal ?? '(nezadán)'}
+# Current phase
+**Phase ${phase.id}: ${phase.title}**
+Goal: ${phase.goal ?? '(not set)'}
 ${stepsBlock}${notesBlock}
-# Tvůj úkol
-Implementuj všechny zbývající kroky tak, aby fáze splnila svůj cíl. Kroky výše jsou vodítko k práci — pořadí a granularita je na tobě a soubory v \`.mini/state.json\` nijak needituj ručně. O posun stavu fáze a finální statusy kroků se postará uživatel přes \`mini done\` na základě reportu, který napíšeš (viz níže).
+# Your task
+Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
-Soubory si přečti sám podle potřeby. Pracuješ v režimu acceptEdits, takže můžeš editovat bez doptávání.
+Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 ${progressBlock}
 
-# Report na konci session
-Než session ukončíš, **zapiš přes Write tool** report do souboru \`${reportPath}\`. Report má dvě části:
+# Report at the end of the session
+Before you end the session, **write via the Write tool** a report into the file \`${reportPath}\`. The report has two parts:
 
-1) **YAML front matter** se strojově čitelnými statusy. Tato část se parsuje, takže struktura musí být přesná. Pravidla:
-   - názvy kroků v \`steps[].title\` MUSÍ doslova odpovídat názvům v sekci "Kroky" výše (kopíruj je znak po znaku),
-   - status každého kroku je právě jeden z: \`done\` (hotovo), \`skipped\` (vědomě vynecháno — vysvětli v textu), \`blocked\` (narazil jsi na blocker — popiš v textu), \`todo\` (zbývá udělat, např. nevyšel čas),
-   - \`verdict\` shrnuje celou fázi a je jeden z: \`done\` (všechno hotové), \`partial\` (něco zbývá, ale nic ti nebrání pokračovat), \`blocked\` (narazil jsi na blocker, který sám neumíš obejít),
-   - volitelné pole \`verify\` — seznam věcí, které jsi **sám nedokázal ověřit** a potřebují lidský pohled (vizuální UI, UX flow, subjektivní dojem). Co jde ověřit strojově (curl, testy, build), **ověř sám** a do \`verify\` to nepiš. Každá položka má \`title\` (co má člověk ověřit, povinné) a volitelně \`detail\` (kontext — co a jak jsi (ne)ověřil). Když není co ověřovat člověkem, pole vynech.
+1) **YAML front matter** with machine-readable statuses. This part is parsed, so the structure must be exact. Rules:
+   - the step names in \`steps[].title\` MUST match the names in the "Steps" section above verbatim (copy them character by character),
+   - each step's status is exactly one of: \`done\`, \`skipped\` (deliberately omitted — explain in the text), \`blocked\` (you ran into a blocker — describe it in the text), \`todo\` (still to be done, e.g. ran out of time),
+   - \`verdict\` summarizes the whole phase and is one of: \`done\` (everything finished), \`partial\` (something remains, but nothing stops you from continuing), \`blocked\` (you ran into a blocker you can't get around yourself),
+   - optional field \`verify\` — a list of things you **could not verify yourself** and that need a human eye (visual UI, UX flow, subjective impression). Whatever can be verified mechanically (curl, tests, build), **verify it yourself** and don't put it in \`verify\`. Each item has \`title\` (what the human should verify, required) and optionally \`detail\` (context — what you did/didn't verify and how). When there is nothing for a human to verify, omit the field.
 
-2) **Volný text** pod YAML blokem — krátké shrnutí pro člověka: co se povedlo, co ne, na co jsi narazil, otevřené otázky. Sem patří kontext, který by se do YAML statusu nevešel.
+2) **Free text** below the YAML block — a short summary for the human: what went well, what didn't, what you ran into, open questions. This is where context that wouldn't fit into the YAML status belongs.
 
-Soubor musí začínat YAML blokem přesně v tomto tvaru (uprav statusy a doplň poznámky; názvy kroků a \`phase\` neměň; \`verify\` přidej jen když je co ověřovat člověkem, jinak ho vynech):
+The file must start with a YAML block in exactly this form (adjust the statuses and add notes; do not change the step names or \`phase\`; add \`verify\` only when there is something for a human to verify, otherwise omit it):
 
 \`\`\`
 ---
@@ -162,17 +162,17 @@ phase: ${phase.id}
 verdict: done
 steps:
 ${sampleSteps}
-verify:   # volitelné — vynech, když Claude ověřil všechno sám
-  - title: "co má člověk ověřit (vizuální/UX věc, co nejde strojově)"
-    detail: "co a jak jsi (ne)ověřil"
+verify:   # optional — omit it when Claude verified everything itself
+  - title: "what the human should verify (a visual/UX thing that can't be done mechanically)"
+    detail: "what you did/didn't verify and how"
 ---
 
-# Fáze ${phase.id} — report z auto session
+# Phase ${phase.id} — report from the auto session
 
-(volný text — co se povedlo, co ne, poznámky pro člověka)
+(free text — what went well, what didn't, notes for the human)
 \`\`\`
 
-Teprve **po zapsání reportu** session ukonči (napiš /exit nebo stiskni Ctrl+D). Bez reportu uživatel nemá z čeho posunout stav — projde se pak ručně přes interaktivní \`mini done\`.
+Only **after writing the report** end the session (type /exit or press Ctrl+D). Without a report the user has nothing to move the state from — they then go through it manually via the interactive \`mini done\`.
 `;
 }
 

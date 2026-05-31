@@ -372,6 +372,11 @@
       "id": 74,
       "title": "Překlad audit + import promptů do AJ",
       "status": "done"
+    },
+    {
+      "id": 75,
+      "title": "Překlad memory + auto promptů do AJ",
+      "status": "done"
     }
   ],
   "models": {

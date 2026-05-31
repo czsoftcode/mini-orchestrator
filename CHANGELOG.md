@@ -17,6 +17,10 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
   `.mini/codebase.md` s anglickými nadpisy sekcí (Overview / Directory structure /
   Key modules / Technologies); import GSD má anglickou prózu. Strojové kontrakty
   (`NAME:`/`WHAT:`/`FOR_WHOM:`/`CONSTRAINTS:`/`PHASES:` i stavová slova) zůstávají beze změny.
+- **Prompty pro zápis paměti a autonomní (`auto`) běh přeloženy do angličtiny.**
+  Memory prompt i auto session prompt (a tím i interaktivní `/mini:do` / `/mini:auto`)
+  jsou nově anglicky. Strojový kontrakt YAML reportu (`phase`/`verdict`/`steps`/
+  `status`/`verify` + jejich hodnoty) zůstává beze změny.
 - **`/mini:auto --discuss`** — flag vynutí krok `discuss` v každé fázi běhu
   (analogicky k `--verify`). Bez něj se `discuss` spouští jen podmíněně u složitých fází.
 - **Verify v autonomním `/mini:auto`** — cyklus teď mezi `do` a `done` spustí krok

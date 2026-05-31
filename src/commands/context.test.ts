@@ -102,7 +102,7 @@ describe('context', () => {
     await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
     await context('do');
     expect(out).toContain('.mini/run/phase-001.md');
-    expect(out).toContain('Report na konci session');
+    expect(out).toContain('Report at the end of the session');
   });
 
   it('do bez poznámek z diskuse blok poznámek vynechá', async () => {
@@ -121,7 +121,7 @@ describe('context', () => {
     );
     await context('do');
     // Reference mód: odkaz na soubor + read-once instrukce, ale ne plný text.
-    expect(out).toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).toContain('# Phase notes (from discussion)');
     expect(out).toContain('.mini/discuss/phase-001.md');
     expect(out).toContain('Read');
     expect(out).not.toContain('TAJNY INLINE TEXT NESMI BYT V PROMPTU');

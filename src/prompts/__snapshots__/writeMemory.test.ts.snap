@@ -1,104 +1,104 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildWriteMemoryPrompt > renders phase with steps, humanNotes a git context 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **zápis paměti po dokončené fázi** — NEIMPLEMENTUJ nic, nic
-nerefaktoruj. Tvým jediným výstupem je soubor \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`.
+"You are part of a tool that helps the user build a project incrementally.
+A **memory write after a finished phase** is in progress — DO NOT implement anything,
+do not refactor anything. Your only output is the file \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Hotová fáze
-**Fáze 7: Záznam paměti**
-Cíl: po fázi se zapíše memory soubor
+# Finished phase
+**Phase 7: Záznam paměti**
+Goal: po fázi se zapíše memory soubor
 
-Kroky:
-- [hotovo] prompt builder
-- [hotovo] symlink
+Steps:
+- [done] prompt builder
+- [done] symlink
 
-Poznámka uživatele:
+User's note:
 """
 Symlink se na Windows fallbackuje na copyFile.
 """
 
-# Tvůj úkol
-Zapiš stručné shrnutí toho, co se v této fázi udělalo a proč. Cílový čtenář
-jsi **ty sám** v dalších fázích — \`git log\` ti řekne *co* se změnilo, memory
-soubor má doplnit *proč* (rozhodnutí, kompromisy, otevřené konce).
+# Your task
+Write a brief summary of what was done in this phase and why. The target reader
+is **you yourself** in later phases — \`git log\` tells you *what* changed, the memory
+file should add *why* (decisions, trade-offs, loose ends).
 
-## Jak postupovat
-- Spusť \`git show HEAD\` přes Bash a podívej se na diff posledního commitu — to je práce této fáze.
-- Přečti \`.mini/discuss/phase-7.md\` — záměr fáze z diskuse před plánováním.
-- Přečti \`.mini/run/phase-7.md\` — report z auto session (co se povedlo, na co Claude narazil).
-- Drž se faktů. Nepiš to, co si nejsi jistý.
-- Krátké odrážky, žádná dlouhá prosa.
+## How to proceed
+- Run \`git show HEAD\` via Bash and look at the diff of the last commit — that is the work of this phase.
+- Read \`.mini/discuss/phase-7.md\` — the phase's intent from the discussion before planning.
+- Read \`.mini/run/phase-7.md\` — the report from the auto session (what went well, what Claude ran into).
+- Stick to facts. Don't write what you're not sure about.
+- Short bullets, no long prose.
 
-## Formát výstupu
-Vytvoř soubor \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\` přes \`Write\` s touto strukturou (názvy sekcí
-jsou fixní; sekci smíš nechat prázdnou, pokud k ní není co napsat):
+## Output format
+Create the file \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\` via \`Write\` with this structure (section names
+are fixed; you may leave a section empty if there is nothing to write):
 
 \`\`\`
-# Fáze 7 — Záznam paměti
+# Phase 7 — Záznam paměti
 
-## Co se udělalo
-(odrážky: konkrétní změny — nové moduly, upravené soubory, nové testy)
+## What was done
+(bullets: concrete changes — new modules, edited files, new tests)
 
-## Klíčová rozhodnutí
-(odrážky: proč X místo Y, jaké kompromisy se dělaly, co bylo zvažováno a zamítnuto)
+## Key decisions
+(bullets: why X instead of Y, what trade-offs were made, what was considered and rejected)
 
-## Otevřené konce
-(odrážky: co zůstalo nehotové, na co si dát pozor v dalších fázích, technický dluh)
+## Loose ends
+(bullets: what was left unfinished, what to watch out for in later phases, technical debt)
 \`\`\`
 
-# Smíš použít
-\`Read\` na čtení souborů projektu, \`Bash\` na \`git show HEAD\` a \`Write\` na založení
-\`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`. Jiné nástroje nepotřebuješ.
+# You may use
+\`Read\` to read project files, \`Bash\` for \`git show HEAD\`, and \`Write\` to create
+\`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`. You don't need any other tools.
 "
 `;
 
 exports[`buildWriteMemoryPrompt > vyjadřuje, ať Claude nepouští git show, když auto-commit neproběhl 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **zápis paměti po dokončené fázi** — NEIMPLEMENTUJ nic, nic
-nerefaktoruj. Tvým jediným výstupem je soubor \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`.
+"You are part of a tool that helps the user build a project incrementally.
+A **memory write after a finished phase** is in progress — DO NOT implement anything,
+do not refactor anything. Your only output is the file \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Hotová fáze
-**Fáze 2: Bez gitu**
-Cíl: něco se udělalo bez commitu
+# Finished phase
+**Phase 2: Bez gitu**
+Goal: něco se udělalo bez commitu
 
-# Tvůj úkol
-Zapiš stručné shrnutí toho, co se v této fázi udělalo a proč. Cílový čtenář
-jsi **ty sám** v dalších fázích — \`git log\` ti řekne *co* se změnilo, memory
-soubor má doplnit *proč* (rozhodnutí, kompromisy, otevřené konce).
+# Your task
+Write a brief summary of what was done in this phase and why. The target reader
+is **you yourself** in later phases — \`git log\` tells you *what* changed, the memory
+file should add *why* (decisions, trade-offs, loose ends).
 
-## Jak postupovat
-- \`git show HEAD\` **nepouštěj** — buď tato fáze žádný commit nevytvořila, nebo nejsi v gitovém repu. Vyjdi jen z informací níže.
-- Drž se faktů. Nepiš to, co si nejsi jistý.
-- Krátké odrážky, žádná dlouhá prosa.
+## How to proceed
+- **Do not run** \`git show HEAD\` — either this phase created no commit, or you are not in a git repo. Rely only on the information below.
+- Stick to facts. Don't write what you're not sure about.
+- Short bullets, no long prose.
 
-## Formát výstupu
-Vytvoř soubor \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\` přes \`Write\` s touto strukturou (názvy sekcí
-jsou fixní; sekci smíš nechat prázdnou, pokud k ní není co napsat):
+## Output format
+Create the file \`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\` via \`Write\` with this structure (section names
+are fixed; you may leave a section empty if there is nothing to write):
 
 \`\`\`
-# Fáze 2 — Bez gitu
+# Phase 2 — Bez gitu
 
-## Co se udělalo
-(odrážky: konkrétní změny — nové moduly, upravené soubory, nové testy)
+## What was done
+(bullets: concrete changes — new modules, edited files, new tests)
 
-## Klíčová rozhodnutí
-(odrážky: proč X místo Y, jaké kompromisy se dělaly, co bylo zvažováno a zamítnuto)
+## Key decisions
+(bullets: why X instead of Y, what trade-offs were made, what was considered and rejected)
 
-## Otevřené konce
-(odrážky: co zůstalo nehotové, na co si dát pozor v dalších fázích, technický dluh)
+## Loose ends
+(bullets: what was left unfinished, what to watch out for in later phases, technical debt)
 \`\`\`
 
-# Smíš použít
-\`Read\` na čtení souborů projektu a \`Write\` na založení
-\`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`. Jiné nástroje nepotřebuješ.
+# You may use
+\`Read\` to read project files, and \`Write\` to create
+\`.mini/memory/phase-7-2026-05-24T14-30-00Z.md\`. You don't need any other tools.
 "
 `;

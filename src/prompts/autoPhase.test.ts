@@ -23,17 +23,17 @@ describe('buildAutoPhasePrompt', () => {
 
     const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
 
-    expect(out).toContain('**Fáze 9: Jeden průchod Claude na fázi**');
-    expect(out).toContain('Cíl: auto pustí celou fázi v jednom Claude session');
+    expect(out).toContain('**Phase 9: Jeden průchod Claude na fázi**');
+    expect(out).toContain('Goal: auto pustí celou fázi v jednom Claude session');
     expect(out).toContain('auto session');
-    expect(out).toContain('- [hotovo] Prompt builder pro celou fázi');
-    expect(out).toContain('- [dělá se] auto.ts jeden průchod + retry smyčka');
-    expect(out).toContain('- [čeká] Snapshot testy auto-promptu');
-    expect(out).toContain('- [odloženo] starý nápad');
+    expect(out).toContain('- [done] Prompt builder pro celou fázi');
+    expect(out).toContain('- [in progress] auto.ts jeden průchod + retry smyčka');
+    expect(out).toContain('- [todo] Snapshot testy auto-promptu');
+    expect(out).toContain('- [skipped] starý nápad');
     // První průchod nesmí mít retry blok.
-    expect(out).not.toContain('# Opakovaný pokus');
+    expect(out).not.toContain('# Retry');
     // Bez notes nesmí být sekce poznámek.
-    expect(out).not.toContain('# Poznámky k fázi');
+    expect(out).not.toContain('# Phase notes');
     // Auto report cesta a YAML šablona pro správnou fázi.
     expect(out).toContain('`.mini/run/phase-009.md`');
     expect(out).toContain('phase: 9');
@@ -53,11 +53,11 @@ describe('buildAutoPhasePrompt', () => {
 
     const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
 
-    expect(out).toContain('**Fáze 1: Bootstrap**');
-    expect(out).toContain('Cíl: CLI vrací --version');
-    expect(out).toContain('(Fáze není rozmenená na kroky — pracuj na celé fázi najednou.)');
+    expect(out).toContain('**Phase 1: Bootstrap**');
+    expect(out).toContain('Goal: CLI vrací --version');
+    expect(out).toContain('(The phase is not broken down into steps — work on the whole phase at once.)');
     // V YAML vzorku musí mít sekce steps placeholder pro prázdný seznam, ne fiktivní položku.
-    expect(out).toContain('[]  # fáze nemá kroky — nech prázdný seznam');
+    expect(out).toContain('[]  # the phase has no steps — leave an empty list');
     expect(out).toContain('`.mini/run/phase-001.md`');
     expect(out).toMatchSnapshot();
   });
@@ -84,7 +84,7 @@ auto má taky vidět diskusi
       discussNotes: notes,
     });
 
-    expect(out).toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).toContain('# Phase notes (from discussion)');
     expect(out).toContain('## Klíčová rozhodnutí');
     expect(out).toContain('auto má taky vidět diskusi');
     expect(out).toMatchSnapshot();
@@ -111,11 +111,11 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
     });
 
     // Nadpis zůstává (ať je blok rozpoznatelný), ale obsahuje odkaz, ne text.
-    expect(out).toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).toContain('# Phase notes (from discussion)');
     expect(out).toContain('.mini/discuss/phase-040.md');
     // Read-once formulace.
     expect(out).toContain('Read');
-    expect(out).toContain('znovu je nenačítej');
+    expect(out).toContain('do not read them again');
     // Inline text poznámek se nesmí objevit.
     expect(out).not.toContain('TENTO INLINE TEXT SE NESMÍ OBJEVIT');
     expect(out).toMatchSnapshot();
@@ -155,10 +155,10 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
     });
 
     // Nadpis projektu zůstává, ale tělo je odkaz + read-once, ne inline text.
-    expect(out).toContain('# Projekt');
+    expect(out).toContain('# Project');
     expect(out).toContain('.mini/project.md');
     expect(out).toContain('Read');
-    expect(out).toContain('znovu ho nenačítej');
+    expect(out).toContain('do not read it again');
     // Inline text projektu se nesmí objevit.
     expect(out).not.toContain('Stavím nástroj X pro Y.');
     expect(out).toMatchSnapshot();
@@ -199,9 +199,9 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
       discussNotes: '   \n  \n',
     });
 
-    expect(noNotes).not.toContain('# Poznámky k fázi (z diskuse)');
-    expect(nullNotes).not.toContain('# Poznámky k fázi (z diskuse)');
-    expect(blankNotes).not.toContain('# Poznámky k fázi (z diskuse)');
+    expect(noNotes).not.toContain('# Phase notes (from discussion)');
+    expect(nullNotes).not.toContain('# Phase notes (from discussion)');
+    expect(blankNotes).not.toContain('# Phase notes (from discussion)');
     expect(nullNotes).toBe(noNotes);
     expect(blankNotes).toBe(noNotes);
   });
@@ -227,7 +227,7 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
       },
     });
 
-    expect(out).toContain('# Opakovaný pokus (průchod 2)');
+    expect(out).toContain('# Retry (iteration 2)');
     expect(out).toContain('`.mini/run/phase-5.prev.md`');
     expect(out).toMatchSnapshot();
   });
@@ -247,8 +247,8 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
       retry: null,
     });
 
-    expect(noRetry).not.toContain('# Opakovaný pokus');
-    expect(nullRetry).not.toContain('# Opakovaný pokus');
+    expect(noRetry).not.toContain('# Retry');
+    expect(nullRetry).not.toContain('# Retry');
     expect(nullRetry).toBe(noRetry);
   });
 
@@ -266,8 +266,8 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
     const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
 
     // V seznamu "Kroky" zůstávají tituly bez úprav.
-    expect(out).toContain('- [čeká] krok s "uvozovkami"');
-    expect(out).toContain('- [čeká] krok s\\backslashem');
+    expect(out).toContain('- [todo] krok s "uvozovkami"');
+    expect(out).toContain('- [todo] krok s\\backslashem');
     // V YAML šabloně musí být escapované (Claude bude kopírovat tento tvar).
     expect(out).toContain('- title: "krok s \\"uvozovkami\\""');
     expect(out).toContain('- title: "krok s\\\\backslashem"');
@@ -286,7 +286,7 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
 
     // instrukce: verify = věci, co Claude sám neověřil (lidský pohled)
     expect(out).toContain('verify');
-    expect(out).toContain('sám nedokázal ověřit');
+    expect(out).toContain('could not verify yourself');
     // vzor v YAML šabloně má title i detail
     expect(out).toContain('verify:');
     expect(out).toContain('detail:');
@@ -303,7 +303,7 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
 
     const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
 
-    expect(out).toContain('# Průběžný zápis kroků');
+    expect(out).toContain('# Tracking step progress');
     expect(out).toContain('mini do --apply --step-done');
   });
 
@@ -317,7 +317,7 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
 
     const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
 
-    expect(out).not.toContain('# Průběžný zápis kroků');
+    expect(out).not.toContain('# Tracking step progress');
     expect(out).not.toContain('--step-done');
   });
 
@@ -331,7 +331,7 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
 
     const out = buildAutoPhasePrompt({ projectMd: PROJECT_MD, phase });
 
-    expect(out).toContain('Cíl: (nezadán)');
+    expect(out).toContain('Goal: (not set)');
   });
 
   it('combines retry + discuss notes + steps in one prompt', () => {
@@ -356,11 +356,11 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
       },
     });
 
-    expect(out).toContain('# Opakovaný pokus (průchod 3)');
-    expect(out).toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).toContain('# Retry (iteration 3)');
+    expect(out).toContain('# Phase notes (from discussion)');
     expect(out).toContain('shrnutí z diskuze');
-    expect(out).toContain('- [hotovo] hotový krok');
-    expect(out).toContain('- [čeká] zbývající krok');
+    expect(out).toContain('- [done] hotový krok');
+    expect(out).toContain('- [todo] zbývající krok');
     expect(out).toContain('`.mini/run/phase-010.md`');
     expect(out).toMatchSnapshot();
   });
@@ -385,10 +385,10 @@ TENTO INLINE TEXT SE NESMÍ OBJEVIT`;
 
     // Krok s detailem: title na svém řádku, detail odsazený (4 mezery) pod ním.
     expect(out).toContain(
-      '- [hotovo] Prompt builder pro celou fázi\n    buildAutoPhasePrompt vrací prompt s YAML reportem; pokryto snapshotem',
+      '- [done] Prompt builder pro celou fázi\n    buildAutoPhasePrompt vrací prompt s YAML reportem; pokryto snapshotem',
     );
     // Krok bez detailu zůstává jednořádkový.
-    expect(out).toContain('- [čeká] Bez detailu\n');
+    expect(out).toContain('- [todo] Bez detailu\n');
     // sampleSteps klonuje jen title — detail se do YAML vzorku nepropisuje.
     expect(out).toContain('- title: "Prompt builder pro celou fázi"');
     expect(out).not.toContain('    status: done\n    buildAutoPhasePrompt');

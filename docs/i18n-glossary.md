@@ -46,6 +46,21 @@ narazíš na nový termín.
 | ← pracuj na tomhle             | ← work on this                 |
 | Jak postupovat                 | How to proceed                 |
 | Smíš použít                    | You may use                    |
+| Hotová fáze                    | Finished phase                 |
+| Poznámka uživatele             | User's note                    |
+| Opakovaný pokus (průchod N)    | Retry (iteration N)            |
+| Průběžný zápis kroků           | Tracking step progress         |
+| Report na konci session        | Report at the end of the session |
+| report z auto session          | report from the auto session   |
+
+### Sekce memory souboru (writeMemory) — nejsou parsované, volný překlad
+
+| Česky                | Anglicky        |
+| -------------------- | --------------- |
+| Formát výstupu       | Output format   |
+| Co se udělalo        | What was done   |
+| Klíčová rozhodnutí   | Key decisions   |
+| Otevřené konce       | Loose ends      |
 
 ### Sekce `codebase.md` (audit) — nejsou parsované, volný překlad
 

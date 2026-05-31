@@ -1,0 +1,29 @@
+{
+  "id": 75,
+  "title": "Překlad memory + auto promptů do AJ",
+  "goal": "Přeložit do angličtiny prompty writeMemory.ts a autoPhase.ts a aktualizovat jejich snapshot testy (strojové kontrakty beze změny); npm test a build zelené.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "writeMemory.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit prózu, STEP_WORD, bloky (Hotová fáze / Jak postupovat / Formát výstupu) i šablonu memory sekcí (## Co se udělalo→## What was done, …). Cesty (MEMORY_DIR, memoryPath) beze změny. Upravit aserce v writeMemory.test.ts."
+    },
+    {
+      "title": "autoPhase.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit prózu, STEP_WORD, projekt/notes/retry/progress bloky a prózu kolem reportu. Zachovat YAML kontrakt (phase/verdict/steps/title/status/verify/detail + enum) i příkaz mini do --apply --step-done. Upravit aserce v autoPhase.test.ts."
+    },
+    {
+      "title": "Doplnit slovníček + ověřit",
+      "status": "done",
+      "detail": "Nové termíny do docs/i18n-glossary.md, přegenerovat snapshoty (vitest -u), pak celé npm test a build zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T13:25:40.867Z",
+  "completedAt": "2026-05-31T13:38:36.064Z",
+  "autoCommit": {
+    "preSha": "b521abcc32bd4ba0e49ebb2c06137754dddfe9f6",
+    "subject": "Fáze 75: Překlad memory + auto promptů do AJ"
+  }
+}

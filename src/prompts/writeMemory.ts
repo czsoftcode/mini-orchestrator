@@ -4,10 +4,10 @@ export const MEMORY_DIR = '.mini/memory';
 export const LAST_MEMORY_FILE = '.mini/last-memory.md';
 
 const STEP_WORD: Record<StepStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  todo: 'čeká',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'in progress',
+  todo: 'todo',
+  skipped: 'skipped',
 };
 
 export interface WriteMemoryPromptInput {
@@ -31,71 +31,71 @@ export function buildWriteMemoryPrompt(input: WriteMemoryPromptInput): string {
     const lines = (phase.steps as Step[]).map(
       (s) => `- [${STEP_WORD[s.status]}] ${s.title}`,
     );
-    stepsBlock = `\nKroky:\n${lines.join('\n')}\n`;
+    stepsBlock = `\nSteps:\n${lines.join('\n')}\n`;
   }
 
   const notesBlock = phase.humanNotes?.trim()
-    ? `\nPoznámka uživatele:\n"""\n${phase.humanNotes.trim()}\n"""\n`
+    ? `\nUser's note:\n"""\n${phase.humanNotes.trim()}\n"""\n`
     : '';
 
   const contextLines: string[] = [];
   if (hasAutoCommit) {
     contextLines.push(
-      '- Spusť `git show HEAD` přes Bash a podívej se na diff posledního commitu — to je práce této fáze.',
+      '- Run `git show HEAD` via Bash and look at the diff of the last commit — that is the work of this phase.',
     );
   } else {
     contextLines.push(
-      '- `git show HEAD` **nepouštěj** — buď tato fáze žádný commit nevytvořila, nebo nejsi v gitovém repu. Vyjdi jen z informací níže.',
+      '- **Do not run** `git show HEAD` — either this phase created no commit, or you are not in a git repo. Rely only on the information below.',
     );
   }
   if (discussPath) {
-    contextLines.push(`- Přečti \`${discussPath}\` — záměr fáze z diskuse před plánováním.`);
+    contextLines.push(`- Read \`${discussPath}\` — the phase's intent from the discussion before planning.`);
   }
   if (runReportPath) {
-    contextLines.push(`- Přečti \`${runReportPath}\` — report z auto session (co se povedlo, na co Claude narazil).`);
+    contextLines.push(`- Read \`${runReportPath}\` — the report from the auto session (what went well, what Claude ran into).`);
   }
   const contextBlock = contextLines.join('\n');
 
-  return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **zápis paměti po dokončené fázi** — NEIMPLEMENTUJ nic, nic
-nerefaktoruj. Tvým jediným výstupem je soubor \`${memoryPath}\`.
+  return `You are part of a tool that helps the user build a project incrementally.
+A **memory write after a finished phase** is in progress — DO NOT implement anything,
+do not refactor anything. Your only output is the file \`${memoryPath}\`.
 
-# Projekt
+# Project
 ${projectMd.trim()}
 
-# Hotová fáze
-**Fáze ${phase.id}: ${phase.title}**
-Cíl: ${phase.goal ?? '(nezadán)'}
+# Finished phase
+**Phase ${phase.id}: ${phase.title}**
+Goal: ${phase.goal ?? '(not set)'}
 ${stepsBlock}${notesBlock}
-# Tvůj úkol
-Zapiš stručné shrnutí toho, co se v této fázi udělalo a proč. Cílový čtenář
-jsi **ty sám** v dalších fázích — \`git log\` ti řekne *co* se změnilo, memory
-soubor má doplnit *proč* (rozhodnutí, kompromisy, otevřené konce).
+# Your task
+Write a brief summary of what was done in this phase and why. The target reader
+is **you yourself** in later phases — \`git log\` tells you *what* changed, the memory
+file should add *why* (decisions, trade-offs, loose ends).
 
-## Jak postupovat
+## How to proceed
 ${contextBlock}
-- Drž se faktů. Nepiš to, co si nejsi jistý.
-- Krátké odrážky, žádná dlouhá prosa.
+- Stick to facts. Don't write what you're not sure about.
+- Short bullets, no long prose.
 
-## Formát výstupu
-Vytvoř soubor \`${memoryPath}\` přes \`Write\` s touto strukturou (názvy sekcí
-jsou fixní; sekci smíš nechat prázdnou, pokud k ní není co napsat):
+## Output format
+Create the file \`${memoryPath}\` via \`Write\` with this structure (section names
+are fixed; you may leave a section empty if there is nothing to write):
 
 \`\`\`
-# Fáze ${phase.id} — ${phase.title}
+# Phase ${phase.id} — ${phase.title}
 
-## Co se udělalo
-(odrážky: konkrétní změny — nové moduly, upravené soubory, nové testy)
+## What was done
+(bullets: concrete changes — new modules, edited files, new tests)
 
-## Klíčová rozhodnutí
-(odrážky: proč X místo Y, jaké kompromisy se dělaly, co bylo zvažováno a zamítnuto)
+## Key decisions
+(bullets: why X instead of Y, what trade-offs were made, what was considered and rejected)
 
-## Otevřené konce
-(odrážky: co zůstalo nehotové, na co si dát pozor v dalších fázích, technický dluh)
+## Loose ends
+(bullets: what was left unfinished, what to watch out for in later phases, technical debt)
 \`\`\`
 
-# Smíš použít
-\`Read\` na čtení souborů projektu${hasAutoCommit ? ', `Bash` na `git show HEAD`' : ''} a \`Write\` na založení
-\`${memoryPath}\`. Jiné nástroje nepotřebuješ.
+# You may use
+\`Read\` to read project files${hasAutoCommit ? ', `Bash` for `git show HEAD`' : ''}, and \`Write\` to create
+\`${memoryPath}\`. You don't need any other tools.
 `;
 }

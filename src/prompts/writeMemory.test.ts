@@ -30,15 +30,15 @@ describe('buildWriteMemoryPrompt', () => {
       hasAutoCommit: true,
     });
 
-    expect(out).toContain('**Fáze 7: Záznam paměti**');
-    expect(out).toContain('Cíl: po fázi se zapíše memory soubor');
-    expect(out).toContain('- [hotovo] prompt builder');
+    expect(out).toContain('**Phase 7: Záznam paměti**');
+    expect(out).toContain('Goal: po fázi se zapíše memory soubor');
+    expect(out).toContain('- [done] prompt builder');
     expect(out).toContain('Symlink se na Windows fallbackuje na copyFile.');
     expect(out).toContain('git show HEAD');
     expect(out).toContain('.mini/discuss/phase-7.md');
     expect(out).toContain('.mini/run/phase-7.md');
     expect(out).toContain(MEMORY_PATH);
-    expect(out).toContain('NEIMPLEMENTUJ');
+    expect(out).toContain('DO NOT implement');
     expect(out).toMatchSnapshot();
   });
 
@@ -57,10 +57,10 @@ describe('buildWriteMemoryPrompt', () => {
       hasAutoCommit: false,
     });
 
-    expect(out).toContain('`git show HEAD` **nepouštěj**');
+    expect(out).toContain('**Do not run** `git show HEAD`');
     expect(out).not.toContain('Bash');
-    expect(out).not.toContain('Kroky:');
-    expect(out).not.toContain('Poznámka uživatele');
+    expect(out).not.toContain('Steps:');
+    expect(out).not.toContain("User's note");
     expect(out).toMatchSnapshot();
   });
 
@@ -81,8 +81,8 @@ describe('buildWriteMemoryPrompt', () => {
 
     expect(out).not.toContain('.mini/discuss/');
     expect(out).not.toContain('.mini/run/');
-    expect(out).toContain('- [hotovo] jediný krok');
-    expect(out).toContain('Cíl: (nezadán)');
+    expect(out).toContain('- [done] jediný krok');
+    expect(out).toContain('Goal: (not set)');
   });
 
   it('trims projectMd whitespace', () => {
@@ -94,8 +94,8 @@ describe('buildWriteMemoryPrompt', () => {
       hasAutoCommit: false,
     });
 
-    expect(out).toContain(`# Projekt\n${PROJECT_MD}\n`);
-    expect(out).not.toContain('# Projekt\n\n');
+    expect(out).toContain(`# Project\n${PROJECT_MD}\n`);
+    expect(out).not.toContain('# Project\n\n');
   });
 
   it('exportuje konstanty cest', () => {
