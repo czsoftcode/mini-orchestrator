@@ -24,35 +24,35 @@ export async function done(opts: AutoOptions = {}): Promise<StepOutcome> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
   const state = await load(cwd);
 
   if (state.currentPhaseId === null) {
-    log.warn('Žádná aktuální fáze.');
-    log.hint('Spusť: mini next');
+    log.warn('No current phase.');
+    log.hint('Run: mini next');
     return { ok: false, reason: 'no-current-phase' };
   }
 
   const phase = state.phases.find((p) => p.id === state.currentPhaseId);
   if (!phase) {
-    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    log.error('State is inconsistent (currentPhaseId points to a non-existent phase).');
     return { ok: false, reason: 'inconsistent-state' };
   }
 
   if (phase.status === 'done') {
-    log.info(`Fáze ${phase.id} (${phase.title}) už je hotová.`);
-    log.hint('Spusť: mini next');
+    log.info(`Phase ${phase.id} (${phase.title}) is already done.`);
+    log.hint('Run: mini next');
     return { ok: false, reason: 'phase-done' };
   }
 
-  // V auto módu se stav fáze posouvá podle reportu, který Claude zapsal na
-  // konci session. Když report sedí, posuneme statusy a případně finalizujeme.
-  // Když chybí nebo je poškozený, sjedeme do interaktivního fallbacku — nikdy
-  // neoznačujeme nic naslepo.
+  // In auto mode the phase status is advanced from the report Claude wrote at
+  // the end of the session. When the report fits, we advance the statuses and
+  // possibly finalize. When it is missing or broken, we drop into the
+  // interactive fallback — we never mark anything blindly.
   if (opts.auto) {
     const applied = await applyAutoReport(phase, state, cwd);
     if (applied.handled) {
@@ -72,19 +72,19 @@ export async function done(opts: AutoOptions = {}): Promise<StepOutcome> {
       return { ok: true };
     }
     if (moreStepsAfter && !opts.auto) {
-      log.hint('Další: mini do (pokračovat dalším krokem)');
+      log.hint('Next: mini do (continue with the next step)');
       return { ok: true };
     }
     if (moreStepsAfter) {
-      // v auto módu: krok je hotový, ale zbývají další kroky — fázi zatím nefinalizujeme
+      // in auto mode: the step is done, but more steps remain — we don't finalize the phase yet
       return { ok: true };
     }
-    // krok byl poslední — pokračujeme finalizací fáze
+    // the step was the last one — we continue with finalizing the phase
   }
 
   const remainingSteps = (phase.steps ?? []).filter((s) => s.status !== 'done' && s.status !== 'skipped');
   if (remainingSteps.length > 0) {
-    log.info(`Fáze ${phase.id} (${phase.title}) má ${remainingSteps.length} ${remainingSteps.length === 1 ? 'nedokončený krok' : 'nedokončených kroků'}:`);
+    log.info(`Phase ${phase.id} (${phase.title}) has ${remainingSteps.length} ${remainingSteps.length === 1 ? 'unfinished step' : 'unfinished steps'}:`);
     for (const s of remainingSteps) {
       log.dim(`  - ${s.title}`);
     }
@@ -94,7 +94,7 @@ export async function done(opts: AutoOptions = {}): Promise<StepOutcome> {
       for (const s of remainingSteps) {
         s.status = 'skipped';
       }
-      log.dim(`${remainingSteps.length} kroků označeno jako odložené.`);
+      log.dim(`${remainingSteps.length} ${remainingSteps.length === 1 ? 'step' : 'steps'} marked as deferred.`);
       phase.status = 'done';
       phase.completedAt = new Date().toISOString();
       const nextPhase = await collectNotesAndSave(phase, state, cwd, 'done', opts);
@@ -104,27 +104,27 @@ export async function done(opts: AutoOptions = {}): Promise<StepOutcome> {
     const { decision } = await ask<'decision'>({
       type: 'select',
       name: 'decision',
-      message: 'Co s tím?',
+      message: 'What do you want to do?',
       choices: [
-        { title: 'Pracovat na dalším kroku', value: 'continue' },
-        { title: 'Označit fázi za hotovou (zbylé kroky → odloženo)', value: 'force-done' },
-        { title: 'Odložit fázi (přeskočit celou)', value: 'force-skip' },
-        { title: 'Zrušit', value: 'cancel' },
+        { title: 'Work on the next step', value: 'continue' },
+        { title: 'Mark the phase as done (remaining steps → deferred)', value: 'force-done' },
+        { title: 'Defer the phase (skip the whole thing)', value: 'force-skip' },
+        { title: 'Cancel', value: 'cancel' },
       ],
     });
 
     if (decision === 'cancel') {
-      log.dim('Nic se nemění.');
+      log.dim('Nothing changed.');
       return { ok: false, reason: 'cancelled' };
     }
     if (decision === 'continue') {
-      log.hint('Spusť: mini do');
+      log.hint('Run: mini do');
       return { ok: true };
     }
     for (const s of remainingSteps) {
       s.status = 'skipped';
     }
-    log.dim(`${remainingSteps.length} kroků označeno jako odložené.`);
+    log.dim(`${remainingSteps.length} ${remainingSteps.length === 1 ? 'step' : 'steps'} marked as deferred.`);
 
     if (decision === 'force-skip') {
       phase.status = 'skipped';
@@ -153,7 +153,7 @@ async function collectNotesAndSave(
     const { notes } = await ask<'notes'>({
       type: 'text',
       name: 'notes',
-      message: 'Krátká poznámka (co se povedlo / co je špatně, můžeš nechat prázdné):',
+      message: 'Short note (what went well / what is wrong, can be left empty):',
       initial: '',
     });
     const trimmedNotes = (notes as string).trim();
@@ -162,9 +162,9 @@ async function collectNotesAndSave(
     }
   }
   if (outcome === 'done') {
-    log.success(`Fáze ${phase.id} (${phase.title}) hotová.`);
+    log.success(`Phase ${phase.id} (${phase.title}) done.`);
   } else {
-    log.warn(`Fáze ${phase.id} odložena.`);
+    log.warn(`Phase ${phase.id} deferred.`);
   }
   const next = advanceToNextPhase(state);
   logNextPhase(next);
@@ -177,19 +177,20 @@ async function collectNotesAndSave(
 
 function logNextPhase(next: Phase | null): void {
   if (next) {
-    log.hint(`Pokračuje se fází ${next.id}: ${next.title}. Spusť: mini do`);
+    log.hint(`Continuing with phase ${next.id}: ${next.title}. Run: mini do`);
   } else {
-    log.hint('Žádná další fáze v plánu. Spusť: mini next');
+    log.hint('No further phase in the plan. Run: mini next');
   }
 }
 
 /**
- * Sestaví commit message pro hotovou fázi. Subject je krátký a jednoznačný,
- * tělo (pokud existuje) přidává `humanNotes`, které uživatel zapsal v `done`.
- * `goal` ze stavu do těla záměrně nedáváme — duplikuje se s `.mini/state.json`.
+ * Builds the commit message for a finished phase. The subject is short and
+ * unambiguous, the body (if any) adds the `humanNotes` the user wrote in `done`.
+ * We deliberately leave the `goal` from the state out of the body — it would
+ * duplicate `.mini/state.json`.
  */
 export function buildPhaseCommitMessage(phase: Phase): string {
-  const subject = `Fáze ${phase.id}: ${phase.title}`;
+  const subject = `Phase ${phase.id}: ${phase.title}`;
   const body = phase.humanNotes?.trim();
   if (body) {
     return `${subject}\n\n${body}\n`;
@@ -198,31 +199,35 @@ export function buildPhaseCommitMessage(phase: Phase): string {
 }
 
 /**
- * Side-effecty, které proběhnou po finalizaci fáze jako `done`. Pořadí je
- * záměrné: memory záznam, graf i finální `state.json` musí vzniknout **před**
- * jediným commitem fáze, aby do něj spadly a po `done` ve worktree **nic
- * neviselo** do další fáze. Commit je proto úplně poslední krok.
+ * Side effects that run after a phase is finalized as `done`. The order is
+ * deliberate: the memory record, graph, and final `state.json` must all be
+ * created **before** the single phase commit, so they land in it and after
+ * `done` **nothing is left hanging** in the worktree into the next phase. The
+ * commit is therefore the very last step.
  *
- * 1. **Předběžný auto-commit** — `phase.autoCommit` se nastaví na `{ preSha,
- *    subject }` z aktuálního HEAD (preSha = cíl pozdějšího `mini undo`). Vlastní
- *    sha výsledného commitu do stavu neukládáme — commit ponese i `state.json`,
- *    takže by záznam závisel sám na sobě (viz `PhaseAutoCommit`).
- * 2. **Memory záznam** (`writePhaseMemory`) — vytvoří `.mini/memory/phase-XXX.md`
- *    a aktualizuje shrnutí v `.mini/last-memory.md`.
- * 3. **Přegenerování grafu** (`regenerateGraph`) — aktualizuje `.mini/graph/`
- *    + `.mini/graph.json` podle nového stavu zdrojáků.
- * 4. **Uložení stavu** (`save`) — `state.json` s posunem na `done` + `autoCommit`.
- * 5. **Commit** (`commitPhaseWork`) — jediný `git add -A && commit`, který pobere
- *    kód, testy, `state.json`, per-fázový json, memory i graf. Po něm je strom čistý.
+ * 1. **Preliminary auto-commit** — `phase.autoCommit` is set to `{ preSha,
+ *    subject }` from the current HEAD (preSha = the target of a later `mini
+ *    undo`). We don't store the resulting commit's own sha in the state — the
+ *    commit will also carry `state.json`, so the record would depend on itself
+ *    (see `PhaseAutoCommit`).
+ * 2. **Memory record** (`writePhaseMemory`) — creates `.mini/memory/phase-XXX.md`
+ *    and updates the summary in `.mini/last-memory.md`.
+ * 3. **Graph regeneration** (`regenerateGraph`) — updates `.mini/graph/`
+ *    + `.mini/graph.json` from the new state of the sources.
+ * 4. **Saving state** (`save`) — `state.json` with the advance to `done` + `autoCommit`.
+ * 5. **Commit** (`commitPhaseWork`) — a single `git add -A && commit` that picks
+ *    up the code, tests, `state.json`, the per-phase json, memory, and graph.
+ *    After it the tree is clean.
  *
- * Společné místo, aby se nezapomnělo zavolat z žádné ze tří finalizačních
- * cest v `done.ts` (`applyAutoReport`, `collectNotesAndSave`, `finalizePhase`).
+ * A shared place so the call is not forgotten in any of the three finalization
+ * paths in `done.ts` (`applyAutoReport`, `collectNotesAndSave`, `finalizePhase`).
  *
- * U `skipped` fáze se tahle funkce nevolá — commit ani memory nedávají smysl.
+ * For a `skipped` phase this function is not called — neither a commit nor a
+ * memory record makes sense.
  *
- * Žádný side-effect nikdy nehází — chyby se logují jako warning a workflow
- * pokračuje. Selže-li commit, `commitPhaseWork` předběžný `autoCommit` zase
- * zruší (žádný commit k vrácení neexistuje).
+ * No side effect ever throws — errors are logged as a warning and the workflow
+ * continues. If the commit fails, `commitPhaseWork` clears the preliminary
+ * `autoCommit` again (there is no commit to revert).
  */
 async function finalizePhaseSideEffects(
   phase: Phase,
@@ -244,10 +249,10 @@ async function finalizePhaseSideEffects(
 }
 
 /**
- * Best-effort regenerace `.mini/graph/` + `.mini/graph.json` po hotové fázi. Nikdy nehází —
- * při chybě jen zalogujeme warning a pokračujeme. Pokud projekt nemá co
- * mapovat (žádné TS/PHP/Rust soubory), tiše přeskočíme — jiné jazyky řeší
- * `/graphify`.
+ * Best-effort regeneration of `.mini/graph/` + `.mini/graph.json` after a
+ * finished phase. Never throws — on error we just log a warning and continue.
+ * If the project has nothing to map (no TS/PHP/Rust files), we silently skip;
+ * other languages are handled by `/graphify`.
  */
 async function regenerateGraph(cwd: string): Promise<void> {
   try {
@@ -255,30 +260,33 @@ async function regenerateGraph(cwd: string): Promise<void> {
       return;
     }
     const result = await buildGraph(cwd);
-    const word = result.fileCount === 1 ? 'soubor' : result.fileCount < 5 ? 'soubory' : 'souborů';
-    log.dim(`${GRAPH_DIR}/: regenerováno (${result.fileCount} ${word}).`);
+    const word = result.fileCount === 1 ? 'file' : 'files';
+    log.dim(`${GRAPH_DIR}/: regenerated (${result.fileCount} ${word}).`);
   } catch (err) {
-    log.warn(`Mapu projektu se nepodařilo přegenerovat: ${(err as Error).message}`);
+    log.warn(`Could not regenerate the project map: ${(err as Error).message}`);
   }
 }
 
 /**
- * Jediný commit fáze (`phase.status === 'done'`). Nikdy nehází — gitové chyby
- * jenom zalogujeme jako varování, aby přerušený commit nezablokoval `mini done`
- * (uživatel může commitnout ručně).
+ * The single phase commit (`phase.status === 'done'`). Never throws — git
+ * errors are only logged as a warning, so an interrupted commit does not block
+ * `mini done` (the user can commit manually).
  *
- * Volá se jako **úplně poslední** krok finalizace, kdy už memory, graf i
- * `state.json` (včetně předběžného `phase.autoCommit`) leží na disku — `git add
- * -A` je tak pobere do jednoho commitu a po `done` ve worktree nic nevisí.
+ * Called as the **very last** finalization step, when memory, graph, and
+ * `state.json` (including the preliminary `phase.autoCommit`) already sit on
+ * disk — `git add -A` thus picks them all up into a single commit and after
+ * `done` nothing is left hanging in the worktree.
  *
- * Před commitem navýší verzi v `package.json` (default `none`), aby ji `git add
- * -A` pobral do commitu. Push se pouští **jen** s `finalizeOpts.push` (opt-in) —
- * jinak zůstává jako dosud jen hint `git push`.
+ * Before committing it bumps the version in `package.json` (default `none`), so
+ * `git add -A` picks it up into the commit. Push runs **only** with
+ * `finalizeOpts.push` (opt-in) — otherwise it stays, as before, just a `git
+ * push` hint.
  *
- * `phase.autoCommit` (preSha + subject) je nastavený už z
- * `finalizePhaseSideEffects`; vlastní sha commitu do něj nedáváme (je uvnitř
- * tohohle commitu). Když commit neproběhne (není repo / žádné změny / selhání),
- * předběžný `autoCommit` zase zrušíme — undo by neměl co vracet.
+ * `phase.autoCommit` (preSha + subject) is already set from
+ * `finalizePhaseSideEffects`; we don't put the commit's own sha into it (it is
+ * inside this very commit). When the commit doesn't happen (no repo / no
+ * changes / failure), the preliminary `autoCommit` is cleared again — undo
+ * would have nothing to revert.
  */
 async function commitPhaseWork(
   phase: Phase,
@@ -286,28 +294,29 @@ async function commitPhaseWork(
   finalizeOpts: FinalizeOptions = {},
 ): Promise<void> {
   if (!(await isGitRepo(cwd))) {
-    log.dim('Git repozitář nenalezen — commit přeskočen.');
+    log.dim('Git repository not found — commit skipped.');
     delete phase.autoCommit;
     return;
   }
 
-  // Bump verze ještě před `hasChanges`/commitem — patří do commitu fáze a sám
-  // o sobě je změnou, která má smysl commitnout (i kdyby jinak nic nebylo).
-  // Výslednou verzi si držíme pro tag při `--push` (níže). Default `none` verzi
-  // nenavyšuje (dílčí fáze) — pak `version` zůstane `null` a tag/stamp se
-  // přirozeně přeskočí.
+  // Bump the version before `hasChanges`/commit — it belongs in the phase
+  // commit and is itself a change worth committing (even if there were nothing
+  // else). We keep the resulting version for the tag on `--push` (below). The
+  // default `none` doesn't bump the version (sub-phases) — then `version` stays
+  // `null` and the tag/stamp is naturally skipped.
   const level = finalizeOpts.bump ?? 'none';
   const version = level === 'none' ? null : await bumpVersion(cwd, level);
 
-  // Při vydání (minor/major s pushem) zaklapneme `## [Unreleased]` do datované
-  // sekce — taky ještě před commitem, ať skončí v commitu fáze. Patche se
-  // nestampují: jejich položky se kumulují v Unreleased do dalšího vydání.
+  // On a release (minor/major with push) we fold `## [Unreleased]` into a dated
+  // section — also before the commit, so it ends up in the phase commit.
+  // Patches are not stamped: their entries accumulate in Unreleased until the
+  // next release.
   if (finalizeOpts.push && (level === 'minor' || level === 'major')) {
     await stampChangelog(cwd, version);
   }
 
   if (!(await hasChanges(cwd))) {
-    log.dim('Žádné změny v gitu — commit přeskočen.');
+    log.dim('No changes in git — commit skipped.');
     delete phase.autoCommit;
     return;
   }
@@ -315,41 +324,42 @@ async function commitPhaseWork(
   const message = buildPhaseCommitMessage(phase);
   const r = await commitAll(cwd, message);
   if (!r.ok) {
-    log.warn('Git commit selhal.');
+    log.warn('Git commit failed.');
     const detail = r.stderr.trim() || r.stdout.trim();
     if (detail) log.dim(detail);
-    log.hint('Commit můžeš dokončit ručně: git add -A && git commit');
+    log.hint('You can finish the commit manually: git add -A && git commit');
     delete phase.autoCommit;
     return;
   }
   const subject = message.split('\n')[0] ?? message;
   log.success(`Commit: ${subject}`);
 
-  // Push jen na vyžádání (opt-in). Best-effort: chybějící remote/upstream nebo
-  // odmítnutí jen zalogujeme, workflow nezablokujeme.
+  // Push only on request (opt-in). Best-effort: a missing remote/upstream or a
+  // rejection is only logged, the workflow is not blocked.
   if (finalizeOpts.push) {
     const pr = await push(cwd);
     if (pr.ok) {
-      log.success('Pushnuto na remote.');
+      log.success('Pushed to remote.');
       await tagVersion(cwd, version);
     } else {
-      log.warn('Push selhal — práce zůstává commitnutá lokálně.');
+      log.warn('Push failed — the work stays committed locally.');
       const detail = pr.stderr.trim() || pr.stdout.trim();
       if (detail) log.dim(detail);
-      log.hint('Zkus ručně: git push (případně nastav upstream přes git push -u).');
+      log.hint('Try manually: git push (or set the upstream via git push -u).');
     }
   } else {
-    log.hint('Pro nahrání na remote spusť: git push (nebo mini done --push).');
+    log.hint('To upload to the remote run: git push (or mini done --push).');
   }
 }
 
 /**
- * Při `--push` po úspěšném pushi založí a pushne git tag `v<verze>` podle
- * aktuální verze z `package.json`. Best-effort jako okolní push logika —
- * gitové chyby (existující tag, chybějící remote) jen zalogujeme jako warning.
+ * On `--push`, after a successful push, creates and pushes a git tag `v<version>`
+ * from the current version in `package.json`. Best-effort like the surrounding
+ * push logic — git errors (an existing tag, a missing remote) are only logged
+ * as a warning.
  *
- * Když projekt verzi nemá (`version === null` — jiný jazyk bez `package.json`),
- * tiše přeskočíme; tagovat není podle čeho.
+ * When the project has no version (`version === null` — another language
+ * without `package.json`), we silently skip; there is nothing to tag against.
  */
 async function tagVersion(cwd: string, version: string | null): Promise<void> {
   if (!version) return;
@@ -357,7 +367,7 @@ async function tagVersion(cwd: string, version: string | null): Promise<void> {
   const tag = `v${version}`;
   const tr = await createTag(cwd, tag);
   if (!tr.ok) {
-    log.warn(`Tag ${tag} se nepodařilo vytvořit — push verze přeskočen.`);
+    log.warn(`Could not create tag ${tag} — version push skipped.`);
     const detail = tr.stderr.trim() || tr.stdout.trim();
     if (detail) log.dim(detail);
     return;
@@ -365,23 +375,24 @@ async function tagVersion(cwd: string, version: string | null): Promise<void> {
 
   const ptr = await pushTag(cwd, tag);
   if (ptr.ok) {
-    log.success(`Tag ${tag} pushnut na remote.`);
+    log.success(`Tag ${tag} pushed to remote.`);
   } else {
-    log.warn(`Push tagu ${tag} selhal — tag zůstává lokálně.`);
+    log.warn(`Push of tag ${tag} failed — the tag stays local.`);
     const detail = ptr.stderr.trim() || ptr.stdout.trim();
     if (detail) log.dim(detail);
-    log.hint(`Zkus ručně: git push origin ${tag}.`);
+    log.hint(`Try manually: git push origin ${tag}.`);
   }
 }
 
 /**
- * Best-effort zaklapnutí `## [Unreleased]` v `CHANGELOG.md` do datované sekce
- * `## [<verze>] - <dnešek>` při vydání (minor/major s pushem). Volá se před
- * commitem fáze, aby datovaná sekce skončila v commitu, který se pushuje.
+ * Best-effort folding of `## [Unreleased]` in `CHANGELOG.md` into a dated
+ * section `## [<version>] - <today>` on a release (minor/major with push).
+ * Called before the phase commit, so the dated section ends up in the commit
+ * that gets pushed.
  *
- * Nikdy neblokuje done — chybějící soubor, chybějící sekce `## [Unreleased]`
- * nebo prázdná Unreleased jen zalogujeme. Když projekt verzi nemá
- * (`version === null` — jiný jazyk bez `package.json`), tiše přeskočíme.
+ * Never blocks done — a missing file, a missing `## [Unreleased]` section, or an
+ * empty Unreleased is only logged. When the project has no version (`version ===
+ * null` — another language without `package.json`), we silently skip.
  */
 async function stampChangelog(cwd: string, version: string | null): Promise<void> {
   if (!version) return;
@@ -391,7 +402,7 @@ async function stampChangelog(cwd: string, version: string | null): Promise<void
   try {
     raw = await readFile(path, 'utf-8');
   } catch {
-    log.dim(`${CHANGELOG_FILE} nenalezen — sekci verze nestampuju.`);
+    log.dim(`${CHANGELOG_FILE} not found — not stamping the version section.`);
     return;
   }
 
@@ -399,9 +410,9 @@ async function stampChangelog(cwd: string, version: string | null): Promise<void
   const result = stampUnreleased(raw, version, date);
   if (!result.stamped) {
     if (result.reason === 'no-unreleased') {
-      log.warn(`${CHANGELOG_FILE} nemá sekci "## [Unreleased]" — verzi nestampuju.`);
+      log.warn(`${CHANGELOG_FILE} has no "## [Unreleased]" section — not stamping the version.`);
     } else {
-      log.dim(`${CHANGELOG_FILE}: "## [Unreleased]" je prázdná — verzi nestampuju.`);
+      log.dim(`${CHANGELOG_FILE}: "## [Unreleased]" is empty — not stamping the version.`);
     }
     return;
   }
@@ -410,24 +421,24 @@ async function stampChangelog(cwd: string, version: string | null): Promise<void
     await writeFile(path, result.content, 'utf-8');
     log.dim(`${CHANGELOG_FILE}: "## [Unreleased]" → "## [${version}] - ${date}".`);
   } catch (err) {
-    log.warn(`Zápis ${CHANGELOG_FILE} selhal: ${(err as Error).message}`);
+    log.warn(`Writing ${CHANGELOG_FILE} failed: ${(err as Error).message}`);
   }
 }
 
 /**
- * Best-effort navýšení verze v `package.json` před commitem fáze. Když projekt
- * `package.json` nemá (jiný jazyk), tiše přeskočí. Chybu při zápisu jen
- * zalogujeme — nesmí zablokovat finalizaci.
+ * Best-effort version bump in `package.json` before the phase commit. When the
+ * project has no `package.json` (another language), it silently skips. A write
+ * error is only logged — it must not block finalization.
  */
 async function bumpVersion(cwd: string, level: BumpLevel): Promise<string | null> {
   try {
     const r = await bumpPackageVersion(cwd, level);
     if (r) {
-      log.dim(`Verze: ${r.from} → ${r.to} (${level}).`);
+      log.dim(`Version: ${r.from} → ${r.to} (${level}).`);
       return r.to;
     }
   } catch (err) {
-    log.warn(`Navýšení verze selhalo: ${(err as Error).message}`);
+    log.warn(`Version bump failed: ${(err as Error).message}`);
   }
   return null;
 }
@@ -443,16 +454,16 @@ export function advanceToNextPhase(state: ProjectState): Phase | null {
 }
 
 /**
- * Dozavře osiřelé rodičovské fáze. Po `block`-verify vznikne opravná podfáze
- * (float ID) a `advanceToNextPhase` se na ni posune — rodič přitom zůstane ve
- * stavu `doing` (nastaveno v `do.ts`) a sám se na něj už nikdy nevrátíme.
- * Jakmile jsou všechny jeho podfáze uzavřené (`done`/`skipped`), je rodič
- * hotový (všechny jeho kroky byly `done` už před vznikem podfáze, jinak by se
- * verify nespustil) — uzavřeme ho jako `done`. Voláno z `advanceToNextPhase`,
- * takže reconciliace proběhne po dokončení každé fáze.
+ * Closes orphaned parent phases. After a `block`-verify a fix sub-phase is
+ * created (float ID) and `advanceToNextPhase` moves onto it — the parent stays
+ * in the `doing` state (set in `do.ts`) and we never return to it again. As
+ * soon as all its sub-phases are closed (`done`/`skipped`), the parent is done
+ * (all its steps were already `done` before the sub-phase was created,
+ * otherwise verify would not have run) — we close it as `done`. Called from
+ * `advanceToNextPhase`, so the reconciliation runs after every finished phase.
  *
- * Top-level fázi, která se zrovna normálně dělá (a žádné podfáze nemá), se to
- * netýká — bez podfází se nikdy neuzavře.
+ * A top-level phase that is just being worked on normally (and has no
+ * sub-phases) is unaffected — without sub-phases it is never closed here.
  */
 function closeOrphanedDoingParents(state: ProjectState): void {
   for (const parent of state.phases) {
@@ -464,7 +475,7 @@ function closeOrphanedDoingParents(state: ProjectState): void {
     if (!subs.every((s) => s.status === 'done' || s.status === 'skipped')) continue;
     parent.status = 'done';
     parent.completedAt = new Date().toISOString();
-    log.success(`Fáze ${parent.id} (${parent.title}) uzavřena — opravná podfáze hotová.`);
+    log.success(`Phase ${parent.id} (${parent.title}) closed — fix sub-phase done.`);
   }
 }
 
@@ -476,34 +487,34 @@ async function finalizeStep(step: Step, moreStepsLeft: boolean, opts: AutoOption
     const answer = await ask<'outcome'>({
       type: 'select',
       name: 'outcome',
-      message: `Krok "${step.title}" — jak to dopadlo?`,
+      message: `Step "${step.title}" — how did it go?`,
       choices: [
-        { title: 'Hotovo, funguje', value: 'done' },
-        { title: 'Ještě ne, nech ho doing', value: 'keep' },
-        { title: 'Odložit (přeskočit)', value: 'skip' },
+        { title: 'Done, works', value: 'done' },
+        { title: 'Not yet, keep it doing', value: 'keep' },
+        { title: 'Defer (skip)', value: 'skip' },
       ],
     });
     outcome = answer.outcome as 'done' | 'keep' | 'skip';
   }
 
   if (outcome === 'keep') {
-    log.dim('Krok zůstává jako "dělá se".');
+    log.dim('The step stays as "doing".');
     return;
   }
   if (outcome === 'skip') {
     step.status = 'skipped';
-    log.warn(`Krok "${step.title}" odložen.`);
+    log.warn(`Step "${step.title}" deferred.`);
     return;
   }
 
   step.status = 'done';
-  log.success(`Krok "${step.title}" hotov.`);
+  log.success(`Step "${step.title}" done.`);
 
   if (moreStepsLeft) {
     return;
   }
 
-  log.info('To byl poslední krok fáze.');
+  log.info('That was the last step of the phase.');
 }
 
 type AutoApplyResult =
@@ -512,9 +523,10 @@ type AutoApplyResult =
 
 export interface ApplyReportOptions extends FinalizeOptions {
   /**
-   * Lidská verifikace (`verify` body) už proběhla mimo tenhle proces — typicky
-   * v Claude session dotazem v chatu (`/mini:done`). Při `true` se pending
-   * verify body neptají interaktivně, ale berou se jako odsouhlasené (pass).
+   * Human verification (`verify` items) already happened outside this process —
+   * typically in the Claude session via a chat question (`/mini:done`). When
+   * `true`, pending verify items are not asked interactively but taken as
+   * approved (pass).
    */
   acceptVerify?: boolean;
 }
@@ -536,17 +548,17 @@ export async function applyAutoReport(
     });
   } catch (err) {
     if (err instanceof RunReportParseError) {
-      log.warn(`Report fáze ${phase.id} je poškozený: ${err.message}`);
-      log.dim(`Soubor: ${reportFile}`);
-      log.dim('Přepínám do interaktivního módu — projdeme kroky ručně.');
+      log.warn(`Report for phase ${phase.id} is broken: ${err.message}`);
+      log.dim(`File: ${reportFile}`);
+      log.dim('Switching to interactive mode — we will go through the steps manually.');
       return { handled: false };
     }
     throw err;
   }
 
   if (!report) {
-    log.warn(`Report fáze ${phase.id} nenalezen (${reportFile}).`);
-    log.dim('Přepínám do interaktivního módu — projdeme kroky ručně.');
+    log.warn(`Report for phase ${phase.id} not found (${reportFile}).`);
+    log.dim('Switching to interactive mode — we will go through the steps manually.');
     return { handled: false };
   }
 
@@ -558,8 +570,8 @@ export async function applyAutoReport(
     } else if (reported.status === 'skipped') {
       step.status = 'skipped';
     } else {
-      // `blocked` i `todo` znamenají, že krok není uzavřený — retry pokus
-      // ho najde jako `todo` a pošle Claudovi znovu.
+      // `blocked` and `todo` both mean the step is not closed — a retry attempt
+      // finds it as `todo` and sends it to Claude again.
       step.status = 'todo';
     }
   }
@@ -570,13 +582,13 @@ export async function applyAutoReport(
 
   if (!phase.steps?.length) {
     if (report.verdict !== 'done') {
-      log.warn(`Fáze ${phase.id}: verdict reportu je "${report.verdict}" — fázi nezavírám.`);
+      log.warn(`Phase ${phase.id}: report verdict is "${report.verdict}" — not closing the phase.`);
       await save(state, cwd);
       return { handled: true, outcome: { ok: true } };
     }
   } else if (remaining.length > 0) {
     log.warn(
-      `Fáze ${phase.id}: zbývá ${remaining.length} ${remaining.length === 1 ? 'nedokončený krok' : 'nedokončených kroků'} (verdict: ${report.verdict}).`,
+      `Phase ${phase.id}: ${remaining.length} ${remaining.length === 1 ? 'unfinished step' : 'unfinished steps'} remaining (verdict: ${report.verdict}).`,
     );
     for (const s of remaining) {
       log.dim(`  - ${s.title}`);
@@ -585,9 +597,9 @@ export async function applyAutoReport(
     return { handled: true, outcome: { ok: true } };
   }
 
-  // Body k ručnímu ověření zobrazíme až tady — všechny kroky jsou uzavřené a
-  // fázi bychom jinak rovnou zavřeli. I v auto módu se tu zastavíme a zeptáme
-  // se člověka (volání `ask()`); auto loop verify neobchází.
+  // Items for manual verification are shown only here — all steps are closed and
+  // we would otherwise close the phase right away. Even in auto mode we stop
+  // here and ask a human (an `ask()` call); the auto loop does not bypass verify.
   const verifyOutcome = await handleVerify(report.verify, phase, state, cwd, applyOpts);
   if (verifyOutcome) {
     return { handled: true, outcome: verifyOutcome };
@@ -595,7 +607,7 @@ export async function applyAutoReport(
 
   phase.status = 'done';
   phase.completedAt = new Date().toISOString();
-  log.success(`Fáze ${phase.id} (${phase.title}) hotová.`);
+  log.success(`Phase ${phase.id} (${phase.title}) done.`);
   const nextPhase = advanceToNextPhase(state);
   logNextPhase(nextPhase);
   await finalizePhaseSideEffects(phase, state, cwd, { bump: applyOpts.bump, push: applyOpts.push });
@@ -607,22 +619,25 @@ export async function applyAutoReport(
 }
 
 /**
- * Projde body k ručnímu ověření (`verify` z reportu) s člověkem. Volá se až
- * při uzavírání fáze, kdy jsou všechny kroky hotové. Vrací:
+ * Goes through the items for manual verification (`verify` from the report)
+ * with a human. Called only when closing the phase, when all steps are done.
+ * Returns:
  *
- * - `null` — žádné verify body, nebo všechny `pass`/`skip`: fázi lze zavřít,
- * - `{ ok: false, reason: 'verify-issue' }` — aspoň jeden `issue` (a žádný
- *   blocker): fázi nezavíráme, uživatel ji po opravě zavře znovu (`mini done`),
- * - `{ ok: true, phaseAdvanced: true, ... }` — aspoň jeden `block`: vytvoříme
- *   opravnou podfázi (float ID) a posuneme se na ni.
+ * - `null` — no verify items, or all `pass`/`skip`: the phase can be closed,
+ * - `{ ok: false, reason: 'verify-issue' }` — at least one `issue` (and no
+ *   blocker): we don't close the phase, the user closes it again after the fix
+ *   (`mini done`),
+ * - `{ ok: true, phaseAdvanced: true, ... }` — at least one `block`: we create
+ *   a fix sub-phase (float ID) and move onto it.
  *
- * I v auto módu se tu volá `ask()` — verify se nikdy neobchází automaticky.
- * Bez interaktivního terminálu (CI, pipe) se ale `ask()` nevolá vůbec: fázi
- * nezavřeme a vrátíme `verify-needs-human`, aby verify tiše neprošlo jako pass.
+ * Even in auto mode `ask()` is called here — verify is never bypassed
+ * automatically. Without an interactive terminal (CI, pipe) `ask()` is not
+ * called at all: we don't close the phase and return `verify-needs-human`, so
+ * verify does not silently pass.
  *
- * Body, které člověk v minulém průchodu už odbavil (`pass`/`skip`), si pamatuje
- * `phase.resolvedVerify` — při opakovaném `mini done` nad stejným reportem se
- * znovu nenabízejí.
+ * Items the human already resolved in a previous pass (`pass`/`skip`) are
+ * remembered in `phase.resolvedVerify` — on a repeated `mini done` over the same
+ * report they are not offered again.
  */
 async function handleVerify(
   verify: RunReportVerifyItem[],
@@ -631,40 +646,41 @@ async function handleVerify(
   cwd: string,
   applyOpts: ApplyReportOptions = {},
 ): Promise<StepOutcome | null> {
-  // Body vyřešené dřívějším průchodem (pass/skip) přeskočíme — opakovaný
-  // `mini done` nad neměnícím se reportem je nesmí přehrávat znovu (W4).
+  // Items resolved by an earlier pass (pass/skip) are skipped — a repeated
+  // `mini done` over an unchanged report must not replay them (W4).
   const alreadyResolved = new Set(phase.resolvedVerify ?? []);
   const pending = verify.filter((v) => !alreadyResolved.has(v.title));
   if (pending.length === 0) {
     return null;
   }
 
-  // `/mini:done`: lidská verifikace proběhla v chatu, sem dorazil souhlas přes
-  // `--accept-verify`. Body bereme jako pass (zapamatujeme do resolvedVerify,
-  // ať se při opakování neptáme znovu) a fázi necháme zavřít.
+  // `/mini:done`: human verification happened in the chat, the approval arrived
+  // here via `--accept-verify`. We take the items as pass (remember them in
+  // resolvedVerify so we don't ask again on a repeat) and let the phase close.
   if (applyOpts.acceptVerify) {
     phase.resolvedVerify = [...(phase.resolvedVerify ?? []), ...pending.map((v) => v.title)];
     return null;
   }
 
-  // Bez TTY se `ask()` nedá bezpečně použít (vrací undefined → tiše pass).
-  // Fázi proto nezavíráme a předáme štafetu člověku do interaktivního běhu.
+  // Without a TTY `ask()` can't be used safely (returns undefined → silent
+  // pass). We therefore don't close the phase and hand the baton to a human in
+  // an interactive run.
   if (!isInteractive()) {
     const w =
-      pending.length === 1 ? 'bod k ručnímu ověření' : 'bodů k ručnímu ověření';
+      pending.length === 1 ? 'item for manual verification' : 'items for manual verification';
     log.warn(
-      `Fáze ${phase.id} (${phase.title}): ${pending.length} ${w} vyžaduje člověka, ale běžím bez interaktivního terminálu — fázi nezavírám.`,
+      `Phase ${phase.id} (${phase.title}): ${pending.length} ${w} require a human, but I'm running without an interactive terminal — not closing the phase.`,
     );
     for (const it of pending) {
       log.dim(`  - ${it.title}`);
     }
-    log.hint('Spusť `mini done` (nebo `mini auto`) v terminálu a body ověř ručně.');
+    log.hint('Run `mini done` (or `mini auto`) in a terminal and verify the items manually.');
     await save(state, cwd);
     return { ok: false, reason: 'verify-needs-human' };
   }
 
-  const word = pending.length === 1 ? 'bod k ručnímu ověření' : 'bodů k ručnímu ověření';
-  log.info(`Fáze ${phase.id} (${phase.title}): ${pending.length} ${word} (Claude je sám neověřil):`);
+  const word = pending.length === 1 ? 'item for manual verification' : 'items for manual verification';
+  log.info(`Phase ${phase.id} (${phase.title}): ${pending.length} ${word} (Claude did not verify them itself):`);
   console.log();
 
   const blockers: RunReportVerifyItem[] = [];
@@ -680,12 +696,12 @@ async function handleVerify(
     const { answer } = await ask<'answer'>({
       type: 'select',
       name: 'answer',
-      message: 'Ověřeno?',
+      message: 'Verified?',
       choices: [
-        { title: 'Ano, funguje (pass)', value: 'pass' },
-        { title: 'Přeskočit ověření, beru zodpovědnost na sebe (skip)', value: 'skip' },
-        { title: 'Drobný problém — chci ho opravit (issue)', value: 'issue' },
-        { title: 'Závažný bloker — vytvoř opravnou podfázi (block)', value: 'block' },
+        { title: 'Yes, works (pass)', value: 'pass' },
+        { title: 'Skip verification, I take responsibility (skip)', value: 'skip' },
+        { title: 'Minor problem — I want to fix it (issue)', value: 'issue' },
+        { title: 'Serious blocker — create a fix sub-phase (block)', value: 'block' },
       ],
     });
     if (answer === 'issue') {
@@ -693,7 +709,7 @@ async function handleVerify(
     } else if (answer === 'block') {
       blockers.push(item);
     } else {
-      // pass | skip — bod je odbavený, ať se příště znovu nenabízí.
+      // pass | skip — the item is resolved, so it is not offered again next time.
       newlyResolved.push(item.title);
     }
   }
@@ -702,11 +718,11 @@ async function handleVerify(
     phase.resolvedVerify = [...(phase.resolvedVerify ?? []), ...newlyResolved];
   }
 
-  // Bloker má přednost: založíme opravnou podfázi a posuneme se na ni.
+  // A blocker takes precedence: we create a fix sub-phase and move onto it.
   if (blockers.length > 0) {
     const sub = insertFixSubphase(state, phase, blockers);
     log.warn(
-      `Fáze ${phase.id} se neuzavírá — našel se ${blockers.length === 1 ? 'bloker' : 'blokery'}. Vytvořil jsem opravnou podfázi ${sub.id}.`,
+      `Phase ${phase.id} is not being closed — ${blockers.length === 1 ? 'a blocker was' : 'blockers were'} found. I created fix sub-phase ${sub.id}.`,
     );
     for (const s of sub.steps ?? []) {
       log.dim(`  - ${s.title}`);
@@ -717,29 +733,30 @@ async function handleVerify(
     return { ok: true, phaseAdvanced: true, nextPhaseId: next?.id ?? null };
   }
 
-  // Drobné problémy bez blokeru: fázi nezavřeme, uživatel ji po opravě zavře znovu.
+  // Minor problems without a blocker: we don't close the phase, the user closes it again after the fix.
   if (issues.length > 0) {
     log.warn(
-      `Fáze ${phase.id} se neuzavírá — ${issues.length === 1 ? 'bod má problém' : 'bodů má problém'}:`,
+      `Phase ${phase.id} is not being closed — ${issues.length === 1 ? 'an item has a problem' : 'items have a problem'}:`,
     );
     for (const it of issues) {
       log.dim(`  - ${it.title}`);
     }
-    log.hint('Oprav uvedené body (`mini do`) a pak fázi zavři znovu (`mini done`).');
+    log.hint('Fix the listed items (`mini do`) and then close the phase again (`mini done`).');
     await save(state, cwd);
     return { ok: false, reason: 'verify-issue' };
   }
 
-  // Všechny body pass/skip — fázi lze zavřít.
+  // All items pass/skip — the phase can be closed.
   return null;
 }
 
 /**
- * Vloží opravnou podfázi hned za mateřskou fázi v `phases` array. Float ID
- * (21 → 21.1 → 21.2…), status `planned`, kroky mechanicky z blokerů (každý
- * blocker → jeden krok). Fyzická pozice za rodičem je důležitá: `advanceToNextPhase`
- * bere první `proposed/planned` fázi v pořadí pole, takže podfáze musí stát hned
- * za rodičem, jinak by se přeskočila.
+ * Inserts a fix sub-phase right after the parent phase in `phases`. Float ID
+ * (21 → 21.1 → 21.2…), status `planned`, steps mechanically from the blockers
+ * (each blocker → one step). The physical position after the parent matters:
+ * `advanceToNextPhase` takes the first `proposed/planned` phase in array order,
+ * so the sub-phase must stand right after the parent, otherwise it would be
+ * skipped.
  */
 function insertFixSubphase(
   state: ProjectState,
@@ -754,8 +771,8 @@ function insertFixSubphase(
   }));
   const sub: Phase = {
     id,
-    title: `Oprava: ${parent.title}`,
-    goal: `Vyřešit blokery z ručního ověření fáze ${parent.id}.`,
+    title: `Fix: ${parent.title}`,
+    goal: `Resolve the blockers from manual verification of phase ${parent.id}.`,
     status: 'planned',
     steps,
   };
@@ -765,9 +782,9 @@ function insertFixSubphase(
 }
 
 /**
- * Další volné float ID podfáze pro daného rodiče. 21 bez podfází → 21.1,
- * jinak nejvyšší existující + 0.1 (zaokrouhleno na jedno desetinné místo,
- * aby float aritmetika nedala 21.200000000000003).
+ * The next free float ID of a sub-phase for the given parent. 21 without
+ * sub-phases → 21.1, otherwise the highest existing one + 0.1 (rounded to one
+ * decimal place, so float arithmetic doesn't give 21.200000000000003).
  */
 function nextSubphaseId(state: ProjectState, parentId: number): number {
   const subs = state.phases.filter(
@@ -790,18 +807,18 @@ async function finalizePhase(
     const answer = await ask<'outcome'>({
       type: 'select',
       name: 'outcome',
-      message: `Fáze ${phase.id} (${phase.title}) — co s ní?`,
+      message: `Phase ${phase.id} (${phase.title}) — what do you want to do with it?`,
       choices: [
-        { title: 'Hotová, funguje', value: 'done' },
-        { title: 'Ještě ne, nech ji doing', value: 'keep' },
-        { title: 'Odložit (přeskočit fázi)', value: 'skip' },
+        { title: 'Done, works', value: 'done' },
+        { title: 'Not yet, keep it doing', value: 'keep' },
+        { title: 'Defer (skip the phase)', value: 'skip' },
       ],
     });
     outcome = answer.outcome as 'done' | 'keep' | 'skip';
   }
 
   if (outcome === 'keep') {
-    log.dim('Fáze zůstává jako rozdělaná.');
+    log.dim('The phase stays in progress.');
     return { ok: true };
   }
 
@@ -809,7 +826,7 @@ async function finalizePhase(
     const { notes } = await ask<'notes'>({
       type: 'text',
       name: 'notes',
-      message: 'Krátká poznámka (co se povedlo / co je špatně, můžeš nechat prázdné):',
+      message: 'Short note (what went well / what is wrong, can be left empty):',
       initial: '',
     });
     const trimmedNotes = (notes as string).trim();
@@ -820,11 +837,11 @@ async function finalizePhase(
 
   if (outcome === 'skip') {
     phase.status = 'skipped';
-    log.warn(`Fáze ${phase.id} odložena.`);
+    log.warn(`Phase ${phase.id} deferred.`);
   } else {
     phase.status = 'done';
     phase.completedAt = new Date().toISOString();
-    log.success(`Fáze ${phase.id} (${phase.title}) hotová.`);
+    log.success(`Phase ${phase.id} (${phase.title}) done.`);
   }
 
   const next = advanceToNextPhase(state);
@@ -837,53 +854,54 @@ async function finalizePhase(
 }
 
 /**
- * Neinteraktivní posun stavu podle reportu — pro `mini done --apply` (volá ho
- * `/mini:done`, když uživatel v session potvrdil, že fáze funguje). Sdílí
- * `applyAutoReport` s auto módem: přečte report, posune kroky, případně uzavře
- * fázi (commit + memory + graf + posun na další). Na rozdíl od `done({auto})`
- * **nepadá do interaktivního fallbacku** — když report chybí nebo je poškozený,
- * vrátí chybu, ať Bash volání selže čistě místo zaseknutí na `ask()`.
+ * Non-interactive state advance from the report — for `mini done --apply`
+ * (called by `/mini:done` when the user confirmed in the session that the phase
+ * works). Shares `applyAutoReport` with auto mode: reads the report, advances
+ * the steps, and possibly closes the phase (commit + memory + graph + advance to
+ * the next one). Unlike `done({auto})` it **does not drop into the interactive
+ * fallback** — when the report is missing or broken, it returns an error so the
+ * Bash call fails cleanly instead of hanging on `ask()`.
  */
 export async function applyDone(
   cwd: string = process.cwd(),
   opts: ApplyReportOptions = {},
 ): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
   const state = await load(cwd);
 
   if (state.currentPhaseId === null) {
-    log.warn('Žádná aktuální fáze.');
-    log.hint('Spusť: mini next');
+    log.warn('No current phase.');
+    log.hint('Run: mini next');
     return { ok: false, reason: 'no-current-phase' };
   }
 
   const phase = state.phases.find((p) => p.id === state.currentPhaseId);
   if (!phase) {
-    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    log.error('State is inconsistent (currentPhaseId points to a non-existent phase).');
     return { ok: false, reason: 'inconsistent-state' };
   }
 
   if (phase.status === 'done') {
-    log.info(`Fáze ${phase.id} (${phase.title}) už je hotová.`);
-    log.hint('Spusť: mini next');
+    log.info(`Phase ${phase.id} (${phase.title}) is already done.`);
+    log.hint('Run: mini next');
     return { ok: false, reason: 'phase-done' };
   }
 
   const applied = await applyAutoReport(phase, state, cwd, opts);
   if (!applied.handled) {
-    log.error(`Report fáze ${phase.id} chybí nebo je poškozený — stav neumím posunout neinteraktivně.`);
-    log.hint('Nejdřív spusť `/mini:do` (zapíše report), nebo stav posuň ručně přes `mini done`.');
+    log.error(`Report for phase ${phase.id} is missing or broken — I can't advance the state non-interactively.`);
+    log.hint('First run `/mini:do` (it writes the report), or advance the state manually via `mini done`.');
     return { ok: false, reason: 'no-report' };
   }
-  // Fáze se opravdu uzavřela (ne jen verify-needs-human apod.) → nabídni vyčištění
-  // kontextu. `/clear` musí napsat člověk, my ho jen připomeneme.
+  // The phase really closed (not just verify-needs-human etc.) → offer to clear
+  // the context. `/clear` must be typed by a human, we only remind them.
   if (applied.outcome.ok && applied.outcome.phaseAdvanced) {
-    log.hint('Hotovo. Pro vyčištění kontextu Claude Code před další fází zvaž `/clear`.');
+    log.hint('Done. To clear the Claude Code context before the next phase, consider `/clear`.');
   }
   return applied.outcome;
 }

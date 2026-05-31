@@ -3,26 +3,26 @@ import { parseSteps } from './plan.js';
 
 describe('parseSteps', () => {
   it('parses multiple STEP lines in order', () => {
-    const text = 'STEP: init package\nSTEP: přidat commander\nSTEP: napsat help';
-    expect(parseSteps(text)).toEqual(['init package', 'přidat commander', 'napsat help']);
+    const text = 'STEP: init package\nSTEP: add commander\nSTEP: write help';
+    expect(parseSteps(text)).toEqual(['init package', 'add commander', 'write help']);
   });
 
   it('trims whitespace around each step title', () => {
-    const text = 'STEP:   první   \nSTEP:\tdruhý\t';
-    expect(parseSteps(text)).toEqual(['první', 'druhý']);
+    const text = 'STEP:   first   \nSTEP:\tsecond\t';
+    expect(parseSteps(text)).toEqual(['first', 'second']);
   });
 
   it('ignores lines that are not STEP markers', () => {
     const text = [
-      'Tady je můj plán:',
+      'Here is my plan:',
       '',
-      'STEP: krok 1',
-      'nějaký poznámkový text',
-      'STEP: krok 2',
+      'STEP: step 1',
+      'some note text',
+      'STEP: step 2',
       '',
-      'Hotovo.',
+      'Done.',
     ].join('\n');
-    expect(parseSteps(text)).toEqual(['krok 1', 'krok 2']);
+    expect(parseSteps(text)).toEqual(['step 1', 'step 2']);
   });
 
   it('returns empty array for empty input', () => {
@@ -30,26 +30,26 @@ describe('parseSteps', () => {
   });
 
   it('returns empty array when no STEP marker is present', () => {
-    expect(parseSteps('Tohle je obyčejný text bez markerů.\nDalší řádek.')).toEqual([]);
+    expect(parseSteps('This is plain text without markers.\nAnother line.')).toEqual([]);
   });
 
   it('skips STEP lines whose value is empty after trim', () => {
-    const text = 'STEP:    \nSTEP: opravdový krok\nSTEP:';
-    expect(parseSteps(text)).toEqual(['opravdový krok']);
+    const text = 'STEP:    \nSTEP: a real step\nSTEP:';
+    expect(parseSteps(text)).toEqual(['a real step']);
   });
 
   it('only matches markers at line start (case-sensitive)', () => {
-    const text = '  STEP: odsazený krok\nstep: malá písmena\nSTEP: ok krok';
-    expect(parseSteps(text)).toEqual(['ok krok']);
+    const text = '  STEP: indented step\nstep: lowercase\nSTEP: ok step';
+    expect(parseSteps(text)).toEqual(['ok step']);
   });
 
   it('preserves duplicates (caller decides how to dedupe)', () => {
-    const text = 'STEP: stejný\nSTEP: stejný\nSTEP: jiný';
-    expect(parseSteps(text)).toEqual(['stejný', 'stejný', 'jiný']);
+    const text = 'STEP: same\nSTEP: same\nSTEP: different';
+    expect(parseSteps(text)).toEqual(['same', 'same', 'different']);
   });
 
   it('handles single-step happy path', () => {
-    expect(parseSteps('STEP: jen jeden krok')).toEqual(['jen jeden krok']);
+    expect(parseSteps('STEP: just one step')).toEqual(['just one step']);
   });
 
 });

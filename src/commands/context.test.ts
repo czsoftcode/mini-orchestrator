@@ -36,12 +36,12 @@ function makeState(phases: Phase[], currentPhaseId: number | null): ProjectState
 }
 
 async function setupProject(phases: Phase[], currentPhaseId: number | null): Promise<void> {
-  await writeProject('# Demo\n\n## Co stavím\nNěco.', cwd);
+  await writeProject('# Demo\n\n## What I am building\nSomething.', cwd);
   await save(makeState(phases, currentPhaseId), cwd);
 }
 
 describe('isContextCommand', () => {
-  it('zná příkazy cyklu i verify', () => {
+  it('knows the cycle commands and verify', () => {
     expect(CONTEXT_COMMANDS).toEqual(['next', 'discuss', 'plan', 'do', 'done', 'verify']);
     expect(isContextCommand('plan')).toBe(true);
     expect(isContextCommand('verify')).toBe(true);
@@ -50,19 +50,19 @@ describe('isContextCommand', () => {
 });
 
 describe('context', () => {
-  it('neznámý pod-příkaz → exit code 1, nic na stdout', async () => {
+  it('unknown sub-command → exit code 1, nothing on stdout', async () => {
     await setupProject([], null);
     await context('auto');
     expect(process.exitCode).toBe(1);
     expect(out).toBe('');
   });
 
-  it('bez projektu → exit code 1', async () => {
+  it('without a project → exit code 1', async () => {
     await context('next');
     expect(process.exitCode).toBe(1);
   });
 
-  it('next vypíše prompt s mini next --apply', async () => {
+  it('next prints a prompt with mini next --apply', async () => {
     await setupProject([], null);
     await context('next');
     expect(process.exitCode).toBeUndefined();
@@ -70,159 +70,159 @@ describe('context', () => {
     expect(out).toContain('**next** step');
   });
 
-  it('next bere extra argumenty jako nápad uživatele', async () => {
+  it('next takes extra arguments as the user idea', async () => {
     await setupProject([], null);
-    await context('next', ['přidej', 'CSV', 'export']);
-    expect(out).toContain('přidej CSV export');
+    await context('next', ['add', 'CSV', 'export']);
+    expect(out).toContain('add CSV export');
     expect(out).toContain("User's idea");
   });
 
-  it('plan bez aktuální fáze → exit code 1', async () => {
+  it('plan without a current phase → exit code 1', async () => {
     await setupProject([], null);
     await context('plan');
     expect(process.exitCode).toBe(1);
     expect(out).toBe('');
   });
 
-  it('plan s aktuální fází vypíše prompt s mini plan --apply', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'proposed' }], 1);
+  it('plan with a current phase prints a prompt with mini plan --apply', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'proposed' }], 1);
     await context('plan');
     expect(out).toContain('mini plan --apply');
-    expect(out).toContain('Phase 1: Fáze A');
+    expect(out).toContain('Phase 1: Phase A');
   });
 
-  it('discuss vypíše diskusní prompt', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'proposed' }], 1);
+  it('discuss prints a discussion prompt', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'proposed' }], 1);
     await context('discuss');
     expect(out).toContain('discussion session');
     expect(out).toContain('.mini/discuss/phase-001.md');
   });
 
-  it('do vypíše auto-prompt s instrukcí zapsat report', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
+  it('do prints the auto prompt with the instruction to write a report', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
     await context('do');
     expect(out).toContain('.mini/run/phase-001.md');
     expect(out).toContain('Report at the end of the session');
   });
 
-  it('do bez poznámek z diskuse blok poznámek vynechá', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
+  it('do without discussion notes omits the notes block', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
     await context('do');
-    expect(out).not.toContain('# Poznámky k fázi (z diskuse)');
+    expect(out).not.toContain('# Phase notes (from discussion)');
   });
 
-  it('do s existujícími poznámkami → odkaz + read-once, ne inline text', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
+  it('do with existing notes → link + read-once, not inline text', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
     await mkdir(join(cwd, '.mini', 'discuss'), { recursive: true });
     await writeFile(
       join(cwd, '.mini', 'discuss', 'phase-001.md'),
-      '# Fáze 1\n\n## Záměr\nTAJNY INLINE TEXT NESMI BYT V PROMPTU',
+      '# Phase 1\n\n## Intent\nSECRET INLINE TEXT MUST NOT BE IN THE PROMPT',
       'utf-8',
     );
     await context('do');
-    // Reference mód: odkaz na soubor + read-once instrukce, ale ne plný text.
+    // Reference mode: link to the file + read-once instruction, but not the full text.
     expect(out).toContain('# Phase notes (from discussion)');
     expect(out).toContain('.mini/discuss/phase-001.md');
     expect(out).toContain('Read');
-    expect(out).not.toContain('TAJNY INLINE TEXT NESMI BYT V PROMPTU');
+    expect(out).not.toContain('SECRET INLINE TEXT MUST NOT BE IN THE PROMPT');
   });
 
-  it('do projekt → odkaz na .mini/project.md + read-once, ne inline text projektu', async () => {
+  it('do project → link to .mini/project.md + read-once, not the inline project text', async () => {
     await setupProject(
-      [{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'planned', steps: [{ title: 's', status: 'todo' }] }],
+      [{ id: 1, title: 'Phase A', goal: 'goal', status: 'planned', steps: [{ title: 's', status: 'todo' }] }],
       1,
     );
     await context('do');
-    // Reference mód projektu: odkaz na soubor místo inlinovaného obsahu project.md.
+    // Project reference mode: a link to the file instead of the inlined project.md content.
     expect(out).toContain('.mini/project.md');
     expect(out).toContain('Read');
-    // Inline tělo project.md (viz setupProject) se nesmí objevit.
-    expect(out).not.toContain('Něco.');
+    // The inline project.md body (see setupProject) must not appear.
+    expect(out).not.toContain('Something.');
   });
 
-  it('done bez reportu pošle na /mini:do', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 's', status: 'doing' }] }], 1);
+  it('done without a report sends to /mini:do', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 's', status: 'doing' }] }], 1);
     await context('done');
     expect(out).toContain('/mini:do');
   });
 
-  it('done s reportem vypíše shrnutí a mini done --apply', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }], 1);
+  it('done with a report prints the summary and mini done --apply', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }], 1);
     await ensureRunDir(cwd);
     await writeFile(
       runReportPath(cwd, 1),
-      ['---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "krok 1"', '    status: done', '---', '', 'všechno klape'].join('\n'),
+      ['---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "step 1"', '    status: done', '---', '', 'all good'].join('\n'),
       'utf-8',
     );
     await context('done');
     expect(out).toContain('mini done --apply');
-    expect(out).toContain('všechno klape');
+    expect(out).toContain('all good');
   });
 
-  it('done s verify body v reportu vyžaduje --accept-verify', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }], 1);
+  it('done with verify items in the report requires --accept-verify', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }], 1);
     await ensureRunDir(cwd);
     await writeFile(
       runReportPath(cwd, 1),
       [
-        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "krok 1"', '    status: done',
-        'verify:', '  - title: "mrkni na UI"', '---', '', 'text',
+        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "step 1"', '    status: done',
+        'verify:', '  - title: "check the UI"', '---', '', 'text',
       ].join('\n'),
       'utf-8',
     );
     await context('done');
     expect(out).toContain('--accept-verify');
-    expect(out).toContain('mrkni na UI');
+    expect(out).toContain('check the UI');
   });
 
-  it('verify bez aktuální i uzavřené fáze → exit code 1', async () => {
-    await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'proposed' }], null);
+  it('verify without a current or closed phase → exit code 1', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'proposed' }], null);
     await context('verify');
     expect(process.exitCode).toBe(1);
     expect(out).toBe('');
   });
 
-  it('verify s aktuální fází vypíše prompt UI/UX kontroly', async () => {
+  it('verify with a current phase prints the UI/UX review prompt', async () => {
     await setupProject(
-      [{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }],
+      [{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }],
       1,
     );
     await context('verify');
     expect(process.exitCode).toBeUndefined();
     expect(out).toContain('**verify** step');
-    expect(out).toContain('Phase 1: Fáze A');
+    expect(out).toContain('Phase 1: Phase A');
     expect(out).toContain('not yet closed');
   });
 
-  it('verify bez aktuální fáze vezme poslední uzavřenou', async () => {
+  it('verify without a current phase takes the last closed one', async () => {
     await setupProject(
       [
-        { id: 1, title: 'Stará', goal: 'cíl', status: 'done' },
-        { id: 2, title: 'Poslední hotová', goal: 'cíl', status: 'done' },
+        { id: 1, title: 'Old', goal: 'goal', status: 'done' },
+        { id: 2, title: 'Last done', goal: 'goal', status: 'done' },
       ],
       null,
     );
     await context('verify');
     expect(process.exitCode).toBeUndefined();
-    expect(out).toContain('Phase 2: Poslední hotová');
+    expect(out).toContain('Phase 2: Last done');
     expect(out).toContain('is already closed');
   });
 
-  it('verify načte verify body z reportu fáze', async () => {
+  it('verify reads the verify items from the phase report', async () => {
     await setupProject(
-      [{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }],
+      [{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }],
       1,
     );
     await ensureRunDir(cwd);
     await writeFile(
       runReportPath(cwd, 1),
       [
-        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "krok 1"', '    status: done',
-        'verify:', '  - title: "mrkni na UI"', '---', '', 'text',
+        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "step 1"', '    status: done',
+        'verify:', '  - title: "check the UI"', '---', '', 'text',
       ].join('\n'),
       'utf-8',
     );
     await context('verify');
-    expect(out).toContain('mrkni na UI');
+    expect(out).toContain('check the UI');
   });
 });

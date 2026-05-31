@@ -15,52 +15,52 @@ export async function discuss(): Promise<StepOutcome> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
   const [projectMd, state] = await Promise.all([readProject(cwd), load(cwd)]);
 
   if (state.currentPhaseId === null) {
-    log.warn('Žádná aktuální fáze k diskusi.');
-    log.hint('Spusť: mini next');
+    log.warn('No current phase to discuss.');
+    log.hint('Run: mini next');
     return { ok: false, reason: 'no-current-phase' };
   }
 
   const phase = state.phases.find((p) => p.id === state.currentPhaseId);
   if (!phase) {
-    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    log.error('State is inconsistent (currentPhaseId points to a non-existent phase).');
     return { ok: false, reason: 'inconsistent-state' };
   }
 
   const prompt = buildDiscussPhasePrompt(projectMd, phase);
 
   console.log();
-  log.title('Tohle pošlu Claude Code jako první zprávu:');
+  log.title('This is what I will send to Claude Code as the first message:');
   console.log();
   console.log(prompt);
 
   const { confirm } = await ask<'confirm'>({
     type: 'confirm',
     name: 'confirm',
-    message: 'Spustit diskusní session s Claude Code?',
+    message: 'Start a discussion session with Claude Code?',
     initial: true,
   });
 
   if (!confirm) {
-    log.dim('Zrušeno. Stav fáze se nezměnil.');
+    log.dim('Cancelled. The phase status did not change.');
     return { ok: false, reason: 'cancelled' };
   }
 
   try {
     await mkdir(join(cwd, DISCUSS_DIR), { recursive: true });
   } catch (err) {
-    log.error(`Nepodařilo se vytvořit adresář ${DISCUSS_DIR}: ${(err as Error).message}`);
+    log.error(`Could not create directory ${DISCUSS_DIR}: ${(err as Error).message}`);
     return { ok: false, reason: 'mkdir-error' };
   }
 
-  log.dim('Spouštím Claude Code (diskusní session)…');
+  log.dim('Starting Claude Code (discussion session)…');
   console.log();
 
   let exitCode: number;
@@ -71,15 +71,15 @@ export async function discuss(): Promise<StepOutcome> {
     });
     exitCode = result.exitCode;
   } catch (err) {
-    log.error(`Claude se nepodařilo spustit: ${(err as Error).message}`);
+    log.error(`Failed to start Claude: ${(err as Error).message}`);
     return { ok: false, reason: 'claude-error' };
   }
 
   console.log();
   if (exitCode === 0) {
-    log.success('Diskusní session ukončena.');
+    log.success('Discussion session finished.');
   } else {
-    log.warn(`Claude session skončila s kódem ${exitCode}.`);
+    log.warn(`Claude session ended with code ${exitCode}.`);
   }
 
   const notesFile = `${phaseStem(phase.id)}.md`;
@@ -87,30 +87,30 @@ export async function discuss(): Promise<StepOutcome> {
   try {
     await access(notesPath);
   } catch {
-    log.dim(`Poznámky nebyly uloženy do ${join(DISCUSS_DIR, notesFile)} — plan a do pojedou bez kontextu diskuse.`);
+    log.dim(`Notes were not saved to ${join(DISCUSS_DIR, notesFile)} — plan and do will run without the discussion context.`);
   }
 
   await offerPhaseEdit(phase, cwd);
 
-  log.hint('Další: mini plan (naplánovat kroky fáze)');
+  log.hint('Next: mini plan (plan the phase steps)');
   return { ok: true };
 }
 
 async function offerPhaseEdit(phase: Phase, cwd: string): Promise<void> {
   console.log();
-  log.title(`Fáze ${phase.id}: ${phase.title}`);
-  log.dim(`  Cíl: ${phase.goal ?? '(nezadán)'}`);
+  log.title(`Phase ${phase.id}: ${phase.title}`);
+  log.dim(`  Goal: ${phase.goal ?? '(not set)'}`);
   console.log();
 
   const { editIt } = await ask<'editIt'>({
     type: 'confirm',
     name: 'editIt',
-    message: 'Chceš upravit název nebo cíl fáze podle diskuse?',
+    message: 'Do you want to edit the phase name or goal based on the discussion?',
     initial: false,
   });
 
   if (!editIt) {
-    log.dim('Stav fáze se nemění.');
+    log.dim('The phase status is not changing.');
     return;
   }
 
@@ -118,7 +118,7 @@ async function offerPhaseEdit(phase: Phase, cwd: string): Promise<void> {
     {
       type: 'text',
       name: 'title',
-      message: 'Název:',
+      message: 'Name:',
       initial: phase.title,
       format: trim,
       validate: nonEmpty(),
@@ -126,7 +126,7 @@ async function offerPhaseEdit(phase: Phase, cwd: string): Promise<void> {
     {
       type: 'text',
       name: 'goal',
-      message: 'Cíl:',
+      message: 'Goal:',
       initial: phase.goal ?? '',
       format: trim,
       validate: nonEmpty(),
@@ -139,15 +139,15 @@ async function offerPhaseEdit(phase: Phase, cwd: string): Promise<void> {
   const oldGoal = phase.goal ?? '';
 
   if (newTitle === oldTitle && newGoal === oldGoal) {
-    log.dim('Beze změny.');
+    log.dim('No change.');
     return;
   }
 
-  // přečteme stav znovu, ať nepřepíšeme cizí změny, které mohly proběhnout během session
+  // re-read the state so we don't overwrite foreign changes that may have happened during the session
   const freshState = await load(cwd);
   const freshPhase = freshState.phases.find((p) => p.id === phase.id);
   if (!freshPhase) {
-    log.error('Fáze už ve stavu neexistuje — nic neukládám.');
+    log.error('The phase no longer exists in the state — saving nothing.');
     return;
   }
 
@@ -157,15 +157,15 @@ async function offerPhaseEdit(phase: Phase, cwd: string): Promise<void> {
   try {
     await save(freshState, cwd);
   } catch (err) {
-    log.error(`Stav se nepodařilo uložit: ${(err as Error).message}`);
+    log.error(`Could not save the state: ${(err as Error).message}`);
     return;
   }
 
-  log.success(`Fáze ${phase.id} aktualizována.`);
+  log.success(`Phase ${phase.id} updated.`);
   if (newTitle !== oldTitle) {
-    log.dim(`  Název: ${oldTitle} → ${newTitle}`);
+    log.dim(`  Name: ${oldTitle} → ${newTitle}`);
   }
   if (newGoal !== oldGoal) {
-    log.dim(`  Cíl: ${oldGoal || '(prázdné)'} → ${newGoal}`);
+    log.dim(`  Goal: ${oldGoal || '(empty)'} → ${newGoal}`);
   }
 }

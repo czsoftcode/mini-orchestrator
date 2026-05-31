@@ -407,6 +407,11 @@
       "id": 81,
       "title": "Anglický README + CHANGELOG",
       "status": "done"
+    },
+    {
+      "id": 82,
+      "title": "Anglické lifecycle příkazy",
+      "status": "done"
     }
   ],
   "models": {

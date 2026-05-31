@@ -8,29 +8,29 @@ import { load, phaseFileName, phasesDir, save, writeProject } from '../state/sto
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 
 /**
- * Synchronně přečte detail aktuální fáze z layoutu verze 2 (hlavička +
- * .mini/phases/phase-<id>.json). Mocky Claude session ji potřebují, aby do
- * reportu vypsaly skutečné kroky fáze.
+ * Synchronously reads the current phase detail from the version 2 layout (header
+ * + .mini/phases/phase-<id>.json). The Claude session mocks need it to write the
+ * real phase steps into the report.
  */
 function readCurrentPhaseSync(cwd: string): Phase {
   const header = JSON.parse(readFileSync(join(cwd, '.mini', 'state.json'), 'utf-8')) as StateHeader;
   const id = header.currentPhaseId;
-  if (id === null) throw new Error('mock: žádná aktuální fáze ve stavu');
+  if (id === null) throw new Error('mock: no current phase in the state');
   return JSON.parse(readFileSync(join(phasesDir(cwd), phaseFileName(id)), 'utf-8')) as Phase;
 }
 
-// V auto módu se interaktivní `ask` nikdy nesmí volat. Pokud ho cokoliv
-// v řetězci next → plan → do → done omylem zavolá, test musí spadnout —
-// jinak by uživatel reálně dostal prompt a `mini auto` by se zaseknul.
+// In auto mode the interactive `ask` must never be called. If anything in the
+// next → plan → do → done chain accidentally calls it, the test must fail —
+// otherwise the user would really get a prompt and `mini auto` would hang.
 vi.mock('../ui/ask.js', () => ({
   ask: vi.fn(async () => {
-    throw new Error('ask() nesmí být v auto módu zavoláno');
+    throw new Error('ask() must not be called in auto mode');
   }),
   nonEmpty: () => () => true as const,
   trim: (v: string) => v.trim(),
 }));
 
-// Mock Claude volání — žádné skutečné spawn(claude) v testech.
+// Mock the Claude calls — no real spawn(claude) in tests.
 const askClaudeMock = vi.fn();
 vi.mock('../claude/ask.js', () => ({
   askClaude: (...args: unknown[]) => askClaudeMock(...args),
@@ -46,9 +46,9 @@ vi.mock('../claude/stream.js', () => ({
   streamWithClaude: (...args: unknown[]) => streamWithClaudeMock(...args),
 }));
 
-// Auto kompletuje fáze přes `done({ auto })`, který po finalizaci volá
-// `commitAll`. V testu běžíme v tmpdir mimo git repo, ale ať se subprocesy
-// `git` v testech nikdy nespouštějí, zatlučeme git modul nahrubo na „není repo".
+// Auto completes phases via `done({ auto })`, which after finalization calls
+// `commitAll`. In the test we run in a tmpdir outside a git repo, but to make
+// sure `git` subprocesses never run in tests, we hard-mock the git module to "not a repo".
 vi.mock('../git.js', () => ({
   isGitRepo: vi.fn(async () => false),
   hasChanges: vi.fn(async () => false),
@@ -60,15 +60,15 @@ vi.mock('../git.js', () => ({
   softResetTo: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
 }));
 
-// Po finalizaci fáze `done({ auto })` spouští memory Claude session. Stejně
-// jako u jiných Claude volání ji v testech zatlučeme nahrubo, aby se
-// neletěly skutečné spawn(claude) volání.
+// After phase finalization `done({ auto })` runs a memory Claude session. Like
+// the other Claude calls, we hard-mock it in tests so no real spawn(claude)
+// calls fly off.
 vi.mock('./writeMemory.js', () => ({
   writePhaseMemory: vi.fn(async () => {}),
 }));
 
-// Po nastavení mocků importujeme `auto` — Vitest hoistí mocky nad importy
-// modulu pod testem.
+// After setting up the mocks we import `auto` — Vitest hoists the mocks above
+// the imports of the module under test.
 const { auto } = await import('./auto.js');
 
 function emptyState(): ProjectState {
@@ -81,11 +81,11 @@ function emptyState(): ProjectState {
 }
 
 /**
- * Naimituje Claude session, která na konci zapíše report — `done({ auto })`
- * ho pak přečte a posune stav fáze. Bez tohohle side-effectu spadne done do
- * interaktivního fallbacku a test trefí mocknuté `ask`.
+ * Imitates a Claude session that writes a report at the end — `done({ auto })`
+ * then reads it and advances the phase status. Without this side effect, done
+ * drops into the interactive fallback and the test hits the mocked `ask`.
  *
- * Report označí všechny kroky aktuální fáze jako `done` (verdict `done`).
+ * The report marks all steps of the current phase as `done` (verdict `done`).
  */
 function mockClaudeSessionWritingReport(cwd: string, getCurrentPhase: () => Phase) {
   return async () => {
@@ -99,7 +99,7 @@ function mockClaudeSessionWritingReport(cwd: string, getCurrentPhase: () => Phas
           )
           .join('\n')
       : '  []';
-    const body = `---\nphase: ${phase.id}\nverdict: done\nsteps:\n${stepsYaml}\n---\n\nReport z testovacího mocku.\n`;
+    const body = `---\nphase: ${phase.id}\nverdict: done\nsteps:\n${stepsYaml}\n---\n\nReport from the test mock.\n`;
     await ensureRunDir(cwd);
     await writeFile(runReportPath(cwd, phase.id), body, 'utf-8');
     return { exitCode: 0 };
@@ -125,72 +125,72 @@ describe('auto() end-to-end', () => {
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('proběhne celý cyklus next → plan → do → done bez jediného promptu', async () => {
-    await writeProject('# Testovací projekt\n\nMinimal seed pro auto test.\n', cwd);
+  it('runs the whole next → plan → do → done cycle without a single prompt', async () => {
+    await writeProject('# Test project\n\nMinimal seed for the auto test.\n', cwd);
     await save(emptyState(), cwd);
 
-    // První volání askClaude je `next` — vrátí návrh fáze.
-    // Druhé je `plan` — vrátí seznam kroků.
+    // The first askClaude call is `next` — returns a phase suggestion.
+    // The second is `plan` — returns a list of steps.
     askClaudeMock
       .mockResolvedValueOnce({
-        text: 'TITLE: První automatická fáze\nGOAL: ověřit že auto chain neprompted ani jednou',
+        text: 'TITLE: First automatic phase\nGOAL: verify the auto chain prompts not even once',
       })
       .mockResolvedValueOnce({
-        text: 'STEP: udělat něco malého\nSTEP: ověřit, že to funguje',
+        text: 'STEP: do something small\nSTEP: verify that it works',
       });
 
-    // `do` v auto módu jede neinteraktivně (bez --stream) přes workWithClaude.
-    // Auto-varianta `doPhase` pouští Claude na CELOU fázi v jednom průchodu;
-    // mock simuluje, že Claude zapsal report označující všechny kroky jako done.
+    // `do` in auto mode runs non-interactively (without --stream) via workWithClaude.
+    // The auto variant of `doPhase` runs Claude on the WHOLE phase in a single pass;
+    // the mock simulates Claude having written a report marking all steps as done.
     workWithClaudeMock.mockImplementation(
-      // Fáze ještě nemusí být ve stavu, když se mock registruje (proběhne
-      // next + plan předtím), takže ji čerpáme z aktuálního state při volání.
+      // The phase may not be in the state yet when the mock is registered (next +
+      // plan run before), so we read it from the current state at call time.
       mockClaudeSessionWritingReport(cwd, () => readCurrentPhaseSync(cwd)),
     );
 
     await auto();
 
-    // Žádný stream nebyl použit (auto chain default → workWithClaude).
+    // No stream was used (auto chain default → workWithClaude).
     expect(streamWithClaudeMock).not.toHaveBeenCalled();
 
-    // Claude byl volán dvakrát na rozhodování (next + plan) a jednou
-    // na práci (celá fáze v jednom průchodu).
+    // Claude was called twice for decisions (next + plan) and once
+    // for the work (the whole phase in a single pass).
     expect(askClaudeMock).toHaveBeenCalledTimes(2);
     expect(workWithClaudeMock).toHaveBeenCalledTimes(1);
 
-    // Volání `do` musí Clauda spustit v acceptEdits, jinak by se Claude
-    // zeptal na povolení každého edit-tool a celé auto by se zaseklo.
+    // The `do` call must run Claude in acceptEdits, otherwise Claude would ask
+    // for permission for every edit tool and the whole auto would hang.
     for (const call of workWithClaudeMock.mock.calls) {
       const callOpts = call[1] as { permissionMode?: string; cwd?: string };
       expect(callOpts?.permissionMode).toBe('acceptEdits');
       expect(callOpts?.cwd).toBe(cwd);
     }
 
-    // Stav po doběhnutí: fáze 1 existuje, je `done`, currentPhaseId je null.
-    // Statusy jednotlivých kroků zatím nezkoumáme — v tomto mezistavu jde
-    // všechno na `skipped`; jakmile přistane parser reportu, budou `done`.
+    // State after completion: phase 1 exists, is `done`, currentPhaseId is null.
+    // We don't examine individual step statuses yet — in this intermediate state
+    // everything goes to `skipped`; once the report parser lands, they will be `done`.
     const reloaded = await load(cwd);
     expect(reloaded.phases).toHaveLength(1);
     const phase = reloaded.phases[0];
     expect(phase?.id).toBe(1);
-    expect(phase?.title).toBe('První automatická fáze');
-    expect(phase?.goal).toBe('ověřit že auto chain neprompted ani jednou');
+    expect(phase?.title).toBe('First automatic phase');
+    expect(phase?.goal).toBe('verify the auto chain prompts not even once');
     expect(phase?.status).toBe('done');
     expect(phase?.completedAt).toBeTypeOf('string');
     expect(phase?.steps).toHaveLength(2);
     expect(reloaded.currentPhaseId).toBeNull();
 
-    // Auto-varianta `do` musí před spuštěním Claude vytvořit `.mini/run/`,
-    // aby tam Claude mohl bez kolize zapsat report.
+    // The auto variant of `do` must create `.mini/run/` before starting Claude,
+    // so Claude can write the report there without a collision.
     const runDirStat = await stat(join(cwd, '.mini', 'run'));
     expect(runDirStat.isDirectory()).toBe(true);
   });
 
-  it('pokračuje na rozdělané fázi bez planu a doběhne také bez promptu', async () => {
-    await writeProject('# Test projekt\n', cwd);
-    // Fáze, která už má kroky a jeden je `doing` — auto musí přeskočit
-    // jak `next` (fáze existuje), tak `plan` (kroky existují) a jet rovnou
-    // na `do` a `done`.
+  it('continues an in-progress phase without planning and also finishes without a prompt', async () => {
+    await writeProject('# Test project\n', cwd);
+    // A phase that already has steps and one is `doing` — auto must skip both
+    // `next` (the phase exists) and `plan` (the steps exist) and go straight to
+    // `do` and `done`.
     await save(
       {
         version: 2,
@@ -199,12 +199,12 @@ describe('auto() end-to-end', () => {
         phases: [
           {
             id: 1,
-            title: 'Rozdělaná fáze',
-            goal: 'dokončit jediný zbývající krok',
+            title: 'In-progress phase',
+            goal: 'finish the single remaining step',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'done' },
-              { title: 'krok 2', status: 'doing' },
+              { title: 'step 1', status: 'done' },
+              { title: 'step 2', status: 'doing' },
             ],
           },
         ],
@@ -218,10 +218,10 @@ describe('auto() end-to-end', () => {
 
     await auto();
 
-    // next ani plan se nesmí volat — fáze existuje a má kroky.
+    // neither next nor plan may be called — the phase exists and has steps.
     expect(askClaudeMock).not.toHaveBeenCalled();
     expect(streamWithClaudeMock).not.toHaveBeenCalled();
-    // Auto-varianta `do` pouští Claude na celou fázi v jednom průchodu — proto 1 volání.
+    // The auto variant of `do` runs Claude on the whole phase in a single pass — hence 1 call.
     expect(workWithClaudeMock).toHaveBeenCalledTimes(1);
 
     const reloaded = await load(cwd);
@@ -231,8 +231,8 @@ describe('auto() end-to-end', () => {
     expect(reloaded.currentPhaseId).toBeNull();
   });
 
-  it('propaguje --max-turns z auto({maxTurns}) až do workWithClaude', async () => {
-    await writeProject('# Test projekt\n', cwd);
+  it('propagates --max-turns from auto({maxTurns}) all the way to workWithClaude', async () => {
+    await writeProject('# Test project\n', cwd);
     await save(
       {
         version: 2,
@@ -241,12 +241,12 @@ describe('auto() end-to-end', () => {
         phases: [
           {
             id: 1,
-            title: 'Fáze s limitem turnů',
-            goal: 'ověřit, že se --max-turns propaguje',
+            title: 'Phase with a turn limit',
+            goal: 'verify that --max-turns propagates',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'doing' },
-              { title: 'krok 2', status: 'todo' },
+              { title: 'step 1', status: 'doing' },
+              { title: 'step 2', status: 'todo' },
             ],
           },
         ],
@@ -261,7 +261,7 @@ describe('auto() end-to-end', () => {
     await auto({ maxTurns: 7 });
 
     expect(streamWithClaudeMock).not.toHaveBeenCalled();
-    // Jeden průchod na celou fázi — workWithClaude se volá jednou.
+    // One pass for the whole phase — workWithClaude is called once.
     expect(workWithClaudeMock).toHaveBeenCalledTimes(1);
     for (const call of workWithClaudeMock.mock.calls) {
       const callOpts = call[1] as { maxTurns?: number };
@@ -269,8 +269,8 @@ describe('auto() end-to-end', () => {
     }
   });
 
-  it('bez --max-turns je maxTurns v opts pro workWithClaude undefined', async () => {
-    await writeProject('# Test projekt\n', cwd);
+  it('without --max-turns maxTurns in the opts for workWithClaude is undefined', async () => {
+    await writeProject('# Test project\n', cwd);
     await save(
       {
         version: 2,
@@ -279,10 +279,10 @@ describe('auto() end-to-end', () => {
         phases: [
           {
             id: 1,
-            title: 'Fáze bez limitu',
-            goal: 'ověřit default chování',
+            title: 'Phase without a limit',
+            goal: 'verify default behavior',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
       },

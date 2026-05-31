@@ -7,7 +7,7 @@ import { askClaude } from '../claude/ask.js';
 import { load, save, writeProject } from '../state/store.js';
 import type { Phase, ProjectState } from '../state/types.js';
 
-// Claude session nahrazujeme — auto next si jen vyžádá návrh fáze.
+// We replace the Claude session — auto next just requests a phase suggestion.
 vi.mock('../claude/ask.js', () => ({
   askClaude: vi.fn(),
 }));
@@ -25,26 +25,26 @@ function makeState(phases: Phase[], currentPhaseId: number | null): ProjectState
 
 describe('parseSuggestion', () => {
   it('parses TITLE + GOAL on consecutive lines', () => {
-    const out = parseSuggestion('TITLE: Bootstrap CLI\nGOAL: mini --version vypíše verzi');
-    expect(out).toEqual({ title: 'Bootstrap CLI', goal: 'mini --version vypíše verzi' });
+    const out = parseSuggestion('TITLE: Bootstrap CLI\nGOAL: mini --version prints the version');
+    expect(out).toEqual({ title: 'Bootstrap CLI', goal: 'mini --version prints the version' });
   });
 
   it('trims surrounding whitespace from values', () => {
-    const out = parseSuggestion('TITLE:    Stav v JSON   \nGOAL:   atomické zapsání   ');
-    expect(out).toEqual({ title: 'Stav v JSON', goal: 'atomické zapsání' });
+    const out = parseSuggestion('TITLE:    State in JSON   \nGOAL:   atomic write   ');
+    expect(out).toEqual({ title: 'State in JSON', goal: 'atomic write' });
   });
 
   it('ignores surrounding prose around the markers', () => {
     const text = [
-      'Tady je můj návrh:',
+      'Here is my suggestion:',
       '',
-      'TITLE: Testy parserů',
-      'GOAL: parsery jsou pokryté testy',
+      'TITLE: Parser tests',
+      'GOAL: the parsers are covered by tests',
       '',
-      'Hotovo, čekám na zpětnou vazbu.',
+      'Done, waiting for feedback.',
     ].join('\n');
     const out = parseSuggestion(text);
-    expect(out).toEqual({ title: 'Testy parserů', goal: 'parsery jsou pokryté testy' });
+    expect(out).toEqual({ title: 'Parser tests', goal: 'the parsers are covered by tests' });
   });
 
   it('accepts the "-" sentinel as the title (signals project done)', () => {
@@ -53,9 +53,9 @@ describe('parseSuggestion', () => {
   });
 
   it('matches markers anywhere in the text (multiline mode)', () => {
-    const text = 'random first line\nTITLE: Snapshot testy\nrandom middle\nGOAL: kryté snapshoty';
+    const text = 'random first line\nTITLE: Snapshot tests\nrandom middle\nGOAL: covered snapshots';
     const out = parseSuggestion(text);
-    expect(out).toEqual({ title: 'Snapshot testy', goal: 'kryté snapshoty' });
+    expect(out).toEqual({ title: 'Snapshot tests', goal: 'covered snapshots' });
   });
 
   it('returns null when input is empty', () => {
@@ -67,11 +67,11 @@ describe('parseSuggestion', () => {
   });
 
   it('returns null when only GOAL is present', () => {
-    expect(parseSuggestion('GOAL: udělat něco')).toBeNull();
+    expect(parseSuggestion('GOAL: do something')).toBeNull();
   });
 
   it('returns null when TITLE value is empty after trim', () => {
-    expect(parseSuggestion('TITLE:    \nGOAL: nějaký cíl')).toBeNull();
+    expect(parseSuggestion('TITLE:    \nGOAL: some goal')).toBeNull();
   });
 
   it('returns null when markers are not at line start', () => {
@@ -79,39 +79,39 @@ describe('parseSuggestion', () => {
   });
 
   it('returns null on garbage input', () => {
-    expect(parseSuggestion('Tohle je naprosto jiná odpověď bez markerů.')).toBeNull();
+    expect(parseSuggestion('This is a completely different answer without markers.')).toBeNull();
   });
 
   it('picks the first occurrence when markers are repeated', () => {
-    const text = 'TITLE: První\nGOAL: cíl A\nTITLE: Druhý\nGOAL: cíl B';
+    const text = 'TITLE: First\nGOAL: goal A\nTITLE: Second\nGOAL: goal B';
     const out = parseSuggestion(text);
-    expect(out).toEqual({ title: 'První', goal: 'cíl A' });
+    expect(out).toEqual({ title: 'First', goal: 'goal A' });
   });
 
-  // --- tolerance k drobným odchylkám formátu (R4) -------------------------
+  // --- tolerance to small format deviations (R4) -------------------------
 
-  it('toleruje markdown bold kolem markeru i hodnoty', () => {
-    const out = parseSuggestion('**TITLE:** **Bootstrap CLI**\n**GOAL:** mini funguje');
-    expect(out).toEqual({ title: 'Bootstrap CLI', goal: 'mini funguje' });
+  it('tolerates markdown bold around the marker and the value', () => {
+    const out = parseSuggestion('**TITLE:** **Bootstrap CLI**\n**GOAL:** mini works');
+    expect(out).toEqual({ title: 'Bootstrap CLI', goal: 'mini works' });
   });
 
-  it('toleruje malá písmena markeru', () => {
-    const out = parseSuggestion('title: Stav v JSON\ngoal: atomický zápis');
-    expect(out).toEqual({ title: 'Stav v JSON', goal: 'atomický zápis' });
+  it('tolerates lowercase markers', () => {
+    const out = parseSuggestion('title: State in JSON\ngoal: atomic write');
+    expect(out).toEqual({ title: 'State in JSON', goal: 'atomic write' });
   });
 
-  it('toleruje úvodní markdown dekoraci (#, -, >) před markerem', () => {
-    const out = parseSuggestion('# TITLE: Nadpisová fáze\n- GOAL: hotovo když projde build');
-    expect(out).toEqual({ title: 'Nadpisová fáze', goal: 'hotovo když projde build' });
+  it('tolerates leading markdown decoration (#, -, >) before the marker', () => {
+    const out = parseSuggestion('# TITLE: Heading phase\n- GOAL: done when the build passes');
+    expect(out).toEqual({ title: 'Heading phase', goal: 'done when the build passes' });
   });
 
-  it('toleruje chybějící mezeru za dvojtečkou', () => {
-    const out = parseSuggestion('TITLE:Kompaktní\nGOAL:bez mezery');
-    expect(out).toEqual({ title: 'Kompaktní', goal: 'bez mezery' });
+  it('tolerates a missing space after the colon', () => {
+    const out = parseSuggestion('TITLE:Compact\nGOAL:no space');
+    expect(out).toEqual({ title: 'Compact', goal: 'no space' });
   });
 });
 
-describe('next({ auto: true }) — číslování fází (W2)', () => {
+describe('next({ auto: true }) — phase numbering (W2)', () => {
   let cwd: string;
   let prevCwd: string;
 
@@ -121,9 +121,9 @@ describe('next({ auto: true }) — číslování fází (W2)', () => {
     process.chdir(cwd);
     askClaudeMock.mockReset();
     askClaudeMock.mockResolvedValue({
-      text: 'TITLE: Nová fáze\nGOAL: něco hotového',
+      text: 'TITLE: New phase\nGOAL: something done',
     });
-    await writeProject('# Projekt', cwd);
+    await writeProject('# Project', cwd);
   });
 
   afterEach(async () => {
@@ -131,12 +131,12 @@ describe('next({ auto: true }) — číslování fází (W2)', () => {
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('přidělí celé ID, i když ve stavu existuje opravná podfáze (21.1)', async () => {
+  it('assigns a whole ID even when a fix sub-phase exists in the state (21.1)', async () => {
     await save(
       makeState(
         [
-          { id: 21, title: 'Rodič', status: 'done' },
-          { id: 21.1, title: 'Oprava', status: 'done', steps: [] },
+          { id: 21, title: 'Parent', status: 'done' },
+          { id: 21.1, title: 'Fix', status: 'done', steps: [] },
         ],
         null,
       ),
@@ -148,13 +148,13 @@ describe('next({ auto: true }) — číslování fází (W2)', () => {
     expect(r.ok).toBe(true);
     const loaded = await load(cwd);
     const ids = loaded.phases.map((p) => p.id);
-    // Nová fáze musí být 22, ne 22.1 (Math.floor zahodí desetinnou část 21.1).
+    // The new phase must be 22, not 22.1 (Math.floor drops the fractional part of 21.1).
     expect(ids).toContain(22);
     expect(ids.some((id) => id === 22.1)).toBe(false);
   });
 });
 
-describe('next({ auto: true }) — retry při neparsovatelné odpovědi (R4)', () => {
+describe('next({ auto: true }) — retry on an unparseable response (R4)', () => {
   let cwd: string;
   let prevCwd: string;
 
@@ -163,7 +163,7 @@ describe('next({ auto: true }) — retry při neparsovatelné odpovědi (R4)', (
     cwd = await mkdtemp(join(tmpdir(), 'mini-next-retry-'));
     process.chdir(cwd);
     askClaudeMock.mockReset();
-    await writeProject('# Projekt', cwd);
+    await writeProject('# Project', cwd);
     await save(makeState([], null), cwd);
   });
 
@@ -172,10 +172,10 @@ describe('next({ auto: true }) — retry při neparsovatelné odpovědi (R4)', (
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('po nečitelné první odpovědi zkusí podruhé a uspěje', async () => {
+  it('after an unreadable first response tries a second time and succeeds', async () => {
     askClaudeMock
-      .mockResolvedValueOnce({ text: 'Tady je nějaká úvaha bez markerů.' })
-      .mockResolvedValueOnce({ text: 'TITLE: Druhý pokus\nGOAL: tentokrát čitelně' });
+      .mockResolvedValueOnce({ text: 'Here is some reasoning without markers.' })
+      .mockResolvedValueOnce({ text: 'TITLE: Second attempt\nGOAL: readable this time' });
 
     const r = await next({ auto: true });
 
@@ -183,26 +183,26 @@ describe('next({ auto: true }) — retry při neparsovatelné odpovědi (R4)', (
     expect(askClaudeMock).toHaveBeenCalledTimes(2);
     const loaded = await load(cwd);
     expect(loaded.phases).toHaveLength(1);
-    expect(loaded.phases[0]?.title).toBe('Druhý pokus');
-    expect(loaded.phases[0]?.goal).toBe('tentokrát čitelně');
+    expect(loaded.phases[0]?.title).toBe('Second attempt');
+    expect(loaded.phases[0]?.goal).toBe('readable this time');
   });
 
-  it('retry dostane v promptu dovětek o formátu', async () => {
+  it('the retry gets a format addendum in the prompt', async () => {
     askClaudeMock
-      .mockResolvedValueOnce({ text: 'bez markerů' })
-      .mockResolvedValueOnce({ text: 'TITLE: OK\nGOAL: hotovo' });
+      .mockResolvedValueOnce({ text: 'without markers' })
+      .mockResolvedValueOnce({ text: 'TITLE: OK\nGOAL: done' });
 
     await next({ auto: true });
 
     const secondPrompt = askClaudeMock.mock.calls[1]![0] as string;
     expect(secondPrompt).toContain('TITLE:');
-    expect(secondPrompt).toContain('nešla přečíst');
+    expect(secondPrompt).toContain('could not be read');
   });
 
-  it('po dvou nečitelných odpovědích to vzdá s parse-failed (jen jeden retry)', async () => {
+  it('after two unreadable responses gives up with parse-failed (only one retry)', async () => {
     askClaudeMock
-      .mockResolvedValueOnce({ text: 'pořád nic' })
-      .mockResolvedValueOnce({ text: 'zase nic' });
+      .mockResolvedValueOnce({ text: 'still nothing' })
+      .mockResolvedValueOnce({ text: 'nothing again' });
 
     const r = await next({ auto: true });
 

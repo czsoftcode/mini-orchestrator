@@ -6,8 +6,22 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-05-31
+
 ### Added
 
+- **The lifecycle command messages are translated to English.** The runtime output of
+  `mini next / plan / do / done / auto / discuss` (and `mini context`) — `log.*`
+  messages, interactive `ask()` prompts and their choices — is now English, together
+  with the in-code comments/JSDoc. The model-scope labels (`SCOPE_LABELS` used by
+  `mini model`) are English too. Command names, flags, the parser response contract
+  (`TITLE:`/`GOAL:`/`STEP:`), state words and paths stay unchanged. (The Claude-facing
+  prompts and the remaining internal modules come in the following phases.)
+- **The auto-commit subject for a finished phase is now English: `Phase {id}: {title}`**
+  (previously `Fáze {id}: {title}`), to match the translated README. `mini undo` is
+  unaffected — it matches the commit via `preSha`, not the subject; no parser depends
+  on the subject. Existing Czech `autoCommit.subject` entries in past `state.json`
+  stay as archival data.
 - **`README.md` and `CHANGELOG.md` translated to English.** Both public docs are now
   fully English, keeping the code blocks, command/flag names, paths, links and the
   Keep a Changelog structure; the README's internal anchor links were updated to the

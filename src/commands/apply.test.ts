@@ -11,7 +11,7 @@ import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import type { Phase, ProjectState } from '../state/types.js';
 import { writePhaseMemory } from './writeMemory.js';
 
-// Git: chováme se jako „nejsme v repu", takže close path commit nedělá.
+// Git: we behave like "we are not in a repo", so the close path makes no commit.
 vi.mock('../git.js', () => ({
   isGitRepo: vi.fn(async () => false),
   hasChanges: vi.fn(async () => false),
@@ -19,7 +19,7 @@ vi.mock('../git.js', () => ({
   headSha: vi.fn(async () => null),
 }));
 
-// Memory zápis spouští skutečnou Claude session — v testech no-op.
+// The memory write runs a real Claude session — no-op in tests.
 vi.mock('./writeMemory.js', () => ({
   writePhaseMemory: vi.fn(async () => {}),
 }));
@@ -51,75 +51,75 @@ async function exists(path: string): Promise<boolean> {
 }
 
 describe('parseStepsFromStdin', () => {
-  it('bere každý neprázdný řádek jako krok (bez oddělovače → jen title)', () => {
-    expect(parseStepsFromStdin('první\ndruhý\ntřetí')).toEqual([
-      { title: 'první' },
-      { title: 'druhý' },
-      { title: 'třetí' },
+  it('takes every non-empty line as a step (no separator → just title)', () => {
+    expect(parseStepsFromStdin('first\nsecond\nthird')).toEqual([
+      { title: 'first' },
+      { title: 'second' },
+      { title: 'third' },
     ]);
   });
 
-  it('ignoruje prázdné řádky a ořeže mezery', () => {
+  it('ignores empty lines and trims spaces', () => {
     expect(parseStepsFromStdin('  a  \n\n\t b \n')).toEqual([{ title: 'a' }, { title: 'b' }]);
   });
 
-  it('odstraní běžné prefixy seznamu (STEP:, -, *, 1.)', () => {
-    const text = 'STEP: jedna\n- dva\n* tři\n1. čtyři\n2) pět';
+  it('strips common list prefixes (STEP:, -, *, 1.)', () => {
+    const text = 'STEP: one\n- two\n* three\n1. four\n2) five';
     expect(parseStepsFromStdin(text)).toEqual([
-      { title: 'jedna' },
-      { title: 'dva' },
-      { title: 'tři' },
-      { title: 'čtyři' },
-      { title: 'pět' },
+      { title: 'one' },
+      { title: 'two' },
+      { title: 'three' },
+      { title: 'four' },
+      { title: 'five' },
     ]);
   });
 
-  it('rozdělí title a detail na oddělovači ` :: `', () => {
-    expect(parseStepsFromStdin('Krátký title :: delší kritérium k ověření')).toEqual([
-      { title: 'Krátký title', detail: 'delší kritérium k ověření' },
+  it('splits title and detail on the ` :: ` separator', () => {
+    expect(parseStepsFromStdin('Short title :: longer criterion to verify')).toEqual([
+      { title: 'Short title', detail: 'longer criterion to verify' },
     ]);
   });
 
-  it('bere první výskyt oddělovače a snese dvojtečky v textu', () => {
-    expect(parseStepsFromStdin('Upravit foo:bar :: detail: viz soubor a:b')).toEqual([
-      { title: 'Upravit foo:bar', detail: 'detail: viz soubor a:b' },
+  it('takes the first occurrence of the separator and tolerates colons in the text', () => {
+    expect(parseStepsFromStdin('Edit foo:bar :: detail: see file a:b')).toEqual([
+      { title: 'Edit foo:bar', detail: 'detail: see file a:b' },
     ]);
   });
 
-  it('prázdný detail za oddělovačem se vynechá (zůstane jen title)', () => {
-    expect(parseStepsFromStdin('jen title ::   ')).toEqual([{ title: 'jen title' }]);
+  it('an empty detail after the separator is omitted (only the title stays)', () => {
+    expect(parseStepsFromStdin('just title ::   ')).toEqual([{ title: 'just title' }]);
   });
 
-  it('prefix funguje i s oddělovačem na stejném řádku', () => {
+  it('the prefix works with a separator on the same line too', () => {
     expect(parseStepsFromStdin('STEP: title :: detail')).toEqual([
       { title: 'title', detail: 'detail' },
     ]);
   });
 
-  it('prázdný vstup → prázdný seznam', () => {
+  it('empty input → empty list', () => {
     expect(parseStepsFromStdin('   \n\n')).toEqual([]);
   });
 });
 
 describe('applyNewPhase', () => {
-  it('bez projektu vrátí no-project', async () => {
-    const r = await applyNewPhase('A', 'cíl', cwd);
+  it('without a project returns no-project', async () => {
+    const r = await applyNewPhase('A', 'goal', cwd);
     expect(r).toEqual({ ok: false, reason: 'no-project' });
   });
 
-  it('uloží novou fázi a nastaví ji jako aktuální, když je první', async () => {
+  it('saves a new phase and sets it as current when it is the first', async () => {
     await save(makeState([], null), cwd);
-    const r = await applyNewPhase('První fáze', 'kdy je hotová', cwd);
+    const r = await applyNewPhase('First phase', 'when it is done', cwd);
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases).toHaveLength(1);
-    expect(state.phases[0]).toMatchObject({ id: 1, title: 'První fáze', goal: 'kdy je hotová', status: 'proposed' });
+    expect(state.phases[0]).toMatchObject({ id: 1, title: 'First phase', goal: 'when it is done', status: 'proposed' });
     expect(state.currentPhaseId).toBe(1);
   });
 
-  it('další fáze dostane id o 1 vyšší a aktuální se nemění', async () => {
+  it('the next phase gets an id 1 higher and the current one does not change', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'doing' }], 1), cwd);
-    const r = await applyNewPhase('B', 'cíl B', cwd);
+    const r = await applyNewPhase('B', 'goal B', cwd);
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases.map((p) => p.id)).toEqual([1, 2]);
@@ -128,52 +128,52 @@ describe('applyNewPhase', () => {
 });
 
 describe('applyPlanSteps', () => {
-  it('uloží kroky a posune proposed → planned', async () => {
+  it('saves the steps and advances proposed → planned', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'proposed' }], 1), cwd);
-    const r = await applyPlanSteps([{ title: 'krok 1' }, { title: 'krok 2' }], cwd);
+    const r = await applyPlanSteps([{ title: 'step 1' }, { title: 'step 2' }], cwd);
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases[0]!.status).toBe('planned');
     expect(state.phases[0]!.steps).toEqual([
-      { title: 'krok 1', status: 'todo' },
-      { title: 'krok 2', status: 'todo' },
+      { title: 'step 1', status: 'todo' },
+      { title: 'step 2', status: 'todo' },
     ]);
   });
 
-  it('uloží detail jen u kroků, které ho mají (prázdný se vynechá)', async () => {
+  it('saves detail only for steps that have it (empty is omitted)', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'proposed' }], 1), cwd);
     const r = await applyPlanSteps(
       [
-        { title: 'krok 1', detail: 'kritérium 1' },
-        { title: 'krok 2' },
-        { title: 'krok 3', detail: '   ' },
+        { title: 'step 1', detail: 'criterion 1' },
+        { title: 'step 2' },
+        { title: 'step 3', detail: '   ' },
       ],
       cwd,
     );
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases[0]!.steps).toEqual([
-      { title: 'krok 1', status: 'todo', detail: 'kritérium 1' },
-      { title: 'krok 2', status: 'todo' },
-      { title: 'krok 3', status: 'todo' },
+      { title: 'step 1', status: 'todo', detail: 'criterion 1' },
+      { title: 'step 2', status: 'todo' },
+      { title: 'step 3', status: 'todo' },
     ]);
   });
 
-  it('prázdný seznam kroků → no-steps', async () => {
+  it('empty step list → no-steps', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'proposed' }], 1), cwd);
     const r = await applyPlanSteps([{ title: '   ' }, { title: '' }], cwd);
     expect(r).toEqual({ ok: false, reason: 'no-steps' });
   });
 
-  it('bez aktuální fáze → no-current-phase', async () => {
+  it('without a current phase → no-current-phase', async () => {
     await save(makeState([], null), cwd);
-    const r = await applyPlanSteps([{ title: 'krok' }], cwd);
+    const r = await applyPlanSteps([{ title: 'step' }], cwd);
     expect(r).toEqual({ ok: false, reason: 'no-current-phase' });
   });
 });
 
 describe('applyDoStart', () => {
-  it('označí fázi jako doing, nastaví startedAt a založí .mini/run/', async () => {
+  it('marks the phase as doing, sets startedAt, and creates .mini/run/', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1), cwd);
     const r = await applyDoStart(cwd);
     expect(r.ok).toBe(true);
@@ -183,7 +183,7 @@ describe('applyDoStart', () => {
     expect(await exists(join(cwd, '.mini', 'run'))).toBe(true);
   });
 
-  it('hotovou fázi nepřepíše', async () => {
+  it('does not overwrite a finished phase', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'done' }], 1), cwd);
     const r = await applyDoStart(cwd);
     expect(r).toEqual({ ok: false, reason: 'phase-done' });
@@ -191,17 +191,17 @@ describe('applyDoStart', () => {
 });
 
 describe('applyDone', () => {
-  it('chybějící report → no-report (nepadá do interaktivního fallbacku)', async () => {
+  it('missing report → no-report (does not drop into the interactive fallback)', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'doing', steps: [{ title: 's', status: 'doing' }] }], 1), cwd);
     const r = await applyDone(cwd);
     expect(r).toEqual({ ok: false, reason: 'no-report' });
   });
 
-  it('report bez verify uzavře fázi a posune se dál', async () => {
+  it('a report without verify closes the phase and moves on', async () => {
     await save(
       makeState(
         [
-          { id: 1, title: 'A', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] },
+          { id: 1, title: 'A', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] },
           { id: 2, title: 'B', status: 'proposed' },
         ],
         1,
@@ -211,7 +211,7 @@ describe('applyDone', () => {
     await ensureRunDir(cwd);
     await writeFile(
       runReportPath(cwd, 1),
-      ['---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "krok 1"', '    status: done', '---', '', 'hotovo'].join('\n'),
+      ['---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "step 1"', '    status: done', '---', '', 'done'].join('\n'),
       'utf-8',
     );
 
@@ -224,14 +224,14 @@ describe('applyDone', () => {
     expect(writePhaseMemoryMock).toHaveBeenCalledOnce();
   });
 
-  it('verify body bez --accept-verify (neinteraktivně) fázi nezavře', async () => {
-    await save(makeState([{ id: 1, title: 'A', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }], 1), cwd);
+  it('verify items without --accept-verify (non-interactive) do not close the phase', async () => {
+    await save(makeState([{ id: 1, title: 'A', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }], 1), cwd);
     await ensureRunDir(cwd);
     await writeFile(
       runReportPath(cwd, 1),
       [
-        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "krok 1"', '    status: done',
-        'verify:', '  - title: "zkontroluj UI"', '---', '', 'text',
+        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "step 1"', '    status: done',
+        'verify:', '  - title: "check the UI"', '---', '', 'text',
       ].join('\n'),
       'utf-8',
     );
@@ -242,14 +242,14 @@ describe('applyDone', () => {
     expect(state.phases[0]!.status).toBe('doing');
   });
 
-  it('verify body s --accept-verify fázi zavře a zapamatuje je jako vyřešené', async () => {
-    await save(makeState([{ id: 1, title: 'A', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }] }], 1), cwd);
+  it('verify items with --accept-verify close the phase and remember them as resolved', async () => {
+    await save(makeState([{ id: 1, title: 'A', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }], 1), cwd);
     await ensureRunDir(cwd);
     await writeFile(
       runReportPath(cwd, 1),
       [
-        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "krok 1"', '    status: done',
-        'verify:', '  - title: "zkontroluj UI"', '---', '', 'text',
+        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "step 1"', '    status: done',
+        'verify:', '  - title: "check the UI"', '---', '', 'text',
       ].join('\n'),
       'utf-8',
     );
@@ -258,13 +258,13 @@ describe('applyDone', () => {
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases[0]!.status).toBe('done');
-    expect(state.phases[0]!.resolvedVerify).toContain('zkontroluj UI');
+    expect(state.phases[0]!.resolvedVerify).toContain('check the UI');
   });
 
-  it('zbývající kroky v reportu fázi nezavřou', async () => {
+  it('remaining steps in the report do not close the phase', async () => {
     await save(
       makeState(
-        [{ id: 1, title: 'A', status: 'doing', steps: [{ title: 'krok 1', status: 'doing' }, { title: 'krok 2', status: 'todo' }] }],
+        [{ id: 1, title: 'A', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }, { title: 'step 2', status: 'todo' }] }],
         1,
       ),
       cwd,
@@ -274,9 +274,9 @@ describe('applyDone', () => {
       runReportPath(cwd, 1),
       [
         '---', 'phase: 1', 'verdict: partial', 'steps:',
-        '  - title: "krok 1"', '    status: done',
-        '  - title: "krok 2"', '    status: todo',
-        '---', '', 'nedotaženo',
+        '  - title: "step 1"', '    status: done',
+        '  - title: "step 2"', '    status: todo',
+        '---', '', 'not finished',
       ].join('\n'),
       'utf-8',
     );

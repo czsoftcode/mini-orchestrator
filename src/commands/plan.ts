@@ -13,43 +13,43 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
   const [projectMd, state] = await Promise.all([readProject(cwd), load(cwd)]);
 
   if (state.currentPhaseId === null) {
-    log.warn('Žádná aktuální fáze k rozplánování.');
-    log.hint('Spusť: mini next');
+    log.warn('No current phase to plan.');
+    log.hint('Run: mini next');
     return { ok: false, reason: 'no-current-phase' };
   }
 
   const phase = state.phases.find((p) => p.id === state.currentPhaseId);
   if (!phase) {
-    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    log.error('State is inconsistent (currentPhaseId points to a non-existent phase).');
     return { ok: false, reason: 'inconsistent-state' };
   }
 
   if (phase.status === 'done' || phase.status === 'skipped') {
-    log.info(`Fáze ${phase.id} už není aktivní (${phase.status}).`);
+    log.info(`Phase ${phase.id} is no longer active (${phase.status}).`);
     return { ok: false, reason: 'phase-not-active' };
   }
 
   if (phase.steps?.length) {
     if (opts.auto) {
-      log.dim(`Fáze ${phase.id} už má ${phase.steps.length} kroků — v auto režimu přepisuji.`);
+      log.dim(`Phase ${phase.id} already has ${phase.steps.length} ${phase.steps.length === 1 ? 'step' : 'steps'} — overwriting in auto mode.`);
     } else {
-      log.warn(`Fáze ${phase.id} už má ${phase.steps.length} kroků.`);
+      log.warn(`Phase ${phase.id} already has ${phase.steps.length} ${phase.steps.length === 1 ? 'step' : 'steps'}.`);
       const { ow } = await ask<'ow'>({
         type: 'confirm',
         name: 'ow',
-        message: 'Přepsat je novým plánem?',
+        message: 'Overwrite them with a new plan?',
         initial: false,
       });
       if (!ow) {
-        log.dim('Nic se nemění.');
+        log.dim('Nothing changed.');
         return { ok: false, reason: 'cancelled' };
       }
     }
@@ -57,13 +57,13 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
 
   const discussNotes = await readDiscussNotes(cwd, phase.id);
   const prompt = buildPlanPhasePrompt(projectMd, phase, discussNotes);
-  log.dim('Přemýšlím nad krocí…');
+  log.dim('Thinking about the steps…');
 
   let response;
   try {
     response = await askClaude(prompt, { cwd, allowedTools: ['Read', 'Glob', 'Grep'], model: resolveModel('plan', state) });
   } catch (err) {
-    log.error(`Claude se nepodařilo zeptat: ${(err as Error).message}`);
+    log.error(`Failed to ask Claude: ${(err as Error).message}`);
     return { ok: false, reason: 'claude-error' };
   }
 
@@ -71,14 +71,14 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
 
   let titles = parseSteps(response.text);
   if (titles.length === 0) {
-    log.warn('Claude odpověděl ve formátu, který neumím přečíst:');
+    log.warn('Claude answered in a format I cannot read:');
     console.log(response.text);
     return { ok: false, reason: 'parse-failed' };
   }
 
   if (!opts.auto) {
     console.log();
-    log.title(`Navržené kroky (${titles.length}):`);
+    log.title(`Suggested steps (${titles.length}):`);
     titles.forEach((t, i) => {
       console.log(`  ${i + 1}. ${t}`);
     });
@@ -87,16 +87,16 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
     const { decision } = await ask<'decision'>({
       type: 'select',
       name: 'decision',
-      message: 'Co s tím?',
+      message: 'What do you want to do?',
       choices: [
-        { title: 'Použít tak jak jsou', value: 'use' },
-        { title: 'Upravit (po jednom kroku, prázdné = smazat)', value: 'edit' },
-        { title: 'Zrušit', value: 'cancel' },
+        { title: 'Use them as they are', value: 'use' },
+        { title: 'Edit (one step at a time, empty = delete)', value: 'edit' },
+        { title: 'Cancel', value: 'cancel' },
       ],
     });
 
     if (decision === 'cancel') {
-      log.dim('Nic se nemění.');
+      log.dim('Nothing changed.');
       return { ok: false, reason: 'cancelled' };
     }
 
@@ -106,7 +106,7 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
         const { title } = await ask<'title'>({
           type: 'text',
           name: 'title',
-          message: `Krok ${i + 1}:`,
+          message: `Step ${i + 1}:`,
           initial: titles[i],
           format: trim,
         });
@@ -115,7 +115,7 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
         }
       }
       if (edited.length === 0) {
-        log.warn('Žádné kroky nezbyly. Nic se nemění.');
+        log.warn('No steps left. Nothing changed.');
         return { ok: false, reason: 'cancelled' };
       }
       titles = edited;
@@ -129,25 +129,26 @@ export async function plan(opts: AutoOptions = {}): Promise<StepOutcome> {
   }
   await save(state, cwd);
 
-  log.success(`Fáze ${phase.id} rozmenena na ${steps.length} ${steps.length === 1 ? 'krok' : 'kroků'}.`);
+  log.success(`Phase ${phase.id} broken down into ${steps.length} ${steps.length === 1 ? 'step' : 'steps'}.`);
   if (!opts.auto) {
-    log.hint('Další: mini do');
+    log.hint('Next: mini do');
   }
   return { ok: true };
 }
 
 /**
- * Neinteraktivní uložení kroků aktuální fáze — pro `mini plan --apply` (volá ho
- * `/mini:plan`, když Claude v session rozmenil fázi). Žádný Claude: jen zapíše
- * předané kroky do stavu se stejnou logikou jako interaktivní `plan`.
+ * Non-interactive save of the current phase's steps — for `mini plan --apply`
+ * (called by `/mini:plan` when Claude broke the phase down in the session). No
+ * Claude: just writes the given steps into the state with the same logic as
+ * interactive `plan`.
  */
 export async function applyPlanSteps(
   parsed: ParsedStep[],
   cwd: string = process.cwd(),
 ): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
@@ -155,26 +156,26 @@ export async function applyPlanSteps(
     .map((p) => ({ title: p.title.trim(), detail: p.detail?.trim() }))
     .filter((p) => p.title.length > 0);
   if (clean.length === 0) {
-    log.error('Nedostal jsem žádné kroky (stdin byl prázdný).');
+    log.error('I received no steps (stdin was empty).');
     return { ok: false, reason: 'no-steps' };
   }
 
   const state = await load(cwd);
 
   if (state.currentPhaseId === null) {
-    log.warn('Žádná aktuální fáze k rozplánování.');
-    log.hint('Spusť: mini next');
+    log.warn('No current phase to plan.');
+    log.hint('Run: mini next');
     return { ok: false, reason: 'no-current-phase' };
   }
 
   const phase = state.phases.find((p) => p.id === state.currentPhaseId);
   if (!phase) {
-    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    log.error('State is inconsistent (currentPhaseId points to a non-existent phase).');
     return { ok: false, reason: 'inconsistent-state' };
   }
 
   if (phase.status === 'done' || phase.status === 'skipped') {
-    log.info(`Fáze ${phase.id} už není aktivní (${phase.status}).`);
+    log.info(`Phase ${phase.id} is no longer active (${phase.status}).`);
     return { ok: false, reason: 'phase-not-active' };
   }
 
@@ -189,28 +190,29 @@ export async function applyPlanSteps(
   }
   await save(state, cwd);
 
-  log.success(`Fáze ${phase.id} rozmenena na ${steps.length} ${steps.length === 1 ? 'krok' : 'kroků'}.`);
+  log.success(`Phase ${phase.id} broken down into ${steps.length} ${steps.length === 1 ? 'step' : 'steps'}.`);
   return { ok: true };
 }
 
-/** Oddělovač `title :: detail` na jednom řádku stdin. Mezery kolem `::` ho
- * dělají odolným vůči samostatným dvojtečkám v textu titulu nebo detailu. */
+/** Separator `title :: detail` on a single stdin line. The spaces around `::`
+ * make it robust against stray colons in the title or detail text. */
 const STEP_DETAIL_SEPARATOR = ' :: ';
 
-/** Naparsovaný krok ze stdin: krátký `title` + volitelný plánovací `detail`. */
+/** A step parsed from stdin: a short `title` + an optional planning `detail`. */
 export interface ParsedStep {
   title: string;
   detail?: string;
 }
 
 /**
- * Naparsuje kroky předané na stdin pro `mini plan --apply`. Tolerantní k tomu,
- * jak je Claude zapíše: bere každý neprázdný řádek jako jeden krok a odstraní
- * běžné prefixy seznamu (`STEP:`, `- `, `* `, `1. `).
+ * Parses the steps passed on stdin for `mini plan --apply`. Tolerant to how
+ * Claude writes them: takes every non-empty line as one step and strips common
+ * list prefixes (`STEP:`, `- `, `* `, `1. `).
  *
- * Formát řádku: `title :: detail`. Oddělovač ` :: ` je volitelný — řádek bez
- * něj je jen `title` (zpětná kompatibilita se starým „jeden title na řádek").
- * Bere se první výskyt oddělovače; prázdný `detail` se vynechá.
+ * Line format: `title :: detail`. The ` :: ` separator is optional — a line
+ * without it is just a `title` (backward compatibility with the old "one title
+ * per line"). The first occurrence of the separator is used; an empty `detail`
+ * is omitted.
  */
 export function parseStepsFromStdin(text: string): ParsedStep[] {
   const out: ParsedStep[] = [];
@@ -223,8 +225,9 @@ export function parseStepsFromStdin(text: string): ParsedStep[] {
     line = line.trim();
     if (line.length === 0) continue;
 
-    // Visící oddělovač na konci řádku (`title ::`) = prázdný detail. `trim()`
-    // výše odstranil koncovou mezeru, takže ho ` :: ` nezachytí — ošetříme zvlášť.
+    // A dangling separator at the end of the line (`title ::`) = empty detail.
+    // The `trim()` above removed the trailing space, so ` :: ` won't catch it —
+    // we handle it separately.
     if (line.endsWith(' ::')) {
       const title = line.slice(0, -' ::'.length).trim();
       if (title.length > 0) out.push({ title });

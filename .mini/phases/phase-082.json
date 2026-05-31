@@ -1,0 +1,39 @@
+{
+  "id": 82,
+  "title": "Anglické lifecycle příkazy",
+  "goal": "Přeložit do angličtiny runtime hlášky i komentáře/JSDoc v lifecycle příkazech src/commands/ (done.ts, do.ts, next.ts, plan.ts, auto.ts, context.ts, discuss.ts) a SCOPE_LABELS v src/state/models.ts, včetně dotčených testů (done/do/next/plan/auto/auto.e2e/apply/context). Sjednotit šablonu auto-commit subjectu (dnes 'Fáze {id}: {title}') na anglické 'Phase {id}: {title}', ať sedí s přeloženým README — ověřit, že to nerozbije undo (matchování commitů jde přes preSha, ne subject) ani parsování. Beze změny: response-kontrakt (TITLE/GOAL/STEP/...), stavová slova, názvy příkazů/flagů a cesty. Ověřit npm test + build zelené.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přeložit done.ts + commit subject + testy",
+      "status": "done",
+      "detail": "Runtime hlášky i komentáře v src/commands/done.ts; buildPhaseCommitMessage Fáze→Phase {id}: {title}; pluralizace (krok/bod/bloker) na EN 2-tvar. Přepsat done.test.ts (asserty na Phase subject, fixtury, it() popisy). Undo přes preSha netrpí."
+    },
+    {
+      "title": "Přeložit do.ts + context.ts + testy",
+      "status": "done",
+      "detail": "Hlášky i komentáře v do.ts a context.ts (chybové hlášky neznámého cmd). Upravit do.test.ts, context.test.ts a apply.test.ts (popisy/komentáře/fixtury, žádné CZ runtime asserty nezůstanou)."
+    },
+    {
+      "title": "Přeložit next.ts + plan.ts + testy",
+      "status": "done",
+      "detail": "Hlášky i komentáře v next.ts a plan.ts; pluralizace kroků na EN. Upravit next.test.ts a plan.test.ts."
+    },
+    {
+      "title": "Přeložit auto.ts + discuss.ts + SCOPE_LABELS + testy",
+      "status": "done",
+      "detail": "auto.ts (chain/retry hlášky + komentáře), discuss.ts, SCOPE_LABELS v src/state/models.ts (popisy scope do AJ). Upravit auto.test.ts a auto.e2e.test.ts."
+    },
+    {
+      "title": "Ověřit build a zelené testy",
+      "status": "done",
+      "detail": "npm run build a npm test (vše zelené); ověřit, že generovaný commit subject je 'Phase {id}: {title}' a žádná lifecycle runtime hláška nezůstala česky."
+    }
+  ],
+  "startedAt": "2026-05-31T16:28:39.492Z",
+  "completedAt": "2026-05-31T17:03:47.145Z",
+  "autoCommit": {
+    "preSha": "65ac468ea720d3e4375ea346cc67ee911aa834bb",
+    "subject": "Fáze 82: Anglické lifecycle příkazy"
+  }
+}

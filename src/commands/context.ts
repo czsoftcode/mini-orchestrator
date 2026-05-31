@@ -20,7 +20,7 @@ import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
 
-/** Pod-příkazy, pro které `mini context` umí vypsat session prompt. */
+/** Sub-commands for which `mini context` can print a session prompt. */
 export const CONTEXT_COMMANDS = ['next', 'discuss', 'plan', 'do', 'done', 'verify'] as const;
 export type ContextCommand = (typeof CONTEXT_COMMANDS)[number];
 
@@ -29,34 +29,35 @@ export function isContextCommand(value: string): value is ContextCommand {
 }
 
 /**
- * `mini context <cmd>` — vypíše na stdout aktuální session prompt pro daný krok
- * workflow. Slouží nativním `/mini:` slash commandům v Claude Code: jejich tenké
- * tělo jen pustí `mini context <cmd>` a Claude se řídí vypsaným promptem. Prompt
- * se tak generuje vždy z aktuálního stavu mini, ne ze zmraženého textu v .md.
+ * `mini context <cmd>` — prints the current session prompt for the given
+ * workflow step to stdout. Serves the native `/mini:` slash commands in Claude
+ * Code: their thin body just runs `mini context <cmd>` and Claude follows the
+ * printed prompt. The prompt is thus always generated from the current mini
+ * state, not from frozen text in a .md file.
  *
- * Na stdout jde **jen prompt** (přes `process.stdout.write`), aby ho šlo bez
- * špíny předat dál. Chyby a nápovědy jdou přes `log` (stderr/stdout dle typu) a
- * nastaví nenulový exit code.
+ * Only the **prompt** goes to stdout (via `process.stdout.write`), so it can be
+ * piped onward cleanly. Errors and hints go through `log` (stderr/stdout by
+ * type) and set a non-zero exit code.
  */
 export async function context(cmd: string, extraArgs: string[] = []): Promise<void> {
   const cwd = process.cwd();
 
   if (!isContextCommand(cmd)) {
-    log.error(`Neznámý context pod-příkaz: "${cmd}".`);
-    log.hint(`Použij jeden z: ${CONTEXT_COMMANDS.join(', ')}.`);
+    log.error(`Unknown context sub-command: "${cmd}".`);
+    log.hint(`Use one of: ${CONTEXT_COMMANDS.join(', ')}.`);
     process.exitCode = 1;
     return;
   }
 
   if (!(await exists(cwd))) {
-    log.error('V tomto adresáři není projekt (.mini/state.json).');
-    log.hint('Začni: mini init');
+    log.error('No project in this directory (.mini/state.json).');
+    log.hint('Start with: mini init');
     process.exitCode = 1;
     return;
   }
 
-  // Granulární čtení (hot path slash commandů): hlavička je malá a `next` z ní
-  // potřebuje jen index fází; ostatní kroky si k tomu načtou jen aktuální fázi.
+  // Granular read (slash command hot path): the header is small and `next` needs
+  // only the phase index from it; the other steps additionally load just the current phase.
   const [projectMd, header] = await Promise.all([readProject(cwd), loadHeader(cwd)]);
 
   let prompt: string | null;
@@ -76,7 +77,7 @@ export async function context(cmd: string, extraArgs: string[] = []): Promise<vo
   process.stdout.write(prompt.endsWith('\n') ? prompt : `${prompt}\n`);
 }
 
-/** Sestaví lehký `ProjectState` z hlavičky — `next` z něj bere jen index fází. */
+/** Builds a lightweight `ProjectState` from the header — `next` takes only the phase index from it. */
 function stateFromHeader(header: StateHeader): ProjectState {
   const state: ProjectState = {
     version: header.version,
@@ -99,7 +100,7 @@ async function buildNextContext(
   return buildNextSessionPrompt(projectMd, stateFromHeader(header), { userHint, lastMemoryMd });
 }
 
-/** Společný díl pro discuss/plan/do/done: vyžadují existující aktuální fázi. */
+/** Shared part for discuss/plan/do/done: they require an existing current phase. */
 async function buildPhaseContext(
   cmd: Exclude<ContextCommand, 'next'>,
   projectMd: string,
@@ -107,13 +108,13 @@ async function buildPhaseContext(
   cwd: string,
 ): Promise<string | null> {
   if (header.currentPhaseId === null) {
-    log.error('Žádná aktuální fáze.');
-    log.hint('Spusť: /mini:next (nebo mini next)');
+    log.error('No current phase.');
+    log.hint('Run: /mini:next (or mini next)');
     return null;
   }
   const phase = await loadPhase(cwd, header.currentPhaseId);
   if (!phase) {
-    log.error('Stav je nekonzistentní (currentPhaseId odkazuje na neexistující fázi).');
+    log.error('State is inconsistent (currentPhaseId points to a non-existent phase).');
     return null;
   }
 
@@ -125,15 +126,17 @@ async function buildPhaseContext(
     return buildPlanSessionPrompt(projectMd, phase, discussNotes);
   }
   if (cmd === 'do') {
-    // `/mini:do` běží ve stejné chat session jako `/mini:plan` (nebo `auto`),
-    // který diskuzní poznámky skoro vždy už načetl — Claude je má v kontextu.
-    // Místo opakovaného inlinování předáme jen příznak reference módu (odkaz +
-    // read-once), a to pouze když poznámky existují (jinak builder blok vynechá).
+    // `/mini:do` runs in the same chat session as `/mini:plan` (or `auto`),
+    // which almost always already loaded the discussion notes — Claude has them
+    // in context. Instead of inlining them again we pass only a reference-mode
+    // flag (link + read-once), and only when the notes exist (otherwise the
+    // builder omits the block).
     const discussNotes = await readDiscussNotes(cwd, phase.id);
     const useDiscussNotesRef = discussNotes != null && discussNotes.trim() !== '';
-    // Projekt řešíme stejně: `/mini:do` běží ve stejné session jako `/mini:plan`,
-    // který projekt už inlinoval. Projekt je v session neměnný, takže ho stačí
-    // odkázat (read-once) — `useProjectRef` zapínáme vždy (project.md tu existuje).
+    // We handle the project the same way: `/mini:do` runs in the same session as
+    // `/mini:plan`, which already inlined the project. The project is immutable
+    // within the session, so a reference is enough (read-once) — `useProjectRef`
+    // is always on (project.md exists here).
     return buildAutoPhasePrompt({
       projectMd,
       phase,
@@ -157,8 +160,9 @@ async function buildDoneContext(phase: Phase, cwd: string): Promise<string> {
 }
 
 /**
- * Tolerantní načtení verify bodů a volného textu z run reportu fáze. Když report
- * nejde přísně naparsovat, vrátí prázdné verify (poškozený report řeší `--apply`).
+ * Tolerant read of the verify items and free text from the phase run report.
+ * When the report can't be parsed strictly, returns empty verify (a broken
+ * report is handled by `--apply`).
  */
 async function readReportVerify(
   phase: Phase,
@@ -178,16 +182,17 @@ async function readReportVerify(
     if (!(err instanceof RunReportParseError)) {
       throw err;
     }
-    // Poškozený report — necháme verify prázdné, Claude to probere bez detailů.
+    // Broken report — we leave verify empty, Claude goes through it without details.
   }
   return { verify, body };
 }
 
 /**
- * Prompt pro `/mini:verify`. Cílová fáze = aktuální (`currentPhaseId`), jinak
- * fallback na poslední uzavřenou (`done`) — verify se typicky pouští i po `done`,
- * kdy už currentPhaseId není nastavené. Bez reportu jen upozorní (verify body
- * z něj čerpá), ale kontrolu povede i tak podle cíle a kroků fáze.
+ * Prompt for `/mini:verify`. The target phase = the current one
+ * (`currentPhaseId`), otherwise a fallback to the last closed (`done`) one —
+ * verify is typically also run after `done`, when currentPhaseId is no longer
+ * set. Without a report it only warns (verify items are drawn from it), but it
+ * still leads the review based on the phase goal and steps.
  */
 async function buildVerifyContext(header: StateHeader, cwd: string): Promise<string | null> {
   let phase: Phase | null = null;
@@ -201,8 +206,8 @@ async function buildVerifyContext(header: StateHeader, cwd: string): Promise<str
   }
 
   if (!phase) {
-    log.error('Není fáze k ověření (žádná aktuální ani uzavřená fáze).');
-    log.hint('Nejdřív rozpracuj fázi: /mini:next a /mini:do');
+    log.error('No phase to verify (neither a current nor a closed phase).');
+    log.hint('First work on a phase: /mini:next and /mini:do');
     return null;
   }
 

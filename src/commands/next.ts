@@ -18,22 +18,22 @@ export interface ParsedSuggestion {
 
 type NextMode = 'manual' | 'hint' | 'estimate';
 
-/** Kolik pokusů dostane Claude na čitelný návrh fáze (1 původní + retry). */
+/** How many attempts Claude gets at a readable phase suggestion (1 original + retry). */
 const MAX_NEXT_ATTEMPTS = 2;
 
-/** Dovětek k promptu pro retry, když první odpověď nešla naparsovat. */
-const RETRY_FORMAT_NOTE = `POZOR: Tvoje předchozí odpověď nešla přečíst — chyběl řádek "TITLE:" nebo "GOAL:".
-Odpověz teď PŘESNĚ v tomhle formátu, každý marker na začátku vlastního řádku, nic dalšího:
+/** Addendum to the prompt for a retry, when the first response could not be parsed. */
+const RETRY_FORMAT_NOTE = `NOTE: Your previous response could not be read — the "TITLE:" or "GOAL:" line was missing.
+Answer now EXACTLY in this format, each marker at the start of its own line, nothing else:
 
-TITLE: <stručný název, max 5 slov>
-GOAL: <1 věta o tom, kdy je fáze hotová>`;
+TITLE: <concise name, max 5 words>
+GOAL: <1 sentence about when the phase is done>`;
 
 export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
 
@@ -41,17 +41,17 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
 
   let mode: NextMode;
   if (opts.auto) {
-    // V auto módu nemůžeme zobrazit prompt — necháme Clauda navrhnout celou fázi sám.
+    // In auto mode we can't show the prompt — we let Claude suggest the whole phase itself.
     mode = 'estimate';
   } else {
     const answer = await ask<'mode'>({
       type: 'select',
       name: 'mode',
-      message: 'Víš, co chceš v další fázi postavit?',
+      message: 'Do you know what you want to build in the next phase?',
       choices: [
-        { title: 'Ano, popíšu to sám', value: 'manual' },
-        { title: 'Mám nápad, ať to Claude rozpracuje', value: 'hint' },
-        { title: 'Nevím, ať Claude navrhne odhad', value: 'estimate' },
+        { title: 'Yes, I will describe it myself', value: 'manual' },
+        { title: 'I have an idea, let Claude flesh it out', value: 'hint' },
+        { title: "I don't know, let Claude propose an estimate", value: 'estimate' },
       ],
     });
     mode = answer.mode as NextMode;
@@ -66,9 +66,9 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
     const { hint } = await ask<'hint'>({
       type: 'text',
       name: 'hint',
-      message: 'Tvůj nápad (1-3 věty):',
+      message: 'Your idea (1-3 sentences):',
       format: trim,
-      validate: nonEmpty('Napiš aspoň pár slov, ať má Claude z čeho vyjít.'),
+      validate: nonEmpty('Write at least a few words so Claude has something to start from.'),
     });
     userHint = hint as string;
   }
@@ -76,11 +76,12 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
   const lastMemoryMd = await readLastMemoryIfExists(cwd);
   const prompt = buildNextPhasePrompt(projectMd, state, { userHint, lastMemoryMd });
 
-  log.dim(userHint ? 'Rozpracovávám tvůj nápad…' : 'Přemýšlím nad další fází…');
+  log.dim(userHint ? 'Fleshing out your idea…' : 'Thinking about the next phase…');
 
-  // Když Claude odpoví bez čitelných markerů `TITLE:`/`GOAL:`, dáme mu jeden
-  // cílený retry s upřesněním formátu, než to vzdáme s `parse-failed`. Bez
-  // něj by jedna odchylka shodila celou auto smyčku hned v prvním kroku.
+  // When Claude answers without readable `TITLE:`/`GOAL:` markers, we give it one
+  // targeted retry with a format clarification before giving up with
+  // `parse-failed`. Without it, a single deviation would bring down the whole
+  // auto loop right in the first step.
   let parsed: ParsedSuggestion | null = null;
   let lastText = '';
   for (let attempt = 1; attempt <= MAX_NEXT_ATTEMPTS; attempt++) {
@@ -94,7 +95,7 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
         model: resolveModel('next', state),
       });
     } catch (err) {
-      log.error(`Claude se nepodařilo zeptat: ${(err as Error).message}`);
+      log.error(`Failed to ask Claude: ${(err as Error).message}`);
       return { ok: false, reason: 'claude-error' };
     }
 
@@ -105,19 +106,19 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
       break;
     }
     if (attempt < MAX_NEXT_ATTEMPTS) {
-      log.dim('Claude odpověděl bez TITLE:/GOAL: — zkouším to ještě jednou s upřesněním formátu.');
+      log.dim('Claude answered without TITLE:/GOAL: — trying once more with a format clarification.');
     }
   }
 
   if (!parsed) {
-    log.warn('Claude odpověděl ve formátu, který neumím přečíst:');
+    log.warn('Claude answered in a format I cannot read:');
     console.log(lastText);
     return { ok: false, reason: 'parse-failed' };
   }
 
   if (parsed.title === '-') {
-    log.info('Claude si myslí, že projekt už je dokončený.');
-    log.hint('Pokud nesouhlasíš, zadej další fázi ručně (zatím přes mini next znovu).');
+    log.info('Claude thinks the project is already complete.');
+    log.hint("If you disagree, enter the next phase manually (for now via mini next again).");
     return { ok: false, reason: 'project-done' };
   }
 
@@ -125,23 +126,23 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
 
   if (!opts.auto) {
     console.log();
-    log.title(`Návrh fáze: ${parsed.title}`);
-    log.dim(`  Cíl: ${parsed.goal}`);
+    log.title(`Phase suggestion: ${parsed.title}`);
+    log.dim(`  Goal: ${parsed.goal}`);
     console.log();
 
     const { decision } = await ask<'decision'>({
       type: 'select',
       name: 'decision',
-      message: 'Co s tím?',
+      message: 'What do you want to do?',
       choices: [
-        { title: 'Přidat jako další fázi', value: 'add' },
-        { title: 'Upravit a přidat', value: 'edit' },
-        { title: 'Zrušit', value: 'cancel' },
+        { title: 'Add as the next phase', value: 'add' },
+        { title: 'Edit and add', value: 'edit' },
+        { title: 'Cancel', value: 'cancel' },
       ],
     });
 
     if (decision === 'cancel') {
-      log.dim('Nic se nemění.');
+      log.dim('Nothing changed.');
       return { ok: false, reason: 'cancelled' };
     }
 
@@ -150,7 +151,7 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
         {
           type: 'text',
           name: 'title',
-          message: 'Název:',
+          message: 'Name:',
           initial: title,
           format: trim,
           validate: nonEmpty(),
@@ -158,7 +159,7 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
         {
           type: 'text',
           name: 'goal',
-          message: 'Cíl:',
+          message: 'Goal:',
           initial: goal,
           format: trim,
           validate: nonEmpty(),
@@ -173,10 +174,10 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
 }
 
 /**
- * Neinteraktivní uložení nové fáze — pro `mini next --apply` (volá ho
- * `/mini:next` slash command, když Claude v session navrhl fázi). Žádný Claude,
- * žádné dotazy: jen zapíše fázi do stavu se stejnou logikou jako interaktivní
- * `next` (sdílí `commitPhase`).
+ * Non-interactive save of a new phase — for `mini next --apply` (called by the
+ * `/mini:next` slash command when Claude suggested a phase in the session). No
+ * Claude, no questions: just writes the phase into the state with the same logic
+ * as interactive `next` (shares `commitPhase`).
  */
 export async function applyNewPhase(
   title: string,
@@ -184,8 +185,8 @@ export async function applyNewPhase(
   cwd: string = process.cwd(),
 ): Promise<StepOutcome> {
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
   const state = await load(cwd);
@@ -201,14 +202,14 @@ async function addPhaseManually(
     {
       type: 'text',
       name: 'title',
-      message: 'Název fáze (max 5 slov):',
+      message: 'Phase name (max 5 words):',
       format: trim,
       validate: nonEmpty(),
     },
     {
       type: 'text',
       name: 'goal',
-      message: 'Cíl (1 věta — kdy je fáze hotová):',
+      message: 'Goal (1 sentence — when the phase is done):',
       format: trim,
       validate: nonEmpty(),
     },
@@ -224,9 +225,9 @@ async function commitPhase(
   goal: string,
   opts: AutoOptions,
 ): Promise<StepOutcome> {
-  // `Math.floor` na maximu zahodí desetinnou část opravných podfází (21.1),
-  // jinak by nová top-level fáze dostala desetinné ID (22.1) a rozbila by
-  // číslování i pozdější `nextSubphaseId`.
+  // `Math.floor` on the maximum drops the fractional part of fix sub-phases
+  // (21.1), otherwise a new top-level phase would get a fractional ID (22.1) and
+  // break the numbering and later `nextSubphaseId`.
   const newId = Math.floor(Math.max(0, ...state.phases.map((p) => p.id))) + 1;
   const newPhase: Phase = {
     id: newId,
@@ -243,12 +244,12 @@ async function commitPhase(
 
   await save(state, cwd);
 
-  log.success(`Přidáno: fáze ${newId} — ${title}`);
+  log.success(`Added: phase ${newId} — ${title}`);
   if (!opts.auto) {
     if (wasFirst) {
-      log.hint('Další: mini plan (rozmenit) nebo mini do (spustit přímo)');
+      log.hint('Next: mini plan (break it down) or mini do (run directly)');
     } else {
-      log.hint('Až dokončíš aktuální fázi (mini done), pokračuj touhle.');
+      log.hint('Once you finish the current phase (mini done), continue with this one.');
     }
   }
   return { ok: true };
@@ -272,14 +273,14 @@ export function parseSuggestion(text: string): ParsedSuggestion | null {
 }
 
 /**
- * Najde hodnotu markeru `TITLE:` / `GOAL:` tolerantně k drobným odchylkám
- * formátu, kterých se Claude občas dopustí: úvodní markdown dekorace
- * (`#`, `*`, `-`, `>`), velikost písmen markeru, mezery kolem dvojtečky a
- * obalující `**bold**`. Marker ale pořád musí být na začátku řádku (po
- * případné dekoraci) — `foo TITLE: bar` se záměrně neuzná, aby parser
- * nechytal markery utopené v prozaickém textu.
+ * Finds the value of the `TITLE:` / `GOAL:` marker tolerantly to the small
+ * format deviations Claude occasionally makes: leading markdown decoration
+ * (`#`, `*`, `-`, `>`), marker case, spaces around the colon, and wrapping
+ * `**bold**`. The marker must still be at the start of the line (after any
+ * decoration) — `foo TITLE: bar` is deliberately not recognized, so the parser
+ * doesn't catch markers buried in prose.
  *
- * Vrací `null`, když marker chybí nebo je hodnota po očištění prázdná.
+ * Returns `null` when the marker is missing or the value is empty after cleanup.
  */
 function matchField(text: string, label: 'TITLE' | 'GOAL'): string | null {
   const re = new RegExp(`^[ \\t>*#-]*${label}[ \\t]*:[ \\t]*(.*)$`, 'im');
@@ -287,7 +288,7 @@ function matchField(text: string, label: 'TITLE' | 'GOAL'): string | null {
   if (!m) {
     return null;
   }
-  // Očistíme obalující markdown dekoraci (`**bold**`, kurzíva) a okolní mezery.
+  // Strip wrapping markdown decoration (`**bold**`, italics) and surrounding spaces.
   const value = (m[1] ?? '').replace(/^[*_\s]+/, '').replace(/[*_\s]+$/, '');
   return value.length > 0 ? value : null;
 }

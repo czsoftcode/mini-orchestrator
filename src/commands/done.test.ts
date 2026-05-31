@@ -11,27 +11,27 @@ import { isInteractive } from '../ui/interactive.js';
 import { commitAll, hasChanges, headSha, isGitRepo, push } from '../git.js';
 import { writePhaseMemory } from './writeMemory.js';
 
-// `ask` nahrazujeme `vi.fn`, ať můžeme v testech přepínat implementaci —
-// většinou má vyhodit (auto mód se ho nesmí dotknout), ale fallback testy
-// si přepnou vlastní odpověď.
+// We replace `ask` with `vi.fn` so we can switch the implementation in tests —
+// mostly it should throw (auto mode must not touch it), but the fallback tests
+// switch in their own answer.
 vi.mock('../ui/ask.js', () => ({
   ask: vi.fn(async () => {
-    throw new Error('ask() nesmí být v auto módu zavoláno');
+    throw new Error('ask() must not be called in auto mode');
   }),
   nonEmpty: () => () => true as const,
   trim: (v: string) => v.trim(),
 }));
 
-// Interaktivitu terminálu mockujeme — testy běží bez TTY, ale většina
-// verify testů ověřuje interaktivní cestu (ask), takže defaultně předstíráme
-// terminál. W3 test si přepne na false (neinteraktivní prostředí).
+// We mock the terminal interactivity — tests run without a TTY, but most verify
+// tests exercise the interactive path (ask), so by default we pretend there is a
+// terminal. The W3 test switches it to false (non-interactive environment).
 vi.mock('../ui/interactive.js', () => ({
   isInteractive: vi.fn(() => true),
 }));
 
-// Git modul mockujeme — defaultně se chová jako „nejsme v gitovém repu",
-// takže existující testy (běžící v `tmpdir`) commit logiku neaktivují.
-// Konkrétní testy si gitové funkce přepnou přes `mockResolvedValueOnce`.
+// We mock the git module — by default it behaves like "we are not in a git
+// repo", so existing tests (running in `tmpdir`) don't activate the commit
+// logic. Specific tests switch the git functions via `mockResolvedValueOnce`.
 vi.mock('../git.js', () => ({
   isGitRepo: vi.fn(async () => false),
   hasChanges: vi.fn(async () => false),
@@ -46,8 +46,8 @@ vi.mock('../git.js', () => ({
   softResetTo: vi.fn(async () => ({ ok: true, stdout: '', stderr: '' })),
 }));
 
-// Memory zápis mockujeme — testy nesmí spouštět skutečnou Claude session.
-// Defaultně no-op; konkrétní testy si ho spy-ují přes `writePhaseMemoryMock`.
+// We mock the memory write — tests must not run a real Claude session.
+// No-op by default; specific tests spy on it via `writePhaseMemoryMock`.
 vi.mock('./writeMemory.js', () => ({
   writePhaseMemory: vi.fn(async () => {}),
 }));
@@ -212,14 +212,14 @@ describe('advanceToNextPhase', () => {
     expect(state.currentPhaseId).toBe(2);
   });
 
-  it('dozavře osiřelého doing rodiče, když je jeho podfáze hotová (W1)', () => {
-    // Rodič 21 uvázl v doing po block-verify; podfáze 21.1 je teď done.
-    // advanceToNextPhase musí rodiče dozavřít jako done a posunout se na 22.
+  it('closes an orphaned doing parent when its sub-phase is done (W1)', () => {
+    // Parent 21 got stuck in doing after a block-verify; sub-phase 21.1 is now done.
+    // advanceToNextPhase must close the parent as done and move on to 22.
     const state = makeState(
       [
-        { id: 21, title: 'Rodič', status: 'doing' },
-        { id: 21.1, title: 'Oprava', status: 'done', steps: [] },
-        { id: 22, title: 'Další', status: 'planned' },
+        { id: 21, title: 'Parent', status: 'doing' },
+        { id: 21.1, title: 'Fix', status: 'done', steps: [] },
+        { id: 22, title: 'Next', status: 'planned' },
       ],
       21.1,
     );
@@ -233,12 +233,12 @@ describe('advanceToNextPhase', () => {
     expect(state.currentPhaseId).toBe(22);
   });
 
-  it('neuzavírá doing rodiče, dokud má neuzavřenou podfázi (W1)', () => {
+  it('does not close a doing parent while it has an unclosed sub-phase (W1)', () => {
     const state = makeState(
       [
-        { id: 21, title: 'Rodič', status: 'doing' },
-        { id: 21.1, title: 'Oprava A', status: 'done', steps: [] },
-        { id: 21.2, title: 'Oprava B', status: 'planned', steps: [] },
+        { id: 21, title: 'Parent', status: 'doing' },
+        { id: 21.1, title: 'Fix A', status: 'done', steps: [] },
+        { id: 21.2, title: 'Fix B', status: 'planned', steps: [] },
       ],
       21.1,
     );
@@ -250,7 +250,7 @@ describe('advanceToNextPhase', () => {
     expect(state.currentPhaseId).toBe(21.2);
   });
 
-  it('neuzavírá běžnou doing fázi bez podfází', () => {
+  it('does not close a regular doing phase without sub-phases', () => {
     const state = makeState(
       [
         { id: 1, title: 'A', status: 'doing' },
@@ -264,14 +264,14 @@ describe('advanceToNextPhase', () => {
     expect(state.phases.find((p) => p.id === 1)?.status).toBe('doing');
   });
 
-  it('posune se na podfázi s float ID vloženou hned za rodiče', () => {
-    // Podfáze 21.1 stojí fyzicky za rodičem 21 (doing) a před fází 22.
-    // advanceToNextPhase ji musí vybrat jako první planned/proposed v pořadí.
+  it('moves to a float-ID sub-phase inserted right after the parent', () => {
+    // Sub-phase 21.1 sits physically after parent 21 (doing) and before phase 22.
+    // advanceToNextPhase must pick it as the first planned/proposed in order.
     const state = makeState(
       [
-        { id: 21, title: 'Rodič', status: 'doing' },
-        { id: 21.1, title: 'Oprava', status: 'planned', steps: [] },
-        { id: 22, title: 'Další', status: 'planned' },
+        { id: 21, title: 'Parent', status: 'doing' },
+        { id: 21.1, title: 'Fix', status: 'planned', steps: [] },
+        { id: 22, title: 'Next', status: 'planned' },
       ],
       21,
     );
@@ -293,7 +293,7 @@ describe('done({ auto: true })', () => {
     process.chdir(cwd);
     askMock.mockReset();
     askMock.mockImplementation(async () => {
-      throw new Error('ask() nesmí být v auto módu zavoláno');
+      throw new Error('ask() must not be called in auto mode');
     });
     isGitRepoMock.mockReset();
     isGitRepoMock.mockResolvedValue(false);
@@ -341,7 +341,7 @@ describe('done({ auto: true })', () => {
     expect(r).toEqual({ ok: false, reason: 'phase-done' });
   });
 
-  it('aplikuje statusy z reportu a nechá fázi doing, když report má todo krok', async () => {
+  it('applies statuses from the report and leaves the phase doing when the report has a todo step', async () => {
     await save(
       makeState(
         [
@@ -350,8 +350,8 @@ describe('done({ auto: true })', () => {
             title: 'A',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'doing' },
-              { title: 'krok 2', status: 'todo' },
+              { title: 'step 1', status: 'doing' },
+              { title: 'step 2', status: 'todo' },
             ],
           },
           { id: 2, title: 'B', status: 'proposed' },
@@ -367,13 +367,13 @@ describe('done({ auto: true })', () => {
 phase: 1
 verdict: partial
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
-  - title: "krok 2"
+  - title: "step 2"
     status: todo
 ---
 
-Krok 2 nestihl jsem.
+I didn't finish step 2.
 `,
     );
 
@@ -389,7 +389,7 @@ Krok 2 nestihl jsem.
     expect(loaded.currentPhaseId).toBe(1);
   });
 
-  it('finalizuje fázi a posune se dál, když report označí všechny kroky jako done', async () => {
+  it('finalizes the phase and moves on when the report marks all steps as done', async () => {
     await save(
       makeState(
         [
@@ -398,8 +398,8 @@ Krok 2 nestihl jsem.
             title: 'A',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'done' },
-              { title: 'krok 2', status: 'doing' },
+              { title: 'step 1', status: 'done' },
+              { title: 'step 2', status: 'doing' },
             ],
           },
           { id: 2, title: 'B', status: 'proposed' },
@@ -415,9 +415,9 @@ Krok 2 nestihl jsem.
 phase: 1
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
-  - title: "krok 2"
+  - title: "step 2"
     status: done
 ---
 `,
@@ -435,7 +435,7 @@ steps:
     expect(loaded.currentPhaseId).toBe(2);
   });
 
-  it('akceptuje skipped kroky v reportu a finalizuje fázi, když nezbude nic neuzavřeného', async () => {
+  it('accepts skipped steps in the report and finalizes the phase when nothing unclosed remains', async () => {
     await save(
       makeState(
         [
@@ -444,9 +444,9 @@ steps:
             title: 'A',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'done' },
-              { title: 'krok 2', status: 'todo' },
-              { title: 'krok 3', status: 'todo' },
+              { title: 'step 1', status: 'done' },
+              { title: 'step 2', status: 'todo' },
+              { title: 'step 3', status: 'todo' },
             ],
           },
           { id: 2, title: 'B', status: 'proposed' },
@@ -462,11 +462,11 @@ steps:
 phase: 1
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
-  - title: "krok 2"
+  - title: "step 2"
     status: skipped
-  - title: "krok 3"
+  - title: "step 3"
     status: skipped
 ---
 `,
@@ -484,7 +484,7 @@ steps:
     expect(loaded.currentPhaseId).toBe(2);
   });
 
-  it('blocked status v reportu drží krok jako todo a fázi nezavírá', async () => {
+  it('a blocked status in the report keeps the step as todo and does not close the phase', async () => {
     await save(
       makeState(
         [
@@ -493,8 +493,8 @@ steps:
             title: 'A',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'done' },
-              { title: 'krok 2', status: 'doing' },
+              { title: 'step 1', status: 'done' },
+              { title: 'step 2', status: 'doing' },
             ],
           },
           { id: 2, title: 'B', status: 'proposed' },
@@ -510,13 +510,13 @@ steps:
 phase: 1
 verdict: blocked
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
-  - title: "krok 2"
+  - title: "step 2"
     status: blocked
 ---
 
-Krok 2 vyžaduje API klíč, který nemám.
+Step 2 requires an API key I don't have.
 `,
     );
 
@@ -532,7 +532,7 @@ Krok 2 vyžaduje API klíč, který nemám.
     expect(loaded.currentPhaseId).toBe(1);
   });
 
-  it('finalizuje fázi bez kroků, když report má verdict=done', async () => {
+  it('finalizes a phase without steps when the report has verdict=done', async () => {
     await save(
       makeState(
         [
@@ -564,7 +564,7 @@ steps: []
     expect(loaded.currentPhaseId).toBe(2);
   });
 
-  it('fázi bez kroků nezavírá, když report má verdict=partial', async () => {
+  it('does not close a phase without steps when the report has verdict=partial', async () => {
     await save(
       makeState(
         [{ id: 1, title: 'A', status: 'doing' }],
@@ -581,7 +581,7 @@ verdict: partial
 steps: []
 ---
 
-Nestihl jsem.
+I didn't finish.
 `,
     );
 
@@ -593,7 +593,7 @@ Nestihl jsem.
     expect(loaded.currentPhaseId).toBe(1);
   });
 
-  it('vynuluje currentPhaseId, když po finalizaci není další fáze', async () => {
+  it('clears currentPhaseId when there is no next phase after finalization', async () => {
     await save(
       makeState(
         [
@@ -601,7 +601,7 @@ Nestihl jsem.
             id: 1,
             title: 'A',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
         1,
@@ -615,7 +615,7 @@ Nestihl jsem.
 phase: 1
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 ---
 `,
@@ -629,7 +629,7 @@ steps:
     expect(loaded.currentPhaseId).toBeNull();
   });
 
-  it('perzistuje stav na disk, aby ho další load viděl', async () => {
+  it('persists the state to disk so the next load sees it', async () => {
     await save(
       makeState(
         [
@@ -637,7 +637,7 @@ steps:
             id: 1,
             title: 'A',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
           { id: 2, title: 'B', status: 'proposed' },
         ],
@@ -652,7 +652,7 @@ steps:
 phase: 1
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 ---
 `,
@@ -666,7 +666,7 @@ steps:
   });
 });
 
-describe('done({ auto: true }) — fallback do interaktivního módu', () => {
+describe('done({ auto: true }) — fallback to interactive mode', () => {
   let cwd: string;
   let prevCwd: string;
 
@@ -692,7 +692,7 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('chybějící report → interaktivní fallback (uživatel rozhoduje per krok)', async () => {
+  it('missing report → interactive fallback (the user decides per step)', async () => {
     await save(
       makeState(
         [
@@ -701,8 +701,8 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
             title: 'A',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'doing' },
-              { title: 'krok 2', status: 'todo' },
+              { title: 'step 1', status: 'doing' },
+              { title: 'step 2', status: 'todo' },
             ],
           },
         ],
@@ -711,8 +711,8 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
       cwd,
     );
 
-    // Interaktivní done() s doing krokem a zbylými todo: zeptá se jen na
-    // outcome doingu (1 ask) a vrátí se s hintem na `mini do`.
+    // Interactive done() with a doing step and remaining todos: asks only about
+    // the doing step's outcome (1 ask) and returns with a hint to `mini do`.
     askMock.mockResolvedValueOnce({ outcome: 'done' });
 
     const r = await done({ auto: true });
@@ -726,7 +726,7 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
     expect(phase?.status).toBe('doing');
   });
 
-  it('poškozený report → interaktivní fallback, nic neoznačuje naslepo', async () => {
+  it('broken report → interactive fallback, marks nothing blindly', async () => {
     await save(
       makeState(
         [
@@ -734,16 +734,16 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
             id: 1,
             title: 'A',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
         1,
       ),
       cwd,
     );
-    await writeRunReport(cwd, 1, 'tohle není validní report\n');
+    await writeRunReport(cwd, 1, 'this is not a valid report\n');
 
-    // outcome u "doing" kroku → "done", protože byl poslední, finalizace fáze (notes prázdné).
+    // outcome for the "doing" step → "done", because it was the last one, phase finalization (empty notes).
     askMock
       .mockResolvedValueOnce({ outcome: 'done' })
       .mockResolvedValueOnce({ outcome: 'done' })
@@ -759,35 +759,35 @@ describe('done({ auto: true }) — fallback do interaktivního módu', () => {
 });
 
 describe('buildPhaseCommitMessage', () => {
-  it('subject obsahuje id i title', () => {
-    const msg = buildPhaseCommitMessage({ id: 7, title: 'Něco hotového', status: 'done' });
-    expect(msg).toBe('Fáze 7: Něco hotového');
+  it('subject contains both the id and the title', () => {
+    const msg = buildPhaseCommitMessage({ id: 7, title: 'Something done', status: 'done' });
+    expect(msg).toBe('Phase 7: Something done');
   });
 
-  it('přidá tělo s humanNotes, pokud existuje', () => {
+  it('adds a body with humanNotes when present', () => {
     const msg = buildPhaseCommitMessage({
       id: 3,
-      title: 'S poznámkami',
+      title: 'With notes',
       status: 'done',
-      humanNotes: 'Funguje, ale plán by se měl ještě zjednodušit.',
+      humanNotes: 'Works, but the plan should be simplified further.',
     });
     expect(msg).toBe(
-      'Fáze 3: S poznámkami\n\nFunguje, ale plán by se měl ještě zjednodušit.\n',
+      'Phase 3: With notes\n\nWorks, but the plan should be simplified further.\n',
     );
   });
 
-  it('ignoruje prázdné / whitespace humanNotes', () => {
+  it('ignores empty / whitespace humanNotes', () => {
     const msg = buildPhaseCommitMessage({
       id: 1,
-      title: 'Bez poznámek',
+      title: 'No notes',
       status: 'done',
       humanNotes: '   \n  ',
     });
-    expect(msg).toBe('Fáze 1: Bez poznámek');
+    expect(msg).toBe('Phase 1: No notes');
   });
 });
 
-describe('commit po finalizaci fáze', () => {
+describe('commit after phase finalization', () => {
   let cwd: string;
   let prevCwd: string;
 
@@ -797,7 +797,7 @@ describe('commit po finalizaci fáze', () => {
     process.chdir(cwd);
     askMock.mockReset();
     askMock.mockImplementation(async () => {
-      throw new Error('ask() nesmí být v auto módu zavoláno');
+      throw new Error('ask() must not be called in auto mode');
     });
     isGitRepoMock.mockReset();
     hasChangesMock.mockReset();
@@ -819,9 +819,9 @@ describe('commit po finalizaci fáze', () => {
         [
           {
             id: 1,
-            title: 'Fáze ke commitu',
+            title: 'Phase to commit',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
         1,
@@ -835,14 +835,14 @@ describe('commit po finalizaci fáze', () => {
 phase: 1
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 ---
 `,
     );
   }
 
-  it('commitne fázi, když je `done`, je git repo a jsou změny', async () => {
+  it('commits the phase when it is `done`, it is a git repo, and there are changes', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
@@ -854,16 +854,17 @@ steps:
     expect(commitAllMock).toHaveBeenCalledTimes(1);
     const [calledCwd, msg] = commitAllMock.mock.calls[0]!;
     expect(calledCwd).toBe(cwd);
-    expect(msg).toBe('Fáze 1: Fáze ke commitu');
+    expect(msg).toBe('Phase 1: Phase to commit');
   });
 
-  it('uloží `phase.autoCommit` (preSha, subject — bez vlastního sha) po úspěšném commitu', async () => {
+  it('saves `phase.autoCommit` (preSha, subject — without its own sha) after a successful commit', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
     commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
-    // headSha se volá jen jednou — preSha PŘED commitem. Vlastní sha commitu se
-    // neukládá (commit nese i state.json se záznamem, závisel by sám na sobě).
+    // headSha is called only once — preSha BEFORE the commit. The commit's own
+    // sha is not stored (the commit also carries state.json with the record, it
+    // would depend on itself).
     headShaMock.mockResolvedValue('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
 
     const r = await done({ auto: true });
@@ -873,12 +874,12 @@ steps:
     const phase = reloaded.phases[0];
     expect(phase?.autoCommit).toEqual({
       preSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      subject: 'Fáze 1: Fáze ke commitu',
+      subject: 'Phase 1: Phase to commit',
     });
     expect(phase?.autoCommit).not.toHaveProperty('sha');
   });
 
-  it('memory, graf i finální state se zapíšou PŘED commitem (po `done` nic nevisí)', async () => {
+  it('memory, graph, and final state are written BEFORE the commit (nothing hangs after `done`)', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
@@ -887,7 +888,7 @@ steps:
 
     await done({ auto: true });
 
-    // Memory záznam musí proběhnout PŘED jediným commitem, aby do něj spadl.
+    // The memory record must happen BEFORE the single commit, so it lands in it.
     expect(writePhaseMemoryMock).toHaveBeenCalledTimes(1);
     expect(commitAllMock).toHaveBeenCalledTimes(1);
     const memoryOrder = writePhaseMemoryMock.mock.invocationCallOrder[0]!;
@@ -895,7 +896,7 @@ steps:
     expect(memoryOrder).toBeLessThan(commitOrder);
   });
 
-  it('selhání commitu nezapíše `phase.autoCommit`', async () => {
+  it('a failed commit does not write `phase.autoCommit`', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
@@ -908,7 +909,7 @@ steps:
     expect(reloaded.phases[0]?.autoCommit).toBeUndefined();
   });
 
-  it('commit přeskočí, když cwd není git repo', async () => {
+  it('skips the commit when cwd is not a git repo', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(false);
 
@@ -918,7 +919,7 @@ steps:
     expect(commitAllMock).not.toHaveBeenCalled();
   });
 
-  it('commit přeskočí, když nejsou žádné změny', async () => {
+  it('skips the commit when there are no changes', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(false);
@@ -929,35 +930,35 @@ steps:
     expect(commitAllMock).not.toHaveBeenCalled();
   });
 
-  it('selhání commitu (`ok: false`) neshodí done — stav je už uložený', async () => {
+  it('a failed commit (`ok: false`) does not crash done — the state is already saved', async () => {
     await setupDoneAutoPhase();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
     commitAllMock.mockResolvedValue({
       ok: false,
       stdout: '',
-      stderr: 'fatal: chyba commitu',
+      stderr: 'fatal: commit error',
     });
 
     const r = await done({ auto: true });
 
     expect(r.ok).toBe(true);
     expect(commitAllMock).toHaveBeenCalledTimes(1);
-    // stav fáze je i tak posunutý — uživatel si commit dotáhne ručně
+    // the phase status is advanced anyway — the user finishes the commit manually
     const reloaded = await load(cwd);
     expect(reloaded.phases[0]?.status).toBe('done');
   });
 
-  it('skipped fáze se necommituje', async () => {
-    // Setup: jediný krok je `doing`, ale interaktivní done volíme `skip`.
+  it('a skipped phase is not committed', async () => {
+    // Setup: the single step is `doing`, but in interactive done we choose `skip`.
     await save(
       makeState(
         [
           {
             id: 1,
-            title: 'Odkládaná fáze',
+            title: 'Deferred phase',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
         1,
@@ -966,9 +967,9 @@ steps:
     );
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
-    // 1. ask: krok → "skip", 2. ask: fáze → "skip", 3. ask: notes → ''
-    // (skip kroku finalizuje krok, pak run dorazí k finalizePhase, kde
-    //  outcome=skip a notes nejsou potřeba, ale done si je vyžádá tak jako tak)
+    // 1st ask: step → "skip", 2nd ask: phase → "skip", 3rd ask: notes → ''
+    // (skipping the step finalizes it, then the run reaches finalizePhase, where
+    //  outcome=skip and notes aren't needed, but done asks for them anyway)
     askMock
       .mockResolvedValueOnce({ outcome: 'skip' })
       .mockResolvedValueOnce({ outcome: 'skip' })
@@ -979,17 +980,17 @@ steps:
     expect(commitAllMock).not.toHaveBeenCalled();
   });
 
-  it('interaktivní force-done volí commit s humanNotes v těle', async () => {
+  it('interactive force-done makes a commit with humanNotes in the body', async () => {
     await save(
       makeState(
         [
           {
             id: 2,
-            title: 'Fáze s poznámkou',
+            title: 'Phase with a note',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'done' },
-              { title: 'krok 2', status: 'todo' },
+              { title: 'step 1', status: 'done' },
+              { title: 'step 2', status: 'todo' },
             ],
           },
         ],
@@ -1000,20 +1001,20 @@ steps:
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
     askMock
-      // done() vidí remainingSteps > 0 → vyzve k "decision"; volíme force-done
+      // done() sees remainingSteps > 0 → prompts for a "decision"; we pick force-done
       .mockResolvedValueOnce({ decision: 'force-done' })
-      // collectNotesAndSave si pak vyžádá poznámku
-      .mockResolvedValueOnce({ notes: 'Tohle si nech.' });
+      // collectNotesAndSave then asks for a note
+      .mockResolvedValueOnce({ notes: 'Keep this.' });
 
     await done();
 
     expect(commitAllMock).toHaveBeenCalledTimes(1);
     const [, msg] = commitAllMock.mock.calls[0]!;
-    expect(msg).toBe('Fáze 2: Fáze s poznámkou\n\nTohle si nech.\n');
+    expect(msg).toBe('Phase 2: Phase with a note\n\nKeep this.\n');
   });
 });
 
-describe('memory zápis po finalizaci fáze', () => {
+describe('memory write after phase finalization', () => {
   let cwd: string;
   let prevCwd: string;
 
@@ -1023,7 +1024,7 @@ describe('memory zápis po finalizaci fáze', () => {
     process.chdir(cwd);
     askMock.mockReset();
     askMock.mockImplementation(async () => {
-      throw new Error('ask() nesmí být v auto módu zavoláno');
+      throw new Error('ask() must not be called in auto mode');
     });
     isGitRepoMock.mockReset();
     isGitRepoMock.mockResolvedValue(false);
@@ -1048,9 +1049,9 @@ describe('memory zápis po finalizaci fáze', () => {
         [
           {
             id: 1,
-            title: 'Fáze do paměti',
+            title: 'Phase into memory',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
         1,
@@ -1064,14 +1065,14 @@ describe('memory zápis po finalizaci fáze', () => {
 phase: 1
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 ---
 `,
     );
   }
 
-  it('zavolá writePhaseMemory po finalizaci fáze v auto módu', async () => {
+  it('calls writePhaseMemory after phase finalization in auto mode', async () => {
     await setupDonePhaseViaAuto();
 
     await done({ auto: true });
@@ -1084,7 +1085,7 @@ steps:
     expect(calledOpts).toEqual({ hasAutoCommit: false });
   });
 
-  it('předá hasAutoCommit=true, když auto-commit proběhl', async () => {
+  it('passes hasAutoCommit=true when the auto-commit happened', async () => {
     await setupDonePhaseViaAuto();
     isGitRepoMock.mockResolvedValue(true);
     hasChangesMock.mockResolvedValue(true);
@@ -1100,22 +1101,22 @@ steps:
     expect(calledOpts).toEqual({ hasAutoCommit: true });
   });
 
-  it('nezavolá writePhaseMemory u skipped fáze', async () => {
+  it('does not call writePhaseMemory for a skipped phase', async () => {
     await save(
       makeState(
         [
           {
             id: 1,
-            title: 'Odložená fáze',
+            title: 'Deferred phase',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
         1,
       ),
       cwd,
     );
-    // Interaktivní cesta: krok → skip, fáze → skip, notes → ''
+    // Interactive path: step → skip, phase → skip, notes → ''
     askMock
       .mockResolvedValueOnce({ outcome: 'skip' })
       .mockResolvedValueOnce({ outcome: 'skip' })
@@ -1126,17 +1127,17 @@ steps:
     expect(writePhaseMemoryMock).not.toHaveBeenCalled();
   });
 
-  it('zavolá writePhaseMemory i u interaktivní force-done cesty', async () => {
+  it('calls writePhaseMemory in the interactive force-done path too', async () => {
     await save(
       makeState(
         [
           {
             id: 4,
-            title: 'Force-done fáze',
+            title: 'Force-done phase',
             status: 'doing',
             steps: [
-              { title: 'krok 1', status: 'done' },
-              { title: 'krok 2', status: 'todo' },
+              { title: 'step 1', status: 'done' },
+              { title: 'step 2', status: 'todo' },
             ],
           },
         ],
@@ -1156,22 +1157,22 @@ steps:
     expect(calledPhase.status).toBe('done');
   });
 
-  it('zavolá writePhaseMemory v interaktivní finalizePhase ("Hotová, funguje")', async () => {
+  it('calls writePhaseMemory in interactive finalizePhase ("Done, works")', async () => {
     await save(
       makeState(
         [
           {
             id: 5,
-            title: 'Interaktivní done fáze',
+            title: 'Interactive done phase',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'done' }],
+            steps: [{ title: 'step 1', status: 'done' }],
           },
         ],
         5,
       ),
       cwd,
     );
-    // Žádné neuzavřené kroky → rovnou finalizePhase: outcome → done, notes → ''
+    // No unclosed steps → straight to finalizePhase: outcome → done, notes → ''
     askMock
       .mockResolvedValueOnce({ outcome: 'done' })
       .mockResolvedValueOnce({ notes: '' });
@@ -1195,7 +1196,7 @@ describe('done({ auto: true }) — graph regeneration', () => {
     process.chdir(cwd);
     askMock.mockReset();
     askMock.mockImplementation(async () => {
-      throw new Error('ask() nesmí být v auto módu zavoláno');
+      throw new Error('ask() must not be called in auto mode');
     });
     isGitRepoMock.mockReset();
     isGitRepoMock.mockResolvedValue(false);
@@ -1214,7 +1215,7 @@ describe('done({ auto: true }) — graph regeneration', () => {
     await rm(cwd, { recursive: true, force: true });
   });
 
-  it('regeneruje .mini/graph/ + index po finalizaci fáze v TS projektu', async () => {
+  it('regenerates .mini/graph/ + index after phase finalization in a TS project', async () => {
     await writeFile(join(cwd, 'tsconfig.json'), '{}', 'utf-8');
     await writeFile(join(cwd, 'a.ts'), 'export const a = 1;', 'utf-8');
     await save(
@@ -1253,7 +1254,7 @@ steps:
     expect(index.files.map((f: { path: string }) => f.path)).toContain('a.ts');
   });
 
-  it('přeskočí regeneraci v non-TS projektu', async () => {
+  it('skips regeneration in a non-TS project', async () => {
     await writeFile(join(cwd, 'package.json'), '{}', 'utf-8');
     await writeFile(join(cwd, 'styles.css'), 'body{}', 'utf-8');
     await save(
@@ -1323,11 +1324,11 @@ describe('done({ auto: true }) — verify body', () => {
         [
           {
             id: 21,
-            title: 'Fáze s ověřením',
+            title: 'Phase with verification',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'done' }],
+            steps: [{ title: 'step 1', status: 'done' }],
           },
-          { id: 22, title: 'Další', status: 'proposed' },
+          { id: 22, title: 'Next', status: 'proposed' },
         ],
         21,
       ),
@@ -1340,17 +1341,17 @@ describe('done({ auto: true }) — verify body', () => {
 phase: 21
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 ${verifyYaml}---
 `,
     );
   }
 
-  it('pass na všech bodech → fáze se uzavře a posune dál', async () => {
+  it('pass on all items → the phase closes and moves on', async () => {
     await setupPhaseWithVerify(
       `verify:
-  - title: Vizuální kontrola tlačítka
+  - title: Visual check of the button
   - title: UX flow
 `,
     );
@@ -1367,10 +1368,10 @@ ${verifyYaml}---
     expect(loaded.currentPhaseId).toBe(22);
   });
 
-  it('skip → fáze se uzavře (uživatel bere zodpovědnost na sebe)', async () => {
+  it('skip → the phase closes (the user takes responsibility)', async () => {
     await setupPhaseWithVerify(
       `verify:
-  - title: Vizuální kontrola
+  - title: Visual check
 `,
     );
     askMock.mockResolvedValueOnce({ answer: 'skip' });
@@ -1382,10 +1383,10 @@ ${verifyYaml}---
     expect(loaded.phases.find((p) => p.id === 21)?.status).toBe('done');
   });
 
-  it('issue → fázi nezavře, vrátí ok:false (uživatel opraví a zavře znovu)', async () => {
+  it('issue → does not close the phase, returns ok:false (the user fixes it and closes again)', async () => {
     await setupPhaseWithVerify(
       `verify:
-  - title: Tlačítko je křivě
+  - title: The button is crooked
 `,
     );
     askMock.mockResolvedValueOnce({ answer: 'issue' });
@@ -1398,19 +1399,19 @@ ${verifyYaml}---
     expect(phase?.status).toBe('doing');
     expect(phase?.completedAt).toBeUndefined();
     expect(loaded.currentPhaseId).toBe(21);
-    // žádná podfáze nevznikla
+    // no sub-phase was created
     expect(loaded.phases.some((p) => p.id === 21.1)).toBe(false);
   });
 
-  it('block → vytvoří opravnou podfázi s float ID a posune se na ni', async () => {
+  it('block → creates a fix sub-phase with a float ID and moves onto it', async () => {
     await setupPhaseWithVerify(
       `verify:
-  - title: Stránka padá na mobilu
-    detail: Na desktopu OK, mobil neotestován
-  - title: Drobnost v textu
+  - title: The page crashes on mobile
+    detail: OK on desktop, mobile untested
+  - title: A small text detail
 `,
     );
-    // 1. bod → block, 2. bod → issue (bloker má přednost)
+    // 1st item → block, 2nd item → issue (a blocker takes precedence)
     askMock
       .mockResolvedValueOnce({ answer: 'block' })
       .mockResolvedValueOnce({ answer: 'issue' });
@@ -1420,12 +1421,12 @@ ${verifyYaml}---
     expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 21.1 });
     const loaded = await load(cwd);
 
-    // rodič se NEuzavřel
+    // the parent did NOT close
     const parent = loaded.phases.find((p) => p.id === 21);
     expect(parent?.status).toBe('doing');
     expect(parent?.completedAt).toBeUndefined();
 
-    // podfáze 21.1 vznikla hned za rodičem
+    // sub-phase 21.1 was created right after the parent
     const idxParent = loaded.phases.findIndex((p) => p.id === 21);
     const idxSub = loaded.phases.findIndex((p) => p.id === 21.1);
     expect(idxSub).toBe(idxParent + 1);
@@ -1433,26 +1434,26 @@ ${verifyYaml}---
     const sub = loaded.phases[idxSub];
     expect(sub?.status).toBe('planned');
     expect(sub?.steps).toEqual([
-      { title: 'Stránka padá na mobilu', status: 'todo', notes: 'Na desktopu OK, mobil neotestován' },
+      { title: 'The page crashes on mobile', status: 'todo', notes: 'OK on desktop, mobile untested' },
     ]);
     expect(loaded.currentPhaseId).toBe(21.1);
 
-    // bloker nespustil commit ani memory (fáze se nezavřela)
+    // the blocker did not trigger a commit or memory (the phase did not close)
     expect(commitAllMock).not.toHaveBeenCalled();
     expect(writePhaseMemoryMock).not.toHaveBeenCalled();
   });
 
-  it('druhý bloker dostane ID 21.2, když 21.1 už existuje', async () => {
+  it('a second blocker gets ID 21.2 when 21.1 already exists', async () => {
     await save(
       makeState(
         [
           {
             id: 21,
-            title: 'Rodič',
+            title: 'Parent',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'done' }],
+            steps: [{ title: 'step 1', status: 'done' }],
           },
-          { id: 21.1, title: 'Oprava: Rodič', status: 'done', steps: [] },
+          { id: 21.1, title: 'Fix: Parent', status: 'done', steps: [] },
         ],
         21,
       ),
@@ -1465,10 +1466,10 @@ ${verifyYaml}---
 phase: 21
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 verify:
-  - title: Další bloker
+  - title: Another blocker
 ---
 `,
     );
@@ -1481,20 +1482,20 @@ verify:
     expect(r).toEqual({ ok: true, phaseAdvanced: true, nextPhaseId: 21.2 });
   });
 
-  it('report bez verify pole projde uzavřením beze změny (ask se nevolá)', async () => {
+  it('a report without a verify field passes the closing unchanged (ask is not called)', async () => {
     askMock.mockImplementation(async () => {
-      throw new Error('ask() se u reportu bez verify nesmí volat');
+      throw new Error('ask() must not be called for a report without verify');
     });
     await save(
       makeState(
         [
           {
             id: 21,
-            title: 'Bez verify',
+            title: 'Without verify',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'done' }],
+            steps: [{ title: 'step 1', status: 'done' }],
           },
-          { id: 22, title: 'Další', status: 'proposed' },
+          { id: 22, title: 'Next', status: 'proposed' },
         ],
         21,
       ),
@@ -1507,7 +1508,7 @@ verify:
 phase: 21
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 ---
 `,
@@ -1519,14 +1520,14 @@ steps:
     expect(askMock).not.toHaveBeenCalled();
   });
 
-  it('bez TTY verify tiše neprojde — fázi nezavře a vrátí verify-needs-human (W3)', async () => {
+  it('without a TTY verify does not silently pass — does not close the phase and returns verify-needs-human (W3)', async () => {
     isInteractiveMock.mockReturnValue(false);
     askMock.mockImplementation(async () => {
-      throw new Error('ask() se v neinteraktivním prostředí nesmí volat');
+      throw new Error('ask() must not be called in a non-interactive environment');
     });
     await setupPhaseWithVerify(
       `verify:
-  - title: Vizuální kontrola tlačítka
+  - title: Visual check of the button
 `,
     );
 
@@ -1541,12 +1542,12 @@ steps:
     expect(loaded.currentPhaseId).toBe(21);
   });
 
-  it('opakovaný done nepřehrává už vyřešené verify body (W4)', async () => {
-    // 1. průchod: jeden bod pass, druhý issue → fáze se nezavře.
+  it('a repeated done does not replay already resolved verify items (W4)', async () => {
+    // 1st pass: one item pass, the other issue → the phase does not close.
     await setupPhaseWithVerify(
       `verify:
-  - title: Vizuální kontrola
-  - title: Drobnost v textu
+  - title: Visual check
+  - title: A small text detail
 `,
     );
     askMock
@@ -1559,10 +1560,10 @@ steps:
     const afterFirst = await load(cwd);
     const phaseAfterFirst = afterFirst.phases.find((p) => p.id === 21);
     expect(phaseAfterFirst?.status).toBe('doing');
-    expect(phaseAfterFirst?.resolvedVerify).toEqual(['Vizuální kontrola']);
+    expect(phaseAfterFirst?.resolvedVerify).toEqual(['Visual check']);
 
-    // 2. průchod nad stejným reportem: už vyřešený bod se nenabízí, ptá se
-    // jen na zbývající (dříve issue, teď opravený → pass) → fáze se zavře.
+    // 2nd pass over the same report: the already resolved item is not offered,
+    // it asks only about the remaining one (previously issue, now fixed → pass) → the phase closes.
     askMock.mockReset();
     askMock.mockResolvedValueOnce({ answer: 'pass' });
 
@@ -1577,7 +1578,7 @@ steps:
 
 });
 
-describe('CHANGELOG stamp při vydání', () => {
+describe('CHANGELOG stamp on release', () => {
   let cwd: string;
   let prevCwd: string;
 
@@ -1585,11 +1586,11 @@ describe('CHANGELOG stamp při vydání', () => {
 
 ## [Unreleased]
 ### Added
-- nová funkce
+- new feature
 
 ## [0.9.0] - 2026-01-01
 ### Added
-- starší věc
+- older thing
 `;
 
   beforeEach(async () => {
@@ -1598,7 +1599,7 @@ describe('CHANGELOG stamp při vydání', () => {
     process.chdir(cwd);
     askMock.mockReset();
     askMock.mockImplementation(async () => {
-      throw new Error('ask() nesmí být v auto módu zavoláno');
+      throw new Error('ask() must not be called in auto mode');
     });
     isGitRepoMock.mockReset();
     isGitRepoMock.mockResolvedValue(true);
@@ -1627,9 +1628,9 @@ describe('CHANGELOG stamp při vydání', () => {
         [
           {
             id: 1,
-            title: 'Fáze k vydání',
+            title: 'Phase to release',
             status: 'doing',
-            steps: [{ title: 'krok 1', status: 'doing' }],
+            steps: [{ title: 'step 1', status: 'doing' }],
           },
         ],
         1,
@@ -1643,49 +1644,49 @@ describe('CHANGELOG stamp při vydání', () => {
 phase: 1
 verdict: done
 steps:
-  - title: "krok 1"
+  - title: "step 1"
     status: done
 ---
 `,
     );
   }
 
-  it('--push --bump minor zaklapne Unreleased do datované sekce', async () => {
+  it('--push --bump minor folds Unreleased into a dated section', async () => {
     await setup();
 
     const r = await applyDone(cwd, { push: true, bump: 'minor' });
 
     expect(r.ok).toBe(true);
     const changelog = await readFile(join(cwd, 'CHANGELOG.md'), 'utf-8');
-    // minor z 1.2.3 → 1.3.0, dnešní datum
-    expect(changelog).toMatch(/## \[1\.3\.0\] - \d{4}-\d{2}-\d{2}\n### Added\n- nová funkce/);
-    // nahoře zůstala čerstvá prázdná Unreleased
+    // minor from 1.2.3 → 1.3.0, today's date
+    expect(changelog).toMatch(/## \[1\.3\.0\] - \d{4}-\d{2}-\d{2}\n### Added\n- new feature/);
+    // a fresh empty Unreleased stays on top
     expect(changelog).toMatch(/## \[Unreleased\]\n\n## \[1\.3\.0\]/);
   });
 
-  it('patch (i s --push) Unreleased nestampuje — položky zůstanou', async () => {
+  it('patch (even with --push) does not stamp Unreleased — entries stay', async () => {
     await setup();
 
     const r = await applyDone(cwd, { push: true, bump: 'patch' });
 
     expect(r.ok).toBe(true);
     const changelog = await readFile(join(cwd, 'CHANGELOG.md'), 'utf-8');
-    expect(changelog).toMatch(/## \[Unreleased\]\n### Added\n- nová funkce/);
+    expect(changelog).toMatch(/## \[Unreleased\]\n### Added\n- new feature/);
     expect(changelog).not.toMatch(/## \[1\.2\.4\]/);
   });
 
-  it('minor bez --push (jen lokální commit) Unreleased nestampuje', async () => {
+  it('minor without --push (local commit only) does not stamp Unreleased', async () => {
     await setup();
 
     const r = await applyDone(cwd, { bump: 'minor' });
 
     expect(r.ok).toBe(true);
     const changelog = await readFile(join(cwd, 'CHANGELOG.md'), 'utf-8');
-    expect(changelog).toMatch(/## \[Unreleased\]\n### Added\n- nová funkce/);
+    expect(changelog).toMatch(/## \[Unreleased\]\n### Added\n- new feature/);
     expect(changelog).not.toMatch(/## \[1\.3\.0\]/);
   });
 
-  it('chybějící CHANGELOG.md neshodí done (best-effort)', async () => {
+  it('a missing CHANGELOG.md does not crash done (best-effort)', async () => {
     await setup();
     await rm(join(cwd, 'CHANGELOG.md'));
 

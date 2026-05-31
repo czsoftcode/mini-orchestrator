@@ -15,12 +15,13 @@ import { plan } from './plan.js';
 import type { AutoOptions } from './types.js';
 
 /**
- * Maximální počet průchodů Claude session na jednu fázi v auto módu.
+ * Maximum number of Claude session passes per phase in auto mode.
  *
- * Auto pouští Claude na celou fázi v jednom průchodu. Pokud po `done({auto})`
- * zbydou kroky se statusem `todo` (Claude nestihl, narazil na blocker apod.),
- * spustí se další pokus — celkem maximálně tolik, kolik říká tahle konstanta.
- * Po vyčerpání limitu auto skončí s warningem a předá štafetu člověku.
+ * Auto runs Claude on the whole phase in a single pass. If after `done({auto})`
+ * steps with the `todo` status remain (Claude didn't finish, hit a blocker,
+ * etc.), another attempt is started — at most as many as this constant says.
+ * After the limit is exhausted, auto ends with a warning and hands the baton to
+ * a human.
  */
 const MAX_PHASE_ITERATIONS = 3;
 
@@ -28,8 +29,8 @@ export async function auto(opts: AutoOptions = {}): Promise<void> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
-    log.warn('V tomto adresáři není projekt.');
-    log.hint('Začni: mini init');
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
     return;
   }
 
@@ -41,20 +42,20 @@ export async function auto(opts: AutoOptions = {}): Promise<void> {
     !currentPhase || currentPhase.status === 'done' || currentPhase.status === 'skipped';
 
   if (needsNewPhase) {
-    log.title('[auto 1/4] Navrhuji další fázi');
+    log.title('[auto 1/4] Suggesting the next phase');
     const r = await next({ auto: true });
     if (!r.ok) {
-      log.dim(`Auto skončil v next (${r.reason}).`);
+      log.dim(`Auto stopped at next (${r.reason}).`);
       return;
     }
     state = await load(cwd);
     currentPhase = state.phases.find((p) => p.id === state.currentPhaseId);
     if (!currentPhase) {
-      log.error('Něco se pokazilo (nová fáze se nenajde ve stavu).');
+      log.error('Something went wrong (the new phase is not found in the state).');
       return;
     }
   } else if (currentPhase) {
-    log.title(`[auto 1/4] Pokračujem na rozdělané fázi ${currentPhase.id}: ${currentPhase.title}`);
+    log.title(`[auto 1/4] Continuing the in-progress phase ${currentPhase.id}: ${currentPhase.title}`);
   }
 
   if (!currentPhase) {
@@ -62,20 +63,21 @@ export async function auto(opts: AutoOptions = {}): Promise<void> {
   }
 
   if (!currentPhase.steps?.length) {
-    log.title('[auto 2/4] Rozmenění fáze na kroky');
+    log.title('[auto 2/4] Breaking the phase down into steps');
     const r = await plan({ auto: true });
     if (!r.ok) {
-      log.dim(`Auto skončil v plan (${r.reason}).`);
+      log.dim(`Auto stopped at plan (${r.reason}).`);
       return;
     }
   } else {
-    log.title(`[auto 2/4] Fáze už má ${currentPhase.steps.length} kroků — planování přeskočeno.`);
+    log.title(`[auto 2/4] Phase already has ${currentPhase.steps.length} ${currentPhase.steps.length === 1 ? 'step' : 'steps'} — planning skipped.`);
   }
 
-  // Jeden Claude session = celá fáze. Pokud po verifikaci přes `done({auto})`
-  // zbydou neuzavřené kroky, pustíme další pokus (až do MAX_PHASE_ITERATIONS).
-  // Druhý a třetí průchod dostávají retry kontext — Claude tak v promptu uvidí,
-  // že pokračuje předchozí pokus, a najde tam cestu k zálohovanému reportu.
+  // One Claude session = the whole phase. If after verification via `done({auto})`
+  // unclosed steps remain, we run another attempt (up to MAX_PHASE_ITERATIONS).
+  // The second and third pass get a retry context — Claude then sees in the
+  // prompt that it is continuing a previous attempt and finds there a path to
+  // the backed-up report.
   let iteration = 0;
   while (true) {
     iteration += 1;
@@ -83,45 +85,45 @@ export async function auto(opts: AutoOptions = {}): Promise<void> {
     const retry = iteration > 1 ? await prepareRetryContext(cwd, currentPhase.id, iteration) : null;
 
     const labelSuffix =
-      iteration === 1 ? '' : ` — pokus ${iteration}/${MAX_PHASE_ITERATIONS}`;
-    log.title(`[auto 3/4] Spouštím Claude Code (acceptEdits)${labelSuffix}`);
+      iteration === 1 ? '' : ` — attempt ${iteration}/${MAX_PHASE_ITERATIONS}`;
+    log.title(`[auto 3/4] Running Claude Code (acceptEdits)${labelSuffix}`);
     const dr = await doPhase({ auto: true, maxTurns: opts.maxTurns, retry });
     if (!dr.ok) {
-      log.dim(`Auto skončil v do (${dr.reason}).`);
+      log.dim(`Auto stopped at do (${dr.reason}).`);
       return;
     }
 
-    log.title(`[auto 4/4] Verifikace${labelSuffix}`);
+    log.title(`[auto 4/4] Verification${labelSuffix}`);
     const fr = await done({ auto: true, bump: opts.bump, push: opts.push });
     if (!fr.ok) {
-      log.dim(`Auto skončil v done (${fr.reason}).`);
+      log.dim(`Auto stopped at done (${fr.reason}).`);
       return;
     }
     if (fr.phaseAdvanced) {
       if (fr.nextPhaseId === null || fr.nextPhaseId === undefined) {
-        log.success('Auto hotov. Žádná další fáze v plánu — spusť: mini next.');
+        log.success('Auto done. No further phase in the plan — run: mini next.');
       } else {
-        log.success(`Auto hotov. Pokračuje se fází ${fr.nextPhaseId} — spusť: mini auto.`);
+        log.success(`Auto done. Continuing with phase ${fr.nextPhaseId} — run: mini auto.`);
       }
       return;
     }
 
     if (iteration >= MAX_PHASE_ITERATIONS) {
       log.warn(
-        `Po ${MAX_PHASE_ITERATIONS} pokusech fáze ${currentPhase.id} pořád není hotová. Zkontroluj report v .mini/run/ a pokračuj ručně přes mini do / mini done.`,
+        `After ${MAX_PHASE_ITERATIONS} attempts phase ${currentPhase.id} is still not done. Check the report in .mini/run/ and continue manually via mini do / mini done.`,
       );
       return;
     }
-    log.dim(`Fáze ${currentPhase.id} pořád není hotová — spouštím další pokus.`);
+    log.dim(`Phase ${currentPhase.id} is still not done — starting another attempt.`);
   }
 }
 
 /**
- * Připraví podklady pro retry: přejmenuje aktuální report na `.prev.md`,
- * aby ho Claude mohl přečíst bez kolize s novým zápisem. Když report
- * neexistuje (Claude předchozí session ukončil bez zápisu — crash, /exit,
- * vyčerpaný `--max-turns`), retry pojede bez kontextu předchozího reportu;
- * statusy kroků si Claude vyčte z bloku „Kroky" v promptu.
+ * Prepares the inputs for a retry: renames the current report to `.prev.md`, so
+ * Claude can read it without colliding with the new write. When the report does
+ * not exist (Claude ended the previous session without writing — crash, /exit,
+ * exhausted `--max-turns`), the retry runs without the previous report's
+ * context; Claude reads the step statuses from the "Steps" block in the prompt.
  */
 async function prepareRetryContext(
   cwd: string,
