@@ -1,7 +1,7 @@
 ---
-description: mini — přehled existující codebase do .mini/codebase.md (doplněk)
+description: mini — overview of the existing codebase into .mini/codebase.md (supplementary)
 ---
 
-Tohle je krok **audit** workflow mini, spuštěný přímo v Claude Code.
+This is the **audit** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash `mini audit` — projde existující kód a vytvoří/aktualizuje `.mini/codebase.md` (přehled codebase pro pozdější session). Po dokončení stručně shrň výsledek uživateli v chatu. Stav fází v `.mini/state.json` to nijak nemění — typicky se pouští hned po `/mini:init` v existujícím projektu, klidně po `/mini:map`.
+Run in Bash `mini audit` — it goes through the existing code and creates/updates `.mini/codebase.md` (a codebase overview for later sessions). When done, briefly summarize the result to the user in the chat. It does not change the phase state in `.mini/state.json` in any way — it is typically run right after `/mini:init` in an existing project, optionally after `/mini:map`.

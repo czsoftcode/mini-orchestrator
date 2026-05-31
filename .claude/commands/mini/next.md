@@ -1,8 +1,8 @@
 ---
-description: mini — navrhni a ulož další fázi projektu
-argument-hint: [volitelný nápad na fázi]
+description: mini — propose and save the next project phase
+argument-hint: [optional phase idea]
 ---
 
-Tohle je krok **next** workflow mini, spuštěný přímo v Claude Code.
+This is the **next** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash `mini context next $ARGUMENTS` a postupuj **přesně** podle vypsaných instrukcí. Prompt obsahuje aktuální kontext projektu i to, jak na konci uložit stav (přes `mini ... --apply`). Stav v `.mini/` měň jen těmi příkazy — nikdy needituj `.mini/state.json` ručně.
+Run in Bash `mini context next $ARGUMENTS` and follow the printed instructions **exactly**. The prompt contains the current project context as well as how to save the state at the end (via `mini ... --apply`). Change the state in `.mini/` only with those commands — never edit `.mini/state.json` by hand.

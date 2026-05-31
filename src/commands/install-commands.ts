@@ -30,124 +30,124 @@ interface CommandDef {
 const COMMAND_DEFS: CommandDef[] = [
   {
     name: 'init',
-    description: 'mini — založ nový projekt (otázky proběhnou v session)',
-    body: `Tohle je krok **init** workflow mini, spuštěný přímo v Claude Code. Založíš nový mini projekt v aktuálním adresáři. Stav v \`.mini/\` vznikne příkazem \`mini init --apply …\` — nikdy nezapisuj \`.mini/state.json\` ani \`.mini/project.md\` ručně.
+    description: 'mini — start a new project (questions happen in the session)',
+    body: `This is the **init** step of the mini workflow, run directly in Claude Code. You start a new mini project in the current directory. The state in \`.mini/\` is created by the \`mini init --apply …\` command — never write \`.mini/state.json\` or \`.mini/project.md\` by hand.
 
-Postupuj v tomhle pořadí:
+Proceed in this order:
 
-1. **Zeptej se uživatele** na čtyři věci (krátké odpovědi, v chatu):
-   - **název projektu** (když nic neřekne, nech default = název adresáře),
-   - **co staví** (1-2 věty),
-   - **pro koho to je** (cílový uživatel),
-   - **hlavní omezení** (jazyk/framework/deadline — může nechat prázdné).
-2. **Ulož projekt.** Spusť v Bash:
-   \`mini init --apply --name "<název>" --what "<co>" --for-whom "<pro koho>" --constraints "<omezení>"\`
-   (\`--name\` a \`--constraints\` můžeš vynechat, když je uživatel nechal prázdné). Když příkaz ohlásí, že projekt už existuje, a uživatel **potvrdí** přepsání (stará historie fází se ztratí), zopakuj příkaz s \`--force\`. Bez potvrzení se zastav.
-3. **Nabídni další kroky.** Z výstupu příkazu poznáš, jestli je v adresáři už nějaký kód (brownfield):
-   - **je tam kód** → nabídni uživateli \`/mini:map\` (graf projektu) a po něm \`/mini:audit\` (přehled codebase do \`.mini/codebase.md\`),
-   - **prázdný adresář** → nabídni \`/mini:next\` (navrhnout první fázi).
+1. **Ask the user** four things (short answers, in the chat):
+   - **project name** (if they say nothing, leave the default = directory name),
+   - **what it builds** (1-2 sentences),
+   - **who it's for** (the target user),
+   - **main constraints** (language/framework/deadline — may be left empty).
+2. **Save the project.** Run in Bash:
+   \`mini init --apply --name "<name>" --what "<what>" --for-whom "<for whom>" --constraints "<constraints>"\`
+   (you can omit \`--name\` and \`--constraints\` when the user left them empty). If the command reports that the project already exists and the user **confirms** overwriting (the old phase history will be lost), repeat the command with \`--force\`. Without confirmation, stop.
+3. **Offer the next steps.** From the command output you can tell whether there is already some code in the directory (brownfield):
+   - **there is code** → offer the user \`/mini:map\` (project graph) and after it \`/mini:audit\` (codebase overview into \`.mini/codebase.md\`),
+   - **empty directory** → offer \`/mini:next\` (propose the first phase).
 
-Výstup příkazu a doporučené další kroky stručně předej uživateli v chatu.`,
+Briefly relay the command output and the recommended next steps to the user in the chat.`,
   },
   {
     name: 'next',
-    description: 'mini — navrhni a ulož další fázi projektu',
-    argumentHint: '[volitelný nápad na fázi]',
+    description: 'mini — propose and save the next project phase',
+    argumentHint: '[optional phase idea]',
     contextArgs: '$ARGUMENTS',
   },
   {
     name: 'discuss',
-    description: 'mini — prodiskutuj aktuální fázi před plánováním',
+    description: 'mini — discuss the current phase before planning',
   },
   {
     name: 'plan',
-    description: 'mini — rozmen aktuální fázi na konkrétní kroky',
+    description: 'mini — break the current phase down into concrete steps',
   },
   {
     name: 'do',
-    description: 'mini — implementuj aktuální fázi a zapiš report',
-    body: `Tohle je krok **do** workflow mini, spuštěný přímo v Claude Code. Implementuješ aktuální fázi a na konci zapíšeš report. Stav v \`.mini/\` měň jen příkazy \`mini ... --apply\`, nikdy needituj \`.mini/state.json\` ručně.
+    description: 'mini — implement the current phase and write a report',
+    body: `This is the **do** step of the mini workflow, run directly in Claude Code. You implement the current phase and write a report at the end. Change the state in \`.mini/\` only with \`mini ... --apply\` commands, never edit \`.mini/state.json\` by hand.
 
-Postupuj v tomhle pořadí:
+Proceed in this order:
 
-1. **Nastartuj fázi.** Spusť v Bash \`mini do --apply\` — fázi to označí jako rozdělanou (\`doing\`) a založí \`.mini/run/\`, aby měl průběžný zápis kroků i report kam směřovat. Spusť to **dřív**, než začneš implementovat.
-2. **Načti prompt.** Spusť \`mini context do\` a řiď se vypsanými instrukcemi (kontext projektu, kroky, formát reportu).
-3. **Implementuj.** Po každém dokončeném kroku ho **hned** označ za hotový: \`mini do --apply --step-done "<přesný název kroku>"\` (název kopíruj znak po znaku ze sekce „Kroky" v promptu).
-4. **Zapiš report.** Na konci přes Write tool ulož report do \`.mini/run/phase-{id}.md\` přesně podle formátu z promptu (YAML statusy + volný text). Teprve potom skonči.
+1. **Start the phase.** Run in Bash \`mini do --apply\` — it marks the phase as in progress (\`doing\`) and creates \`.mini/run/\`, so that the step tracking and the report have somewhere to go. Run it **before** you start implementing.
+2. **Load the prompt.** Run \`mini context do\` and follow the printed instructions (project context, steps, report format).
+3. **Implement.** After each finished step, mark it done **immediately**: \`mini do --apply --step-done "<exact step name>"\` (copy the name character by character from the "Steps" section in the prompt).
+4. **Write the report.** At the end, use the Write tool to save the report into \`.mini/run/phase-{id}.md\` exactly in the format from the prompt (YAML statuses + free text). Only then finish.
 
-Když některý krok narazí na blocker, který sám neumíš obejít, zastav se a předej řízení uživateli.`,
+If a step runs into a blocker you can't get around yourself, stop and hand control back to the user.`,
   },
   {
     name: 'done',
-    description: 'mini — lidská verifikace a posun stavu fáze',
+    description: 'mini — human verification and moving the phase state',
   },
   {
     name: 'verify',
-    description: 'mini — hloubková UI/UX kontrola fáze člověkem',
+    description: 'mini — in-depth UI/UX review of the phase by a human',
   },
   {
     name: 'status',
-    description: 'mini — přehled fází projektu (read-only)',
-    body: `Tohle je krok **status** workflow mini, spuštěný přímo v Claude Code.
+    description: 'mini — overview of the project phases (read-only)',
+    body: `This is the **status** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash \`mini status\` a jeho výstup (přehled fází projektu) předej uživateli v chatu. Je to **read-only** krok — žádný stav v \`.mini/\` neměň a nic neukládej.`,
+Run in Bash \`mini status\` and relay its output (an overview of the project phases) to the user in the chat. It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
   },
   {
     name: 'map',
-    description: 'mini — přegeneruj graf projektu (doplněk)',
-    body: `Tohle je krok **map** workflow mini, spuštěný přímo v Claude Code.
+    description: 'mini — regenerate the project graph (supplementary)',
+    body: `This is the **map** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash \`mini map\` — přegeneruje graf projektu (\`.mini/graph/\` + index \`.mini/graph.json\`) ze zdrojáků. Výsledek (cestu indexu a počet zmapovaných souborů) z výstupu předej uživateli v chatu. Stav fází v \`.mini/state.json\` to nijak nemění — graf je jen derivace ze zdrojáků.`,
+Run in Bash \`mini map\` — it regenerates the project graph (\`.mini/graph/\` + the index \`.mini/graph.json\`) from the source files. Relay the result (the index path and the number of mapped files) from the output to the user in the chat. It does not change the phase state in \`.mini/state.json\` in any way — the graph is just a derivation from the source files.`,
   },
   {
     name: 'audit',
-    description: 'mini — přehled existující codebase do .mini/codebase.md (doplněk)',
-    body: `Tohle je krok **audit** workflow mini, spuštěný přímo v Claude Code.
+    description: 'mini — overview of the existing codebase into .mini/codebase.md (supplementary)',
+    body: `This is the **audit** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash \`mini audit\` — projde existující kód a vytvoří/aktualizuje \`.mini/codebase.md\` (přehled codebase pro pozdější session). Po dokončení stručně shrň výsledek uživateli v chatu. Stav fází v \`.mini/state.json\` to nijak nemění — typicky se pouští hned po \`/mini:init\` v existujícím projektu, klidně po \`/mini:map\`.`,
+Run in Bash \`mini audit\` — it goes through the existing code and creates/updates \`.mini/codebase.md\` (a codebase overview for later sessions). When done, briefly summarize the result to the user in the chat. It does not change the phase state in \`.mini/state.json\` in any way — it is typically run right after \`/mini:init\` in an existing project, optionally after \`/mini:map\`.`,
   },
   {
     name: 'auto',
-    description: 'mini — autonomní režim: dotáhne víc fází za sebou',
+    description: 'mini — autonomous mode: completes several phases in a row',
     argumentHint: '[--max-phases N] [--yolo] [--verify] [--discuss]',
-    body: `Tohle je krok **auto** workflow mini, spuštěný přímo v Claude Code. Jsi v **autonomním režimu**: v cyklu sám dotahuješ celé fáze (next → discuss(podmíněně) → plan → do → verify(podmíněně) → done) a po dokončení jedné fáze plynule pokračuješ další, dokud nenarazíš na některou z hranic běhu (viz „Konec běhu"). Stav v \`.mini/\` měň jen příkazy \`mini ... --apply\`, nikdy needituj \`.mini/state.json\` ručně.
+    body: `This is the **auto** step of the mini workflow, run directly in Claude Code. You are in **autonomous mode**: in a loop you complete whole phases yourself (next → discuss(conditionally) → plan → do → verify(conditionally) → done) and after finishing one phase you smoothly continue with the next, until you hit one of the run boundaries (see "End of run"). Change the state in \`.mini/\` only with \`mini ... --apply\` commands, never edit \`.mini/state.json\` by hand.
 
-## Argumenty běhu
-Uživatel spustil příkaz s argumenty: \`$ARGUMENTS\`. Vyparsuj z nich (tolerantně, na pořadí nezáleží):
-- **\`--max-phases N\`** — kolik fází nejvýš dotáhnout za sebou. Když chybí (nebo nejde přečíst), použij **default 1**.
-- **\`--yolo\`** — plně bezobslužný režim (viz „Potvrzování příkazů"). Když chybí, běž v normálním režimu.
-- **\`--verify\`** — vynutí krok **verify** (hloubková UI/UX kontrola člověkem) v **každé** fázi běhu, i kdyby ti nepřišla jako UI/UX. Bez něj verify spouštíš jen podmíněně (viz krok 5 cyklu).
-- **\`--discuss\`** — vynutí krok **discuss** v **každé** fázi běhu, i kdyby ti přišla přímočará. Bez něj discuss spouštíš jen podmíněně (viz krok 2 cyklu).
+## Run arguments
+The user ran the command with arguments: \`$ARGUMENTS\`. Parse from them (leniently, order doesn't matter):
+- **\`--max-phases N\`** — how many phases at most to complete in a row. When missing (or unreadable), use the **default 1**.
+- **\`--yolo\`** — fully unattended mode (see "Confirming commands"). When missing, run in normal mode.
+- **\`--verify\`** — forces the **verify** step (in-depth UI/UX review by a human) in **every** phase of the run, even if it doesn't seem UI/UX to you. Without it you run verify only conditionally (see step 5 of the cycle).
+- **\`--discuss\`** — forces the **discuss** step in **every** phase of the run, even if it seems straightforward to you. Without it you run discuss only conditionally (see step 2 of the cycle).
 
-Na začátku uživateli **jednou** krátce oznam, kolik fází poběžíš a které z přepínačů \`--yolo\` / \`--verify\` / \`--discuss\` jsou zapnuté.
+At the start, **once** briefly announce to the user how many phases you'll run and which of the \`--yolo\` / \`--verify\` / \`--discuss\` switches are on.
 
-## Cyklus jedné fáze
-Pro každou fázi projdi tyto kroky po sobě (další spusť až po dokončení předchozího):
+## The cycle of one phase
+For each phase go through these steps in sequence (start the next one only after finishing the previous):
 
-1. **next (zastav se a zeptej).** Pokud zrovna **není** rozdělaná žádná fáze (po předchozím \`done\`, nebo na začátku, když je poslední fáze hotová), navrhni další. Spusť \`mini context next\` a řiď se promptem, ale **napřed se zastav a vezmi od uživatele nápad/podklad** na další fázi (autonomní režim fáze nevymýšlí naslepo). Když \`mini context next\` / tvůj návrh dojde k závěru, že **projekt je hotový** (TITLE: -), cyklus čistě ukonči (viz „Konec běhu"). Je-li už fáze rozdělaná (\`proposed\`/\`planned\`/\`doing\`), tenhle krok přeskoč.
-2. **discuss (podmíněně / vynuceně, zastav se a zeptej).** Spusť \`mini context discuss\`, když je fáze složitá na rozhodnutí (nejednoznačný cíl, víc směrů, potřeba něco vyjasnit) **a** diskuse pro ni ještě neproběhla, **nebo** vždy, když běh dostal \`--discuss\`; pak interaktivně seber vstup od uživatele a ulož poznámky. U přímočaré fáze bez \`--discuss\` krok **přeskoč**.
-3. **plan.** Spusť \`mini context plan\` a rozmen fázi na kroky; ulož přes \`mini plan --apply\`. Když už fáze kroky má, přeskoč.
-4. **do (tiše).** Spusť \`mini do --apply\` a pak \`mini context do\`; implementuj fázi podle instrukcí. **Nevypisuj editační výpisy** — nepřevyprávěj každou změnu souboru do chatu, jen krátce hlas postup po krocích. Po každém hotovém kroku ho označ: \`mini do --apply --step-done "<přesný název>"\`. Na konci zapiš report do \`.mini/run/phase-{id}.md\`.
-5. **verify (podmíněně, zastav se a nech ověřit).** Tenhle krok spusť, když je fáze **UI/UX povahy** — má viditelný výstup, který posoudí jen člověk (vzhled, CLI/obrazovka, UX flow, srozumitelnost); posuď to z cíle fáze, kroků a reportu. **Nebo** ho spusť vždy, když běh dostal \`--verify\`. U čistě vnitřní fáze (refaktor, parser, build, testy bez viditelného výstupu) a bez \`--verify\` verify **přeskoč**. Když běží: nech report z \`do\` zapsaný, spusť \`mini context verify\` a veď člověka hloubkovou UI/UX kontrolou podle promptu (ptej se po jednom). Nálezy se zapíšou do reportu (prompt tě navede), takže se přes report dostanou i do paměti. **Najdou-li se problémy, fázi nezavírej** — vrať se do \`do\`, oprav je ještě v téhle fázi, report aktualizuj a teprve pak pokračuj na \`done\`. Verify je řízený člověkem — **auto ho neobchází**.
-6. **done.** Spusť \`mini context done\` a posuň stav; finální uložení \`mini done --apply\`. U **bodů k ručnímu ověření (verify)** se **zastav a nech uživatele ověřit** — auto verify neobchází.
+1. **next (stop and ask).** If there is currently **no** phase in progress (after a previous \`done\`, or at the start when the last phase is finished), propose the next one. Run \`mini context next\` and follow the prompt, but **first stop and take an idea/input from the user** for the next phase (autonomous mode does not invent phases blindly). When \`mini context next\` / your proposal concludes that the **project is finished** (TITLE: -), end the cycle cleanly (see "End of run"). If a phase is already in progress (\`proposed\`/\`planned\`/\`doing\`), skip this step.
+2. **discuss (conditionally / forced, stop and ask).** Run \`mini context discuss\` when the phase is hard to decide on (an ambiguous goal, multiple directions, something to clarify) **and** a discussion hasn't happened for it yet, **or** always when the run got \`--discuss\`; then interactively gather input from the user and save the notes. For a straightforward phase without \`--discuss\`, **skip** the step.
+3. **plan.** Run \`mini context plan\` and break the phase into steps; save via \`mini plan --apply\`. If the phase already has steps, skip.
+4. **do (quietly).** Run \`mini do --apply\` and then \`mini context do\`; implement the phase per the instructions. **Don't print edit listings** — don't retell every file change into the chat, just briefly report progress step by step. After each finished step, mark it: \`mini do --apply --step-done "<exact name>"\`. At the end, write the report into \`.mini/run/phase-{id}.md\`.
+5. **verify (conditionally, stop and let it be reviewed).** Run this step when the phase is **UI/UX in nature** — it has a visible output only a human can judge (appearance, CLI/screen, UX flow, clarity); judge that from the phase goal, the steps and the report. **Or** run it always when the run got \`--verify\`. For a purely internal phase (refactor, parser, build, tests with no visible output) and without \`--verify\`, **skip** verify. When it runs: leave the report from \`do\` written, run \`mini context verify\` and take the human through an in-depth UI/UX review per the prompt (ask one at a time). The findings are written into the report (the prompt guides you), so they reach the memory through the report too. **If problems are found, don't close the phase** — go back to \`do\`, fix them within this phase, update the report and only then continue to \`done\`. Verify is human-driven — **auto does not bypass it**.
+6. **done.** Run \`mini context done\` and move the state; the final save is \`mini done --apply\`. For **items for manual verification (verify)**, **stop and let the user verify** — auto does not bypass verify.
 
-Mezi kroky i mezi fázemi uživateli krátce hlas, kam ses dostal (bez zaplavení chatu).
+Between steps and between phases, briefly report to the user where you got (without flooding the chat).
 
-## Potvrzování příkazů
-V **normálním** režimu necháváš potvrzování bash příkazů na uživateli (řídí ho permission mode session, příp. allowlist v \`.claude/settings.json\`). V režimu **\`--yolo\`** nemáš uživatele zatěžovat dotazy — to ale funguje jen tehdy, když session **běží v acceptEdits** (spusť Claude Code s \`--permission-mode acceptEdits\`, nebo to v session přepni). Slash command sám potvrzování nevypne. Když \`--yolo\` dostaneš, ale session v acceptEdits není, jednou na to upozorni a pokračuj normálně.
+## Confirming commands
+In **normal** mode you leave confirming bash commands to the user (it's governed by the session's permission mode, or an allowlist in \`.claude/settings.json\`). In **\`--yolo\`** mode you shouldn't burden the user with prompts — but that only works when the session **runs in acceptEdits** (start Claude Code with \`--permission-mode acceptEdits\`, or switch it within the session). The slash command itself does not turn off confirmation. When you get \`--yolo\` but the session isn't in acceptEdits, point it out once and continue normally.
 
-## Stop háčky (kooperativní zastavení)
-Na těchto **kontrolních bodech** ověř, jestli nemáš čistě skončit (když existuje soubor \`.mini/STOP\`, dokonči rozdělaný krok, zapiš report a skonči s hlášením „Zastaveno na žádost"; jinak pokračuj). Signál zakládá uživatel z druhého terminálu příkazem \`mini stop\` (zruší ho \`mini stop --clear\`) — ty soubor jen čteš na těchto bodech:
-- **mezi kroky cyklu** — před každým dalším \`mini context …\` voláním,
-- **po každém hotovém kroku v \`do\`** — hned po \`mini do --apply --step-done "…"\`.
-(Hranice celé fáze je v tom automaticky obsažená.) Stop je nutně kooperativní — zprávu napsanou do téhle session bys během práce stejně nepřečetl; tvrdé přerušení uprostřed kroku je na Esc/Ctrl+C.
+## Stop hooks (cooperative stopping)
+At these **checkpoints** check whether you should finish cleanly (when the file \`.mini/STOP\` exists, finish the step in progress, write the report and finish with the message "Stopped on request"; otherwise continue). The signal is created by the user from another terminal with the \`mini stop\` command (cleared by \`mini stop --clear\`) — you only read the file at these points:
+- **between cycle steps** — before each further \`mini context …\` call,
+- **after each finished step in \`do\`** — right after \`mini do --apply --step-done "…"\`.
+(The whole-phase boundary is automatically included in that.) Stopping is necessarily cooperative — you wouldn't read a message written into this session during work anyway; a hard interruption mid-step is on Esc/Ctrl+C.
 
-## Konec běhu
-Cyklus ukonči (a krátce shrň, co se stalo), když nastane kterákoli z hranic:
-- dotáhl jsi **\`--max-phases\`** fází,
-- \`next\` usoudil, že **projekt je hotový**,
-- narazíš na **blocker**, který sám neumíš obejít — zastav se a předej řízení uživateli (zbytek nedotahuj na sílu),
-- zafungoval **stop háček**.`,
+## End of run
+End the cycle (and briefly summarize what happened) when any of the boundaries occurs:
+- you completed **\`--max-phases\`** phases,
+- \`next\` concluded that the **project is finished**,
+- you hit a **blocker** you can't get around yourself — stop and hand control to the user (don't force the rest),
+- a **stop hook** fired.`,
   },
 ];
 
@@ -163,9 +163,9 @@ export function renderCommandMd(def: CommandDef): string {
     : `mini context ${def.name}`;
   const body =
     def.body ??
-    `Tohle je krok **${def.name}** workflow mini, spuštěný přímo v Claude Code.
+    `This is the **${def.name}** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash \`${contextCall}\` a postupuj **přesně** podle vypsaných instrukcí. Prompt obsahuje aktuální kontext projektu i to, jak na konci uložit stav (přes \`mini ... --apply\`). Stav v \`.mini/\` měň jen těmi příkazy — nikdy needituj \`.mini/state.json\` ručně.`;
+Run in Bash \`${contextCall}\` and follow the printed instructions **exactly**. The prompt contains the current project context as well as how to save the state at the end (via \`mini ... --apply\`). Change the state in \`.mini/\` only with those commands — never edit \`.mini/state.json\` by hand.`;
 
   return `---
 ${front.join('\n')}

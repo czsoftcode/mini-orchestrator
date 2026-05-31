@@ -92,7 +92,7 @@ describe('installCommands', () => {
       expect(md).toContain(`mini context ${name}`);
     }
     // discuss je podmíněný, ne bezpodmínečný
-    expect(md).toMatch(/podmín|jen když|pouze/i);
+    expect(md).toMatch(/condition|only when|only if/i);
     // done se ukládá bez automatického push na remote
     expect(md).toContain('mini done --apply');
     expect(md).not.toContain('mini done --apply --push');
@@ -112,9 +112,9 @@ describe('installCommands', () => {
     // default 1 fáze, když --max-phases chybí
     expect(md).toMatch(/default 1|default.*1/i);
     // autonomní běh přes víc fází (ne jen jedna fáze)
-    expect(md).toMatch(/autonomn/i);
+    expect(md).toMatch(/autonom/i);
     // tichý běh — žádné editační výpisy
-    expect(md).toMatch(/editačn[íi] výpis|nevypisuj/i);
+    expect(md).toMatch(/edit listing|don't print|do not print/i);
     // detekce hotového projektu
     expect(md).toContain('TITLE: -');
   });
@@ -127,7 +127,7 @@ describe('installCommands', () => {
     expect(md).toContain('--verify');
     // krok je popsaný jako UI/UX a podmíněný (přeskočí se u vnitřní fáze)
     expect(md).toMatch(/UI\/UX/);
-    expect(md).toMatch(/přeskoč/i);
+    expect(md).toMatch(/skip/i);
     // verify předchází done v textu cyklu
     expect(md.indexOf('mini context verify')).toBeLessThan(md.indexOf('mini context done'));
   });
@@ -139,7 +139,7 @@ describe('installCommands', () => {
     expect(md).toContain('--discuss');
     // krok discuss zůstává podmíněný, pokud --discuss není
     expect(md).toMatch(/discuss/i);
-    expect(md).toMatch(/přeskoč/i);
+    expect(md).toMatch(/skip/i);
   });
 
   it('auto command popisuje stop háčky (kontrolní body + mini stop)', async () => {
@@ -148,7 +148,7 @@ describe('installCommands', () => {
     // stop flag soubor + příkaz, kterým ho uživatel zakládá + obě granularity kontroly
     expect(md).toContain('.mini/STOP');
     expect(md).toMatch(/mini stop/);
-    expect(md).toMatch(/mezi kroky cyklu/i);
+    expect(md).toMatch(/between cycle steps/i);
     expect(md).toMatch(/step-done/);
   });
 

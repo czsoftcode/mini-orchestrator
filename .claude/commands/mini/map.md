@@ -1,7 +1,7 @@
 ---
-description: mini — přegeneruj graf projektu (doplněk)
+description: mini — regenerate the project graph (supplementary)
 ---
 
-Tohle je krok **map** workflow mini, spuštěný přímo v Claude Code.
+This is the **map** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash `mini map` — přegeneruje graf projektu (`.mini/graph/` + index `.mini/graph.json`) ze zdrojáků. Výsledek (cestu indexu a počet zmapovaných souborů) z výstupu předej uživateli v chatu. Stav fází v `.mini/state.json` to nijak nemění — graf je jen derivace ze zdrojáků.
+Run in Bash `mini map` — it regenerates the project graph (`.mini/graph/` + the index `.mini/graph.json`) from the source files. Relay the result (the index path and the number of mapped files) from the output to the user in the chat. It does not change the phase state in `.mini/state.json` in any way — the graph is just a derivation from the source files.

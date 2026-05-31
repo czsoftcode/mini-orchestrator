@@ -1,7 +1,7 @@
 ---
-description: mini — hloubková UI/UX kontrola fáze člověkem
+description: mini — in-depth UI/UX review of the phase by a human
 ---
 
-Tohle je krok **verify** workflow mini, spuštěný přímo v Claude Code.
+This is the **verify** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash `mini context verify` a postupuj **přesně** podle vypsaných instrukcí. Prompt obsahuje aktuální kontext projektu i to, jak na konci uložit stav (přes `mini ... --apply`). Stav v `.mini/` měň jen těmi příkazy — nikdy needituj `.mini/state.json` ručně.
+Run in Bash `mini context verify` and follow the printed instructions **exactly**. The prompt contains the current project context as well as how to save the state at the end (via `mini ... --apply`). Change the state in `.mini/` only with those commands — never edit `.mini/state.json` by hand.

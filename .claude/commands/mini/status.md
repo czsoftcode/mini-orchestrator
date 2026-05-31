@@ -1,7 +1,7 @@
 ---
-description: mini — přehled fází projektu (read-only)
+description: mini — overview of the project phases (read-only)
 ---
 
-Tohle je krok **status** workflow mini, spuštěný přímo v Claude Code.
+This is the **status** step of the mini workflow, run directly in Claude Code.
 
-Spusť v Bash `mini status` a jeho výstup (přehled fází projektu) předej uživateli v chatu. Je to **read-only** krok — žádný stav v `.mini/` neměň a nic neukládej.
+Run in Bash `mini status` and relay its output (an overview of the project phases) to the user in the chat. It's a **read-only** step — change no state in `.mini/` and save nothing.

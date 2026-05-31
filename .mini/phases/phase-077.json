@@ -1,0 +1,34 @@
+{
+  "id": 77,
+  "title": "Překlad slash-command .md do AJ",
+  "goal": "Přeložit do angličtiny popisy a těla commandů v install-commands.ts (vč. výchozí šablony těla), aktualizovat install-commands.test.ts a přegenerovat nainstalované .claude/commands/mini/*.md; npm test a build zelené.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přeložit COMMAND_DEFS + výchozí tělo",
+      "status": "done",
+      "detail": "V install-commands.ts do AJ description, vlastní těla (init/do/status/map/audit/auto), argumentHint ([volitelný nápad na fázi]→[optional phase idea]) i default šablonu těla. Příkazy/flagy/cesty beze změny."
+    },
+    {
+      "title": "Upravit install-commands.test.ts",
+      "status": "done",
+      "detail": "Přepsat české toMatch regexy na AJ (skip, conditional, autonomous, edit-listing/print, between cycle steps); ostatní aserce (mini context, $ARGUMENTS, flags, description:) ponechat."
+    },
+    {
+      "title": "Přegenerovat .claude/commands/mini/*.md",
+      "status": "done",
+      "detail": "npm run build + mini install-commands; ověřit anglický obsah a idempotenci (druhý běh beze změny)."
+    },
+    {
+      "title": "Doplnit slovníček + ověřit",
+      "status": "done",
+      "detail": "Termíny do docs/i18n-glossary.md; celé npm test + build zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T14:13:32.772Z",
+  "completedAt": "2026-05-31T14:26:47.663Z",
+  "autoCommit": {
+    "preSha": "fcc4fa06f15725b645f6e7877eee712a18c96b4d",
+    "subject": "Fáze 77: Překlad slash-command .md do AJ"
+  }
+}

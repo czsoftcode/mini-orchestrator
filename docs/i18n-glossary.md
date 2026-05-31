@@ -110,6 +110,28 @@ přejmenuje tyhle nadpisy v promptu, musí upravit i matchery + jejich test.
   cizích nástrojů (`completed`, `in_progress`, `pending`, `cancelled`, …).
 - Identifikátory v kódu (názvy funkcí, typů, klíčů stavu jako `done`/`doing`).
 
+### Slash-command `.md` (install-commands) — text pro Claude, přeložen
+
+Popisy (`description:`) a těla commandů `.claude/commands/mini/*.md` se generují
+z `src/commands/install-commands.ts`. Přeloženo do AJ vč. výchozí šablony těla.
+Beze změny zůstávají: názvy příkazů a flagy (`mini context …`, `mini … --apply`,
+`--max-phases`, `--yolo`, `--verify`, `--discuss`, `--step-done`), `$ARGUMENTS`,
+`TITLE: -`, cesty (`.mini/STOP`, `.mini/run/`). **Logy CLI** v `installCommands`
+(`Vytvořeno`/`Aktualizováno`/`Hotovo`/…) zůstávají **česky** — to je UI projektu.
+
+| Česky                          | Anglicky                       |
+| ------------------------------ | ------------------------------ |
+| Postupuj v tomhle pořadí       | Proceed in this order          |
+| autonomní režim                | autonomous mode                |
+| Argumenty běhu                 | Run arguments                  |
+| Cyklus jedné fáze              | The cycle of one phase         |
+| Potvrzování příkazů            | Confirming commands            |
+| Stop háčky                     | Stop hooks                     |
+| Konec běhu                     | End of run                     |
+| přeskoč                        | skip                           |
+| podmíněně                      | conditionally                  |
+| mezi kroky cyklu               | between cycle steps            |
+
 ## Stav migrace
 
 Překlad promptů je **dokončen** (fáze 73–76) — všechny buildery v `src/prompts/`

@@ -27,6 +27,10 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
   poznámek i sekce „Verify findings" jsou anglicky a summarizer `last-memory` je
   rozpoznává (česká paměť z dřívějška se chytá dál). Sdílený slovníček je
   v `docs/i18n-glossary.md`.
+- **Slash-command soubory `/mini:*` přeloženy do angličtiny.** Popisy i těla
+  generovaných `.claude/commands/mini/*.md` (zdroj `install-commands.ts`) jsou
+  nově anglicky vč. autonomního `auto`. Příkazy, flagy a `$ARGUMENTS` beze změny;
+  logy CLI zůstávají české.
 - **`/mini:auto --discuss`** — flag vynutí krok `discuss` v každé fázi běhu
   (analogicky k `--verify`). Bez něj se `discuss` spouští jen podmíněně u složitých fází.
 - **Verify v autonomním `/mini:auto`** — cyklus teď mezi `do` a `done` spustí krok

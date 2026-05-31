@@ -1,14 +1,14 @@
 ---
-description: mini — implementuj aktuální fázi a zapiš report
+description: mini — implement the current phase and write a report
 ---
 
-Tohle je krok **do** workflow mini, spuštěný přímo v Claude Code. Implementuješ aktuální fázi a na konci zapíšeš report. Stav v `.mini/` měň jen příkazy `mini ... --apply`, nikdy needituj `.mini/state.json` ručně.
+This is the **do** step of the mini workflow, run directly in Claude Code. You implement the current phase and write a report at the end. Change the state in `.mini/` only with `mini ... --apply` commands, never edit `.mini/state.json` by hand.
 
-Postupuj v tomhle pořadí:
+Proceed in this order:
 
-1. **Nastartuj fázi.** Spusť v Bash `mini do --apply` — fázi to označí jako rozdělanou (`doing`) a založí `.mini/run/`, aby měl průběžný zápis kroků i report kam směřovat. Spusť to **dřív**, než začneš implementovat.
-2. **Načti prompt.** Spusť `mini context do` a řiď se vypsanými instrukcemi (kontext projektu, kroky, formát reportu).
-3. **Implementuj.** Po každém dokončeném kroku ho **hned** označ za hotový: `mini do --apply --step-done "<přesný název kroku>"` (název kopíruj znak po znaku ze sekce „Kroky" v promptu).
-4. **Zapiš report.** Na konci přes Write tool ulož report do `.mini/run/phase-{id}.md` přesně podle formátu z promptu (YAML statusy + volný text). Teprve potom skonči.
+1. **Start the phase.** Run in Bash `mini do --apply` — it marks the phase as in progress (`doing`) and creates `.mini/run/`, so that the step tracking and the report have somewhere to go. Run it **before** you start implementing.
+2. **Load the prompt.** Run `mini context do` and follow the printed instructions (project context, steps, report format).
+3. **Implement.** After each finished step, mark it done **immediately**: `mini do --apply --step-done "<exact step name>"` (copy the name character by character from the "Steps" section in the prompt).
+4. **Write the report.** At the end, use the Write tool to save the report into `.mini/run/phase-{id}.md` exactly in the format from the prompt (YAML statuses + free text). Only then finish.
 
-Když některý krok narazí na blocker, který sám neumíš obejít, zastav se a předej řízení uživateli.
+If a step runs into a blocker you can't get around yourself, stop and hand control back to the user.
