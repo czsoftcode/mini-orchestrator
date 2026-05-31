@@ -3,172 +3,210 @@ import { buildPhaseMemoryMarkdown, summarizeMemoryForNext } from './writeMemory.
 import type { Phase } from '../state/types.js';
 
 describe('buildPhaseMemoryMarkdown', () => {
-  it('složí title, cíl, kroky se statusy, poznámku a auto-commit', () => {
+  it('assembles the title, goal, steps with statuses, note and auto-commit', () => {
     const phase: Phase = {
       id: 17,
-      title: 'Paměť fáze bez Claude API',
-      goal: 'memory se generuje v TS',
+      title: 'Phase memory without the Claude API',
+      goal: 'memory is generated in TS',
       status: 'done',
       steps: [
-        { title: 'přečíst soubory', status: 'done' },
-        { title: 'sestavit markdown', status: 'doing' },
-        { title: 'něco odloženého', status: 'skipped' },
-        { title: 'zbytek', status: 'todo' },
+        { title: 'read the files', status: 'done' },
+        { title: 'assemble the markdown', status: 'doing' },
+        { title: 'something skipped', status: 'skipped' },
+        { title: 'the rest', status: 'todo' },
       ],
-      humanNotes: 'Claude jen v explicitním režimu.',
-      autoCommit: { preSha: 'aaa', sha: 'bbb123', subject: 'Fáze 17: paměť v TS' },
+      humanNotes: 'Claude only in the explicit mode.',
+      autoCommit: { preSha: 'aaa', sha: 'bbb123', subject: 'Phase 17: memory in TS' },
     };
 
     const out = buildPhaseMemoryMarkdown(phase, '', '');
 
-    expect(out).toContain('# Fáze 17 — Paměť fáze bez Claude API');
-    expect(out).toContain('**Cíl:** memory se generuje v TS');
-    expect(out).toContain('- [hotovo] přečíst soubory');
-    expect(out).toContain('- [dělá se] sestavit markdown');
-    expect(out).toContain('- [odloženo] něco odloženého');
-    expect(out).toContain('- [čeká] zbytek');
-    expect(out).toContain('## Poznámka uživatele');
-    expect(out).toContain('Claude jen v explicitním režimu.');
+    expect(out).toContain('# Phase 17 — Phase memory without the Claude API');
+    expect(out).toContain('**Goal:** memory is generated in TS');
+    expect(out).toContain('- [done] read the files');
+    expect(out).toContain('- [doing] assemble the markdown');
+    expect(out).toContain('- [skipped] something skipped');
+    expect(out).toContain('- [todo] the rest');
+    expect(out).toContain("## User's note");
+    expect(out).toContain('Claude only in the explicit mode.');
     expect(out).toContain('## Auto-commit');
-    expect(out).toContain('- Fáze 17: paměť v TS (`bbb123`)');
+    expect(out).toContain('- Phase 17: memory in TS (`bbb123`)');
     expect(out.endsWith('\n')).toBe(true);
   });
 
-  it('auto-commit bez vlastního sha (nový tvar) ukáže jen subject', () => {
+  it('shows only the subject for an auto-commit without its own sha (new shape)', () => {
     const phase: Phase = {
       id: 70,
-      title: 'Done commitne všechny změny',
+      title: 'Done commits all changes',
       status: 'done',
-      // Nové fáze ukládají autoCommit bez `sha` (commit nese state.json se záznamem).
-      autoCommit: { preSha: 'aaa', subject: 'Fáze 70: Done commitne všechny změny' },
+      // New phases store autoCommit without `sha` (the commit carries state.json with the record).
+      autoCommit: { preSha: 'aaa', subject: 'Phase 70: Done commits all changes' },
     };
 
     const out = buildPhaseMemoryMarkdown(phase, '', '');
 
     expect(out).toContain('## Auto-commit');
-    expect(out).toContain('- Fáze 70: Done commitne všechny změny');
+    expect(out).toContain('- Phase 70: Done commits all changes');
     expect(out).not.toContain('`');
   });
 
-  it('vloží discuss a run obsah doslova jako sekce', () => {
-    const phase: Phase = { id: 3, title: 'Krátká', status: 'done' };
+  it('inserts the discuss and run content verbatim as sections', () => {
+    const phase: Phase = { id: 3, title: 'Short', status: 'done' };
 
     const out = buildPhaseMemoryMarkdown(
       phase,
-      '# Diskuse fáze 3\nzáměr je takový a makový',
-      '---\nphase: 3\nverdict: done\n---\nvše hotovo',
+      '# Discussion of phase 3\nthe intent is such and such',
+      '---\nphase: 3\nverdict: done\n---\nall done',
     );
 
-    expect(out).toContain('## Diskuse');
-    expect(out).toContain('záměr je takový a makový');
+    expect(out).toContain('## Discussion');
+    expect(out).toContain('the intent is such and such');
     expect(out).toContain('## Run report');
-    expect(out).toContain('vše hotovo');
+    expect(out).toContain('all done');
   });
 
-  it('vynechá volitelné sekce, když nejsou data', () => {
-    const phase: Phase = { id: 1, title: 'Holá fáze', status: 'done' };
+  it('omits optional sections when there is no data', () => {
+    const phase: Phase = { id: 1, title: 'Bare phase', status: 'done' };
 
     const out = buildPhaseMemoryMarkdown(phase, '   ', '\n\n');
 
-    expect(out).toContain('# Fáze 1 — Holá fáze');
-    expect(out).toContain('**Cíl:** (nezadán)');
-    expect(out).not.toContain('## Kroky');
-    expect(out).not.toContain('## Poznámka uživatele');
+    expect(out).toContain('# Phase 1 — Bare phase');
+    expect(out).toContain('**Goal:** (not specified)');
+    expect(out).not.toContain('## Steps');
+    expect(out).not.toContain("## User's note");
     expect(out).not.toContain('## Auto-commit');
-    expect(out).not.toContain('## Diskuse');
+    expect(out).not.toContain('## Discussion');
     expect(out).not.toContain('## Run report');
   });
 });
 
 describe('summarizeMemoryForNext', () => {
-  // Reprezentativní plná koláž: hlava + Diskuse (se Záměrem, Rozhodnutími a
-  // Pozor na) + Run report (s mechanickým Ověřením a Nálezem pro další fázi).
+  // A representative full collage: head + Discussion (with Intent, Decisions and
+  // Watch out for) + Run report (with a mechanical Verification and a Finding for the next phase).
   const phase: Phase = {
     id: 38,
-    title: 'Žebříček příkazů podle tokenů',
-    goal: 'změřit token cenu promptů',
+    title: 'Command ranking by tokens',
+    goal: 'measure the token cost of prompts',
     status: 'done',
-    steps: [{ title: 'měřicí jádro', status: 'done' }],
-    humanNotes: 'poznámka od uživatele',
-    autoCommit: { preSha: 'aaa', sha: 'cdd73ff', subject: 'Fáze 38: žebříček' },
+    steps: [{ title: 'measuring core', status: 'done' }],
+    humanNotes: 'a note from the user',
+    autoCommit: { preSha: 'aaa', sha: 'cdd73ff', subject: 'Phase 38: ranking' },
   };
   const discuss = [
-    '# Fáze 38 — diskuse',
+    '# Phase 38 — discussion',
     '## Intent',
-    'změřit token cenu a seřadit příkazy',
+    'measure token cost and sort the commands',
     '## Key decisions',
-    'vkládaný kontext = součet bloků',
+    'inserted context = sum of blocks',
     '## Watch out for',
-    '- done má větvenou šablonu, pozor na první běh',
+    '- done has a branched template, watch out for the first run',
   ].join('\n');
   const run = [
     '---',
     'phase: 38',
     'verdict: done',
     '---',
-    '# Fáze 38 — report',
+    '# Phase 38 — report',
     '## What was done',
-    'napsali jsme měřič tokenů',
+    'we wrote a token meter',
     '## Verification',
-    'npm test zelené, 433 testů',
+    'npm test green, 433 tests',
     '## Findings for next phase',
-    'next je drahý kvůli celé vložené last-memory (63 %)',
+    'next is expensive due to the whole inserted last-memory (63%)',
   ].join('\n');
   const full = buildPhaseMemoryMarkdown(phase, discuss, run);
 
-  it('ponechá hlavu fáze (hlavička, cíl, kroky, poznámka, auto-commit)', () => {
+  it('keeps the phase head (header, goal, steps, note, auto-commit)', () => {
     const out = summarizeMemoryForNext(full);
-    expect(out).toContain('# Fáze 38 — Žebříček příkazů podle tokenů');
-    expect(out).toContain('**Cíl:** změřit token cenu promptů');
-    expect(out).toContain('## Kroky');
-    expect(out).toContain('- [hotovo] měřicí jádro');
-    expect(out).toContain('## Poznámka uživatele');
+    expect(out).toContain('# Phase 38 — Command ranking by tokens');
+    expect(out).toContain('**Goal:** measure the token cost of prompts');
+    expect(out).toContain('## Steps');
+    expect(out).toContain('- [done] measuring core');
+    expect(out).toContain("## User's note");
     expect(out).toContain('## Auto-commit');
     expect(out).toContain('cdd73ff');
   });
 
-  it('vytáhne „Watch out for" z diskuse a „Findings for next phase" z run reportu', () => {
+  it('extracts "Watch out for" from the discussion and "Findings for next phase" from the run report', () => {
     const out = summarizeMemoryForNext(full);
     expect(out).toContain('## Watch out for');
-    expect(out).toContain('done má větvenou šablonu');
+    expect(out).toContain('done has a branched template');
     expect(out).toContain('## Findings for next phase');
-    expect(out).toContain('next je drahý kvůli celé vložené last-memory');
+    expect(out).toContain('next is expensive due to the whole inserted last-memory');
   });
 
-  it('zahodí Intent, Key decisions, mechanické What was done / Verification i kotvy bloků', () => {
+  it('drops Intent, Key decisions, the mechanical What was done / Verification and the block anchors', () => {
     const out = summarizeMemoryForNext(full);
     expect(out).not.toContain('## Intent');
-    expect(out).not.toContain('změřit token cenu a seřadit');
+    expect(out).not.toContain('measure token cost and sort');
     expect(out).not.toContain('## Key decisions');
-    expect(out).not.toContain('vkládaný kontext = součet bloků');
+    expect(out).not.toContain('inserted context = sum of blocks');
     expect(out).not.toContain('## What was done');
-    expect(out).not.toContain('napsali jsme měřič');
+    expect(out).not.toContain('we wrote a token meter');
     expect(out).not.toContain('## Verification');
-    expect(out).not.toContain('433 testů');
-    expect(out).not.toContain('## Diskuse');
+    expect(out).not.toContain('433 tests');
+    expect(out).not.toContain('## Discussion');
     expect(out).not.toContain('## Run report');
   });
 
-  it('je výrazně kratší než plná koláž', () => {
+  it('is significantly shorter than the full collage', () => {
     const out = summarizeMemoryForNext(full);
     expect(out.length).toBeLessThan(full.length);
   });
 
-  it('bez známých kotev ořízne na tvrdý limit délky', () => {
-    const long = Array.from({ length: 60 }, (_, i) => `řádek ${i} ${'x'.repeat(50)}`).join('\n');
+  it('caps to the hard length limit without known anchors', () => {
+    const long = Array.from({ length: 60 }, (_, i) => `line ${i} ${'x'.repeat(50)}`).join('\n');
     expect(long.length).toBeGreaterThan(2000);
 
     const out = summarizeMemoryForNext(long);
 
-    expect(out).toContain('…(zkráceno)');
+    expect(out).toContain('…(truncated)');
     expect(out.length).toBeLessThan(2100);
     expect(out.endsWith('\n')).toBe(true);
   });
 
-  it('krátkou paměť bez kotev vrátí beze změny obsahu', () => {
-    const out = summarizeMemoryForNext('# Fáze 1 — Holá\n\n**Cíl:** něco');
-    expect(out).toContain('# Fáze 1 — Holá');
-    expect(out).toContain('**Cíl:** něco');
-    expect(out).not.toContain('…(zkráceno)');
+  it('returns short memory without anchors unchanged in content', () => {
+    const out = summarizeMemoryForNext('# Phase 1 — Bare\n\n**Goal:** something');
+    expect(out).toContain('# Phase 1 — Bare');
+    expect(out).toContain('**Goal:** something');
+    expect(out).not.toContain('…(truncated)');
+  });
+
+  it('still parses legacy Czech memory (## Diskuse + ## Pozor na anchors)', () => {
+    // Memory written before the translation: Czech section headings. The consumer
+    // must keep reading them via the legacy alias + the bilingual matchers.
+    const legacy = [
+      '# Fáze 12 — Stará fáze',
+      '',
+      '**Cíl:** něco starého',
+      '',
+      '## Diskuse',
+      '## Záměr',
+      'doslovný záměr k zahození',
+      '## Pozor na',
+      '- legacy pozor bod, který se má vytáhnout',
+      '',
+      '## Run report',
+      '## Co se udělalo',
+      'mechanický popis k zahození',
+      '## Nález pro další fázi',
+      'legacy nález k vytažení',
+    ].join('\n');
+
+    const out = summarizeMemoryForNext(legacy);
+
+    // head stays
+    expect(out).toContain('# Fáze 12 — Stará fáze');
+    expect(out).toContain('**Cíl:** něco starého');
+    // watch-out + finding sub-sections extracted
+    expect(out).toContain('## Pozor na');
+    expect(out).toContain('legacy pozor bod');
+    expect(out).toContain('## Nález pro další fázi');
+    expect(out).toContain('legacy nález k vytažení');
+    // block anchors and verbatim intent/what-was-done dropped
+    expect(out).not.toContain('## Diskuse');
+    expect(out).not.toContain('doslovný záměr');
+    expect(out).not.toContain('## Run report');
+    expect(out).not.toContain('mechanický popis');
   });
 });

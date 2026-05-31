@@ -8,6 +8,12 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
 
 ### Added
 
+- **Paměť fáze (`.mini/memory/phase-XXX.md`) se generuje anglicky.** Generátor
+  `buildPhaseMemoryMarkdown` píše nově anglické nadpisy (`# Phase`, `**Goal:**`,
+  `## Steps`, `## User's note`, `## Auto-commit`, `## Discussion`) a stavy kroků
+  `done/doing/todo/skipped`. Shrnutí pro prompt `next` (`summarizeMemoryForNext`)
+  čte anglickou i **starší českou** paměť (existující archiv se nerozbije).
+  `phase-XXX.json` beze změny.
 - **Hlášky utility příkazů přeloženy do angličtiny.** Runtime výstupy příkazů
   `mini status / undo / init / import-gsd / model / stop / map / audit / update /
   install-commands / migrate / migrate --renumber` jsou nově anglicky (labely

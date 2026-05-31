@@ -397,6 +397,11 @@
       "id": 79,
       "title": "Anglické hlášky utility příkazů",
       "status": "done"
+    },
+    {
+      "id": 80,
+      "title": "Anglická paměť fáze (writeMemory)",
+      "status": "done"
     }
   ],
   "models": {

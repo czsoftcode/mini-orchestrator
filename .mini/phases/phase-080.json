@@ -1,0 +1,34 @@
+{
+  "id": 80,
+  "title": "Anglická paměť fáze (writeMemory)",
+  "goal": "Přeložit do angličtiny výstup buildPhaseMemoryMarkdown v src/commands/writeMemory.ts (nadpisy # Phase / **Goal:** / ## Steps / ## User's note / ## Auto-commit, STEP_WORD na done/doing/todo/skipped, sekční konstanty Discussion / Run report) a sladit konzumenta summarizeMemoryForNext (kotvy + RUN_WATCH_RE matcher) i komentáře. Zachovat zpětně-kompatibilní čtení existující české paměti (.mini/memory/*.md). Upravit dotčené testy. phase-XXX.json (savePhase) zůstává beze změny — drží jen uživatelský title/goal. Ověřit npm test + build.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Přeložit výstup buildPhaseMemoryMarkdown",
+      "status": "done",
+      "detail": "Nadpisy # Phase / **Goal:** / ## Steps / ## User's note / ## Auto-commit, (nezadán)→(not specified), STEP_WORD→done/doing/todo/skipped, konstanta DISCUSS_SECTION→Discussion (RUN_REPORT_SECTION zůstává Run report) + komentáře v souboru."
+    },
+    {
+      "title": "Sladit konzumenta summarizeMemoryForNext na EN i starou CZ paměť",
+      "status": "done",
+      "detail": "Discuss kotva v indexOfSection čte Discussion i Diskuse (zpětná kompatibilita s existující českou pamětí); ověřit, že pozor|watch out a RUN_WATCH_RE chytají obojí; přeložit komentáře."
+    },
+    {
+      "title": "Upravit testy writeMemory.test.ts",
+      "status": "done",
+      "detail": "Asserty na nové anglické nadpisy/slova; přidat/ponechat test, že summarizeMemoryForNext zvládne i českou archivní paměť (## Diskuse + ## Pozor na)."
+    },
+    {
+      "title": "Ověřit build a testy",
+      "status": "done",
+      "detail": "npm test (vše zelené) a npm run build zelené; smoke: render buildPhaseMemoryMarkdown z fixtury čte anglicky."
+    }
+  ],
+  "startedAt": "2026-05-31T15:58:09.510Z",
+  "completedAt": "2026-05-31T16:06:14.373Z",
+  "autoCommit": {
+    "preSha": "03fa1488dcd443d831c58518bb817559e810ba5a",
+    "subject": "Fáze 80: Anglická paměť fáze (writeMemory)"
+  }
+}

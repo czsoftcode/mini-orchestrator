@@ -11,10 +11,10 @@ import type { Phase, ProjectState, StepStatus } from '../state/types.js';
 import { log } from '../ui/log.js';
 import { logUsage } from '../ui/usage.js';
 
-// Živé konstanty explicitního memory režimu — používá je `writeViaClaude`,
-// když je scope `memory` ručně nastaven přes `mini model`. NEJSOU mrtvý kód:
-// krok z fáze 17 „smazat MEMORY_ALLOWED_TOOLS / MEMORY_TIMEOUT_MS / import
-// buildWriteMemoryPrompt" byl proto vědomě skipnut. Nemaž je.
+// Live constants of the explicit memory mode — used by `writeViaClaude` when the
+// `memory` scope is set manually via `mini model`. They are NOT dead code: the
+// step from phase 17 "remove MEMORY_ALLOWED_TOOLS / MEMORY_TIMEOUT_MS / the
+// buildWriteMemoryPrompt import" was therefore deliberately skipped. Don't delete them.
 const MEMORY_ALLOWED_TOOLS = ['Read', 'Bash', 'Write'];
 const MEMORY_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -22,40 +22,47 @@ const DISCUSS_DIR_REL = join('.mini', 'discuss');
 const RUN_DIR_REL = join('.mini', 'run');
 
 const STEP_WORD: Record<StepStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  todo: 'čeká',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'doing',
+  todo: 'todo',
+  skipped: 'skipped',
 };
 
-// Názvy „velkých" sekcí memory koláže. Sdílené mezi producentem
-// (`buildPhaseMemoryMarkdown`) a konzumentem (`summarizeMemoryForNext`), aby se
-// kotvy nikdy nerozešly — kdo přejmenuje sekci, změní obojí na jednom místě.
-const DISCUSS_SECTION = 'Diskuse';
+// Names of the "big" sections of the memory collage. Shared between the producer
+// (`buildPhaseMemoryMarkdown`) and the consumer (`summarizeMemoryForNext`) so the
+// anchors never diverge — whoever renames a section changes both in one place.
+const DISCUSS_SECTION = 'Discussion';
 const RUN_REPORT_SECTION = 'Run report';
 
+// Legacy anchor of the discuss section. The producer now writes the English
+// `Discussion`, but existing memory files (.mini/memory/*.md) still have the Czech
+// `Diskuse` — the consumer keeps reading both. RUN_REPORT_SECTION was English from
+// the start, so it needs no alias.
+const DISCUSS_SECTION_LEGACY = 'Diskuse';
+
 /**
- * Zapíše memory soubor pro hotovou fázi do `.mini/memory/phase-XXX.md`
- * a uloží jeho krátké shrnutí do `.mini/last-memory.md` (vstup promptu `next`).
+ * Writes the memory file for a finished phase into `.mini/memory/phase-XXX.md`
+ * and saves its short summary into `.mini/last-memory.md` (input of the `next` prompt).
  *
- * Název nese jen padded ID fáze (`phaseStem`) — žádné datum. Když soubor téže
- * fáze už existuje (opakované `done`), připojí se číselný rozlišovač
- * (`phase-XXX-2.md`, `-3`, …), aby se historie nepřepsala (viz `freeMemoryPath`).
+ * The name carries only the padded phase ID (`phaseStem`) — no date. When a file
+ * for the same phase already exists (a repeated `done`), a numeric discriminator
+ * is appended (`phase-XXX-2.md`, `-3`, …) so the history is not overwritten (see
+ * `freeMemoryPath`).
  *
- * Ve výchozím stavu sestaví soubor **přímo v TypeScriptu** jako koláž dat, která
- * mini už má (metadata fáze + doslovný obsah discuss a run reportu) — bez volání
- * Claude API. Výstup je delší a syrovější než claudovská syntéza, ale zadarmo a
- * okamžitý.
+ * By default it assembles the file **directly in TypeScript** as a collage of data
+ * mini already has (phase metadata + the verbatim content of the discuss and run
+ * report) — without calling the Claude API. The output is longer and rawer than
+ * Claude's synthesis, but free and instant.
  *
- * Claude se zavolá **pouze** když je model scope `memory` explicitně nastaven
- * (`state.models?.memory != null`) — ne když se jen dědí z `default`.
+ * Claude is called **only** when the `memory` model scope is explicitly set
+ * (`state.models?.memory != null`) — not when it just inherits from `default`.
  *
- * Memory je **nice-to-have** — nikdy nehází. Když zápis selže, vypíše se jen
- * warning a workflow pokračuje (fáze už je `done` v state.json a auto-commit
- * už proběhl).
+ * Memory is **nice-to-have** — it never throws. When the write fails, it only
+ * prints a warning and the workflow continues (the phase is already `done` in
+ * state.json and the auto-commit already happened).
  *
- * Záměrně **mimo commit** — `commitPhaseWork` proběhl předtím, memory zůstane
- * neverzovaná do dalšího ručního commitu.
+ * Deliberately **outside the commit** — `commitPhaseWork` ran before, so memory
+ * stays unversioned until the next manual commit.
  */
 export async function writePhaseMemory(
   phase: Phase,
@@ -68,7 +75,7 @@ export async function writePhaseMemory(
   try {
     await mkdir(memoryDirAbs, { recursive: true });
   } catch (err) {
-    log.warn(`Memory pro fázi ${phase.id} se nepodařilo zapsat: nemohu vytvořit ${MEMORY_DIR} (${(err as Error).message}).`);
+    log.warn(`Failed to write memory for phase ${phase.id}: cannot create ${MEMORY_DIR} (${(err as Error).message}).`);
     return;
   }
 
@@ -79,8 +86,8 @@ export async function writePhaseMemory(
   const discussPath = join(DISCUSS_DIR_REL, `${phaseStem(phase.id)}.md`);
   const runReportPath = join(RUN_DIR_REL, `${phaseStem(phase.id)}.md`);
 
-  // Explicitní Claude režim — jen když je `memory` scope ručně nastaven přes
-  // `mini model`. Fallback na default model k volání Claude NESTAČÍ.
+  // Explicit Claude mode — only when the `memory` scope is set manually via
+  // `mini model`. Falling back to the default model is NOT enough to call Claude.
   if (state.models?.memory != null) {
     const ok = await writeViaClaude(phase, state, cwd, {
       memoryPathRel,
@@ -101,8 +108,8 @@ export async function writePhaseMemory(
     try {
       await writeFile(memoryPathAbs, markdown, 'utf-8');
     } catch (err) {
-      log.warn(`Memory pro fázi ${phase.id} se nepodařilo zapsat: ${(err as Error).message}`);
-      log.hint('Pokračuji bez memory záznamu.');
+      log.warn(`Failed to write memory for phase ${phase.id}: ${(err as Error).message}`);
+      log.hint('Continuing without a memory record.');
       return;
     }
 
@@ -113,8 +120,8 @@ export async function writePhaseMemory(
 }
 
 /**
- * Sestaví obsah memory souboru přímo z dat fáze a doslovně vloženého obsahu
- * discuss a run reportu. Žádná syntéza — jen poskládání toho, co mini má.
+ * Builds the memory file content directly from the phase data and the verbatim
+ * content of the discuss and run report. No synthesis — just assembling what mini has.
  */
 export function buildPhaseMemoryMarkdown(
   phase: Phase,
@@ -123,28 +130,28 @@ export function buildPhaseMemoryMarkdown(
 ): string {
   const parts: string[] = [];
 
-  parts.push(`# Fáze ${phase.id} — ${phase.title}`);
+  parts.push(`# Phase ${phase.id} — ${phase.title}`);
   parts.push('');
-  parts.push(`**Cíl:** ${phase.goal?.trim() || '(nezadán)'}`);
+  parts.push(`**Goal:** ${phase.goal?.trim() || '(not specified)'}`);
 
   if (phase.steps?.length) {
     parts.push('');
-    parts.push('## Kroky');
+    parts.push('## Steps');
     parts.push(phase.steps.map((s) => `- [${STEP_WORD[s.status]}] ${s.title}`).join('\n'));
   }
 
   if (phase.humanNotes?.trim()) {
     parts.push('');
-    parts.push('## Poznámka uživatele');
+    parts.push("## User's note");
     parts.push(phase.humanNotes.trim());
   }
 
   if (phase.autoCommit) {
     parts.push('');
     parts.push('## Auto-commit');
-    // Memory soubor je součástí commitu fáze, takže jeho vlastní sha tady znát
-    // nemůžeme (závisel by sám na sobě). Legacy fáze sha ještě mají — když je,
-    // ukážeme ho; jinak vystačíme se subjectem commitu.
+    // The memory file is part of the phase commit, so we cannot know its own sha
+    // here (it would depend on itself). Legacy phases still have a sha — when there
+    // is one, we show it; otherwise the commit subject is enough.
     const ref = phase.autoCommit.sha ? ` (\`${phase.autoCommit.sha}\`)` : '';
     parts.push(`- ${phase.autoCommit.subject}${ref}`);
   }
@@ -164,40 +171,43 @@ export function buildPhaseMemoryMarkdown(
   return `${parts.join('\n')}\n`;
 }
 
-/** Horní mez délky shrnutí (znaky). Pojistka, aby ani neznámý formát paměti
- * (např. claude-mode, kde memory píše volně Claude) prompt `next` nenafoukl. */
+/** Upper bound on the summary length (chars). A safeguard so even an unknown
+ * memory format (e.g. claude-mode, where Claude writes the memory freely) does
+ * not bloat the `next` prompt. */
 const SUMMARY_MAX_CHARS = 2000;
 
-/** Vzory nadpisů „na co dát pozor" v run reportu — ten má názvy sekcí volné
- * (píše je Claude), tak je matchujeme sadou slov místo fixní kotvy. Prompty jsou
- * anglicky (od fáze 76), ale starší česká paměť se taky musí pochytit. */
+/** Patterns of "watch out" headings in the run report — it has free section names
+ * (Claude writes them), so we match them with a set of words instead of a fixed
+ * anchor. The prompts are English (since phase 76), but older Czech memory must be
+ * caught too. */
 const RUN_WATCH_RE = /pozor|nález|další fáz|watch out|finding|next phase/i;
 
 /**
- * Z plné memory koláže (`buildPhaseMemoryMarkdown`) vyrobí krátké shrnutí pro
- * prompt `next`. Ponechá hlavu (hlavička, cíl, kroky, poznámka, auto-commit) a
- * navíc vytáhne to nejcennější pro návrh další fáze: pod-sekci `## Pozor na`
- * z bloku Diskuse a sekci „nález / další fáze" z bloku Run report. Doslovný
- * Záměr, Klíčová rozhodnutí a mechanické kroky/ověření vynechá.
+ * From the full memory collage (`buildPhaseMemoryMarkdown`) it produces a short
+ * summary for the `next` prompt. It keeps the head (header, goal, steps, note,
+ * auto-commit) and additionally pulls the most valuable part for proposing the
+ * next phase: the `## Watch out for` sub-section from the Discussion block and the
+ * "finding / next phase" section from the Run report block. The verbatim Intent,
+ * Key decisions and mechanical steps/verification are dropped.
  *
- * Slicuje podle literálních kotev `## Diskuse` / `## Run report`, které vyrábí
- * producent výš — proto NEjde naivně splitovat podle `## ` (Diskuse i Run report
- * mají vlastní vnořené `##` nadpisy na stejné úrovni). Když kotvy chybí (paměť
- * v neznámém formátu), vrátí aspoň tvrdě omezenou délku.
+ * It slices by the literal anchors `## Discussion` / `## Run report` produced above
+ * — so it can NOT naively split by `## ` (both Discussion and Run report have their
+ * own nested `##` headings at the same level). When the anchors are missing (memory
+ * in an unknown format), it returns at least a hard length cap.
  */
 export function summarizeMemoryForNext(md: string): string {
   const text = md.trimEnd();
 
-  const discussIdx = indexOfSection(text, DISCUSS_SECTION, 0);
+  const discussIdx = indexOfSection(text, [DISCUSS_SECTION, DISCUSS_SECTION_LEGACY], 0);
   const runSearchFrom = discussIdx === -1 ? 0 : discussIdx + 1;
-  const runIdx = indexOfSection(text, RUN_REPORT_SECTION, runSearchFrom);
+  const runIdx = indexOfSection(text, [RUN_REPORT_SECTION], runSearchFrom);
 
-  // Bez známých kotev neumíme strukturně ořezat — vrátíme aspoň pojistku délkou.
+  // Without known anchors we cannot trim structurally — return at least the length safeguard.
   if (discussIdx === -1 && runIdx === -1) {
     return hardCap(text);
   }
 
-  // Hlava = vše před první kotvou (hlavička, cíl, kroky, poznámka, auto-commit).
+  // Head = everything before the first anchor (header, goal, steps, note, auto-commit).
   const headEnd = Math.min(
     discussIdx === -1 ? text.length : discussIdx,
     runIdx === -1 ? text.length : runIdx,
@@ -206,31 +216,38 @@ export function summarizeMemoryForNext(md: string): string {
 
   if (discussIdx !== -1) {
     const discussEnd = runIdx > discussIdx ? runIdx : text.length;
-    const pozor = extractSubsection(text.slice(discussIdx, discussEnd), (h) => /pozor|watch out/i.test(h));
-    if (pozor) parts.push(pozor);
+    const watch = extractSubsection(text.slice(discussIdx, discussEnd), (h) => /pozor|watch out/i.test(h));
+    if (watch) parts.push(watch);
   }
 
   if (runIdx !== -1) {
-    const nalez = extractSubsection(text.slice(runIdx), (h) => RUN_WATCH_RE.test(h));
-    if (nalez) parts.push(nalez);
+    const finding = extractSubsection(text.slice(runIdx), (h) => RUN_WATCH_RE.test(h));
+    if (finding) parts.push(finding);
   }
 
-  // Ve strukturní větvi NEkrátíme tvrdě délkou — to by uřízlo konec, tj. zrovna
-  // vytažené „Pozor na" / „Nález" (nejcennější část). Hranicí je výběr sekcí.
+  // In the structural branch we do NOT hard-cap by length — that would cut the end,
+  // i.e. the just-extracted "Watch out for" / "finding" (the most valuable part).
+  // The boundary is the section selection.
   return `${parts.join('\n\n').trimEnd()}\n`;
 }
 
-/** Najde začátek řádku `## <name>` od `fromIndex`. Vrací index `#`, nebo -1. */
-function indexOfSection(text: string, name: string, fromIndex: number): number {
-  const heading = `## ${name}`;
-  if (fromIndex === 0 && text.startsWith(heading)) return 0;
-  const idx = text.indexOf(`\n${heading}`, fromIndex);
-  return idx === -1 ? -1 : idx + 1;
+/** Finds the start of a `## <name>` line from `fromIndex`, trying each name in
+ * order (the producer's English anchor first, then any legacy alias). Returns the
+ * index of `#`, or -1. */
+function indexOfSection(text: string, names: string[], fromIndex: number): number {
+  for (const name of names) {
+    const heading = `## ${name}`;
+    if (fromIndex === 0 && text.startsWith(heading)) return 0;
+    const idx = text.indexOf(`\n${heading}`, fromIndex);
+    if (idx !== -1) return idx + 1;
+  }
+  return -1;
 }
 
 /**
- * V bloku najde první pod-sekci `## <nadpis>`, jejíž nadpis splní `matches`, a
- * vrátí ji od nadpisu po další `## ` (nebo konec bloku). `null`, když nic nesedí.
+ * In a block, finds the first sub-section `## <heading>` whose heading satisfies
+ * `matches` and returns it from the heading to the next `## ` (or the end of the
+ * block). `null` when nothing matches.
  */
 function extractSubsection(block: string, matches: (heading: string) => boolean): string | null {
   const lines = block.split('\n');
@@ -254,8 +271,8 @@ function extractSubsection(block: string, matches: (heading: string) => boolean)
   return lines.slice(start, end).join('\n').trimEnd();
 }
 
-/** Omezí text na `SUMMARY_MAX_CHARS` (řez na hranici řádku) a normalizuje konec.
- * Používá se jen ve fallbacku bez kotev — ve strukturní větvi by uřízlo to nejcennější. */
+/** Caps the text to `SUMMARY_MAX_CHARS` (cut at a line boundary) and normalizes the end.
+ * Used only in the anchor-less fallback — in the structural branch it would cut the most valuable part. */
 function hardCap(text: string): string {
   const trimmed = text.trimEnd();
   if (trimmed.length <= SUMMARY_MAX_CHARS) {
@@ -264,13 +281,13 @@ function hardCap(text: string): string {
   const slice = trimmed.slice(0, SUMMARY_MAX_CHARS);
   const cut = slice.lastIndexOf('\n');
   const body = (cut > 0 ? slice.slice(0, cut) : slice).trimEnd();
-  return `${body}\n\n…(zkráceno)\n`;
+  return `${body}\n\n…(truncated)\n`;
 }
 
 /**
- * Spustí Claude print-mode session, která zapíše memory soubor. Volá se jen
- * v explicitním režimu (`state.models?.memory != null`). Vrací `true`, když
- * soubor vznikl (a má smysl z něj zapsat shrnutí do last-memory.md).
+ * Runs a Claude print-mode session that writes the memory file. Called only in the
+ * explicit mode (`state.models?.memory != null`). Returns `true` when the file was
+ * created (and it makes sense to write its summary into last-memory.md).
  */
 async function writeViaClaude(
   phase: Phase,
@@ -299,7 +316,7 @@ async function writeViaClaude(
     hasAutoCommit: ctx.hasAutoCommit,
   });
 
-  log.dim(`Zapisuji memory pro fázi ${phase.id} přes Claude do ${ctx.memoryPathRel}…`);
+  log.dim(`Writing memory for phase ${phase.id} via Claude into ${ctx.memoryPathRel}…`);
 
   let response;
   try {
@@ -311,15 +328,15 @@ async function writeViaClaude(
       model: state.models?.memory,
     });
   } catch (err) {
-    log.warn(`Memory pro fázi ${phase.id} se nepodařilo zapsat: ${(err as Error).message}`);
-    log.hint('Pokračuji bez memory záznamu.');
+    log.warn(`Failed to write memory for phase ${phase.id}: ${(err as Error).message}`);
+    log.hint('Continuing without a memory record.');
     return false;
   }
 
   logUsage(response);
 
   if (!(await fileExists(ctx.memoryPathAbs))) {
-    log.warn(`Memory pro fázi ${phase.id} se nepodařilo zapsat: Claude soubor ${ctx.memoryPathRel} nevytvořil.`);
+    log.warn(`Failed to write memory for phase ${phase.id}: Claude did not create the file ${ctx.memoryPathRel}.`);
     return false;
   }
 
@@ -328,35 +345,36 @@ async function writeViaClaude(
 }
 
 /**
- * Zapíše `.mini/last-memory.md` jako **krátké shrnutí** nejnovější fáze. Přečte
- * právě zapsaný archivní soubor (plnou koláž), prožene ho `summarizeMemoryForNext`
- * a výsledek uloží — `last-memory.md` tak není kopií archivu, ale jeho zeštíhlenou
- * verzí, kterou pak `next` vkládá do promptu (proto je čte JEN `next`).
+ * Writes `.mini/last-memory.md` as a **short summary** of the latest phase. It reads
+ * the just-written archive file (the full collage), runs it through
+ * `summarizeMemoryForNext` and saves the result — so `last-memory.md` is not a copy
+ * of the archive but its slimmed-down version, which `next` then inserts into the
+ * prompt (that's why ONLY `next` reads it).
  *
- * Funguje jednotně pro TS i claude-mode větev: vstupem je hotový soubor na disku.
- * Archiv `.mini/memory/phase-XXX.md` zůstává plný a netknutý.
+ * It works uniformly for the TS and claude-mode branch: the input is a finished file
+ * on disk. The archive `.mini/memory/phase-XXX.md` stays full and untouched.
  *
- * Selhání = jen `log.dim` — last-memory.md je čistě pro pohodlí, archiv už je
- * na disku.
+ * A failure = just `log.dim` — last-memory.md is purely for convenience, the archive
+ * is already on disk.
  */
 async function writeLastMemorySummary(cwd: string, memoryPathAbs: string, memoryPathRel: string): Promise<void> {
   const lastMemoryAbs = join(cwd, LAST_MEMORY_FILE);
 
-  // Starý last-memory.md může být ještě symlink z dřívějška — smazat před zápisem.
+  // The old last-memory.md may still be a symlink from earlier — delete it before writing.
   try {
     await unlink(lastMemoryAbs);
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
-      log.dim(`(starý ${LAST_MEMORY_FILE} se nepodařilo smazat: ${(err as Error).message})`);
+      log.dim(`(failed to delete the old ${LAST_MEMORY_FILE}: ${(err as Error).message})`);
     }
   }
 
   try {
     const full = await readFile(memoryPathAbs, 'utf-8');
     await writeFile(lastMemoryAbs, summarizeMemoryForNext(full), 'utf-8');
-    log.dim(`  ${LAST_MEMORY_FILE} (shrnutí ${memoryPathRel})`);
+    log.dim(`  ${LAST_MEMORY_FILE} (summary of ${memoryPathRel})`);
   } catch (err) {
-    log.dim(`(${LAST_MEMORY_FILE} se nepodařilo aktualizovat: ${(err as Error).message})`);
+    log.dim(`(failed to update ${LAST_MEMORY_FILE}: ${(err as Error).message})`);
   }
 }
 
@@ -369,7 +387,7 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-/** Přečte soubor jako string; když neexistuje (nebo selže čtení), vrátí prázdný string. */
+/** Reads a file as a string; when it does not exist (or the read fails), returns an empty string. */
 async function readFileOrEmpty(path: string): Promise<string> {
   try {
     return await readFile(path, 'utf-8');
@@ -379,10 +397,10 @@ async function readFileOrEmpty(path: string): Promise<string> {
 }
 
 /**
- * Najde volný název memory souboru pro fázi v `dirAbs`. Výchozí je `phase-XXX.md`
- * (padded ID, bez data); když už existuje (opakované `done` téže fáze), zkouší
- * `phase-XXX-2.md`, `phase-XXX-3.md`, … dokud nenarazí na volný — historie se
- * tak nikdy nepřepíše. Vrací jen název souboru (ne cestu).
+ * Finds a free memory file name for a phase in `dirAbs`. The default is `phase-XXX.md`
+ * (padded ID, no date); when it already exists (a repeated `done` of the same phase),
+ * it tries `phase-XXX-2.md`, `phase-XXX-3.md`, … until it finds a free one — so the
+ * history is never overwritten. Returns only the file name (not the path).
  */
 export async function freeMemoryFileName(dirAbs: string, phaseId: number): Promise<string> {
   const stem = phaseStem(phaseId);
