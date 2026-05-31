@@ -94,11 +94,11 @@ describe('summarizeMemoryForNext', () => {
   };
   const discuss = [
     '# Fáze 38 — diskuse',
-    '## Záměr',
+    '## Intent',
     'změřit token cenu a seřadit příkazy',
-    '## Klíčová rozhodnutí',
+    '## Key decisions',
     'vkládaný kontext = součet bloků',
-    '## Pozor na',
+    '## Watch out for',
     '- done má větvenou šablonu, pozor na první běh',
   ].join('\n');
   const run = [
@@ -107,11 +107,11 @@ describe('summarizeMemoryForNext', () => {
     'verdict: done',
     '---',
     '# Fáze 38 — report',
-    '## Co se udělalo',
+    '## What was done',
     'napsali jsme měřič tokenů',
-    '## Ověření (strojově)',
+    '## Verification',
     'npm test zelené, 433 testů',
-    '## Nález pro další fázi',
+    '## Findings for next phase',
     'next je drahý kvůli celé vložené last-memory (63 %)',
   ].join('\n');
   const full = buildPhaseMemoryMarkdown(phase, discuss, run);
@@ -127,23 +127,23 @@ describe('summarizeMemoryForNext', () => {
     expect(out).toContain('cdd73ff');
   });
 
-  it('vytáhne „Pozor na" z diskuse a „Nález pro další fázi" z run reportu', () => {
+  it('vytáhne „Watch out for" z diskuse a „Findings for next phase" z run reportu', () => {
     const out = summarizeMemoryForNext(full);
-    expect(out).toContain('## Pozor na');
+    expect(out).toContain('## Watch out for');
     expect(out).toContain('done má větvenou šablonu');
-    expect(out).toContain('## Nález pro další fázi');
+    expect(out).toContain('## Findings for next phase');
     expect(out).toContain('next je drahý kvůli celé vložené last-memory');
   });
 
-  it('zahodí Záměr, Klíčová rozhodnutí, mechanické Co se udělalo / Ověření i kotvy bloků', () => {
+  it('zahodí Intent, Key decisions, mechanické What was done / Verification i kotvy bloků', () => {
     const out = summarizeMemoryForNext(full);
-    expect(out).not.toContain('## Záměr');
+    expect(out).not.toContain('## Intent');
     expect(out).not.toContain('změřit token cenu a seřadit');
-    expect(out).not.toContain('## Klíčová rozhodnutí');
+    expect(out).not.toContain('## Key decisions');
     expect(out).not.toContain('vkládaný kontext = součet bloků');
-    expect(out).not.toContain('## Co se udělalo');
+    expect(out).not.toContain('## What was done');
     expect(out).not.toContain('napsali jsme měřič');
-    expect(out).not.toContain('## Ověření');
+    expect(out).not.toContain('## Verification');
     expect(out).not.toContain('433 testů');
     expect(out).not.toContain('## Diskuse');
     expect(out).not.toContain('## Run report');

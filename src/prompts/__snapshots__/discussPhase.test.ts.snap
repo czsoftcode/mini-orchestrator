@@ -1,162 +1,162 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildDiscussPhasePrompt > falls back to (nezadán) when phase has no goal 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
+"You are part of a tool that helps the user build a project incrementally.
+A **discussion session** about the upcoming phase is in progress — DO NOT implement anything.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Fáze k diskusi
-**Fáze 5: Refactor auth**
-Cíl: (nezadán)
+# Phase to discuss
+**Phase 5: Refactor auth**
+Goal: (not set)
 
-# Tvůj úkol
-Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
-- pochopit, co má fáze přesně řešit a proč
-- upozornit na nejasnosti, skryté předpoklady nebo rizika
-- navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
+# Your task
+Discuss the intent of this phase with the user. Your goals are to:
+- understand what exactly the phase should solve and why
+- point out ambiguities, hidden assumptions or risks
+- suggest what the goal or steps might look like (if they are not set or are vague)
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+If you need to understand the state of the code, go through the machine-generated map: (1) read the index \`.mini/graph.json\` once (if it exists) — for each source file its path, its map in \`.mini/graph/\`, and the export names; keep the index in memory and share it across steps, do not read it repeatedly; (2) based on the exports, open only the relevant maps \`.mini/graph/<path>.md\` (imports, exports, signatures; for exports there is an anchor \`@L<start>-<end>\` = the declaration lines); (3) when you need the actual code, read it targeted via \`Read\` straight from the anchor (\`offset\` = start, \`limit\` = end − start + 1), not the whole file; when a map has no anchor, look up the symbol via the Grep tool (ripgrep). Small files can be read whole. Apart from the notes file (see below) do not write anything else — the session is otherwise only for discussion.
 
-Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
+Start with a brief summary of what the phase's goal means, and then ask about what is unclear or what you consider key to clarify.
 
-# Poznámky z diskuse
-Než session ukončíš, zapiš přes Write tool shrnutí diskuse do souboru \`.mini/discuss/phase-005.md\`. Teprve potom session ukonči.
+# Discussion notes
+Before you end the session, write a summary of the discussion via the Write tool into the file \`.mini/discuss/phase-005.md\`. Only then end the session.
 
-Soubor musí mít tuto strukturu (názvy sekcí jsou fixní; jednotlivé sekce smí být prázdné nebo úplně chybět, pokud k nim není co napsat):
+The file must have this structure (section names are fixed; individual sections may be empty or entirely absent if there is nothing to write):
 
 \`\`\`
-# Fáze 5 — Refactor auth
+# Phase 5 — Refactor auth
 
-## Záměr
-## Klíčová rozhodnutí
-## Pozor na
+## Intent
+## Key decisions
+## Watch out for
 \`\`\`
 
-Soubor slouží jako kontext pro následující kroky workflow (\`mini plan\`, \`mini do\`), které samotnou diskusi neuvidí. Piš věcně a stručně — jen to, co je pro další práci podstatné.
+The file serves as context for the following workflow steps (\`mini plan\`, \`mini do\`), which won't see the discussion itself. Write factually and concisely — only what matters for further work.
 "
 `;
 
 exports[`buildDiscussPhasePrompt > omits steps block when phase has no steps 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
+"You are part of a tool that helps the user build a project incrementally.
+A **discussion session** about the upcoming phase is in progress — DO NOT implement anything.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Fáze k diskusi
-**Fáze 2: Bootstrap**
-Cíl: CLI vrací --version
+# Phase to discuss
+**Phase 2: Bootstrap**
+Goal: CLI vrací --version
 
-# Tvůj úkol
-Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
-- pochopit, co má fáze přesně řešit a proč
-- upozornit na nejasnosti, skryté předpoklady nebo rizika
-- navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
+# Your task
+Discuss the intent of this phase with the user. Your goals are to:
+- understand what exactly the phase should solve and why
+- point out ambiguities, hidden assumptions or risks
+- suggest what the goal or steps might look like (if they are not set or are vague)
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+If you need to understand the state of the code, go through the machine-generated map: (1) read the index \`.mini/graph.json\` once (if it exists) — for each source file its path, its map in \`.mini/graph/\`, and the export names; keep the index in memory and share it across steps, do not read it repeatedly; (2) based on the exports, open only the relevant maps \`.mini/graph/<path>.md\` (imports, exports, signatures; for exports there is an anchor \`@L<start>-<end>\` = the declaration lines); (3) when you need the actual code, read it targeted via \`Read\` straight from the anchor (\`offset\` = start, \`limit\` = end − start + 1), not the whole file; when a map has no anchor, look up the symbol via the Grep tool (ripgrep). Small files can be read whole. Apart from the notes file (see below) do not write anything else — the session is otherwise only for discussion.
 
-Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
+Start with a brief summary of what the phase's goal means, and then ask about what is unclear or what you consider key to clarify.
 
-# Poznámky z diskuse
-Než session ukončíš, zapiš přes Write tool shrnutí diskuse do souboru \`.mini/discuss/phase-002.md\`. Teprve potom session ukonči.
+# Discussion notes
+Before you end the session, write a summary of the discussion via the Write tool into the file \`.mini/discuss/phase-002.md\`. Only then end the session.
 
-Soubor musí mít tuto strukturu (názvy sekcí jsou fixní; jednotlivé sekce smí být prázdné nebo úplně chybět, pokud k nim není co napsat):
+The file must have this structure (section names are fixed; individual sections may be empty or entirely absent if there is nothing to write):
 
 \`\`\`
-# Fáze 2 — Bootstrap
+# Phase 2 — Bootstrap
 
-## Záměr
-## Klíčová rozhodnutí
-## Pozor na
+## Intent
+## Key decisions
+## Watch out for
 \`\`\`
 
-Soubor slouží jako kontext pro následující kroky workflow (\`mini plan\`, \`mini do\`), které samotnou diskusi neuvidí. Piš věcně a stručně — jen to, co je pro další práci podstatné.
+The file serves as context for the following workflow steps (\`mini plan\`, \`mini do\`), which won't see the discussion itself. Write factually and concisely — only what matters for further work.
 "
 `;
 
 exports[`buildDiscussPhasePrompt > renders phase with explicit goal 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
+"You are part of a tool that helps the user build a project incrementally.
+A **discussion session** about the upcoming phase is in progress — DO NOT implement anything.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Fáze k diskusi
-**Fáze 3: Diskusní session**
-Cíl: uživatel může prodiskutovat fázi před plánováním
+# Phase to discuss
+**Phase 3: Diskusní session**
+Goal: uživatel může prodiskutovat fázi před plánováním
 
-# Tvůj úkol
-Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
-- pochopit, co má fáze přesně řešit a proč
-- upozornit na nejasnosti, skryté předpoklady nebo rizika
-- navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
+# Your task
+Discuss the intent of this phase with the user. Your goals are to:
+- understand what exactly the phase should solve and why
+- point out ambiguities, hidden assumptions or risks
+- suggest what the goal or steps might look like (if they are not set or are vague)
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+If you need to understand the state of the code, go through the machine-generated map: (1) read the index \`.mini/graph.json\` once (if it exists) — for each source file its path, its map in \`.mini/graph/\`, and the export names; keep the index in memory and share it across steps, do not read it repeatedly; (2) based on the exports, open only the relevant maps \`.mini/graph/<path>.md\` (imports, exports, signatures; for exports there is an anchor \`@L<start>-<end>\` = the declaration lines); (3) when you need the actual code, read it targeted via \`Read\` straight from the anchor (\`offset\` = start, \`limit\` = end − start + 1), not the whole file; when a map has no anchor, look up the symbol via the Grep tool (ripgrep). Small files can be read whole. Apart from the notes file (see below) do not write anything else — the session is otherwise only for discussion.
 
-Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
+Start with a brief summary of what the phase's goal means, and then ask about what is unclear or what you consider key to clarify.
 
-# Poznámky z diskuse
-Než session ukončíš, zapiš přes Write tool shrnutí diskuse do souboru \`.mini/discuss/phase-003.md\`. Teprve potom session ukonči.
+# Discussion notes
+Before you end the session, write a summary of the discussion via the Write tool into the file \`.mini/discuss/phase-003.md\`. Only then end the session.
 
-Soubor musí mít tuto strukturu (názvy sekcí jsou fixní; jednotlivé sekce smí být prázdné nebo úplně chybět, pokud k nim není co napsat):
+The file must have this structure (section names are fixed; individual sections may be empty or entirely absent if there is nothing to write):
 
 \`\`\`
-# Fáze 3 — Diskusní session
+# Phase 3 — Diskusní session
 
-## Záměr
-## Klíčová rozhodnutí
-## Pozor na
+## Intent
+## Key decisions
+## Watch out for
 \`\`\`
 
-Soubor slouží jako kontext pro následující kroky workflow (\`mini plan\`, \`mini do\`), které samotnou diskusi neuvidí. Piš věcně a stručně — jen to, co je pro další práci podstatné.
+The file serves as context for the following workflow steps (\`mini plan\`, \`mini do\`), which won't see the discussion itself. Write factually and concisely — only what matters for further work.
 "
 `;
 
 exports[`buildDiscussPhasePrompt > renders steps list when phase has steps 1`] = `
-"Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
+"You are part of a tool that helps the user build a project incrementally.
+A **discussion session** about the upcoming phase is in progress — DO NOT implement anything.
 
-# Projekt
+# Project
 # Můj projekt
 Stavím nástroj X pro Y.
 
-# Fáze k diskusi
-**Fáze 7: Nová feature**
-Cíl: feature je hotová
+# Phase to discuss
+**Phase 7: Nová feature**
+Goal: feature je hotová
 
-Kroky:
-- [hotovo] připravit schéma
-- [čeká] napsat handler
-- [odloženo] starý nápad
+Steps:
+- [done] připravit schéma
+- [todo] napsat handler
+- [skipped] starý nápad
 
-# Tvůj úkol
-Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
-- pochopit, co má fáze přesně řešit a proč
-- upozornit na nejasnosti, skryté předpoklady nebo rizika
-- navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
+# Your task
+Discuss the intent of this phase with the user. Your goals are to:
+- understand what exactly the phase should solve and why
+- point out ambiguities, hidden assumptions or risks
+- suggest what the goal or steps might look like (if they are not set or are vague)
 
-Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: (1) jednou si načti index \`.mini/graph.json\` (pokud existuje) — pro každý zdroják cestu, jeho mapu v \`.mini/graph/\` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, nenačítej ho opakovaně; (2) podle exportů cíleně otevři jen relevantní mapy \`.mini/graph/<cesta>.md\` (importy, exporty, signatury; u exportů je kotva \`@L<start>-<end>\` = řádky deklarace); (3) když potřebuješ samotný kód, čti ho cíleně přes \`Read\` rovnou od kotvy (\`offset\` = start, \`limit\` = end − start + 1), ne celý soubor; když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé. Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+If you need to understand the state of the code, go through the machine-generated map: (1) read the index \`.mini/graph.json\` once (if it exists) — for each source file its path, its map in \`.mini/graph/\`, and the export names; keep the index in memory and share it across steps, do not read it repeatedly; (2) based on the exports, open only the relevant maps \`.mini/graph/<path>.md\` (imports, exports, signatures; for exports there is an anchor \`@L<start>-<end>\` = the declaration lines); (3) when you need the actual code, read it targeted via \`Read\` straight from the anchor (\`offset\` = start, \`limit\` = end − start + 1), not the whole file; when a map has no anchor, look up the symbol via the Grep tool (ripgrep). Small files can be read whole. Apart from the notes file (see below) do not write anything else — the session is otherwise only for discussion.
 
-Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
+Start with a brief summary of what the phase's goal means, and then ask about what is unclear or what you consider key to clarify.
 
-# Poznámky z diskuse
-Než session ukončíš, zapiš přes Write tool shrnutí diskuse do souboru \`.mini/discuss/phase-007.md\`. Teprve potom session ukonči.
+# Discussion notes
+Before you end the session, write a summary of the discussion via the Write tool into the file \`.mini/discuss/phase-007.md\`. Only then end the session.
 
-Soubor musí mít tuto strukturu (názvy sekcí jsou fixní; jednotlivé sekce smí být prázdné nebo úplně chybět, pokud k nim není co napsat):
+The file must have this structure (section names are fixed; individual sections may be empty or entirely absent if there is nothing to write):
 
 \`\`\`
-# Fáze 7 — Nová feature
+# Phase 7 — Nová feature
 
-## Záměr
-## Klíčová rozhodnutí
-## Pozor na
+## Intent
+## Key decisions
+## Watch out for
 \`\`\`
 
-Soubor slouží jako kontext pro následující kroky workflow (\`mini plan\`, \`mini do\`), které samotnou diskusi neuvidí. Piš věcně a stručně — jen to, co je pro další práci podstatné.
+The file serves as context for the following workflow steps (\`mini plan\`, \`mini do\`), which won't see the discussion itself. Write factually and concisely — only what matters for further work.
 "
 `;

@@ -67,14 +67,14 @@ describe('context', () => {
     await context('next');
     expect(process.exitCode).toBeUndefined();
     expect(out).toContain('mini next --apply');
-    expect(out).toContain('krok **next**');
+    expect(out).toContain('**next** step');
   });
 
   it('next bere extra argumenty jako nápad uživatele', async () => {
     await setupProject([], null);
     await context('next', ['přidej', 'CSV', 'export']);
     expect(out).toContain('přidej CSV export');
-    expect(out).toContain('Nápad uživatele');
+    expect(out).toContain("User's idea");
   });
 
   it('plan bez aktuální fáze → exit code 1', async () => {
@@ -88,13 +88,13 @@ describe('context', () => {
     await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'proposed' }], 1);
     await context('plan');
     expect(out).toContain('mini plan --apply');
-    expect(out).toContain('Fáze 1: Fáze A');
+    expect(out).toContain('Phase 1: Fáze A');
   });
 
   it('discuss vypíše diskusní prompt', async () => {
     await setupProject([{ id: 1, title: 'Fáze A', goal: 'cíl', status: 'proposed' }], 1);
     await context('discuss');
-    expect(out).toContain('diskusní session');
+    expect(out).toContain('discussion session');
     expect(out).toContain('.mini/discuss/phase-001.md');
   });
 
@@ -189,9 +189,9 @@ describe('context', () => {
     );
     await context('verify');
     expect(process.exitCode).toBeUndefined();
-    expect(out).toContain('krok **verify**');
-    expect(out).toContain('Fáze 1: Fáze A');
-    expect(out).toContain('ještě neuzavřená');
+    expect(out).toContain('**verify** step');
+    expect(out).toContain('Phase 1: Fáze A');
+    expect(out).toContain('not yet closed');
   });
 
   it('verify bez aktuální fáze vezme poslední uzavřenou', async () => {
@@ -204,8 +204,8 @@ describe('context', () => {
     );
     await context('verify');
     expect(process.exitCode).toBeUndefined();
-    expect(out).toContain('Fáze 2: Poslední hotová');
-    expect(out).toContain('je už uzavřená');
+    expect(out).toContain('Phase 2: Poslední hotová');
+    expect(out).toContain('is already closed');
   });
 
   it('verify načte verify body z reportu fáze', async () => {

@@ -169,8 +169,9 @@ export function buildPhaseMemoryMarkdown(
 const SUMMARY_MAX_CHARS = 2000;
 
 /** Vzory nadpisů „na co dát pozor" v run reportu — ten má názvy sekcí volné
- * (píše je Claude), tak je matchujeme sadou slov místo fixní kotvy. */
-const RUN_WATCH_RE = /pozor|nález|další fáz/i;
+ * (píše je Claude), tak je matchujeme sadou slov místo fixní kotvy. Prompty jsou
+ * anglicky (od fáze 76), ale starší česká paměť se taky musí pochytit. */
+const RUN_WATCH_RE = /pozor|nález|další fáz|watch out|finding|next phase/i;
 
 /**
  * Z plné memory koláže (`buildPhaseMemoryMarkdown`) vyrobí krátké shrnutí pro
@@ -205,7 +206,7 @@ export function summarizeMemoryForNext(md: string): string {
 
   if (discussIdx !== -1) {
     const discussEnd = runIdx > discussIdx ? runIdx : text.length;
-    const pozor = extractSubsection(text.slice(discussIdx, discussEnd), (h) => /pozor/i.test(h));
+    const pozor = extractSubsection(text.slice(discussIdx, discussEnd), (h) => /pozor|watch out/i.test(h));
     if (pozor) parts.push(pozor);
   }
 

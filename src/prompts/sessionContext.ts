@@ -16,18 +16,18 @@ import { GRAPH_USAGE_HINT } from './graphHint.js';
  */
 
 const STEP_WORD: Record<StepStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  todo: 'čeká',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'in progress',
+  todo: 'todo',
+  skipped: 'skipped',
 };
 
 const PHASE_WORD: Record<PhaseStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  planned: 'plán',
-  proposed: 'návrh',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'in progress',
+  planned: 'planned',
+  proposed: 'proposed',
+  skipped: 'skipped',
 };
 
 export interface NextSessionOptions {
@@ -50,45 +50,45 @@ export function buildNextSessionPrompt(
   );
   const history =
     historyLines.length > 0
-      ? `# Dosavadní postup\n${historyLines.join('\n')}\n`
-      : '# Postup\nProjekt je čerstvě založený, žádné fáze ještě nebyly.\n';
+      ? `# Progress so far\n${historyLines.join('\n')}\n`
+      : '# Progress\nThe project is brand new, there are no phases yet.\n';
 
   const memory = options.lastMemoryMd?.trim();
   const memoryBlock = memory
-    ? `# Poslední fáze\nShrnutí poslední dokončené fáze (co se udělalo, na co dát pozor):\n"""\n${memory}\n"""\n\n`
+    ? `# Last phase\nSummary of the last finished phase (what was done, what to watch out for):\n"""\n${memory}\n"""\n\n`
     : '';
 
   const hint = options.userHint?.trim();
   const hintBlock = hint
-    ? `# Nápad uživatele\nUživatel má představu, kterou chce v další fázi rozpracovat:\n"""\n${hint}\n"""\nPřesně z toho vyjdi. Pokud je nápad příliš velký na jednu fázi (1-3 dny), vyber z něj první smysluplný kus.\n\n`
+    ? `# User's idea\nThe user has an idea they want to develop in the next phase:\n"""\n${hint}\n"""\nStart from exactly this. If the idea is too big for one phase (1-3 days), pick the first meaningful piece of it.\n\n`
     : '';
 
   // Bez nápadu se nejdřív zeptej — uživatel ho mohl zapomenout zadat.
   const askBlock = hint
     ? ''
-    : `# Nejdřív se zeptej\nUživatel ti k další fázi nic nezadal. Než cokoli navrhneš, **zeptej se ho**, jestli má pro další fázi vlastní představu (mohl ji omylem nezadat), nebo to má nechat na tobě. Teprve podle odpovědi pokračuj:\n- má-li vlastní nápad → vyjdi přesně z něj,\n- nechá-li to na tobě → navrhni fázi sám podle dosavadního postupu a stavu kódu.\n\n`;
+    : `# Ask first\nThe user gave you nothing for the next phase. Before you propose anything, **ask them** whether they have their own idea for the next phase (they may have forgotten to provide it), or whether to leave it up to you. Only then continue based on the answer:\n- if they have their own idea → start from exactly that,\n- if they leave it to you → propose a phase yourself based on the progress so far and the state of the code.\n\n`;
 
-  return `Jsi v Claude Code session a pomáháš uživateli budovat projekt po malých fázích.
-Tohle je krok **next** workflow mini — navrhni JEDNU další fázi.
+  return `You are in a Claude Code session helping the user build a project in small phases.
+This is the **next** step of the mini workflow — propose ONE next phase.
 
-# Projekt
+# Project
 ${projectMd.trim()}
 
 ${history}
-${memoryBlock}${askBlock}${hintBlock}# Tvůj úkol
-Navrhni jednu další fázi. Má být malá (1-3 dny práce), s jasným, ověřitelným cílem — ne roadmap, jen jedna věc, co dává smysl udělat hned. ${GRAPH_USAGE_HINT}
+${memoryBlock}${askBlock}${hintBlock}# Your task
+Propose one next phase. It should be small (1-3 days of work), with a clear, verifiable goal — not a roadmap, just one thing that makes sense to do right now. ${GRAPH_USAGE_HINT}
 
-Návrh (název max 5 slov + cíl na 1 větu) krátce ukaž uživateli. Po odsouhlasení fázi **ulož** zavoláním (Bash):
+Show the proposal (name, max 5 words + goal in 1 sentence) briefly to the user. After they approve, **save** the phase by calling (Bash):
 
 \`\`\`
-mini next --apply --title "<název>" --goal "<cíl fáze>"
+mini next --apply --title "<name>" --goal "<phase goal>"
 \`\`\`
 
-Stav fáze měň jen tímhle příkazem — nikdy needituj \`.mini/state.json\` ručně.
+Change the phase state only with this command — never edit \`.mini/state.json\` by hand.
 
-Pokud projekt považuješ za hotový, nic neukládej a řekni to uživateli.
+If you consider the project finished, save nothing and tell the user.
 
-Po uložení napiš, že další na řadě je \`/mini:discuss\` (prodiskutovat) nebo \`/mini:plan\` (rovnou rozplánovat).
+After saving, write that the next step is \`/mini:discuss\` (discuss) or \`/mini:plan\` (break it down right away).
 `;
 }
 
@@ -102,44 +102,44 @@ export function buildPlanSessionPrompt(
   discussNotes?: string | null,
 ): string {
   const notes = discussNotes?.trim();
-  const notesBlock = notes ? `\n# Poznámky k fázi (z diskuse)\n${notes}\n` : '';
+  const notesBlock = notes ? `\n# Phase notes (from discussion)\n${notes}\n` : '';
 
   let stepsBlock = '';
   if (phase.steps?.length) {
     const lines = (phase.steps as Step[]).map((s) => `- [${STEP_WORD[s.status]}] ${s.title}`);
-    stepsBlock = `\nFáze už má kroky (uložení je přepíše):\n${lines.join('\n')}\n`;
+    stepsBlock = `\nThe phase already has steps (saving will overwrite them):\n${lines.join('\n')}\n`;
   }
 
-  return `Jsi v Claude Code session a pomáháš uživateli budovat projekt po malých fázích.
-Tohle je krok **plan** workflow mini — rozmen aktuální fázi na konkrétní kroky.
+  return `You are in a Claude Code session helping the user build a project in small phases.
+This is the **plan** step of the mini workflow — break the current phase down into concrete steps.
 
-# Projekt
+# Project
 ${projectMd.trim()}
 
-# Fáze, kterou rozmenujeme
-**Fáze ${phase.id}: ${phase.title}**
-Cíl: ${phase.goal ?? '(nezadán)'}
+# Phase to break down
+**Phase ${phase.id}: ${phase.title}**
+Goal: ${phase.goal ?? '(not set)'}
 ${stepsBlock}${notesBlock}
-# Tvůj úkol
-Rozmen fázi na 3-7 konkrétních kroků. Každý krok má dvě části:
+# Your task
+Break the phase down into 3-7 concrete steps. Each step has two parts:
 
-- **title** — krátký, výstižný název (ideálně do 8 slov). Slouží jako kanonický identifikátor kroku (páruje se s reportem), tak ať je stručný a stálý.
-- **detail** (volitelný) — delší upřesnění: ověřitelný výstup a kritéria (např. "API endpoint /tasks vrací JSON; pokryto testem"). Sem patří to, co by jinak title nafukovalo.
+- **title** — a short, descriptive name (ideally up to 8 words). It serves as the step's canonical identifier (it's paired with the report), so keep it concise and stable.
+- **detail** (optional) — a longer clarification: verifiable output and criteria (e.g. "API endpoint /tasks returns JSON; covered by a test"). This is where things that would otherwise bloat the title belong.
 
-Každý krok musí mít jasný, ověřitelný výstup (např. "API endpoint /tasks vrací JSON" — ne "udělat backend"); pokud se nevejde do title, dej ho do detailu. ${GRAPH_USAGE_HINT}
+Each step must have a clear, verifiable output (e.g. "API endpoint /tasks returns JSON" — not "build the backend"); if it doesn't fit in the title, put it in the detail. ${GRAPH_USAGE_HINT}
 
-Kroky krátce ukaž uživateli. Po odsouhlasení je **ulož** zavoláním (Bash) — jeden krok na řádek ve formátu \`title :: detail\` (oddělovač \` :: \` je volitelný; řádek bez něj je jen title):
+Show the steps briefly to the user. After they approve, **save** them by calling (Bash) — one step per line in the format \`title :: detail\` (the \` :: \` separator is optional; a line without it is just a title):
 
 \`\`\`
 printf '%s\\n' \\
-  "<title prvního kroku> :: <detail prvního kroku>" \\
-  "<title druhého kroku bez detailu>" \\
-  "<title třetího kroku> :: <detail třetího kroku>" | mini plan --apply
+  "<title of the first step> :: <detail of the first step>" \\
+  "<title of the second step without detail>" \\
+  "<title of the third step> :: <detail of the third step>" | mini plan --apply
 \`\`\`
 
-Stav fáze měň jen tímhle příkazem — nikdy needituj \`.mini/state.json\` ručně.
+Change the phase state only with this command — never edit \`.mini/state.json\` by hand.
 
-Po uložení napiš, že další na řadě je \`/mini:do\` (implementovat fázi).
+After saving, write that the next step is \`/mini:do\` (implement the phase).
 `;
 }
 
@@ -161,15 +161,15 @@ export function buildDoneSessionPrompt(input: DoneSessionInput): string {
   const { phase, reportExists, reportBody, verify } = input;
 
   if (!reportExists) {
-    return `Jsi v Claude Code session — krok **done** workflow mini.
+    return `You are in a Claude Code session — the **done** step of the mini workflow.
 
-Fáze **${phase.id}: ${phase.title}** zatím nemá report z implementace (\`.mini/run/${phaseStem(phase.id)}.md\` chybí).
-Bez reportu nelze stav posunout neinteraktivně. Nejdřív spusť \`/mini:do\` (implementovat fázi a zapsat report), pak se vrať k \`/mini:done\`.
+Phase **${phase.id}: ${phase.title}** does not have an implementation report yet (\`.mini/run/${phaseStem(phase.id)}.md\` is missing).
+Without a report the state can't be moved non-interactively. First run \`/mini:do\` (implement the phase and write the report), then come back to \`/mini:done\`.
 `;
   }
 
   const bodyBlock = reportBody?.trim()
-    ? `\n# Report z implementace\n${reportBody.trim()}\n`
+    ? `\n# Implementation report\n${reportBody.trim()}\n`
     : '';
 
   let verifyBlock: string;
@@ -179,49 +179,49 @@ Bez reportu nelze stav posunout neinteraktivně. Nejdřív spusť \`/mini:do\` (
       const detail = v.detail ? `\n     ${v.detail}` : '';
       return `  ${i + 1}. ${v.title}${detail}`;
     });
-    verifyBlock = `\n# Body k ručnímu ověření\nClaude tyhle věci sám neověřil — projdi je s uživatelem:\n${lines.join('\n')}\n`;
-    applyHint = `Až uživatel ověření odsouhlasí, posuň stav (Bash):
+    verifyBlock = `\n# Items for manual verification\nClaude did not verify these itself — go through them with the user:\n${lines.join('\n')}\n`;
+    applyHint = `Once the user approves the verification, move the state (Bash):
 
 \`\`\`
 mini done --apply --accept-verify
 \`\`\`
 
-Pokud uživatel najde problém, fázi nezavírej — vrať se k \`/mini:do\` a oprav to.`;
+If the user finds a problem, don't close the phase — go back to \`/mini:do\` and fix it.`;
   } else {
-    verifyBlock = '\n# Body k ručnímu ověření\nClaude žádné neuvedl — ověřil vše sám.\n';
-    applyHint = `Zeptej se uživatele, jestli fáze funguje. Po potvrzení posuň stav (Bash):
+    verifyBlock = '\n# Items for manual verification\nClaude listed none — it verified everything itself.\n';
+    applyHint = `Ask the user whether the phase works. After confirmation, move the state (Bash):
 
 \`\`\`
 mini done --apply
 \`\`\``;
   }
 
-  return `Jsi v Claude Code session — krok **done** workflow mini.
-Fáze **${phase.id}: ${phase.title}** je hotová z pohledu implementace.
+  return `You are in a Claude Code session — the **done** step of the mini workflow.
+Phase **${phase.id}: ${phase.title}** is finished from an implementation standpoint.
 
-# Tvůj úkol
-Lidská verifikace: krátce shrň uživateli, co se udělalo (viz report níže), a nech ho potvrdit, že to funguje.
+# Your task
+Human verification: briefly summarize for the user what was done (see the report below) and let them confirm that it works.
 ${bodyBlock}${verifyBlock}
 # CHANGELOG
-Ještě **před** \`mini done --apply\` zaznamenej, co fáze přinesla, do \`CHANGELOG.md\`
-(formát keepachangelog 1.1.0) — commit fáze ho pak automaticky pobere:
-- Soubor je v kořeni projektu; když chybí, založ ho s krátkou hlavičkou a sekcí \`## [Unreleased]\`.
-- Z reportu vyber změny zajímavé pro uživatele a přidej je pod \`## [Unreleased]\` do podsekcí
-  \`### Added\` (nová funkce), \`### Changed\` (změna chování) nebo \`### Fixed\` (oprava) — jen ty, které dávají smysl.
-- **Verzi ani datum nedoplňuj** — zůstaň u \`## [Unreleased]\`. Datovanou sekci \`## [verze] - datum\`
-  vyrobí až \`mini done --apply --push\` při minor/major vydání; patche se kumulují v Unreleased.
-- Čistě interní úpravy bez dopadu na uživatele klidně vynech.
+Still **before** \`mini done --apply\`, record what the phase delivered into \`CHANGELOG.md\`
+(keepachangelog 1.1.0 format) — the phase commit then picks it up automatically:
+- The file is in the project root; if it's missing, create it with a short header and an \`## [Unreleased]\` section.
+- From the report, pick the changes interesting to the user and add them under \`## [Unreleased]\` into the subsections
+  \`### Added\` (new feature), \`### Changed\` (behavior change) or \`### Fixed\` (a fix) — only those that make sense.
+- **Do not fill in a version or date** — stay at \`## [Unreleased]\`. The dated section \`## [version] - date\`
+  is produced only by \`mini done --apply --push\` on a minor/major release; patches accumulate in Unreleased.
+- Purely internal changes with no user impact can be omitted.
 
-# Posun stavu
+# Moving the state
 ${applyHint}
 
-Stav fáze měň jen příkazem \`mini done --apply\` — nikdy needituj \`.mini/state.json\` ručně. \`mini done --apply\` přečte report, posune kroky, fázi uzavře a commitne práci. Verzi v package.json ve výchozím stavu **nenavyšuje** (\`--bump none\`) — vhodné pro dílčí fáze, kde se verze zvedne až na konci celku.
+Change the phase state only with the \`mini done --apply\` command — never edit \`.mini/state.json\` by hand. \`mini done --apply\` reads the report, moves the steps, closes the phase and commits the work. By default it does **not** bump the version in package.json (\`--bump none\`) — suitable for partial phases, where the version is bumped only at the end of a whole unit.
 
-Verze a push:
-- Verzi navyš jen na vyžádání (po dohodě s uživatelem): přidej \`--bump patch\`, \`--bump minor\` nebo \`--bump major\`. Bez \`--bump\` (default \`none\`) verze zůstane beze změny.
-- Nahrání na remote je opt-in: když to uživatel chce, přidej \`--push\` (jinak práce zůstane jen v lokálním commitu). \`--push\` je vydání, proto **vyžaduje explicitní** \`--bump patch|minor|major\` — s \`none\` (ani bez \`--bump\`) skončí chybou.
+Version and push:
+- Bump the version only on request (agreed with the user): add \`--bump patch\`, \`--bump minor\` or \`--bump major\`. Without \`--bump\` (default \`none\`) the version stays unchanged.
+- Pushing to the remote is opt-in: when the user wants it, add \`--push\` (otherwise the work stays only in a local commit). \`--push\` is a release, so it **requires an explicit** \`--bump patch|minor|major\` — with \`none\` (or without \`--bump\`) it fails with an error.
 
-Po uzavření napiš, že další na řadě je \`/mini:next\` (navrhnout další fázi), a **nabídni uživateli příkaz \`/clear\`** pro vyčištění kontextu Claude Code před další fází (\`/clear\` musí napsat on sám).
+After closing, write that the next step is \`/mini:next\` (propose the next phase), and **offer the user the \`/clear\` command** to clear the Claude Code context before the next phase (the user must type \`/clear\` themselves).
 `;
 }
 
@@ -253,11 +253,11 @@ export function buildVerifySessionPrompt(input: VerifySessionInput): string {
   const memoryRel = `.mini/memory/${phaseStem(phase.id)}.md`;
 
   const frame = phaseDone
-    ? `**Fáze ${phase.id}: ${phase.title}** je už uzavřená — tohle je **zpětná hloubková kontrola** jejího UI/UX člověkem.`
-    : `**Fáze ${phase.id}: ${phase.title}** je implementovaná, ale ještě neuzavřená — projdi její UI/UX s člověkem **dřív, než ji v \`done\` zavřeš**.`;
+    ? `**Phase ${phase.id}: ${phase.title}** is already closed — this is a **retrospective in-depth review** of its UI/UX by a human.`
+    : `**Phase ${phase.id}: ${phase.title}** is implemented but not yet closed — go through its UI/UX with a human **before you close it in \`done\`**.`;
 
   const bodyBlock = reportBody?.trim()
-    ? `\n# Report z implementace\n${reportBody.trim()}\n`
+    ? `\n# Implementation report\n${reportBody.trim()}\n`
     : '';
 
   let verifyBlock: string;
@@ -266,14 +266,14 @@ export function buildVerifySessionPrompt(input: VerifySessionInput): string {
       const detail = v.detail ? `\n     ${v.detail}` : '';
       return `  ${i + 1}. ${v.title}${detail}`;
     });
-    verifyBlock = `\n# Body z reportu k ověření\nClaude tyhle věci sám neověřil — tvoř z nich kostru kontroly:\n${lines.join('\n')}\n`;
+    verifyBlock = `\n# Items from the report to verify\nClaude did not verify these itself — use them as the skeleton of the review:\n${lines.join('\n')}\n`;
   } else {
-    verifyBlock = `\n# Body z reportu k ověření\nReport žádné explicitní verify body neuvádí — kontrolu veď podle cíle fáze a kroků níže.\n`;
+    verifyBlock = `\n# Items from the report to verify\nThe report lists no explicit verify items — guide the review by the phase goal and the steps below.\n`;
   }
 
   const stepsBlock =
     phase.steps && phase.steps.length > 0
-      ? `\n# Kroky fáze\n${phase.steps
+      ? `\n# Phase steps\n${phase.steps
           .map((s: Step) => `  - ${s.title}${s.detail ? `\n    ${s.detail}` : ''}`)
           .join('\n')}\n`
       : '';
@@ -282,27 +282,27 @@ export function buildVerifySessionPrompt(input: VerifySessionInput): string {
   // paměť, takže přes report se nálezy dostanou i tam. U rozdělané fáze stačí
   // report. U už uzavřené fáze je paměť hotová, proto nálezy přidej i do ní.
   const reportWrite = reportExists
-    ? `přes \`Read\` + \`Edit\` přidej na konec \`${reportRel}\` sekci \`## Nálezy z verify\` (datum + odrážky: co je OK, co se má opravit a jak). Tahle sekce je **pod** YAML hlavičkou reportu, takže parser ani \`mini done\` nerozhodí`
-    : `report \`${reportRel}\` zatím neexistuje — založ ho přes \`Write\` aspoň se sekcí \`## Nálezy z verify\` (datum + odrážky), ať nálezy nezůstanou jen v chatu`;
+    ? `via \`Read\` + \`Edit\` add a \`## Verify findings\` section at the end of \`${reportRel}\` (date + bullets: what is OK, what should be fixed and how). This section is **below** the report's YAML header, so it won't disturb the parser or \`mini done\``
+    : `the report \`${reportRel}\` does not exist yet — create it via \`Write\` with at least a \`## Verify findings\` section (date + bullets), so the findings don't stay only in the chat`;
   const memoryWrite = phaseDone
-    ? `\n   Fáze je **už uzavřená**, takže paměť \`${memoryRel}\` je hotová a report už do ní \`mini done\` zpětně nepřevezme — přidej tytéž nálezy i na konec paměťového souboru (sekce \`## Nálezy z verify\`). Pozn.: soubor může mít číselný sufix (\`-2\` apod.), když fáze prošla \`done\` víckrát — uprav ten nejnovější.`
+    ? `\n   The phase is **already closed**, so the memory \`${memoryRel}\` is finished and \`mini done\` won't pull the report into it retroactively — add the same findings to the end of the memory file too (a \`## Verify findings\` section). Note: the file may have a numeric suffix (\`-2\` etc.) when the phase went through \`done\` multiple times — edit the most recent one.`
     : '';
 
-  return `Jsi v Claude Code session — krok **verify** workflow mini.
+  return `You are in a Claude Code session — the **verify** step of the mini workflow.
 ${frame}
 
-# Tvůj úkol
-Proveď člověka **hloubkovou kontrolou UI/UX** téhle fáze. Nejsi tu od strojových testů (ty patří do \`do\`), ale od věcí, co posoudí jen člověk: vizuální podoba, srozumitelnost, plynulost UX flow, drobné detaily a celkový dojem. Postupuj interaktivně — **ptej se po jednom**, nech člověka reagovat a teprve pak pokračuj:
+# Your task
+Take the human through an **in-depth UI/UX review** of this phase. You're not here for machine tests (those belong in \`do\`), but for things only a human can judge: visual appearance, clarity, the smoothness of the UX flow, small details and the overall impression. Proceed interactively — **ask one at a time**, let the human react, and only then continue:
 
-1. **Připrav scénu.** Z cíle fáze, kroků a reportu níže urči, co konkrétně se má kontrolovat a jak to člověk uvidí (který příkaz/obrazovku/výstup má spustit). Když je potřeba něco nastartovat (build, dev server, ukázkový vstup), navrhni přesné kroky.
-2. **Projdi verify body.** Vezmi body z reportu jako kostru a u každého nech člověka potvrdit, že to vypadá a chová se správně. Aktivně se ptej na detaily, ne jen „funguje to?".
-3. **Rozšiř kontrolu.** Doplň širší UX procházku za rámec verify bodů: okrajové stavy, chybové hlášky, konzistence s okolím, přístupnost/čitelnost, drobné nepřesnosti. Navrhuj konkrétní věci k vyzkoušení.
-4. **Posbírej a zapiš nálezy.** Shrň, co je v pořádku a co ne. U každého problému zachyť, co se má opravit. Pak nálezy **zapiš**: ${reportWrite}.${memoryWrite}
+1. **Set the scene.** From the phase goal, the steps and the report below, determine what specifically should be reviewed and how the human will see it (which command/screen/output to run). When something needs to be started up (build, dev server, sample input), propose the exact steps.
+2. **Go through the verify items.** Take the items from the report as a skeleton and for each let the human confirm that it looks and behaves correctly. Actively ask about details, not just "does it work?".
+3. **Broaden the review.** Add a wider UX walkthrough beyond the verify items: edge states, error messages, consistency with the surroundings, accessibility/readability, small inaccuracies. Suggest concrete things to try.
+4. **Collect and record the findings.** Summarize what is OK and what isn't. For each problem, capture what should be fixed. Then **record** the findings: ${reportWrite}.${memoryWrite}
 ${bodyBlock}${verifyBlock}${stepsBlock}
-# Po kontrole
-- Když je vše v pořádku → řekni to (nálezy v reportu to potvrdí) a doporuč pokračovat na \`/mini:done\` (uzavření fáze), pokud ještě není uzavřená.
-- Když člověk najde problémy → shrň je jako konkrétní úkoly (jsou už zapsané v reportu) a doporuč vrátit se k \`/mini:do\` a opravit je (fázi nezavírej).
+# After the review
+- If everything is fine → say so (the findings in the report confirm it) and recommend continuing to \`/mini:done\` (closing the phase), if it isn't closed yet.
+- If the human finds problems → summarize them as concrete tasks (they're already recorded in the report) and recommend going back to \`/mini:do\` to fix them (don't close the phase).
 
-Jediné, co tu zapisuješ, jsou **nálezy** (do run reportu, u uzavřené fáze i do paměti) — stav fáze v \`.mini/state.json\` **neposouváš**, to je práce \`done\`.
+The only thing you write here are the **findings** (into the run report, and for a closed phase also into the memory) — you **do not move** the phase state in \`.mini/state.json\`, that's the job of \`done\`.
 `;
 }

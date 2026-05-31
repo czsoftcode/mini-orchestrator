@@ -52,6 +52,19 @@ narazíš na nový termín.
 | Průběžný zápis kroků           | Tracking step progress         |
 | Report na konci session        | Report at the end of the session |
 | report z auto session          | report from the auto session   |
+| Fáze k diskusi                 | Phase to discuss               |
+| Poznámky z diskuse             | Discussion notes               |
+| diskusní session               | discussion session             |
+| Nejdřív se zeptej              | Ask first                      |
+| Fáze už má kroky               | The phase already has steps    |
+| Report z implementace          | Implementation report          |
+| Body k ručnímu ověření         | Items for manual verification  |
+| Posun stavu                    | Moving the state               |
+| Body z reportu k ověření       | Items from the report to verify |
+| Kroky fáze                     | Phase steps                    |
+| Po kontrole                    | After the review               |
+| hloubková kontrola UI/UX       | in-depth UI/UX review          |
+| zpětná hloubková kontrola      | retrospective in-depth review  |
 
 ### Sekce memory souboru (writeMemory) — nejsou parsované, volný překlad
 
@@ -61,6 +74,21 @@ narazíš na nový termín.
 | Co se udělalo        | What was done   |
 | Klíčová rozhodnutí   | Key decisions   |
 | Otevřené konce       | Loose ends      |
+
+### Sekce diskuzních poznámek (discuss) — `Watch out for` parsuje summarizer
+
+Šablonu poznámek z diskuse píše Claude podle promptu `discussPhase`; sekci
+„Watch out for" (a obdoby „findings/next phase" v run reportu) **parsuje**
+`summarizeMemoryForNext` v `commands/writeMemory.ts` (matchery `pozor|watch out`,
+resp. `finding|next phase|nález|další fáz` — drží i starší českou paměť). Kdo
+přejmenuje tyhle nadpisy v promptu, musí upravit i matchery + jejich test.
+
+| Česky                | Anglicky          |
+| -------------------- | ----------------- |
+| Záměr                | Intent            |
+| Klíčová rozhodnutí   | Key decisions     |
+| Pozor na             | Watch out for     |
+| Nálezy z verify      | Verify findings   |
 
 ### Sekce `codebase.md` (audit) — nejsou parsované, volný překlad
 
@@ -82,8 +110,14 @@ narazíš na nový termín.
   cizích nástrojů (`completed`, `in_progress`, `pending`, `cancelled`, …).
 - Identifikátory v kódu (názvy funkcí, typů, klíčů stavu jako `done`/`doing`).
 
-## Známé švy migrace (zatím nepřeloženo)
+## Stav migrace
 
-- `GRAPH_USAGE_HINT` (`src/prompts/graphHint.ts`) — sdílený mezi více prompty,
-  jeho překlad patří do pozdější fáze. Do té doby přeložené prompty obsahují
-  český blok s nápovědou ke grafu.
+Překlad promptů je **dokončen** (fáze 73–76) — všechny buildery v `src/prompts/`
+generují anglické instrukce, sdílený `GRAPH_USAGE_HINT` včetně.
+
+Záměrně **česky** zůstává interní produkce paměťové koláže
+`buildPhaseMemoryMarkdown` v `commands/writeMemory.ts` (nadpisy `## Diskuse`,
+`## Run report`, `## Kroky`, `## Poznámka uživatele`, `## Auto-commit`, `**Cíl:**`).
+Není to prompt — je to skládání dat, která mini vlastní; konzument
+`summarizeMemoryForNext` se na ty kotvy váže. Případný překlad je samostatná
+změna mimo „překlad instrukcí".

@@ -3,10 +3,10 @@ import type { Phase, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
-  done: 'hotovo',
-  doing: 'dělá se',
-  todo: 'čeká',
-  skipped: 'odloženo',
+  done: 'done',
+  doing: 'in progress',
+  todo: 'todo',
+  skipped: 'skipped',
 };
 
 export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string {
@@ -15,44 +15,44 @@ export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string
     const lines = (phase.steps as Step[]).map(
       (s) => `- [${STEP_WORD[s.status]}] ${s.title}`,
     );
-    stepsBlock = `\nKroky:\n${lines.join('\n')}\n`;
+    stepsBlock = `\nSteps:\n${lines.join('\n')}\n`;
   }
 
   const notesPath = `.mini/discuss/${phaseStem(phase.id)}.md`;
 
-  return `Jsi součástí nástroje, který pomáhá uživateli budovat projekt postupně.
-Právě probíhá **diskusní session** o nadcházející fázi — NEIMPLEMENTUJ nic.
+  return `You are part of a tool that helps the user build a project incrementally.
+A **discussion session** about the upcoming phase is in progress — DO NOT implement anything.
 
-# Projekt
+# Project
 ${projectMd.trim()}
 
-# Fáze k diskusi
-**Fáze ${phase.id}: ${phase.title}**
-Cíl: ${phase.goal ?? '(nezadán)'}
+# Phase to discuss
+**Phase ${phase.id}: ${phase.title}**
+Goal: ${phase.goal ?? '(not set)'}
 ${stepsBlock}
-# Tvůj úkol
-Prodiskutuj s uživatelem záměr této fáze. Tvým cílem je:
-- pochopit, co má fáze přesně řešit a proč
-- upozornit na nejasnosti, skryté předpoklady nebo rizika
-- navrhnout, jak by mohl vypadat cíl nebo kroky (pokud nejsou zadané nebo jsou vágní)
+# Your task
+Discuss the intent of this phase with the user. Your goals are to:
+- understand what exactly the phase should solve and why
+- point out ambiguities, hidden assumptions or risks
+- suggest what the goal or steps might look like (if they are not set or are vague)
 
-${GRAPH_USAGE_HINT} Kromě souboru s poznámkami (viz níže) nic jiného nezapisuj — session je jinak jen pro diskusi.
+${GRAPH_USAGE_HINT} Apart from the notes file (see below) do not write anything else — the session is otherwise only for discussion.
 
-Začni stručným shrnutím, co cíl fáze znamená, a pak se zeptej na to, co je nejasné nebo co považuješ za klíčové upřesnit.
+Start with a brief summary of what the phase's goal means, and then ask about what is unclear or what you consider key to clarify.
 
-# Poznámky z diskuse
-Než session ukončíš, zapiš přes Write tool shrnutí diskuse do souboru \`${notesPath}\`. Teprve potom session ukonči.
+# Discussion notes
+Before you end the session, write a summary of the discussion via the Write tool into the file \`${notesPath}\`. Only then end the session.
 
-Soubor musí mít tuto strukturu (názvy sekcí jsou fixní; jednotlivé sekce smí být prázdné nebo úplně chybět, pokud k nim není co napsat):
+The file must have this structure (section names are fixed; individual sections may be empty or entirely absent if there is nothing to write):
 
 \`\`\`
-# Fáze ${phase.id} — ${phase.title}
+# Phase ${phase.id} — ${phase.title}
 
-## Záměr
-## Klíčová rozhodnutí
-## Pozor na
+## Intent
+## Key decisions
+## Watch out for
 \`\`\`
 
-Soubor slouží jako kontext pro následující kroky workflow (\`mini plan\`, \`mini do\`), které samotnou diskusi neuvidí. Piš věcně a stručně — jen to, co je pro další práci podstatné.
+The file serves as context for the following workflow steps (\`mini plan\`, \`mini do\`), which won't see the discussion itself. Write factually and concisely — only what matters for further work.
 `;
 }

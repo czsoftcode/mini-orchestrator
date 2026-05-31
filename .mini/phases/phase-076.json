@@ -1,0 +1,44 @@
+{
+  "id": 76,
+  "title": "Dokončení překladu instrukcí do AJ",
+  "goal": "Přeložit do angličtiny graphHint.ts (sdílený), discussPhase.ts a sessionContext.ts a aktualizovat všechny návazné snapshoty/aserce (i v tokens/measure a commands/context); strojové kontrakty beze změny; npm test a build zelené — čímž jsou všechny mini prompty anglicky.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "graphHint.ts → AJ",
+      "status": "done",
+      "detail": "Přeložit sdílený GRAPH_USAGE_HINT. Tím se anglicky srovnají i next/plan (už EN) a discuss/sessionContext (v krocích níže) — žádný šev."
+    },
+    {
+      "title": "discussPhase.ts → AJ",
+      "status": "done",
+      "detail": "Próza + STEP_WORD + šablona poznámek (## Záměr→## Intent, ## Klíčová rozhodnutí→## Key decisions, ## Pozor na→## Watch out for). Upravit discussPhase.test.ts."
+    },
+    {
+      "title": "sessionContext.ts → AJ",
+      "status": "done",
+      "detail": "4 buildery (next/plan/done/verify session) vč. ## Nálezy z verify→## Verify findings. Zachovat příkazy (mini … --apply, --accept-verify, --step-done) a keepachangelog termíny. Upravit sessionContext.test.ts."
+    },
+    {
+      "title": "Sladit summarizer last-memory",
+      "status": "done",
+      "detail": "V commands/writeMemory.ts rozšířit matchery na AJ nadpisy (pozor|watch out, nález|finding). Upravit fixtury+aserce v commands/writeMemory.test.ts."
+    },
+    {
+      "title": "Návazné aserce + snapshoty",
+      "status": "done",
+      "detail": "Upravit commands/context.test.ts (session prompty) a přegenerovat tokens/measure snapshoty."
+    },
+    {
+      "title": "Doplnit slovníček + ověřit",
+      "status": "done",
+      "detail": "docs/i18n-glossary.md; celé npm test + build zelené."
+    }
+  ],
+  "startedAt": "2026-05-31T13:45:28.821Z",
+  "completedAt": "2026-05-31T14:04:04.563Z",
+  "autoCommit": {
+    "preSha": "6bf8f9df12276643bfd0796d445fdebcfe40fb13",
+    "subject": "Fáze 76: Dokončení překladu instrukcí do AJ"
+  }
+}

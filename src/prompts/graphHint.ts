@@ -9,12 +9,12 @@
  * promptů, takže žádné prompt-specifické věty (typu „nezapisuj nic").
  */
 export const GRAPH_USAGE_HINT =
-  'Pokud potřebuješ pochopit stav kódu, postupuj přes strojovou mapu: ' +
-  '(1) jednou si načti index `.mini/graph.json` (pokud existuje) — pro každý zdroják cestu, ' +
-  'jeho mapu v `.mini/graph/` a názvy exportů; index si drž v paměti a sdílej ho napříč kroky, ' +
-  'nenačítej ho opakovaně; ' +
-  '(2) podle exportů cíleně otevři jen relevantní mapy `.mini/graph/<cesta>.md` ' +
-  '(importy, exporty, signatury; u exportů je kotva `@L<start>-<end>` = řádky deklarace); ' +
-  '(3) když potřebuješ samotný kód, čti ho cíleně přes `Read` rovnou od kotvy ' +
-  '(`offset` = start, `limit` = end − start + 1), ne celý soubor; ' +
-  'když mapa kotvu nemá, dohledej symbol přes Grep tool (ripgrep). Malé soubory klidně celé.';
+  'If you need to understand the state of the code, go through the machine-generated map: ' +
+  '(1) read the index `.mini/graph.json` once (if it exists) — for each source file its path, ' +
+  'its map in `.mini/graph/`, and the export names; keep the index in memory and share it across steps, ' +
+  'do not read it repeatedly; ' +
+  '(2) based on the exports, open only the relevant maps `.mini/graph/<path>.md` ' +
+  '(imports, exports, signatures; for exports there is an anchor `@L<start>-<end>` = the declaration lines); ' +
+  '(3) when you need the actual code, read it targeted via `Read` straight from the anchor ' +
+  '(`offset` = start, `limit` = end − start + 1), not the whole file; ' +
+  'when a map has no anchor, look up the symbol via the Grep tool (ripgrep). Small files can be read whole.';

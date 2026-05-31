@@ -21,6 +21,12 @@ z [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) a projekt používá
   Memory prompt i auto session prompt (a tím i interaktivní `/mini:do` / `/mini:auto`)
   jsou nově anglicky. Strojový kontrakt YAML reportu (`phase`/`verdict`/`steps`/
   `status`/`verify` + jejich hodnoty) zůstává beze změny.
+- **Překlad instrukcí dokončen — všechny prompty jsou anglicky.** Přeloženy
+  i interaktivní session prompty (`/mini:next`, `/mini:plan`, `/mini:done`,
+  `/mini:verify`), `discuss` prompt a sdílená nápověda ke grafu. Šablona diskuzních
+  poznámek i sekce „Verify findings" jsou anglicky a summarizer `last-memory` je
+  rozpoznává (česká paměť z dřívějška se chytá dál). Sdílený slovníček je
+  v `docs/i18n-glossary.md`.
 - **`/mini:auto --discuss`** — flag vynutí krok `discuss` v každé fázi běhu
   (analogicky k `--verify`). Bez něj se `discuss` spouští jen podmíněně u složitých fází.
 - **Verify v autonomním `/mini:auto`** — cyklus teď mezi `do` a `done` spustí krok

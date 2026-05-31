@@ -16,10 +16,10 @@ describe('buildDiscussPhasePrompt', () => {
 
     const out = buildDiscussPhasePrompt(PROJECT_MD, phase);
 
-    expect(out).toContain('**Fáze 3: Diskusní session**');
-    expect(out).toContain('Cíl: uživatel může prodiskutovat fázi před plánováním');
-    expect(out).not.toContain('(nezadán)');
-    expect(out).toContain('NEIMPLEMENTUJ');
+    expect(out).toContain('**Phase 3: Diskusní session**');
+    expect(out).toContain('Goal: uživatel může prodiskutovat fázi před plánováním');
+    expect(out).not.toContain('(not set)');
+    expect(out).toContain('DO NOT implement');
     expect(out).toMatchSnapshot();
   });
 
@@ -32,8 +32,8 @@ describe('buildDiscussPhasePrompt', () => {
 
     const out = buildDiscussPhasePrompt(PROJECT_MD, phase);
 
-    expect(out).toContain('**Fáze 5: Refactor auth**');
-    expect(out).toContain('Cíl: (nezadán)');
+    expect(out).toContain('**Phase 5: Refactor auth**');
+    expect(out).toContain('Goal: (not set)');
     expect(out).toMatchSnapshot();
   });
 
@@ -52,10 +52,10 @@ describe('buildDiscussPhasePrompt', () => {
 
     const out = buildDiscussPhasePrompt(PROJECT_MD, phase);
 
-    expect(out).toContain('- [hotovo] připravit schéma');
-    expect(out).toContain('- [čeká] napsat handler');
-    expect(out).toContain('- [odloženo] starý nápad');
-    expect(out).not.toContain('← pracuj na tomhle');
+    expect(out).toContain('- [done] připravit schéma');
+    expect(out).toContain('- [todo] napsat handler');
+    expect(out).toContain('- [skipped] starý nápad');
+    expect(out).not.toContain('← work on this');
     expect(out).toMatchSnapshot();
   });
 
@@ -69,7 +69,7 @@ describe('buildDiscussPhasePrompt', () => {
 
     const out = buildDiscussPhasePrompt(PROJECT_MD, phase);
 
-    expect(out).not.toContain('Kroky:');
+    expect(out).not.toContain('Steps:');
     expect(out).toMatchSnapshot();
   });
 
@@ -77,8 +77,8 @@ describe('buildDiscussPhasePrompt', () => {
     const phase: Phase = { id: 1, title: 'P1', status: 'proposed' };
     const out = buildDiscussPhasePrompt(`\n\n  ${PROJECT_MD}  \n\n`, phase);
 
-    expect(out).toContain(`# Projekt\n${PROJECT_MD}\n`);
-    expect(out).not.toContain('# Projekt\n\n');
+    expect(out).toContain(`# Project\n${PROJECT_MD}\n`);
+    expect(out).not.toContain('# Project\n\n');
   });
 
   it('instructs Claude to read graph.json index first', () => {

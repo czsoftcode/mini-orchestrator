@@ -4,10 +4,10 @@ exports[`render > konzolový výpis nad fixními vstupy (snapshot) 1`] = `
 "Token report (heuristika délka/4), seřazeno podle reálných tokenů:
   auto         reálný=1159  šablona=914  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
   do           reálný=1061  šablona=1041  kontext=20  (vkládaný kontext 20 tok: fáze (název + cíl) 60 %, kroky 40 %)
-  plan         reálný=756  šablona=511  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
-  next         reálný=663  šablona=470  kontext=193  (vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %)
-  done         reálný=621  šablona=539  kontext=82  (vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %)
-  discuss      reálný=592  šablona=472  kontext=120  (vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %)
+  plan         reálný=822  šablona=577  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
+  next         reálný=724  šablona=531  kontext=193  (vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %)
+  done         reálný=694  šablona=612  kontext=82  (vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %)
+  discuss      reálný=641  šablona=521  kontext=120  (vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %)
   writeMemory  reálný=485  šablona=358  kontext=127  (vkládaný kontext 127 tok: projekt 79 %, fáze (název + cíl) 9 %)"
 `;
 
@@ -22,10 +22,10 @@ obsahových bloků (projekt, historie fází, poznámky, …).
 | --- | ---: | ---: | ---: |
 | auto | 1159 | 914 | 245 |
 | do | 1061 | 1041 | 20 |
-| plan | 756 | 511 | 245 |
-| next | 663 | 470 | 193 |
-| done | 621 | 539 | 82 |
-| discuss | 592 | 472 | 120 |
+| plan | 822 | 577 | 245 |
+| next | 724 | 531 | 193 |
+| done | 694 | 612 | 82 |
+| discuss | 641 | 521 | 120 |
 | writeMemory | 485 | 358 | 127 |
 
 ## Proč (rozpad vkládaného kontextu)

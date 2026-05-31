@@ -377,6 +377,11 @@
       "id": 75,
       "title": "Překlad memory + auto promptů do AJ",
       "status": "done"
+    },
+    {
+      "id": 76,
+      "title": "Dokončení překladu instrukcí do AJ",
+      "status": "done"
     }
   ],
   "models": {
