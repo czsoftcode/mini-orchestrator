@@ -1,0 +1,34 @@
+{
+  "id": 90,
+  "title": "npm metadata a keywords",
+  "goal": "Do package.json doplnit keywords pro vyhledávání na npm a chybějící metadata balíčku (repository, homepage, bugs, author); zkontrolovat a případně doladit i description, aby byl mini-orchestrator dobře dohledatelný a měl na stránce balíčku správné odkazy.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add keywords to package.json",
+      "status": "done",
+      "detail": "Pole keywords s relevantnimi terminy (claude, claude-code, anthropic, ai, llm, cli, orchestrator, workflow, agent, project-management, phases, typescript) pro fulltext a stitky na npmjs.com."
+    },
+    {
+      "title": "Add repository, homepage, bugs, author",
+      "status": "done",
+      "detail": "repository (type git + URL git+https://github.com/czsoftcode/mini-orchestrator.git), homepage, bugs (issues URL), author Stanislav Kremen; overit/doladit description."
+    },
+    {
+      "title": "Verify package via npm pack --dry-run",
+      "status": "done",
+      "detail": "npm pack --dry-run a npm publish --dry-run projdou bez varovani k metadatum; nova pole jsou validni JSON."
+    },
+    {
+      "title": "README + CHANGELOG",
+      "status": "done",
+      "detail": "Anglicky zaznam faze do CHANGELOG.md, pripadne zminka v README."
+    }
+  ],
+  "startedAt": "2026-05-31T21:06:40.439Z",
+  "completedAt": "2026-05-31T21:11:15.270Z",
+  "autoCommit": {
+    "preSha": "02a3a5e452eae72aa482cf90798fa58681291161",
+    "subject": "Phase 90: npm metadata a keywords"
+  }
+}

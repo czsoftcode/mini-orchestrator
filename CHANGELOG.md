@@ -6,6 +6,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **npm package metadata for discoverability.** `package.json` now carries
+  `keywords` (claude, claude-code, anthropic, ai, llm, cli, orchestrator,
+  workflow, agent, project-management, phases, typescript) so the package shows
+  up in npm's full-text search and as clickable tags on its npmjs.com page.
+  Also added `author`, `homepage`, `repository` and `bugs`, so the package page
+  links to the GitHub repository, README and issue tracker. These take effect on
+  the next publish.
+
 ## [1.7.0] - 2026-05-31
 
 ### Added

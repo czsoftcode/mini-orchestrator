@@ -1,8 +1,31 @@
 {
   "name": "mini-orchestrator",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Mini orchestrator on top of Claude Code — keeps the project state and sends Claude only the essentials.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "ai",
+    "llm",
+    "cli",
+    "orchestrator",
+    "workflow",
+    "agent",
+    "project-management",
+    "phases",
+    "typescript"
+  ],
   "license": "MIT",
+  "author": "Stanislav Kremeň",
+  "homepage": "https://github.com/czsoftcode/mini-orchestrator#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/czsoftcode/mini-orchestrator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/czsoftcode/mini-orchestrator/issues"
+  },
   "type": "module",
   "bin": {
     "mini": "dist/cli.js"

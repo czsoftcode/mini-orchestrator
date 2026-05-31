@@ -447,6 +447,11 @@
       "id": 89,
       "title": "Verze podle jazyka projektu",
       "status": "done"
+    },
+    {
+      "id": 90,
+      "title": "npm metadata a keywords",
+      "status": "done"
     }
   ],
   "models": {
