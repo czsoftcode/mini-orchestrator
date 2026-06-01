@@ -7,5 +7,8 @@
 - [x] mini todo edit <n> "<text>" — úprava textu existující položky archivu
 - [x] mini todo clear --done — hromadné smazání odškrtnutých položek (úklid archivu)
 - [x] mini status zobrazí počet otevřených todo (Ideas: N open) vedle přehledu fází
-- [ ] CI workflow (GitHub Actions): build + tsc --noEmit + testy na push a PR
 - [x] přidat příkaz mini changelog a /mini:changelog, který vypíše změny v mini
+- [x] mini changelog --version <v>: výpis konkrétní verze ze CHANGELOG.md
+- [ ] mini doctor: diagnostika projektu (schema stavu, slash commandy, statusline, čerstvost verze) jako checklist
+- [ ] mini status --json: strojově čitelný výstup stavu projektu pro skripty/integrace
+- [ ] mini status zobrazí dobu trvání fáze z startedAt/completedAt

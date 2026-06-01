@@ -144,3 +144,14 @@ export function latestReleased(sections: ChangelogSection[]): ChangelogSection |
 export function unreleasedSection(sections: ChangelogSection[]): ChangelogSection | null {
   return sections.find((s) => s.version === null) ?? null;
 }
+
+/**
+ * The section for a specific version, or `null` when not found. Tolerant of a
+ * leading `v` (`v1.2.0` matches `1.2.0`); the `[Unreleased]` section is matched
+ * by the word `unreleased` (any case).
+ */
+export function findVersion(sections: ChangelogSection[], query: string): ChangelogSection | null {
+  const want = query.trim().replace(/^v/i, '').toLowerCase();
+  if (want === 'unreleased') return unreleasedSection(sections);
+  return sections.find((s) => s.version?.toLowerCase() === want) ?? null;
+}

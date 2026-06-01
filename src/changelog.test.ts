@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  findVersion,
   latestReleased,
   parseChangelogSections,
   stampUnreleased,
@@ -142,5 +143,25 @@ describe('latestReleased / unreleasedSection', () => {
   it('latestReleased is null with no dated sections', () => {
     const onlyUnreleased = '# Changelog\n\n## [Unreleased]\n\n- x\n';
     expect(latestReleased(parseChangelogSections(onlyUnreleased))).toBeNull();
+  });
+});
+
+describe('findVersion', () => {
+  const sections = parseChangelogSections(SAMPLE);
+
+  it('matches an exact version', () => {
+    expect(findVersion(sections, '1.1.0')?.heading).toBe('[1.1.0] - 2026-01-01');
+  });
+
+  it('tolerates a leading v', () => {
+    expect(findVersion(sections, 'v1.2.0')?.version).toBe('1.2.0');
+  });
+
+  it('matches unreleased by word', () => {
+    expect(findVersion(sections, 'unreleased')?.version).toBeNull();
+  });
+
+  it('returns null for an unknown version', () => {
+    expect(findVersion(sections, '9.9.9')).toBeNull();
   });
 });

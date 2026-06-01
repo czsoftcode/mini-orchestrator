@@ -507,6 +507,11 @@
       "id": 101,
       "title": "Příkaz mini changelog a /mini:changelog",
       "status": "done"
+    },
+    {
+      "id": 102,
+      "title": "mini changelog --version <v>",
+      "status": "done"
     }
   ],
   "models": {

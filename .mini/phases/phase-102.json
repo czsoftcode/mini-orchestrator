@@ -1,0 +1,29 @@
+{
+  "id": 102,
+  "title": "mini changelog --version <v>",
+  "goal": "Add a '--version <v>' flag to 'mini changelog' (and the /mini:changelog slash command) that prints the section for a specific version; an unknown version is reported with the list of available versions. Reuses the phase-101 section parser.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Version lookup helper + flag",
+      "status": "done",
+      "detail": "In changelog.ts add findVersion(sections, v) (match on the bracket version, tolerant of a leading 'v'); add a 'version?' field to ChangelogOptions and wire '--version <v>' in cli.ts. The command prints the matched section, or warns with the list of available versions when not found. Unit tests for the helper."
+    },
+    {
+      "title": "Command behaviour + tests",
+      "status": "done",
+      "detail": "Extend commands/changelog.ts to handle --version; add command tests (temp dir) for a hit, an unknown version (lists available), and the 'v' prefix tolerance."
+    },
+    {
+      "title": "Docs and slash command",
+      "status": "done",
+      "detail": "Update the /mini:changelog argument-hint and body with --version <v>, the README commands table/slash list, and add an English CHANGELOG entry."
+    }
+  ],
+  "startedAt": "2026-06-01T16:04:05.209Z",
+  "completedAt": "2026-06-01T16:08:25.712Z",
+  "autoCommit": {
+    "preSha": "4dda5586b0ff2e6eb96dd2d326787867b07ae2da",
+    "subject": "Phase 102: mini changelog --version <v>"
+  }
+}

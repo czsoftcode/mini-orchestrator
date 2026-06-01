@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import {
   CHANGELOG_FILE,
   type ChangelogSection,
+  findVersion,
   latestReleased,
   parseChangelogSections,
   unreleasedSection,
@@ -14,6 +15,8 @@ export interface ChangelogOptions {
   all?: boolean;
   /** Print the pending `[Unreleased]` section instead of the latest release. */
   unreleased?: boolean;
+  /** Print the section for a specific version (tolerant of a leading `v`). */
+  version?: string;
 }
 
 /**
@@ -44,6 +47,18 @@ export async function changelog(opts: ChangelogOptions = {}): Promise<void> {
   const sections = parseChangelogSections(content);
   if (sections.length === 0) {
     log.warn(`${CHANGELOG_FILE} has no version sections.`);
+    return;
+  }
+
+  if (opts.version) {
+    const match = findVersion(sections, opts.version);
+    if (!match) {
+      log.warn(`No section for version "${opts.version}".`);
+      const available = sections.map((s) => s.version ?? 'Unreleased').join(', ');
+      log.hint(`Available: ${available}`);
+      return;
+    }
+    printSection(match);
     return;
   }
 

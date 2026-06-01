@@ -6,6 +6,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **`mini changelog <version>`.** The changelog command takes an optional
+  version argument and prints just that version's section (tolerant of a leading
+  `v`, e.g. `v1.11.0`); an unknown version is reported with the list of available
+  versions. Exposed through the `/mini:changelog` slash command too. (A positional
+  argument rather than `--version`, which collides with the global version flag.)
+
 ## [1.11.0] - 2026-06-01
 
 ### Added

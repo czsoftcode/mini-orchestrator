@@ -72,6 +72,29 @@ describe('changelog', () => {
     expect(out).toContain('- old bug');
   });
 
+  it('--version prints a specific section', async () => {
+    await writeFile(join(cwd, 'CHANGELOG.md'), SAMPLE, 'utf-8');
+    await changelog({ version: '1.1.0' });
+    expect(out).toContain('[1.1.0] - 2026-01-01');
+    expect(out).toContain('- old bug');
+    expect(out).not.toContain('- shipped feature');
+  });
+
+  it('--version tolerates a leading v', async () => {
+    await writeFile(join(cwd, 'CHANGELOG.md'), SAMPLE, 'utf-8');
+    await changelog({ version: 'v1.2.0' });
+    expect(out).toContain('[1.2.0] - 2026-02-01');
+    expect(out).toContain('- shipped feature');
+  });
+
+  it('--version with an unknown version lists the available ones', async () => {
+    await writeFile(join(cwd, 'CHANGELOG.md'), SAMPLE, 'utf-8');
+    await changelog({ version: '9.9.9' });
+    expect(out).toContain('No section for version "9.9.9"');
+    expect(out).toContain('Available:');
+    expect(out).toContain('1.2.0');
+  });
+
   it('reports a missing changelog gracefully', async () => {
     await changelog();
     expect(out).toContain('No CHANGELOG.md');
