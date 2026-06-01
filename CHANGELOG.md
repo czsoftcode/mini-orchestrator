@@ -8,6 +8,11 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **Phase duration in `mini status`.** Each finished phase now shows how long it
+  took (a compact `(took 3m)` / `(took 2h 5m)` suffix), computed from its
+  `startedAt`/`completedAt` timestamps; phases without both timestamps show
+  nothing.
+
 - **`mini doctor` command and `/mini:doctor` slash command.** A new `mini doctor`
   prints a health-check checklist of the project setup — the state and its schema
   version (legacy → `mini migrate`, missing → `mini init`), `project.md` and

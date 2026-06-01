@@ -105,7 +105,9 @@ function printPhase(
   const status = renderStatus(PHASE_LABELS[p.status]);
   const marker = isCurrent ? pc.cyan('>') : ' ';
   const title = isCurrent ? pc.bold(p.title) : p.title;
-  console.log(`  ${status} ${marker} ${p.id}. ${title}`);
+  const ms = phaseDuration(p);
+  const took = ms !== null ? ` ${pc.dim(`(took ${formatDuration(ms)})`)}` : '';
+  console.log(`  ${status} ${marker} ${p.id}. ${title}${took}`);
 
   if (p.humanNotes) {
     console.log(pc.dim(`              ${p.humanNotes}`));
@@ -143,6 +145,35 @@ function renderStatus(entry: { label: string; color: (s: string) => string }): s
 export function ideasSummaryLine(openCount: number): string | null {
   if (openCount <= 0) return null;
   return `Ideas: ${openCount} open (mini todo)`;
+}
+
+/**
+ * Compact human duration: the two largest non-zero units (e.g. `45s`, `3m`,
+ * `2h 5m`, `1d 2h`). Sub-second or negative inputs render as `0s`.
+ */
+export function formatDuration(ms: number): string {
+  const totalSec = Math.floor(Math.max(0, ms) / 1000);
+  const units: Array<[number, string]> = [
+    [Math.floor(totalSec / 86400), 'd'],
+    [Math.floor((totalSec % 86400) / 3600), 'h'],
+    [Math.floor((totalSec % 3600) / 60), 'm'],
+    [totalSec % 60, 's'],
+  ];
+  const nonzero = units.filter(([v]) => v > 0);
+  if (nonzero.length === 0) return '0s';
+  return nonzero
+    .slice(0, 2)
+    .map(([v, u]) => `${v}${u}`)
+    .join(' ');
+}
+
+/** How long a phase took, in ms, from `startedAt`..`completedAt`; `null` when not both present (or invalid). */
+export function phaseDuration(phase: Phase): number | null {
+  if (!phase.startedAt || !phase.completedAt) return null;
+  const start = Date.parse(phase.startedAt);
+  const end = Date.parse(phase.completedAt);
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+  return end - start;
 }
 
 export function describeModels(state: ProjectState): string {

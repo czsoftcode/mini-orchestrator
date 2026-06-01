@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   describeModels,
+  formatDuration,
   ideasSummaryLine,
   isOrphanedDoing,
   nextActionHint,
   openVerifyCount,
+  phaseDuration,
   runReportSummaryLines,
 } from './status.js';
 import type { RunReportSummary } from '../state/runReport.js';
@@ -27,6 +29,42 @@ function phase(id: number, status: Phase['status']): Phase {
 function summary(overrides: Partial<RunReportSummary> = {}): RunReportSummary {
   return { verdict: 'done', verify: [], unparseable: false, ...overrides };
 }
+
+describe('formatDuration', () => {
+  it('renders seconds, minutes and the two largest units', () => {
+    expect(formatDuration(45_000)).toBe('45s');
+    expect(formatDuration(3 * 60_000)).toBe('3m');
+    expect(formatDuration(2 * 3_600_000 + 5 * 60_000)).toBe('2h 5m');
+    expect(formatDuration(86_400_000 + 2 * 3_600_000)).toBe('1d 2h');
+  });
+
+  it('clamps sub-second and negative inputs to 0s', () => {
+    expect(formatDuration(500)).toBe('0s');
+    expect(formatDuration(-1000)).toBe('0s');
+  });
+});
+
+describe('phaseDuration', () => {
+  it('computes ms between startedAt and completedAt', () => {
+    const p: Phase = {
+      ...phase(1, 'done'),
+      startedAt: '2026-01-01T00:00:00.000Z',
+      completedAt: '2026-01-01T00:03:00.000Z',
+    };
+    expect(phaseDuration(p)).toBe(180_000);
+  });
+
+  it('returns null without both timestamps or when end precedes start', () => {
+    expect(phaseDuration(phase(1, 'done'))).toBeNull();
+    expect(
+      phaseDuration({
+        ...phase(1, 'done'),
+        startedAt: '2026-01-01T00:05:00.000Z',
+        completedAt: '2026-01-01T00:00:00.000Z',
+      }),
+    ).toBeNull();
+  });
+});
 
 describe('ideasSummaryLine', () => {
   it('summarizes open ideas when there are any', () => {

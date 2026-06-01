@@ -517,6 +517,11 @@
       "id": 103,
       "title": "Příkaz mini doctor a /mini:doctor",
       "status": "done"
+    },
+    {
+      "id": 104,
+      "title": "Doba trvání fáze ve status",
+      "status": "done"
     }
   ],
   "models": {

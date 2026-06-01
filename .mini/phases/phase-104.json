@@ -1,0 +1,29 @@
+{
+  "id": 104,
+  "title": "Doba trvání fáze ve status",
+  "goal": "mini status shows how long each finished phase took, computed from startedAt/completedAt, as a compact '(took 3m)' suffix on the phase line; phases without both timestamps show nothing. Covered by unit tests on the duration formatter.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Duration formatter + helper",
+      "status": "done",
+      "detail": "In status.ts add pure formatDuration(ms) (e.g. 45s / 3m / 2h 5m / 1d 2h, largest two units) and phaseDuration(phase) returning ms from startedAt..completedAt or null; unit tests over the ranges and the null cases."
+    },
+    {
+      "title": "Show duration in the phase line",
+      "status": "done",
+      "detail": "In printPhase append a dim '(took <dur>)' when phaseDuration is non-null; verified via a render test / direct call."
+    },
+    {
+      "title": "CHANGELOG",
+      "status": "done",
+      "detail": "Add an English CHANGELOG entry under Unreleased for the phase-duration display."
+    }
+  ],
+  "startedAt": "2026-06-01T16:26:50.158Z",
+  "completedAt": "2026-06-01T16:29:04.368Z",
+  "autoCommit": {
+    "preSha": "d8ffd2b37e945f7febdd7bd10c07810a4e1e6cac",
+    "subject": "Phase 104: Doba trvání fáze ve status"
+  }
+}
