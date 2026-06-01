@@ -70,6 +70,17 @@ describe('buildNextSessionPrompt', () => {
     const p = buildNextSessionPrompt(PROJECT, state(), { openTodos: [] });
     expect(p).not.toContain('Ideas in the backlog');
   });
+
+  it('without a hint, offers to stash extra ideas into the todo archive', () => {
+    const p = buildNextSessionPrompt(PROJECT, state());
+    expect(p).toContain('mini todo add');
+    expect(p).toContain('2-3');
+  });
+
+  it('with a user hint, does not add the stash-into-todo instruction', () => {
+    const p = buildNextSessionPrompt(PROJECT, state(), { userHint: 'add CSV export' });
+    expect(p).not.toContain('mini todo add');
+  });
 });
 
 describe('buildPlanSessionPrompt', () => {

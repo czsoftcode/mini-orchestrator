@@ -6,6 +6,17 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **Feeding the todo archive with Claude's ideas.** Two ways to fill the
+  ideas/changes backlog without starting a phase or hunting for ideas elsewhere:
+  (1) when `mini next` / `/mini:next` proposes its own ideas (the "leave it to
+  me" path), it now sketches 2-3 candidates, takes one as the phase and offers to
+  stash the rest into the archive via `mini todo add`; (2) a new `/mini:todo
+  suggest` (alias `ideas`) action has Claude review the project (project.md,
+  phase history, the machine map) and write a batch of small, concrete ideas
+  straight into `.mini/todo.md` (skipping duplicates).
+
 ### Changed
 
 - **`mini todo` listing now shows the available actions.** After the

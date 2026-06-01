@@ -203,7 +203,7 @@ Never run a bare \`mini upgrade\` here — it would block on an interactive conf
   {
     name: 'todo',
     description: 'mini — archive of future ideas and changes (mini todo)',
-    argumentHint: '[list | add <text> | done <n> | remove <n>]',
+    argumentHint: '[list | add <text> | done <n> | remove <n> | suggest]',
     body: `This is the **todo** step of the mini workflow, run directly in Claude Code. It manages the project's archive of future ideas and changes (\`.mini/todo.md\`); \`/mini:next\` later offers the open items as candidate phase ideas. The archive is a plain markdown checklist — change it only via \`mini todo\`, never by editing \`.mini/todo.md\` by hand mid-session.
 
 The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a non-interactive \`mini todo\` call and relay the output to the user in the chat:
@@ -212,8 +212,13 @@ The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a non-inter
 - **\`add <text>\`** → run \`mini todo add "<text>"\` to append a new open idea (quote the text).
 - **\`done <n>\`** → run \`mini todo done <n>\` to tick item number \`n\` off.
 - **\`remove <n>\`** (or \`rm <n>\`) → run \`mini todo remove <n>\` to drop item number \`n\`.
+- **\`suggest\`** (alias \`ideas\`) → **you** propose ideas and write them straight into the archive, so the user can fill the backlog without starting a phase:
+  1. Review the project: read \`.mini/project.md\`, skim the phase history (\`mini status\`) and the machine map (\`.mini/graph.json\` + the relevant \`.mini/graph/\` files) to see what's done and what's missing.
+  2. Run \`mini todo\` first to see what's already in the archive — **don't duplicate** existing items.
+  3. Propose **3-5** small, concrete, verifiable ideas (each a possible 1-3 day phase). Show them briefly to the user.
+  4. Append each new one with \`mini todo add "<text>"\` (one call per idea). Then run \`mini todo\` to relay the updated list.
 
-The numbers are the 1-based positions from the listing. It's a self-contained command — it changes no phase state in \`.mini/state.json\`.`,
+The numbers are the 1-based positions from the listing. Except for \`suggest\` (where you do the thinking), it's a self-contained command — it changes no phase state in \`.mini/state.json\`.`,
   },
 ];
 

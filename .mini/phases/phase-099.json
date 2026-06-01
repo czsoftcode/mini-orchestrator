@@ -1,0 +1,29 @@
+{
+  "id": 99,
+  "title": "Návrhy nápadů do todo",
+  "goal": "In the 'leave it to me' path of the mini next prompt, Claude sketches 2-3 candidate ideas, proposes one as the phase and offers to stash the rest into the todo archive via 'mini todo add'; and the /mini:todo slash command gains a 'suggest' (alias 'ideas') action where Claude reviews the project (graph + history) and writes a few concrete ideas straight into .mini/todo.md — so the user can fill the backlog without starting a phase or hunting for ideas outside mini.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "next prompt offers to stash ideas into todo",
+      "status": "done",
+      "detail": "In buildNextSessionPrompt (the 'leave it to me'/no-hint path), instruct Claude to sketch 2-3 candidate ideas, propose one as the phase and offer to save the rest into the archive via 'mini todo add \"<text>\"'. Prompt unit tests assert the instruction appears without a userHint and not with one."
+    },
+    {
+      "title": "/mini:todo suggest action",
+      "status": "done",
+      "detail": "Extend the /mini:todo slash command body in install/commands.ts with a 'suggest' (alias 'ideas') action: Claude reviews the project (project.md + graph + recent phases) and appends a few concrete ideas straight into .mini/todo.md via 'mini todo add', without starting a phase. Update the argument-hint; update the install-commands test."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Document the next->todo stashing and the /mini:todo suggest action in README (commands/slash list) and add an English CHANGELOG entry."
+    }
+  ],
+  "startedAt": "2026-06-01T14:35:58.235Z",
+  "completedAt": "2026-06-01T14:40:25.016Z",
+  "autoCommit": {
+    "preSha": "71f58b4479c2fb02ff0733a454c2964d6a3b7990",
+    "subject": "Phase 99: Návrhy nápadů do todo"
+  }
+}

@@ -492,6 +492,11 @@
       "id": 98,
       "title": "Nápověda akcí ve výpisu mini todo",
       "status": "done"
+    },
+    {
+      "id": 99,
+      "title": "Návrhy nápadů do todo",
+      "status": "done"
     }
   ],
   "models": {

@@ -68,7 +68,7 @@ export function buildNextSessionPrompt(
   // Bez nápadu se nejdřív zeptej — uživatel ho mohl zapomenout zadat.
   const askBlock = hint
     ? ''
-    : `# Ask first\nThe user gave you nothing for the next phase. Before you propose anything, **ask them** whether they have their own idea for the next phase (they may have forgotten to provide it), or whether to leave it up to you. Only then continue based on the answer:\n- if they have their own idea → start from exactly that,\n- if they leave it to you → propose a phase yourself based on the progress so far and the state of the code.\n\n`;
+    : `# Ask first\nThe user gave you nothing for the next phase. Before you propose anything, **ask them** whether they have their own idea for the next phase (they may have forgotten to provide it), or whether to leave it up to you. Only then continue based on the answer:\n- if they have their own idea → start from exactly that,\n- if they leave it to you → sketch **2-3** candidate ideas based on the progress so far and the state of the code; propose the most sensible one as the phase, and **offer to stash the rest** into the project's ideas archive with \`mini todo add "<text>"\` (one call per idea, only after the user approves) so they aren't lost.\n\n`;
 
   // Open items from `.mini/todo.md` — candidate ideas the user collected earlier.
   const openTodos = (options.openTodos ?? []).map((t) => t.trim()).filter(Boolean);
