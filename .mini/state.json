@@ -462,6 +462,11 @@
       "id": 92,
       "title": "Přepínače bump a push v /mini:auto",
       "status": "done"
+    },
+    {
+      "id": 93,
+      "title": "Terminálový příkaz mini verify",
+      "status": "done"
     }
   ],
   "models": {

@@ -220,6 +220,14 @@ program
   });
 
 program
+  .command('verify')
+  .description('Opens an interactive Claude Code session for the in-depth UI/UX review of the current phase (or the last closed one) — symmetric to discuss, the terminal counterpart of /mini:verify.')
+  .action(async () => {
+    const { verify } = await import('./commands/verify.js');
+    await verify();
+  });
+
+program
   .command('undo')
   .description('Reverts the last state change by one step.')
   .action(async () => {
@@ -316,7 +324,7 @@ program
 
 program
   .command('context <cmd> [args...]')
-  .description('Prints the current session prompt for the given step (next|discuss|plan|do|done) to stdout. Serves the native /mini: slash commands in Claude Code.')
+  .description('Prints the current session prompt for the given step (next|discuss|plan|do|done|verify) to stdout. Serves the native /mini: slash commands in Claude Code.')
   .action(async (cmd: string, args: string[]) => {
     const { context } = await import('./commands/context.js');
     await context(cmd, args);

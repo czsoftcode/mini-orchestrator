@@ -8,6 +8,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`mini verify` terminal command.** A top-level `mini verify` command now opens
+  an interactive Claude Code session for the in-depth UI/UX review of the current
+  phase (or, when none is in progress, the last closed one), symmetric to
+  `mini discuss` and the terminal counterpart of the `/mini:verify` slash command.
+  The first message is the same prompt `mini context verify` prints; the session
+  runs with the tools needed to write findings into the report and memory
+  (`Read`, `Edit`, `Grep`, `Glob`, `LS`). The verify prompt builder was extracted
+  from `context.ts` into a shared `verifyContext` module so both entry points use
+  identical wording.
+
 - **`--bump` and `--push` switches for `/mini:auto`.** The autonomous slash
   command now parses `--bump <level>` and `--push` from its arguments (alongside
   the existing `--max-phases` / `--yolo` / `--verify` / `--discuss`) and forwards

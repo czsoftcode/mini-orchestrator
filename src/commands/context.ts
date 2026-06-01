@@ -6,19 +6,14 @@ import {
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
-  buildVerifySessionPrompt,
 } from '../prompts/sessionContext.js';
 import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { readDiscussNotes } from '../state/discussNotes.js';
-import {
-  RunReportParseError,
-  parseRunReport,
-  runReportExists,
-  runReportPath,
-} from '../state/runReport.js';
+import { runReportExists } from '../state/runReport.js';
 import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
+import { buildVerifyContext, readReportVerify } from './verifyContext.js';
 
 /** Sub-commands for which `mini context` can print a session prompt. */
 export const CONTEXT_COMMANDS = ['next', 'discuss', 'plan', 'do', 'done', 'verify'] as const;
@@ -157,67 +152,6 @@ async function buildDoneContext(phase: Phase, cwd: string): Promise<string> {
 
   const { verify, body } = await readReportVerify(phase, cwd);
   return buildDoneSessionPrompt({ phase, reportExists: true, reportBody: body, verify });
-}
-
-/**
- * Tolerant read of the verify items and free text from the phase run report.
- * When the report can't be parsed strictly, returns empty verify (a broken
- * report is handled by `--apply`).
- */
-async function readReportVerify(
-  phase: Phase,
-  cwd: string,
-): Promise<{ verify: { title: string; detail?: string }[]; body?: string }> {
-  let verify: { title: string; detail?: string }[] = [];
-  let body: string | undefined;
-  try {
-    const raw = await readFile(runReportPath(cwd, phase.id), 'utf-8');
-    const report = parseRunReport(raw, {
-      expectedPhaseId: phase.id,
-      expectedStepTitles: (phase.steps ?? []).map((s) => s.title),
-    });
-    verify = report.verify;
-    body = report.body;
-  } catch (err) {
-    if (!(err instanceof RunReportParseError)) {
-      throw err;
-    }
-    // Broken report — we leave verify empty, Claude goes through it without details.
-  }
-  return { verify, body };
-}
-
-/**
- * Prompt for `/mini:verify`. The target phase = the current one
- * (`currentPhaseId`), otherwise a fallback to the last closed (`done`) one —
- * verify is typically also run after `done`, when currentPhaseId is no longer
- * set. Without a report it only warns (verify items are drawn from it), but it
- * still leads the review based on the phase goal and steps.
- */
-async function buildVerifyContext(header: StateHeader, cwd: string): Promise<string | null> {
-  let phase: Phase | null = null;
-  if (header.currentPhaseId !== null) {
-    phase = await loadPhase(cwd, header.currentPhaseId);
-  } else {
-    const lastDone = [...header.phases].reverse().find((p) => p.status === 'done');
-    if (lastDone) {
-      phase = await loadPhase(cwd, lastDone.id);
-    }
-  }
-
-  if (!phase) {
-    log.error('No phase to verify (neither a current nor a closed phase).');
-    log.hint('First work on a phase: /mini:next and /mini:do');
-    return null;
-  }
-
-  const phaseDone = phase.status === 'done';
-  const reportExists = await runReportExists(cwd, phase.id);
-  const { verify, body } = reportExists
-    ? await readReportVerify(phase, cwd)
-    : { verify: [], body: undefined };
-
-  return buildVerifySessionPrompt({ phase, phaseDone, verify, reportBody: body, reportExists });
 }
 
 async function readLastMemoryIfExists(cwd: string): Promise<string | undefined> {

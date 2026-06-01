@@ -1,0 +1,39 @@
+{
+  "id": 93,
+  "title": "Terminálový příkaz mini verify",
+  "goal": "Přidat top-level příkaz `mini verify` symetricky k `mini discuss`: otevře interaktivní Claude Code session s promptem z `mini context verify` jako prvním vzkazem (cílová fáze = aktuální, jinak poslední done), s povolenými nástroji pro zápis nálezů, a zaregistrovat ho v cli.ts i v --help.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Sdílený builder verify promptu",
+      "status": "done",
+      "detail": "Vytáhnout logiku z buildVerifyContext (context.ts) do sdíleného helperu (resolve fáze current/last-done + report → buildVerifySessionPrompt); mini context verify ho používá beze změny chování."
+    },
+    {
+      "title": "Příkaz mini verify (verify.ts)",
+      "status": "done",
+      "detail": "Nový src/commands/verify.ts symetricky k discuss.ts: načte stav, postaví prompt sdíleným helperem, potvrzení uživatele, spustí workWithClaude s nástroji pro zápis nálezů (Read/Edit/Grep/Glob/LS), ohlásí výsledek."
+    },
+    {
+      "title": "Registrace v cli.ts + --help",
+      "status": "done",
+      "detail": "Přidat .command('verify') s popisem a aktualizovat popis context."
+    },
+    {
+      "title": "Testy příkazu verify",
+      "status": "done",
+      "detail": "Unit testy pro verify (no-project, žádná fáze, výběr current vs. last-done, spuštění workWithClaude) po vzoru discuss testů."
+    },
+    {
+      "title": "README + CHANGELOG",
+      "status": "done",
+      "detail": "Zdokumentovat mini verify a přidat záznam fáze 93."
+    }
+  ],
+  "startedAt": "2026-06-01T09:52:41.182Z",
+  "completedAt": "2026-06-01T09:57:08.376Z",
+  "autoCommit": {
+    "preSha": "c1b8449bc9c5c299d69cfd63030bde07ee870dc9",
+    "subject": "Phase 93: Terminálový příkaz mini verify"
+  }
+}
