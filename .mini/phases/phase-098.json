@@ -1,0 +1,24 @@
+{
+  "id": 98,
+  "title": "Nápověda akcí ve výpisu mini todo",
+  "goal": "When 'mini todo' lists items (and thus via /mini:todo), it appends a short one-line hint of the available actions (add \"<text>\" / done <n> / remove <n>) so the user does not have to recall them; the existing empty-archive message keeps its add hint; covered by a unit test.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Append actions hint to todo listing",
+      "status": "done",
+      "detail": "In commands/todo.ts list(), after the open/total summary print a dim one-line hint of the available actions: add \"<text>\" / done <n> / remove <n>. The empty-archive branch keeps its existing add hint."
+    },
+    {
+      "title": "Test the listing hint",
+      "status": "done",
+      "detail": "Extend commands/todo.test.ts (capturing log output) to assert the actions hint appears when items exist and the add hint on an empty archive."
+    }
+  ],
+  "startedAt": "2026-06-01T14:13:58.522Z",
+  "completedAt": "2026-06-01T14:15:55.211Z",
+  "autoCommit": {
+    "preSha": "8f6693f022a2e1ec8f4de975aefd1556fe7cf07c",
+    "subject": "Phase 98: Nápověda akcí ve výpisu mini todo"
+  }
+}

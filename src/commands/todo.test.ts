@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -60,6 +60,25 @@ describe('todo', () => {
     await todo('done', ['5']);
     await todo('remove', ['0']);
     expect(await readTodos(cwd)).toEqual([{ text: 'only', done: false }]);
+  });
+
+  it('list prints the available actions hint when there are items', async () => {
+    await todo('add', ['something']);
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await todo();
+    const out = spy.mock.calls.map((c) => c.join(' ')).join('\n');
+    spy.mockRestore();
+    expect(out).toContain('Actions:');
+    expect(out).toContain('done <n>');
+    expect(out).toContain('remove <n>');
+  });
+
+  it('empty archive keeps the add hint', async () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await todo();
+    const out = spy.mock.calls.map((c) => c.join(' ')).join('\n');
+    spy.mockRestore();
+    expect(out).toContain('mini todo add');
   });
 
   it('does nothing without a project', async () => {

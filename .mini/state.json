@@ -487,6 +487,11 @@
       "id": 97,
       "title": "Příkaz mini todo a /mini:todo",
       "status": "done"
+    },
+    {
+      "id": 98,
+      "title": "Nápověda akcí ve výpisu mini todo",
+      "status": "done"
     }
   ],
   "models": {

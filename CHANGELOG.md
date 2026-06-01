@@ -6,6 +6,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- **`mini todo` listing now shows the available actions.** After the
+  `N open / M total` summary the listing prints a one-line hint
+  (`Actions: add "<text>" · done <n> · remove <n>`), so the sub-commands are
+  discoverable without consulting the help.
+
 ## [1.10.0] - 2026-06-01
 
 ### Added
