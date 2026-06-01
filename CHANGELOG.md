@@ -6,7 +6,15 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-06-01
+
 ### Added
+
+- **`mini status --json`.** A machine-readable JSON object (project title, the
+  "what" line, configured models, `currentPhaseId`, the open-idea count, and the
+  phases with their status, `startedAt`/`completedAt`, `durationMs` and steps) for
+  scripts and integrations. Printed to stdout with no decoration; the human
+  overview is unchanged without the flag.
 
 - **Phase duration in `mini status`.** Each finished phase now shows how long it
   took (a compact `(took 3m)` / `(took 2h 5m)` suffix), computed from its

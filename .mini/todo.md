@@ -10,5 +10,5 @@
 - [x] přidat příkaz mini changelog a /mini:changelog, který vypíše změny v mini
 - [x] mini changelog --version <v>: výpis konkrétní verze ze CHANGELOG.md
 - [x] mini doctor: diagnostika projektu (schema stavu, slash commandy, statusline, čerstvost verze) jako checklist
-- [ ] mini status --json: strojově čitelný výstup stavu projektu pro skripty/integrace
+- [x] mini status --json: strojově čitelný výstup stavu projektu pro skripty/integrace
 - [x] mini status zobrazí dobu trvání fáze z startedAt/completedAt

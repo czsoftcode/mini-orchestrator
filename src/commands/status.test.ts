@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildStatusJson,
   describeModels,
   formatDuration,
   ideasSummaryLine,
@@ -29,6 +30,52 @@ function phase(id: number, status: Phase['status']): Phase {
 function summary(overrides: Partial<RunReportSummary> = {}): RunReportSummary {
   return { verdict: 'done', verify: [], unparseable: false, ...overrides };
 }
+
+describe('buildStatusJson', () => {
+  const PROJECT = "# Demo project\n\n## What I'm building\nA thing.\n";
+
+  it('captures title, what, models, currentPhaseId and ideasOpen', () => {
+    const state = makeState({
+      currentPhaseId: 1,
+      models: { default: 'opus' },
+      phases: [phase(1, 'doing')],
+    });
+    const json = buildStatusJson(PROJECT, state, 3);
+    expect(json).toMatchObject({
+      title: 'Demo project',
+      what: 'A thing.',
+      models: { default: 'opus' },
+      currentPhaseId: 1,
+      ideasOpen: 3,
+    });
+  });
+
+  it('maps phases with steps, timestamps and durationMs', () => {
+    const p: Phase = {
+      ...phase(1, 'done'),
+      startedAt: '2026-01-01T00:00:00.000Z',
+      completedAt: '2026-01-01T00:02:00.000Z',
+      steps: [{ title: 'a', status: 'done' }],
+    };
+    const json = buildStatusJson(PROJECT, makeState({ phases: [p] }), 0);
+    expect(json.phases[0]).toMatchObject({
+      id: 1,
+      status: 'done',
+      durationMs: 120_000,
+      steps: [{ title: 'a', status: 'done' }],
+    });
+  });
+
+  it('omits durationMs when timestamps are incomplete', () => {
+    const json = buildStatusJson(PROJECT, makeState({ phases: [phase(1, 'proposed')] }), 0);
+    expect(json.phases[0]!.durationMs).toBeUndefined();
+  });
+
+  it('serializes to valid JSON', () => {
+    const json = buildStatusJson(PROJECT, makeState({ phases: [phase(1, 'done')] }), 1);
+    expect(() => JSON.parse(JSON.stringify(json))).not.toThrow();
+  });
+});
 
 describe('formatDuration', () => {
   it('renders seconds, minutes and the two largest units', () => {

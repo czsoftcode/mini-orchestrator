@@ -239,10 +239,11 @@ program
 
 program
   .command('status')
-  .description('Shows where we currently are in the project.')
-  .action(async () => {
+  .description('Shows where we currently are in the project. With --json prints a machine-readable object.')
+  .option('--json', 'Print a machine-readable JSON object instead of the human overview.')
+  .action(async (opts: { json?: boolean }) => {
     const { status } = await import('./commands/status.js');
-    await status();
+    await status({ json: opts.json });
   });
 
 program

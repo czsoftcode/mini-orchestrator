@@ -1,0 +1,29 @@
+{
+  "id": 105,
+  "title": "mini status --json",
+  "goal": "Add a '--json' flag to 'mini status' that prints a machine-readable JSON object (title, what, models, currentPhaseId, open-idea count, and phases with id/title/status/timestamps/durationMs/steps) to stdout with no decoration, for scripts and integrations; covered by a unit test on the JSON builder.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "JSON status builder",
+      "status": "done",
+      "detail": "In status.ts add a StatusJson type and a pure buildStatusJson(projectMd, state, openTodos) returning {title, what, models, currentPhaseId, ideasOpen, phases:[{id,title,status,startedAt?,completedAt?,durationMs?,steps:[{title,status}]}]}; reuse phaseDuration. Unit tests."
+    },
+    {
+      "title": "--json flag wiring",
+      "status": "done",
+      "detail": "status() takes {json?}; when set, print JSON.stringify(buildStatusJson(...), null, 2) and return early (no decoration, no hints); register --json in cli.ts. readTodos already available for the open count."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Note --json on the mini status row in README and add an English CHANGELOG entry."
+    }
+  ],
+  "startedAt": "2026-06-01T16:43:19.596Z",
+  "completedAt": "2026-06-01T16:45:43.699Z",
+  "autoCommit": {
+    "preSha": "3570051d38ae3f9511dd72d514525e7ba4ef00c8",
+    "subject": "Phase 105: mini status --json"
+  }
+}

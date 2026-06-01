@@ -34,10 +34,19 @@ const STEP_LABELS: Record<StepStatus, { label: string; color: (s: string) => str
 
 const STATUS_WIDTH = 10;
 
-export async function status(): Promise<void> {
+export interface StatusOptions {
+  /** Print a machine-readable JSON object instead of the human overview. */
+  json?: boolean;
+}
+
+export async function status(opts: StatusOptions = {}): Promise<void> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
+    if (opts.json) {
+      console.log(JSON.stringify({ error: 'no-project' }));
+      return;
+    }
     log.warn('There is no project in this directory.');
     log.hint('Start with: mini init');
     return;
@@ -48,6 +57,13 @@ export async function status(): Promise<void> {
     load(cwd),
     readTodos(cwd),
   ]);
+
+  const openTodos = todos.filter((t) => !t.done).length;
+
+  if (opts.json) {
+    console.log(JSON.stringify(buildStatusJson(projectMd, state, openTodos), null, 2));
+    return;
+  }
 
   const titleMatch = projectMd.match(/^#\s+(.+)$/m);
   const title = titleMatch?.[1]?.trim() ?? '(untitled)';
@@ -65,7 +81,7 @@ export async function status(): Promise<void> {
   if (modelLine) {
     log.dim(`  Models: ${modelLine}`);
   }
-  const ideas = ideasSummaryLine(todos.filter((t) => !t.done).length);
+  const ideas = ideasSummaryLine(openTodos);
   if (ideas) {
     log.dim(`  ${ideas}`);
   }
@@ -174,6 +190,63 @@ export function phaseDuration(phase: Phase): number | null {
   const end = Date.parse(phase.completedAt);
   if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
   return end - start;
+}
+
+export interface StatusJsonStep {
+  title: string;
+  status: StepStatus;
+}
+
+export interface StatusJsonPhase {
+  id: number;
+  title: string;
+  status: PhaseStatus;
+  startedAt?: string;
+  completedAt?: string;
+  durationMs?: number;
+  steps: StatusJsonStep[];
+}
+
+export interface StatusJson {
+  title: string;
+  what: string | null;
+  models: Record<string, string>;
+  currentPhaseId: number | null;
+  ideasOpen: number;
+  phases: StatusJsonPhase[];
+}
+
+/** Builds the machine-readable status object (`mini status --json`). Pure. */
+export function buildStatusJson(
+  projectMd: string,
+  state: ProjectState,
+  openTodos: number,
+): StatusJson {
+  const title = projectMd.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? '(untitled)';
+  const what =
+    projectMd.match(/##\s+(?:What I'm building|Co stavím)\s*\n+([^\n]+)/)?.[1]?.trim() ?? null;
+
+  const models: Record<string, string> = {};
+  for (const scope of MODEL_SCOPES) {
+    const value = state.models?.[scope];
+    if (value) models[scope] = value;
+  }
+
+  const phases: StatusJsonPhase[] = state.phases.map((p) => {
+    const out: StatusJsonPhase = {
+      id: p.id,
+      title: p.title,
+      status: p.status,
+      steps: (p.steps ?? []).map((s) => ({ title: s.title, status: s.status })),
+    };
+    if (p.startedAt) out.startedAt = p.startedAt;
+    if (p.completedAt) out.completedAt = p.completedAt;
+    const dur = phaseDuration(p);
+    if (dur !== null) out.durationMs = dur;
+    return out;
+  });
+
+  return { title, what, models, currentPhaseId: state.currentPhaseId, ideasOpen: openTodos, phases };
 }
 
 export function describeModels(state: ProjectState): string {

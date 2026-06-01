@@ -522,6 +522,11 @@
       "id": 104,
       "title": "Doba trvání fáze ve status",
       "status": "done"
+    },
+    {
+      "id": 105,
+      "title": "mini status --json",
+      "status": "done"
     }
   ],
   "models": {
