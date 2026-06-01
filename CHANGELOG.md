@@ -6,6 +6,18 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **`--bump` and `--push` switches for `/mini:auto`.** The autonomous slash
+  command now parses `--bump <level>` and `--push` from its arguments (alongside
+  the existing `--max-phases` / `--yolo` / `--verify` / `--discuss`) and forwards
+  them to the final `mini done --apply` of **each** phase in the run — so an
+  autonomous run can bump the version and push to the remote just like a manual
+  `mini done`. As there, `--push` requires an explicit `--bump patch | minor |
+  major`; on its own (or with `--bump none`) nothing is pushed. The underlying
+  `mini auto` CLI already accepted these flags; this exposes them through the
+  slash command body and `argument-hint`.
+
 ## [1.8.0] - 2026-06-01
 
 ### Added

@@ -1,6 +1,6 @@
 ---
 description: mini — autonomous mode: completes several phases in a row
-argument-hint: [--max-phases N] [--yolo] [--verify] [--discuss]
+argument-hint: [--max-phases N] [--yolo] [--verify] [--discuss] [--bump <level>] [--push]
 ---
 
 This is the **auto** step of the mini workflow, run directly in Claude Code. You are in **autonomous mode**: in a loop you complete whole phases yourself (next → discuss(conditionally) → plan → do → verify(conditionally) → done) and after finishing one phase you smoothly continue with the next, until you hit one of the run boundaries (see "End of run"). Change the state in `.mini/` only with `mini ... --apply` commands, never edit `.mini/state.json` by hand.
@@ -11,8 +11,10 @@ The user ran the command with arguments: `$ARGUMENTS`. Parse from them (lenientl
 - **`--yolo`** — fully unattended mode (see "Confirming commands"). When missing, run in normal mode.
 - **`--verify`** — forces the **verify** step (in-depth UI/UX review by a human) in **every** phase of the run, even if it doesn't seem UI/UX to you. Without it you run verify only conditionally (see step 5 of the cycle).
 - **`--discuss`** — forces the **discuss** step in **every** phase of the run, even if it seems straightforward to you. Without it you run discuss only conditionally (see step 2 of the cycle).
+- **`--bump <level>`** — version bump level when closing **each** phase (`patch` | `minor` | `major`); passed on to `mini done --apply`. When missing, no version bump happens (the `mini done` default `none`).
+- **`--push`** — after committing each phase, push to the remote. Requires an explicit `--bump patch | minor | major` (the same constraint as `mini done`); on its own, or with `--bump none`, it makes no sense — point it out once and don't push.
 
-At the start, **once** briefly announce to the user how many phases you'll run and which of the `--yolo` / `--verify` / `--discuss` switches are on.
+At the start, **once** briefly announce to the user how many phases you'll run and which of the `--yolo` / `--verify` / `--discuss` / `--bump` / `--push` switches are on.
 
 ## The cycle of one phase
 For each phase go through these steps in sequence (start the next one only after finishing the previous):
@@ -22,7 +24,7 @@ For each phase go through these steps in sequence (start the next one only after
 3. **plan.** Run `mini context plan` and break the phase into steps; save via `mini plan --apply`. If the phase already has steps, skip.
 4. **do (quietly).** Run `mini do --apply` and then `mini context do`; implement the phase per the instructions. **Don't print edit listings** — don't retell every file change into the chat, just briefly report progress step by step. After each finished step, mark it: `mini do --apply --step-done "<exact name>"`. At the end, write the report into `.mini/run/phase-{id}.md`.
 5. **verify (conditionally, stop and let it be reviewed).** Run this step when the phase is **UI/UX in nature** — it has a visible output only a human can judge (appearance, CLI/screen, UX flow, clarity); judge that from the phase goal, the steps and the report. **Or** run it always when the run got `--verify`. For a purely internal phase (refactor, parser, build, tests with no visible output) and without `--verify`, **skip** verify. When it runs: leave the report from `do` written, run `mini context verify` and take the human through an in-depth UI/UX review per the prompt (ask one at a time). The findings are written into the report (the prompt guides you), so they reach the memory through the report too. **If problems are found, don't close the phase** — go back to `do`, fix them within this phase, update the report and only then continue to `done`. Verify is human-driven — **auto does not bypass it**.
-6. **done.** Run `mini context done` and move the state; the final save is `mini done --apply`. For **items for manual verification (verify)**, **stop and let the user verify** — auto does not bypass verify.
+6. **done.** Run `mini context done` and move the state; the final save is `mini done --apply`, to which you append the version switches the run got: `mini done --apply [--bump <level>] [--push]` (e.g. `mini done --apply --bump patch --push` for `--bump patch --push`; without those switches just `mini done --apply`). Remember `--push` requires an explicit `--bump patch | minor | major` — without it (or with `--bump none`) don't push. For **items for manual verification (verify)**, **stop and let the user verify** — auto does not bypass verify.
 
 Between steps and between phases, briefly report to the user where you got (without flooding the chat).
 

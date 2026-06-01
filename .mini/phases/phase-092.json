@@ -1,0 +1,39 @@
+{
+  "id": 92,
+  "title": "Přepínače bump a push v /mini:auto",
+  "goal": "V slash commandu /mini:auto přidat parsování --bump <level> a --push z $ARGUMENTS (včetně argument-hint) a předat je do finálního mini done --apply v každé fázi běhu, aby autonomní režim uměl navyšovat verzi a pushovat stejně jako mini done.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Bump/push do argument-hint a parsování",
+      "status": "done",
+      "detail": "V auto def v src/install/commands.ts doplnit [--bump <level>] a [--push] do argumentHint a do sekce Run arguments popsat parsování obou (default: žádný bump, žádný push) + zmínit je v úvodním oznámení uživateli."
+    },
+    {
+      "title": "Předat bump/push do kroku done",
+      "status": "done",
+      "detail": "V kroku 6 cyklu změnit finální save na mini done --apply [--bump <level>] [--push] podle parsovaných argumentů; přidat poznámku, že --push vyžaduje explicitní --bump patch|minor|major (stejné omezení jako u mini done)."
+    },
+    {
+      "title": "Přegenerovat nainstalované .md",
+      "status": "done",
+      "detail": "Spustit mini install-commands (build + regen), aby .claude/commands/mini/auto.md odpovídal nové definici."
+    },
+    {
+      "title": "Upravit testy install-commands",
+      "status": "done",
+      "detail": "V install-commands.test.ts opravit aserci na L96-98 (auto už může pushovat) a přidat kontrolu, že auto.md obsahuje --bump a --push."
+    },
+    {
+      "title": "README + CHANGELOG",
+      "status": "done",
+      "detail": "Zdokumentovat nové přepínače /mini:auto --bump/--push a přidat záznam fáze do CHANGELOG.md."
+    }
+  ],
+  "startedAt": "2026-06-01T00:26:40.097Z",
+  "completedAt": "2026-06-01T00:30:50.334Z",
+  "autoCommit": {
+    "preSha": "a7991f94d83a11e175bc319d93df35e797b66603",
+    "subject": "Phase 92: Přepínače bump a push v /mini:auto"
+  }
+}

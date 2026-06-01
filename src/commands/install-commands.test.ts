@@ -93,10 +93,21 @@ describe('installCommands', () => {
     }
     // discuss is conditional, not unconditional
     expect(md).toMatch(/condition|only when|only if/i);
-    // done is saved without an automatic push to the remote
+    // done is saved via mini done --apply (bump/push are opt-in via run arguments)
     expect(md).toContain('mini done --apply');
-    expect(md).not.toContain('mini done --apply --push');
     expect(md).toContain('description:');
+  });
+
+  it('the auto command forwards --bump and --push to the done step', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'auto.md'), 'utf-8');
+    // exposed as run arguments
+    expect(md).toContain('--bump');
+    expect(md).toContain('--push');
+    // appended to the final done save
+    expect(md).toContain('mini done --apply [--bump <level>] [--push]');
+    // --push requires an explicit bump (same constraint as mini done)
+    expect(md).toMatch(/--push.*requires|requires.*--bump/i);
   });
 
   it('the auto command is autonomous: argument-hint, --max-phases (default 1), --yolo and a loop over multiple phases', async () => {

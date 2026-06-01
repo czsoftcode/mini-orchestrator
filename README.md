@@ -110,7 +110,7 @@ This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,statu
 /mini:do             # implements the phase and writes a report
 /mini:done           # human verification in the chat → moves the state
 /mini:verify         # in-depth UI/UX review of the phase by a human; writes findings into the report (and memory)
-/mini:auto [args]    # autonomous mode: completes several phases in a row (--max-phases N, --yolo, --verify, --discuss)
+/mini:auto [args]    # autonomous mode: completes several phases in a row (--max-phases N, --yolo, --verify, --discuss, --bump <level>, --push)
 /mini:map            # regenerates the project graph
 /mini:status         # overview of the phases (read-only)
 /mini:audit          # overview of the existing codebase into .mini/codebase.md
@@ -123,6 +123,7 @@ This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,statu
 - **`--max-phases N`** (default 1) — how many phases at most to complete in a row; `--yolo` = a run without unnecessary asking (works only in a session started with `--permission-mode acceptEdits`).
 - **`--verify`** — forces the `verify` step in every phase. Without it, auto runs `verify` only for **UI/UX phases** (judged from the goal/steps/report): it guides a human through an in-depth review between `do` and `done`, writes the findings into the report (and thus into memory) and fixes any problems within the same phase before closing.
 - **`--discuss`** — forces the `discuss` step in every phase. Without it, auto runs `discuss` only for **hard phases** (an ambiguous goal, multiple directions).
+- **`--bump <level>`** / **`--push`** — passed on to `mini done --apply` when closing **each** phase: `--bump patch | minor | major` bumps the version (default: no bump), `--push` pushes to the remote after the commit. As with `mini done`, `--push` requires an explicit `--bump` (on its own, or with `--bump none`, nothing is pushed).
 - **Stops and asks** at the steps where a human is needed: `next` (takes your phase idea), `discuss` (for hard phases or with `--discuss`), `verify` (UI/UX review) and at the items for **manual verification** in `done`.
 - **Quiet run for `do`** — it does not retell every edit into the chat, just briefly reports progress.
 - **Cooperative stop:** at the step boundaries it checks the stop signal (`.mini/STOP`) and finishes cleanly; for a hard interrupt mid-step use Esc/Ctrl+C. You create the signal with `mini stop` (from a second terminal), remove it with `mini stop --clear`.

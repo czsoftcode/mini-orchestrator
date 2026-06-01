@@ -457,6 +457,11 @@
       "id": 91,
       "title": "Sdílená instrukce o paralelismu",
       "status": "done"
+    },
+    {
+      "id": 92,
+      "title": "Přepínače bump a push v /mini:auto",
+      "status": "done"
     }
   ],
   "models": {
