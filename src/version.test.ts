@@ -3,7 +3,13 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bumpPackageVersion, bumpSemver, isBumpLevel, readPackageVersion } from './version.js';
+import {
+  bumpPackageVersion,
+  bumpSemver,
+  compareSemver,
+  isBumpLevel,
+  readPackageVersion,
+} from './version.js';
 
 describe('bumpSemver', () => {
   it('navýší patch', () => {
@@ -20,6 +26,27 @@ describe('bumpSemver', () => {
   });
   it('vrátí null pro nevalidní verzi', () => {
     expect(bumpSemver('není-verze', 'patch')).toBeNull();
+  });
+});
+
+describe('compareSemver', () => {
+  it('orders by major, then minor, then patch', () => {
+    expect(compareSemver('1.0.0', '2.0.0')).toBe(-1);
+    expect(compareSemver('1.2.0', '1.1.0')).toBe(1);
+    expect(compareSemver('1.2.3', '1.2.4')).toBe(-1);
+  });
+  it('treats equal versions as 0', () => {
+    expect(compareSemver('1.9.0', '1.9.0')).toBe(0);
+  });
+  it('compares numerically, not lexically (1.10.0 > 1.9.0)', () => {
+    expect(compareSemver('1.10.0', '1.9.0')).toBe(1);
+  });
+  it('ignores prerelease/build suffixes', () => {
+    expect(compareSemver('1.2.3-beta.1', '1.2.3')).toBe(0);
+  });
+  it('returns null when either side is not x.y.z', () => {
+    expect(compareSemver('not-a-version', '1.0.0')).toBeNull();
+    expect(compareSemver('1.0.0', '')).toBeNull();
   });
 });
 

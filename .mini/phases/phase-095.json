@@ -1,0 +1,43 @@
+{
+  "id": 95,
+  "title": "mini upgrade a /mini:upgrade",
+  "goal": "Add a `mini upgrade` terminal command and a `/mini:upgrade` slash command that install the latest mini-orchestrator from npm, plus a non-blocking statusline indicator that shows when a newer version is available on npmjs.com (version cached locally with a TTL, so the status line never blocks on the network).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Version-check + cache module",
+      "status": "done",
+      "detail": "src/upgrade/versionCheck.ts — fetch latest version from the npm registry via built-in fetch, read/write a TTL cache (5h) under the OS temp dir keyed to the package name, semver isNewer comparison, and a refreshCache() helper. Unit tests for isNewer and cache parse/TTL."
+    },
+    {
+      "title": "Statusline upgrade indicator",
+      "status": "done",
+      "detail": "Extend statusline data + render.ts to append a yellow '↑ <latest>' segment only when a newer version is cached. The statusline command reads cache only and spawns a detached fire-and-forget background refresh when the cache is stale (>5h). Add a hidden 'mini check-version' CLI command that performs the fetch+cache write. Render snapshot/tests."
+    },
+    {
+      "title": "mini upgrade command",
+      "status": "done",
+      "detail": "src/commands/upgrade.ts + register in cli.ts. Fresh synchronous check, report current → latest, install via 'npm install -g mini-orchestrator@latest'; warn (no-op) on a dev/symlink install; --check (only report) and --yes (skip confirm) flags. Tests for the decision logic."
+    },
+    {
+      "title": "/mini:upgrade slash command",
+      "status": "done",
+      "detail": "Add to COMMAND_DEFS with a non-interactive body (preview via mini upgrade --check, confirm in chat, apply via mini upgrade --yes). Update the install hint and command count/snapshot tests."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Document mini upgrade, /mini:upgrade and the statusline upgrade indicator; add an English CHANGELOG entry for the phase."
+    }
+  ],
+  "startedAt": "2026-06-01T10:33:39.334Z",
+  "resolvedVerify": [
+    "Status-line upgrade indicator appearance",
+    "`mini upgrade` CLI flow and wording"
+  ],
+  "completedAt": "2026-06-01T11:00:52.882Z",
+  "autoCommit": {
+    "preSha": "948f6c1d0b8d8f0c00a0aff5d9152568bba5ee1c",
+    "subject": "Phase 95: mini upgrade a /mini:upgrade"
+  }
+}

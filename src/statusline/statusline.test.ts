@@ -69,7 +69,17 @@ describe('buildData', () => {
       model: 'Opus 4.8',
       usedTokens: 1000,
       windowTokens: 1_000_000,
+      upgrade: null,
     });
+  });
+
+  it('passes the upgrade version through when given', () => {
+    const data = buildData({ cwd: '/x' }, '', '1.9.1');
+    expect(data.upgrade).toBe('1.9.1');
+  });
+
+  it('defaults upgrade to null when omitted', () => {
+    expect(buildData({ cwd: '/x' }, '').upgrade).toBeNull();
   });
 
   it('falls back to workspace.current_dir when cwd is missing', () => {
@@ -87,6 +97,6 @@ describe('buildData', () => {
 
   it('handles an empty payload without throwing', () => {
     const data = buildData({}, '');
-    expect(data).toEqual({ dir: '', model: '', usedTokens: 0, windowTokens: 200_000 });
+    expect(data).toEqual({ dir: '', model: '', usedTokens: 0, windowTokens: 200_000, upgrade: null });
   });
 });

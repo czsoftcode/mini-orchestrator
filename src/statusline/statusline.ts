@@ -31,6 +31,13 @@ export interface StatuslineData {
   usedTokens: number;
   /** Size of the context window in tokens (200_000 or 1_000_000). */
   windowTokens: number;
+  /**
+   * Latest published version to advertise when a newer one is available on npm
+   * (rendered as a `↑ <version>` segment). `null`/`undefined` when up to date or
+   * unknown — the segment is then omitted. Sourced from the cache by the command
+   * wrapper, never fetched here (the status line must not block on the network).
+   */
+  upgrade?: string | null;
 }
 
 /** Context-window sizes. */
@@ -101,7 +108,11 @@ export function extractUsage(transcript: string): number {
  * already run past the model's base limit — a defensive correction for the case
  * where the model→window mapping underestimates (e.g. a new long-context model).
  */
-export function buildData(input: StatusInput, transcript: string): StatuslineData {
+export function buildData(
+  input: StatusInput,
+  transcript: string,
+  upgrade: string | null = null,
+): StatuslineData {
   const dir = input.cwd ?? input.workspace?.current_dir ?? '';
   const model = input.model?.display_name ?? '';
   const used = extractUsage(transcript);
@@ -109,5 +120,5 @@ export function buildData(input: StatusInput, transcript: string): StatuslineDat
   if (used > window && window < WINDOW_1M) {
     window = WINDOW_1M;
   }
-  return { dir, model, usedTokens: used, windowTokens: window };
+  return { dir, model, usedTokens: used, windowTokens: window, upgrade };
 }

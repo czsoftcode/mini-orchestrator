@@ -62,6 +62,28 @@ export function bumpSemver(version: string, level: BumpLevel): string | null {
   return `${major}.${minor}.${patch}`;
 }
 
+/** Parsuje `x.y.z` na trojici čísel; ignoruje prerelease/build suffix. */
+function parseSemver(version: string): [number, number, number] | null {
+  const m = version.trim().match(/^(\d+)\.(\d+)\.(\d+)/);
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+}
+
+/**
+ * Porovná dvě `x.y.z` verze čísleně. Vrací `-1` / `0` / `1` (a<b / a==b / a>b),
+ * nebo `null`, když některá strana není ve tvaru `x.y.z`. Prerelease/build
+ * suffix se ignoruje (verzujeme jen releasy fází). Slouží kontrole upgradu, aby
+ * `1.10.0` správně předčilo `1.9.0` (na rozdíl od porovnání řetězců).
+ */
+export function compareSemver(a: string, b: string): number | null {
+  const pa = parseSemver(a);
+  const pb = parseSemver(b);
+  if (!pa || !pb) return null;
+  for (let i = 0; i < 3; i++) {
+    if (pa[i]! !== pb[i]!) return pa[i]! < pb[i]! ? -1 : 1;
+  }
+  return 0;
+}
+
 /**
  * Navýší verzi v `package.json` v `cwd` podle `level` a zapíše ji zpět.
  *

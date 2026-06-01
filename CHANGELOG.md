@@ -6,6 +6,26 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **`mini upgrade` command and `/mini:upgrade` slash command.** A new
+  `mini upgrade` checks npm for a newer `mini-orchestrator`, reports
+  current → latest, and (after confirming) installs it with
+  `npm install -g mini-orchestrator@latest`. `--check` only reports without
+  installing; `--yes` installs non-interactively. A local dev build
+  (`install-local`) is detected and left untouched with a hint. The matching
+  `/mini:upgrade` slash command is non-interactive — it previews with
+  `mini upgrade --check`, confirms in the chat, then applies with
+  `mini upgrade --yes` (14 generated commands now), and the install hint lists it.
+
+- **Status-line upgrade indicator.** When a newer mini version is available on
+  npm, the status line appends a yellow `↑ <version>` segment
+  (`… 28% · ↑ 1.9.1`). It never blocks on the network: it reads a cached reading
+  of the latest published version from the OS temp dir and, when that cache is
+  older than 5 hours, fires a detached background refresh (the hidden
+  `mini check-version`) to update it for next time. `mini upgrade` does a fresh,
+  blocking check and also refreshes the cache.
+
 ## [1.9.0] - 2026-06-01
 
 ### Added

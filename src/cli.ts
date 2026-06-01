@@ -343,6 +343,17 @@ program
   });
 
 program
+  .command('upgrade')
+  .description('Checks npm for a newer mini-orchestrator and installs it (npm install -g mini-orchestrator@latest). Reports current → latest and asks before installing.')
+  .option('--check', 'Only check and report the latest published version; do not install.')
+  .option('--yes', 'Skip the confirmation and install directly (non-interactive). For /mini:upgrade.')
+  .action(async (opts: { check?: boolean; yes?: boolean }) => {
+    const { upgrade } = await import('./commands/upgrade.js');
+    const r = await upgrade({ check: opts.check, yes: opts.yes });
+    if (!r.ok) process.exit(1);
+  });
+
+program
   .command('statusline')
   .description(
     'Renders the mini status line for Claude Code. Reads the status JSON on stdin and prints one line: shortened project dir, model, and context-window usage. Meant to be wired into ~/.claude/settings.json as a statusLine command, not run by hand.',
@@ -350,6 +361,17 @@ program
   .action(async () => {
     const { statusline } = await import('./commands/statusline.js');
     await statusline();
+  });
+
+// Hidden best-effort helper: refreshes the npm latest-version cache. The status
+// line spawns it detached when its cache is stale; it is not meant to be run by
+// hand (use `mini upgrade --check` for that).
+program
+  .command('check-version', { hidden: true })
+  .description('Refreshes the cached latest published version from npm (used by the status line).')
+  .action(async () => {
+    const { checkVersion } = await import('./commands/statusline.js');
+    await checkVersion();
   });
 
 // Hidden fallback for installing the slash commands by hand — the normal path is

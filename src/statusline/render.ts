@@ -8,6 +8,8 @@
  *   - window: the context-window size label ("1M" / "200k").
  *   - bar:    a fixed-width graphical gauge of the usage.
  *   - pct:    the same usage as a number.
+ *   - upgrade: an optional trailing `↑ <version>`, shown in yellow only when a
+ *             newer mini version is available on npm.
  *
  * Pure: data in → string out. Colors are raw ANSI escape codes (NOT picocolors)
  * because Claude Code runs this command with stdout piped, not a TTY — picocolors
@@ -98,6 +100,8 @@ export function renderStatusline(data: StatuslineData, options: RenderOptions = 
   const pct = usagePercent(data.usedTokens, data.windowTokens);
   const gauge = `${windowLabel(data.windowTokens)} ${usageBar(pct)} ${pct}%`;
   parts.push(paint(gauge, usageColor(pct), color));
+
+  if (data.upgrade) parts.push(paint(`↑ ${data.upgrade}`, ANSI.yellow, color));
 
   const sep = color ? ` ${paint('·', ANSI.dim, true)} ` : SEP;
   return parts.join(sep);

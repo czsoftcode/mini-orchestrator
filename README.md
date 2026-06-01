@@ -88,6 +88,7 @@ mini auto        # next → plan → do (with acceptEdits) → done; everything 
 | `mini import-gsd` | One-off import of an in-progress GSD project from `.planning/` |
 | `mini migrate` | One-off conversion of the old monolithic `state.json` to the v2 layout (lightweight header + `.mini/phases/`); with `--renumber` it renumbers phases to consecutive numbers and unifies file names |
 | `mini update` | Brings the non-generated part of the project (the `.mini/` skeleton + slash commands) up to the current mini version; idempotent, does not touch generated files. `--dry-run` only shows what would change |
+| `mini upgrade` | Checks npm for a newer `mini-orchestrator` and installs it (`npm install -g mini-orchestrator@latest`); reports current → latest and asks first. `--check` only reports, `--yes` installs without asking. A status-line indicator (`↑ <version>`) also signals when a newer version is available — see [Status line](#status-line) |
 | `mini install-commands` | Generates `.claude/commands/mini/*.md` (the `/mini:*` slash commands) into the project — see below |
 | `mini context <cmd>` | Prints the current session prompt for a cycle step (`next`/`discuss`/`plan`/`do`/`done`/`verify`) to stdout; called by the slash commands |
 | `mini statusline` | Renders the mini status line for Claude Code (reads the status JSON on stdin) — wired into `settings.json`, not run by hand; see below |
@@ -100,7 +101,7 @@ The whole cycle `next → discuss → plan → do → done` can also be run **di
 mini install-commands     # one-off in the target project
 ```
 
-This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map,audit,auto,undo,model}.md`. Then in Claude Code:
+This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map,audit,auto,undo,model,upgrade}.md`. Then in Claude Code:
 
 ```
 /mini:init           # creates the project (questions in the chat) → offers /mini:map and /mini:audit
@@ -116,6 +117,7 @@ This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,statu
 /mini:audit          # overview of the existing codebase into .mini/codebase.md
 /mini:undo           # reverts the last state change (preview → confirm in the chat → apply)
 /mini:model [args]   # views/sets the project model (show | reset | <scope> <model>)
+/mini:upgrade        # checks npm for a newer mini and installs it (preview → confirm in the chat → apply)
 ```
 
 `/mini:undo` and `/mini:model` are the non-interactive counterparts of the interactive terminal commands `mini undo` / `mini model`: undo previews the change (`mini undo --dry-run`), confirms in the chat and applies it (`mini undo --yes`); model leans on the non-interactive sub-commands (`mini model show` / `<scope> <model>` / `reset`) — neither blocks on a TTY prompt in the Claude Code Bash.
@@ -168,6 +170,19 @@ mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28%
 context-window size (`200k`/`1M`), and a gauge plus percentage of the
 **context-window usage** (recovered from the session transcript, since Claude
 Code does not report token counts to the status line directly).
+
+When a newer mini version is available on npm, a yellow `↑ <version>` segment is
+appended at the end:
+
+```
+mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28% · ↑ 1.9.1
+```
+
+The status line never blocks on the network for this: it reads a small cached
+reading of the latest published version (in the OS temp dir) and, when that cache
+is older than 5 hours, fires a detached background refresh that updates it for
+next time. Run `mini upgrade` to install the new version (or `mini upgrade
+--check` to just see what's available).
 
 **Install:** on `npm install` the postinstall hook offers it — but only when you
 have **no** status line configured yet. In an interactive install it asks first;

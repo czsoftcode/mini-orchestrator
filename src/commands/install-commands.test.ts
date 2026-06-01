@@ -31,8 +31,19 @@ describe('installCommands', () => {
       'plan.md',
       'status.md',
       'undo.md',
+      'upgrade.md',
       'verify.md',
     ]);
+  });
+
+  it('the upgrade command is non-interactive: --check preview then --yes apply', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'upgrade.md'), 'utf-8');
+    expect(md).toContain('mini upgrade --check');
+    expect(md).toContain('mini upgrade --yes');
+    // It must never fall back to the blocking interactive form.
+    expect(md).not.toContain('mini context');
+    expect(md).toContain('description:');
   });
 
   it('the undo command is non-interactive: --dry-run preview then --yes apply', async () => {

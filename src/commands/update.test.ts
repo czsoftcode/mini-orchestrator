@@ -107,7 +107,8 @@ describe('update', () => {
     expect(commands).toContain('verify.md');
     expect(commands).toContain('undo.md');
     expect(commands).toContain('model.md');
-    expect(commands.length).toBe(13);
+    expect(commands).toContain('upgrade.md');
+    expect(commands.length).toBe(14);
   });
 
   it('--dry-run writes nothing even for the commands', async () => {

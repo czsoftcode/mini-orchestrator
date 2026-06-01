@@ -84,6 +84,33 @@ describe('renderStatusline', () => {
     expect(line).toBe('200k ▱▱▱▱▱▱▱▱▱▱ 0%');
   });
 
+  it('appends an upgrade segment when one is available (plain)', () => {
+    const line = renderStatusline(
+      { dir: '/home/me/mini', model: 'Opus 4.8', usedTokens: 0, windowTokens: 1_000_000, upgrade: '1.9.1' },
+      { color: false },
+    );
+    expect(line).toBe('mini · Opus 4.8 · 1M ▱▱▱▱▱▱▱▱▱▱ 0% · ↑ 1.9.1');
+  });
+
+  it('omits the upgrade segment when there is none', () => {
+    const line = renderStatusline(
+      { dir: '/home/me/mini', model: 'Opus 4.8', usedTokens: 0, windowTokens: 1_000_000, upgrade: null },
+      { color: false },
+    );
+    expect(line).toBe('mini · Opus 4.8 · 1M ▱▱▱▱▱▱▱▱▱▱ 0%');
+  });
+
+  it('colors the upgrade segment yellow', () => {
+    const line = renderStatusline({
+      dir: '/home/me/mini',
+      model: 'Opus 4.8',
+      usedTokens: 0,
+      windowTokens: 1_000_000,
+      upgrade: '1.9.1',
+    });
+    expect(line).toContain('\x1b[33m↑ 1.9.1\x1b[0m');
+  });
+
   it('colors by default: bold-cyan dir, dim separators, threshold-colored gauge', () => {
     const line = renderStatusline({
       dir: '/home/me/mini',

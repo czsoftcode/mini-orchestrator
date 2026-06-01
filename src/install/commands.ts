@@ -187,6 +187,19 @@ Proceed:
 
 Relay the command output to the user in the chat.`,
   },
+  {
+    name: 'upgrade',
+    description: 'mini — check npm for a newer mini-orchestrator and install it',
+    body: `This is the **upgrade** step of the mini workflow, run directly in Claude Code. It checks npm for a newer \`mini-orchestrator\` and, with the user's approval, installs it globally (\`npm install -g mini-orchestrator@latest\`).
+
+Proceed in this order:
+
+1. **Check.** Run in Bash \`mini upgrade --check\` — it reports the current version and the latest one on npm, and whether a newer one is available. It installs nothing. Relay the result to the user in the chat.
+2. **Confirm.** If a newer version is available, ask the user whether to install it now. **Wait for their answer** — do not install anything before it.
+3. **Apply.** Only after they confirm, run \`mini upgrade --yes\` — it installs the latest version non-interactively. Relay the result (and any npm output). If the user declines, or if it is already up to date, change nothing.
+
+Never run a bare \`mini upgrade\` here — it would block on an interactive confirmation prompt in this non-interactive Bash. If \`mini upgrade --check\` reports a local dev build (not a global npm install), don't try to upgrade — relay its hint instead (update via \`git pull && npm run install-local\`).`,
+  },
 ];
 
 /** Renders the content of a single .md command. */

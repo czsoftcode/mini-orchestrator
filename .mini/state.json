@@ -472,6 +472,11 @@
       "id": 94,
       "title": "Slash commandy /mini:undo a /mini:model",
       "status": "done"
+    },
+    {
+      "id": 95,
+      "title": "mini upgrade a /mini:upgrade",
+      "status": "done"
     }
   ],
   "models": {
