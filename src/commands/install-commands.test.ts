@@ -26,11 +26,33 @@ describe('installCommands', () => {
       'done.md',
       'init.md',
       'map.md',
+      'model.md',
       'next.md',
       'plan.md',
       'status.md',
+      'undo.md',
       'verify.md',
     ]);
+  });
+
+  it('the undo command is non-interactive: --dry-run preview then --yes apply', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'undo.md'), 'utf-8');
+    expect(md).toContain('mini undo --dry-run');
+    expect(md).toContain('mini undo --yes');
+    // It must never fall back to the blocking interactive form.
+    expect(md).not.toContain('mini context');
+    expect(md).toContain('description:');
+  });
+
+  it('the model command uses the non-interactive subcommands, not mini context', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'model.md'), 'utf-8');
+    expect(md).toContain('mini model show');
+    expect(md).toContain('mini model reset');
+    expect(md).toContain('$ARGUMENTS');
+    expect(md).not.toContain('mini context');
+    expect(md).toContain('description:');
   });
 
   it('the verify command calls mini context verify and describes the UI/UX review', async () => {

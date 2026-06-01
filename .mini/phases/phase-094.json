@@ -1,0 +1,42 @@
+{
+  "id": 94,
+  "title": "Slash commandy /mini:undo a /mini:model",
+  "goal": "Add non-interactive native slash commands /mini:undo and /mini:model. For undo, add a non-interactive CLI path (--dry-run to preview the change, --yes to skip the confirmation prompt) so the slash command can show a preview, confirm in the chat and apply without a TTY prompt; for model, rely on the existing non-interactive subcommands (show / <scope> <id> / reset). Register both in COMMAND_DEFS and the install hint, update README/CHANGELOG, add tests.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "undo --dry-run a --yes flagy",
+      "status": "done",
+      "detail": "Refactor undo() to accept options {dryRun, yes}: --dry-run prints the change summary and exits without prompting or applying; --yes skips the confirm and applies directly; wire both flags in cli.ts. Covered by undo.test.ts."
+    },
+    {
+      "title": "/mini:undo slash command",
+      "status": "done",
+      "detail": "Add an 'undo' CommandDef with a custom non-interactive body: run mini undo --dry-run, relay the preview, confirm in the chat (destructive, only one step back), then mini undo --yes."
+    },
+    {
+      "title": "/mini:model slash command",
+      "status": "done",
+      "detail": "Add a 'model' CommandDef with argumentHint and a custom body that uses only the non-interactive subcommands (mini model show / <scope> <id> / reset) and never the interactive pickers; gather a missing scope/model in the chat."
+    },
+    {
+      "title": "Update install hint and command tests",
+      "status": "done",
+      "detail": "Add undo and model to the install hint list in install-commands.ts; update install-commands.test.ts expected file list and add body assertions for undo/model."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Document the new /mini:undo and /mini:model slash commands and the new undo --dry-run/--yes flags."
+    }
+  ],
+  "startedAt": "2026-06-01T10:08:00.922Z",
+  "resolvedVerify": [
+    "Run /mini:undo and /mini:model in a real Claude Code session"
+  ],
+  "completedAt": "2026-06-01T10:16:51.346Z",
+  "autoCommit": {
+    "preSha": "e0f655e24e5d0c6885572514204e665012fa4a36",
+    "subject": "Phase 94: Slash commandy /mini:undo a /mini:model"
+  }
+}

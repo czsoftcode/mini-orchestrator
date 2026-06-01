@@ -82,7 +82,7 @@ mini auto        # next → plan → do (with acceptEdits) → done; everything 
 | `mini verify` | Opens an interactive Claude Code session for the in-depth UI/UX review of the phase by a human (symmetric to `mini discuss`, the terminal counterpart of `/mini:verify`) — Claude guides you through a visual/UX review (based on the report's `verify` items) and writes the findings into the report (and, for a closed phase, into memory); it does not move the phase state. It targets the current phase, otherwise the last closed one |
 | `mini auto` | Chain: next → plan → do (acceptEdits) → done, everything without asking except done |
 | `mini status` | What the project is, where we are, models, phases and steps |
-| `mini undo` | Reverts the last state change (1 step back, no deep history); if `mini done` auto-committed in the last step and HEAD still sits on a clean tree, it also offers to revert the commit (`git reset --soft`) |
+| `mini undo` | Reverts the last state change (1 step back, no deep history); if `mini done` auto-committed in the last step and HEAD still sits on a clean tree, it also offers to revert the commit (`git reset --soft`). `--dry-run` previews without changing anything, `--yes` skips the confirmation (used by `/mini:undo`) |
 | `mini stop` | Creates a cooperative stop signal `.mini/STOP` for the autonomous `/mini:auto` (typically from a second terminal); `--clear` removes it — see [Autonomous `/mini:auto`](#autonomous-miniauto) |
 | `mini model …` | Per-project / per-scope model choice (see below) |
 | `mini import-gsd` | One-off import of an in-progress GSD project from `.planning/` |
@@ -100,7 +100,7 @@ The whole cycle `next → discuss → plan → do → done` can also be run **di
 mini install-commands     # one-off in the target project
 ```
 
-This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map,audit,auto}.md`. Then in Claude Code:
+This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,map,audit,auto,undo,model}.md`. Then in Claude Code:
 
 ```
 /mini:init           # creates the project (questions in the chat) → offers /mini:map and /mini:audit
@@ -114,7 +114,11 @@ This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,statu
 /mini:map            # regenerates the project graph
 /mini:status         # overview of the phases (read-only)
 /mini:audit          # overview of the existing codebase into .mini/codebase.md
+/mini:undo           # reverts the last state change (preview → confirm in the chat → apply)
+/mini:model [args]   # views/sets the project model (show | reset | <scope> <model>)
 ```
+
+`/mini:undo` and `/mini:model` are the non-interactive counterparts of the interactive terminal commands `mini undo` / `mini model`: undo previews the change (`mini undo --dry-run`), confirms in the chat and applies it (`mini undo --yes`); model leans on the non-interactive sub-commands (`mini model show` / `<scope> <model>` / `reset`) — neither blocks on a TTY prompt in the Claude Code Bash.
 
 ### Autonomous `/mini:auto`
 

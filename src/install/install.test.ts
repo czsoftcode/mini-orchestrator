@@ -42,7 +42,7 @@ describe('installSlashCommands', () => {
     expect(res.target.scope).toBe('project');
     const files = await readdir(join(cwd, COMMANDS_DIR));
     expect(files).toContain('next.md');
-    expect(files.length).toBe(11);
+    expect(files.length).toBe(13);
   });
 
   it('dry-run writes nothing', async () => {

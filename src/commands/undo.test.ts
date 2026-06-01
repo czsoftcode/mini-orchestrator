@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { save } from '../state/store.js';
+import { load, save } from '../state/store.js';
 import type { PhaseAutoCommit, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
 import {
@@ -238,5 +238,57 @@ describe('undo()', () => {
     await undo();
 
     expect(softResetToMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('--dry-run only previews — no prompt, no soft reset, state stays', async () => {
+    await save(
+      makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
+      cwd,
+    );
+    await save(
+      makeState(
+        [{ id: 1, title: 'A', status: 'done', autoCommit: SAMPLE_AUTO_COMMIT }],
+        null,
+      ),
+      cwd,
+    );
+    isGitRepoMock.mockResolvedValue(true);
+    headParentShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.preSha);
+    isCleanWorkingTreeMock.mockResolvedValue(true);
+
+    await undo({ dryRun: true });
+
+    expect(askMock).not.toHaveBeenCalled();
+    expect(softResetToMock).not.toHaveBeenCalled();
+    // State is untouched — still the "current" (un-reverted) version.
+    const state = await load(cwd);
+    expect(state.currentPhaseId).toBe(null);
+    expect(state.phases[0]?.status).toBe('done');
+  });
+
+  it('--yes skips the confirm and applies (soft reset runs without asking)', async () => {
+    await save(
+      makeState([{ id: 1, title: 'A', status: 'doing' }], 1),
+      cwd,
+    );
+    await save(
+      makeState(
+        [{ id: 1, title: 'A', status: 'done', autoCommit: SAMPLE_AUTO_COMMIT }],
+        null,
+      ),
+      cwd,
+    );
+    isGitRepoMock.mockResolvedValue(true);
+    headParentShaMock.mockResolvedValue(SAMPLE_AUTO_COMMIT.preSha);
+    isCleanWorkingTreeMock.mockResolvedValue(true);
+
+    await undo({ yes: true });
+
+    expect(askMock).not.toHaveBeenCalled();
+    expect(softResetToMock).toHaveBeenCalledTimes(1);
+    // State reverted by one step — back to the "doing" version.
+    const state = await load(cwd);
+    expect(state.currentPhaseId).toBe(1);
+    expect(state.phases[0]?.status).toBe('doing');
   });
 });

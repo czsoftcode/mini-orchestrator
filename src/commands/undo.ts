@@ -20,7 +20,22 @@ type RevertDecision =
   | { kind: 'match'; autoCommit: PhaseAutoCommit }
   | { kind: 'mismatch'; autoCommit: PhaseAutoCommit; reason: string };
 
-export async function undo(): Promise<void> {
+export interface UndoOptions {
+  /**
+   * Preview only — print the change summary (the same block as the interactive
+   * prompt) and exit without prompting or touching anything. Serves the
+   * non-interactive `/mini:undo` slash command, which shows the preview in the
+   * chat before confirming. Cannot be combined meaningfully with `yes`.
+   */
+  dryRun?: boolean;
+  /**
+   * Skip the `Proceed?` confirmation and apply directly. For non-interactive use
+   * (the `/mini:undo` slash command applies after the user confirmed in the chat).
+   */
+  yes?: boolean;
+}
+
+export async function undo({ dryRun = false, yes = false }: UndoOptions = {}): Promise<void> {
   const cwd = process.cwd();
 
   if (!(await exists(cwd))) {
@@ -39,7 +54,7 @@ export async function undo(): Promise<void> {
   const decision = await classifyRevert(cwd, autoCommit);
 
   console.log();
-  log.title('Undo the last change?');
+  log.title(dryRun ? 'Undo would revert the last change:' : 'Undo the last change?');
   log.dim(`  ${summary}`);
   if (decision.kind === 'match') {
     log.dim(`  + revert commit: ${decision.autoCommit.subject} (soft reset to ${shortSha(decision.autoCommit.preSha)})`);
@@ -48,15 +63,22 @@ export async function undo(): Promise<void> {
   }
   console.log();
 
-  const { confirm } = await ask<'confirm'>({
-    type: 'confirm',
-    name: 'confirm',
-    message: 'Proceed?',
-    initial: true,
-  });
-  if (!confirm) {
-    log.dim('Nothing changes.');
+  if (dryRun) {
+    log.dim('Preview only — nothing changed. Run "mini undo --yes" to apply.');
     return;
+  }
+
+  if (!yes) {
+    const { confirm } = await ask<'confirm'>({
+      type: 'confirm',
+      name: 'confirm',
+      message: 'Proceed?',
+      initial: true,
+    });
+    if (!confirm) {
+      log.dim('Nothing changes.');
+      return;
+    }
   }
 
   await restorePrev(cwd);

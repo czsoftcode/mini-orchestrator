@@ -230,9 +230,11 @@ program
 program
   .command('undo')
   .description('Reverts the last state change by one step.')
-  .action(async () => {
+  .option('--dry-run', 'Preview only — print what would be reverted and exit, without prompting or changing anything. For /mini:undo.')
+  .option('--yes', 'Skip the confirmation and revert directly (non-interactive). For /mini:undo, after the user confirmed in the chat.')
+  .action(async (opts: { dryRun?: boolean; yes?: boolean }) => {
     const { undo } = await import('./commands/undo.js');
-    await undo();
+    await undo({ dryRun: opts.dryRun, yes: opts.yes });
   });
 
 program
