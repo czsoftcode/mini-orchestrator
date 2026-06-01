@@ -24,6 +24,15 @@ export const PACKAGE_NAME = 'mini-orchestrator';
 /** How long a cached latest-version reading stays fresh: 5 hours. */
 export const CACHE_TTL_MS = 5 * 60 * 60 * 1000;
 
+/**
+ * Minimum gap between two background refreshes triggered by the TTL path. The
+ * status line renders constantly, so without this a perpetually-stale cache
+ * (e.g. offline, the fetch keeps failing and never advances `checkedAt`) would
+ * spawn a refresh on every single render. A brand-new session bypasses this — we
+ * always want a fresh reading when Claude Code starts.
+ */
+export const REFRESH_RETRY_MS = 5 * 60 * 1000;
+
 /** npm registry endpoint that returns the metadata of the `latest` dist-tag. */
 const REGISTRY_URL = `https://registry.npmjs.org/${PACKAGE_NAME}/latest`;
 
@@ -76,6 +85,78 @@ export function isCacheStale(
 ): boolean {
   if (!cache) return true;
   return now - cache.checkedAt >= ttl;
+}
+
+/**
+ * A small sidecar marker recording the last background refresh the status line
+ * fired: for which Claude Code session, and when. Kept separate from the version
+ * cache because the cache is written by `mini check-version` (which knows nothing
+ * about sessions), while this marker is written by the status line.
+ */
+export interface RefreshTrigger {
+  /** The session id we last fired a refresh for (`''` when it was unknown). */
+  sessionId: string;
+  /** Epoch milliseconds of that last trigger. */
+  triggeredAt: number;
+}
+
+/** Path of the refresh-trigger marker (next to the version cache). */
+export function triggerFilePath(dir: string = tmpdir()): string {
+  return join(dir, `${PACKAGE_NAME}-refresh.json`);
+}
+
+/** Reads the refresh-trigger marker; `null` when missing/malformed. Never throws. */
+export async function readTrigger(path: string = triggerFilePath()): Promise<RefreshTrigger | null> {
+  try {
+    const raw = await readFile(path, 'utf-8');
+    const parsed = JSON.parse(raw) as Partial<RefreshTrigger>;
+    if (typeof parsed.sessionId === 'string' && typeof parsed.triggeredAt === 'number') {
+      return { sessionId: parsed.sessionId, triggeredAt: parsed.triggeredAt };
+    }
+  } catch {
+    // missing / unreadable / invalid JSON → behave as if there is no marker
+  }
+  return null;
+}
+
+/** Writes the refresh-trigger marker for `sessionId` with the current timestamp. */
+export async function writeTrigger(
+  sessionId: string,
+  path: string = triggerFilePath(),
+  now: number = Date.now(),
+): Promise<void> {
+  const data: RefreshTrigger = { sessionId, triggeredAt: now };
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, JSON.stringify(data), 'utf-8');
+}
+
+/**
+ * Pure decision: should the status line fire a background version refresh now?
+ *
+ * - A **new session** (the current `sessionId` differs from the marker's) always
+ *   refreshes — so the check runs on every Claude Code start, even when the cache
+ *   is still fresh.
+ * - Otherwise (same/unknown session) it refreshes only when the cache is **stale**
+ *   (older than the TTL), which covers a long-running session crossing the 5h mark.
+ * - The TTL path is gated by `REFRESH_RETRY_MS` so a perpetually-stale cache (a
+ *   failing fetch) can't spawn a refresh on every render. A new session bypasses
+ *   that gate.
+ *
+ * `sessionId` is `null`/`undefined` when the status payload carries none — then
+ * there is no "new session" signal and it degrades to the TTL behaviour.
+ */
+export function shouldRefresh(
+  cache: VersionCache | null,
+  trigger: RefreshTrigger | null,
+  sessionId: string | null | undefined,
+  now: number = Date.now(),
+  ttl: number = CACHE_TTL_MS,
+  retry: number = REFRESH_RETRY_MS,
+): boolean {
+  const newSession = !!sessionId && (!trigger || trigger.sessionId !== sessionId);
+  if (newSession) return true;
+  if (!isCacheStale(cache, ttl, now)) return false;
+  return !trigger || now - trigger.triggeredAt >= retry;
 }
 
 /**

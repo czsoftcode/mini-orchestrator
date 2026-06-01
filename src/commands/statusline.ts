@@ -15,7 +15,13 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { buildData, type StatusInput } from '../statusline/statusline.js';
 import { renderStatusline } from '../statusline/render.js';
-import { isCacheStale, readCache, upgradeStatusFromCache } from '../upgrade/versionCheck.js';
+import {
+  readCache,
+  readTrigger,
+  shouldRefresh,
+  upgradeStatusFromCache,
+  writeTrigger,
+} from '../upgrade/versionCheck.js';
 import { readPackageVersion } from '../version.js';
 
 /** Reads all of stdin as a UTF-8 string. */
@@ -29,14 +35,21 @@ async function readStdin(): Promise<string> {
 
 /**
  * The latest mini version to advertise, read from the cache ONLY (never the
- * network — the status line must return instantly). When the cache is missing or
- * older than the TTL, it fires a detached `mini check-version` to refresh it for
- * next time and returns `null` for now. Any failure → `null` (no segment).
+ * network — the status line must return instantly). When a refresh is due (a new
+ * session, or a long session crossing the 5h TTL — see `shouldRefresh`), it fires
+ * a detached `mini check-version` to refresh the cache for next time and records
+ * the trigger, then returns the current cached reading. Any failure → `null`.
  */
-async function readUpgradeLabel(): Promise<string | null> {
+async function readUpgradeLabel(sessionId: string | undefined): Promise<string | null> {
   try {
     const cache = await readCache();
-    if (isCacheStale(cache)) fireBackgroundRefresh();
+    const trigger = await readTrigger();
+    if (shouldRefresh(cache, trigger, sessionId)) {
+      fireBackgroundRefresh();
+      // Record the trigger immediately so the next render in this session won't
+      // re-fire before the detached refresh has written the cache.
+      await writeTrigger(sessionId ?? '');
+    }
     const { available, latest } = upgradeStatusFromCache(cache, readPackageVersion());
     return available ? latest : null;
   } catch {
@@ -75,7 +88,7 @@ export async function statusline(): Promise<void> {
       transcript = await readFile(input.transcript_path, 'utf-8').catch(() => '');
     }
 
-    const upgrade = await readUpgradeLabel();
+    const upgrade = await readUpgradeLabel(input.session_id);
     const line = renderStatusline(buildData(input, transcript, upgrade));
     if (line) process.stdout.write(line);
   } catch {

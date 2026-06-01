@@ -19,6 +19,8 @@ export interface StatusInput {
   workspace?: { current_dir?: string };
   model?: { display_name?: string };
   transcript_path?: string;
+  /** Claude Code session id — used to refresh the upgrade check on a new session. */
+  session_id?: string;
 }
 
 /** Parsed, normalized inputs for the renderer. */

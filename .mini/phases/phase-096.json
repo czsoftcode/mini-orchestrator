@@ -1,0 +1,29 @@
+{
+  "id": 96,
+  "title": "Kontrola upgrade při startu session",
+  "goal": "Trigger the latest-version background refresh on every new Claude Code session start (detected via the session_id in the status payload), in addition to the existing 5-hour TTL refresh that covers long-running sessions; rate-limit the trigger so a failing fetch can't spawn a refresh on every status-line render.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Refresh trigger state + decision",
+      "status": "done",
+      "detail": "In versionCheck.ts add a trigger sidecar (readTrigger/writeTrigger holding {sessionId, triggeredAt}) and a pure shouldRefresh(cache, trigger, sessionId, now) that returns true for a new session, otherwise per the 5h TTL, gated by a short retry cooldown so a failing fetch cannot fire on every render. Unit tests for the decision matrix."
+    },
+    {
+      "title": "Statusline fires on session start",
+      "status": "done",
+      "detail": "Add session_id to StatusInput; the statusline command reads the trigger marker, decides via shouldRefresh, and on a positive decision spawns the detached check-version refresh and writes the marker (with the current session id). Falls back to TTL-only behaviour when session_id is absent. Verify the wiring."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Document that the upgrade check refreshes on every new Claude Code session start, with the 5h TTL covering long-running sessions; add an English CHANGELOG entry."
+    }
+  ],
+  "startedAt": "2026-06-01T11:08:10.275Z",
+  "completedAt": "2026-06-01T11:11:49.591Z",
+  "autoCommit": {
+    "preSha": "217c3bc241c93da4835ea1878c5bcd8b7488a233",
+    "subject": "Phase 96: Kontrola upgrade při startu session"
+  }
+}

@@ -26,6 +26,15 @@ All notable changes to this project are recorded here. The format is based on
   `mini check-version`) to update it for next time. `mini upgrade` does a fresh,
   blocking check and also refreshes the cache.
 
+### Changed
+
+- **Upgrade check now refreshes on every new Claude Code session.** The
+  status-line version refresh previously fired only when its cache was older than
+  5 hours. It now also fires on each new session (detected via the `session_id`
+  in the status payload), so you get a fresh check every time you start Claude;
+  the 5-hour TTL then only covers a single long-running session. A short retry
+  cooldown keeps a failing fetch from re-firing on every render.
+
 ## [1.9.0] - 2026-06-01
 
 ### Added

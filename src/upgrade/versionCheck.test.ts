@@ -7,8 +7,12 @@ import {
   isCacheStale,
   isNewer,
   readCache,
+  readTrigger,
+  REFRESH_RETRY_MS,
+  shouldRefresh,
   upgradeStatusFromCache,
   writeCache,
+  writeTrigger,
 } from './versionCheck.js';
 
 describe('isNewer', () => {
@@ -56,6 +60,67 @@ describe('upgradeStatusFromCache', () => {
       available: false,
       latest: '1.9.0',
     });
+  });
+});
+
+describe('shouldRefresh', () => {
+  const now = 1_000_000_000_000;
+  const fresh = { latest: '1.9.0', checkedAt: now - 1000 }; // within TTL
+  const stale = { latest: '1.9.0', checkedAt: now - CACHE_TTL_MS }; // past TTL
+
+  it('refreshes on a brand-new session even when the cache is fresh', () => {
+    const trigger = { sessionId: 'old-session', triggeredAt: now - 1000 };
+    expect(shouldRefresh(fresh, trigger, 'new-session', now)).toBe(true);
+  });
+
+  it('refreshes when there is no trigger marker yet and a session id is present', () => {
+    expect(shouldRefresh(fresh, null, 'sess-1', now)).toBe(true);
+  });
+
+  it('does not refresh within the same session while the cache is fresh', () => {
+    const trigger = { sessionId: 'sess-1', triggeredAt: now - 1000 };
+    expect(shouldRefresh(fresh, trigger, 'sess-1', now)).toBe(false);
+  });
+
+  it('refreshes within the same session once the cache is stale (long session)', () => {
+    const trigger = { sessionId: 'sess-1', triggeredAt: now - REFRESH_RETRY_MS };
+    expect(shouldRefresh(stale, trigger, 'sess-1', now)).toBe(true);
+  });
+
+  it('rate-limits the stale path: no refresh within the retry cooldown', () => {
+    const trigger = { sessionId: 'sess-1', triggeredAt: now - 1000 };
+    expect(shouldRefresh(stale, trigger, 'sess-1', now)).toBe(false);
+  });
+
+  it('without a session id falls back to TTL behaviour (stale → refresh)', () => {
+    expect(shouldRefresh(stale, null, undefined, now)).toBe(true);
+    expect(shouldRefresh(fresh, null, undefined, now)).toBe(false);
+  });
+});
+
+describe('readTrigger / writeTrigger', () => {
+  let dir: string;
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'mini-rt-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('round-trips a written marker', async () => {
+    const path = join(dir, 'refresh.json');
+    await writeTrigger('sess-1', path, 555);
+    expect(await readTrigger(path)).toEqual({ sessionId: 'sess-1', triggeredAt: 555 });
+  });
+
+  it('returns null for a missing file', async () => {
+    expect(await readTrigger(join(dir, 'missing.json'))).toBeNull();
+  });
+
+  it('returns null for malformed JSON', async () => {
+    const path = join(dir, 'bad.json');
+    await writeFile(path, 'nope', 'utf-8');
+    expect(await readTrigger(path)).toBeNull();
   });
 });
 

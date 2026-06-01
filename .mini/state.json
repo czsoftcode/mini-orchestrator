@@ -477,6 +477,11 @@
       "id": 95,
       "title": "mini upgrade a /mini:upgrade",
       "status": "done"
+    },
+    {
+      "id": 96,
+      "title": "Kontrola upgrade při startu session",
+      "status": "done"
     }
   ],
   "models": {

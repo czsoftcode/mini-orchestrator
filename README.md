@@ -179,10 +179,14 @@ mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28% · ↑ 1.9.1
 ```
 
 The status line never blocks on the network for this: it reads a small cached
-reading of the latest published version (in the OS temp dir) and, when that cache
-is older than 5 hours, fires a detached background refresh that updates it for
-next time. Run `mini upgrade` to install the new version (or `mini upgrade
---check` to just see what's available).
+reading of the latest published version (in the OS temp dir) and fires a detached
+background refresh to update it for next time. The refresh runs **on every new
+Claude Code session** (detected via the session id in the status payload), so you
+get a fresh check each time you start Claude; within a single long-running session
+it then refreshes again only once the cache is older than **5 hours** (a short
+retry cooldown keeps a failing fetch from re-firing on every render). Run
+`mini upgrade` to install the new version (or `mini upgrade --check` to just see
+what's available).
 
 **Install:** on `npm install` the postinstall hook offers it — but only when you
 have **no** status line configured yet. In an interactive install it asks first;
