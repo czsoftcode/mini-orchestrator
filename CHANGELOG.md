@@ -8,6 +8,15 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`mini doctor` command and `/mini:doctor` slash command.** A new `mini doctor`
+  prints a health-check checklist of the project setup — the state and its schema
+  version (legacy → `mini migrate`, missing → `mini init`), `project.md` and
+  `CHANGELOG.md` presence, the installed slash-command count vs the expected
+  number (→ `mini install-commands` / `mini update`), and mini version freshness
+  from the cache (→ `mini upgrade`) — each line marked ok/warn/fail with a fix
+  hint. Read-only; the `/mini:doctor` slash command relays it (17 generated
+  commands now).
+
 - **`mini changelog <version>`.** The changelog command takes an optional
   version argument and prints just that version's section (tolerant of a leading
   `v`, e.g. `v1.11.0`); an unknown version is reported with the list of available

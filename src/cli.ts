@@ -279,6 +279,16 @@ program
   });
 
 program
+  .command('doctor')
+  .description(
+    'Quick health check of the project setup: state and schema version, project.md/CHANGELOG.md, installed slash commands and mini version freshness. Read-only.',
+  )
+  .action(async () => {
+    const { doctor } = await import('./commands/doctor.js');
+    await doctor();
+  });
+
+program
   .command('import-gsd')
   .description('One-off import of an in-progress GSD project from .planning/.')
   .action(async () => {

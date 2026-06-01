@@ -512,6 +512,11 @@
       "id": 102,
       "title": "mini changelog --version <v>",
       "status": "done"
+    },
+    {
+      "id": 103,
+      "title": "Příkaz mini doctor a /mini:doctor",
+      "status": "done"
     }
   ],
   "models": {

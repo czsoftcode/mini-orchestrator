@@ -1,0 +1,34 @@
+{
+  "id": 103,
+  "title": "Příkaz mini doctor a /mini:doctor",
+  "goal": "Add a 'mini doctor' command (and read-only /mini:doctor slash command) that prints a diagnostic checklist of the project setup — state presence and schema version, project.md/CHANGELOG.md presence, installed slash-command count vs expected, and mini version freshness from the cache — each line ok/warn/fail with a fix hint.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Diagnostics model + checks",
+      "status": "done",
+      "detail": "New src/commands/doctor.ts with a DoctorCheck type {label, status: ok|warn|fail, detail?, hint?} and a pure buildDiagnostics(input) covering: project state (missing->init, legacy->migrate, v2->ok), project.md present, CHANGELOG.md present, slash-command count vs expected (0->install-commands, fewer->update), version freshness (newer->upgrade, unknown->info, current->ok). Unit tests over the input matrix."
+    },
+    {
+      "title": "doctor command + cli",
+      "status": "done",
+      "detail": "Implement doctor() that gathers the facts (exists, raw state version, file presence, count of .md in COMMANDS_DIR, readPackageVersion, version cache) and prints the checklist with a summary; register 'mini doctor' in cli.ts."
+    },
+    {
+      "title": "/mini:doctor slash command",
+      "status": "done",
+      "detail": "Add a read-only 'doctor' entry to install/commands.ts (own body like status: runs 'mini doctor' and relays); bump the generated-command count (16->17) in install/update/install-commands tests."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Document 'mini doctor' / '/mini:doctor' in README (commands table + slash list + generated file list) and add an English CHANGELOG entry."
+    }
+  ],
+  "startedAt": "2026-06-01T16:11:25.045Z",
+  "completedAt": "2026-06-01T16:15:49.298Z",
+  "autoCommit": {
+    "preSha": "ace25c2acc6be8869d62dd9a4cf1f55441b3f5a0",
+    "subject": "Phase 103: Příkaz mini doctor a /mini:doctor"
+  }
+}

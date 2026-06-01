@@ -110,7 +110,8 @@ describe('update', () => {
     expect(commands).toContain('upgrade.md');
     expect(commands).toContain('todo.md');
     expect(commands).toContain('changelog.md');
-    expect(commands.length).toBe(16);
+    expect(commands).toContain('doctor.md');
+    expect(commands.length).toBe(17);
   });
 
   it('--dry-run writes nothing even for the commands', async () => {

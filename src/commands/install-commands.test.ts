@@ -24,6 +24,7 @@ describe('installCommands', () => {
       'changelog.md',
       'discuss.md',
       'do.md',
+      'doctor.md',
       'done.md',
       'init.md',
       'map.md',

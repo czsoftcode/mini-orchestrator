@@ -96,6 +96,13 @@ If a step runs into a blocker you can't get around yourself, stop and hand contr
 Run in Bash \`mini status\` and relay its output (an overview of the project phases) to the user in the chat. It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
   },
   {
+    name: 'doctor',
+    description: 'mini — health check of the project setup (read-only)',
+    body: `This is the **doctor** step of the mini workflow, run directly in Claude Code.
+
+Run in Bash \`mini doctor\` — it prints a health-check checklist of the project setup (state and schema version, project.md/CHANGELOG.md, installed slash commands, mini version freshness) with a fix hint for anything that isn't ok. Relay the output to the user in the chat and, when something is flagged, mention the suggested fix command. It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
+  },
+  {
     name: 'changelog',
     description: 'mini — show the project CHANGELOG.md changes (read-only)',
     argumentHint: '[<version> | --all | --unreleased]',
