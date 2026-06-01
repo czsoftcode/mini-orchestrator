@@ -14,6 +14,8 @@ Goal: CLI vrací --version
 # Your task
 Implement the whole phase so that it meets the goal.
 
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
+
 Read the files yourself as needed — they are not handed to you up front.
 When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 "
@@ -38,6 +40,8 @@ Steps:
 # Your task
 Implement the step: "napsat snapshoty".
 
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
+
 Read the files yourself as needed — they are not handed to you up front.
 When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 "
@@ -61,6 +65,8 @@ Steps:
 # Your task
 Implement the step: "napsat snapshoty".
 
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
+
 Read the files yourself as needed — they are not handed to you up front.
 When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.
 "
@@ -81,6 +87,8 @@ Steps:
 
 # Your task
 Implement the whole phase so that it meets the goal.
+
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 Read the files yourself as needed — they are not handed to you up front.
 When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.

@@ -1,3 +1,4 @@
+import { PARALLELISM_HINT } from './parallelismHint.js';
 import type { Phase, Step, StepStatus } from '../state/types.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
@@ -47,6 +48,8 @@ Goal: ${phase.goal ?? '(not set)'}
 ${stepsBlock}${notesBlock}
 # Your task
 ${taskLine}
+
+${PARALLELISM_HINT}
 
 Read the files yourself as needed — they are not handed to you up front.
 When you are done, end the session (type /exit or press Ctrl+D). The user then verifies manually with \`mini done\`.

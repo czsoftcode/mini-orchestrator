@@ -28,6 +28,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
+
 # Tracking step progress
 As soon as you finish one step, mark it done **immediately** (before you start the next one):
 
@@ -103,6 +105,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
+
 # Tracking step progress
 As soon as you finish one step, mark it done **immediately** (before you start the next one):
 
@@ -165,6 +169,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 # Tracking step progress
 As soon as you finish one step, mark it done **immediately** (before you start the next one):
@@ -233,6 +239,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
+
 # Tracking step progress
 As soon as you finish one step, mark it done **immediately** (before you start the next one):
 
@@ -300,6 +308,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 # Tracking step progress
 As soon as you finish one step, mark it done **immediately** (before you start the next one):
@@ -372,6 +382,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
+
 
 # Report at the end of the session
 Before you end the session, **write via the Write tool** a report into the file \`.mini/run/phase-001.md\`. The report has two parts:
@@ -429,6 +441,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 # Tracking step progress
 As soon as you finish one step, mark it done **immediately** (before you start the next one):
@@ -497,6 +511,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 # Tracking step progress
 As soon as you finish one step, mark it done **immediately** (before you start the next one):

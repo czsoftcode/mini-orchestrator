@@ -452,6 +452,11 @@
       "id": 90,
       "title": "npm metadata a keywords",
       "status": "done"
+    },
+    {
+      "id": 91,
+      "title": "Sdílená instrukce o paralelismu",
+      "status": "done"
     }
   ],
   "models": {

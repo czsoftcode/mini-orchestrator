@@ -1,0 +1,39 @@
+{
+  "id": 91,
+  "title": "Sdílená instrukce o paralelismu",
+  "goal": "Přidat kanonickou sdílenou instrukci (po vzoru GRAPH_USAGE_HINT) o paralelismu tool-callů a vložit ji do relevantních lifecycle promptů: (1) křehké/stavové příkazy pouštět samostatně — hlavně cokoli se serverem (start/stop, kill, pkill, věci na pozadí), ne v jedné dávce s užitečnou prací; (2) nezávislé čtení a dotazy klidně paralelně; (3) závislé kroky sekvenčně — když je potřeba výstup jednoho příkazu pro druhý.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Sdílená konstanta PARALLELISM_HINT",
+      "status": "done",
+      "detail": "Nový soubor src/prompts/parallelismHint.ts po vzoru graphHint.ts; export konstanty se třemi body (křehké/stavové příkazy a serverové věci samostatně; nezávislé čtení/dotazy paralelně; závislé kroky sekvenčně), znění anglicky a token-úsporné."
+    },
+    {
+      "title": "Vložit hint do do promptu",
+      "status": "done",
+      "detail": "V buildDoPhasePrompt vykreslit PARALLELISM_HINT v sekci # Your task (za task line, před 'Read the files yourself')."
+    },
+    {
+      "title": "Vložit hint do auto promptu",
+      "status": "done",
+      "detail": "V buildAutoPhasePrompt vykreslit stejnou konstantu v sekci # Your task."
+    },
+    {
+      "title": "Obnovit snapshoty + test konstanty",
+      "status": "done",
+      "detail": "vitest -u pro doPhase/autoPhase snapshoty; ověřit, že prošly všechny testy."
+    },
+    {
+      "title": "README + CHANGELOG",
+      "status": "done",
+      "detail": "Záznam fáze 91 do CHANGELOG.md (anglicky), případně zmínka v README."
+    }
+  ],
+  "startedAt": "2026-06-01T00:15:14.841Z",
+  "completedAt": "2026-06-01T00:18:19.632Z",
+  "autoCommit": {
+    "preSha": "9b6486c42f915f560eb2340e9c7b9bf410a9378c",
+    "subject": "Phase 91: Sdílená instrukce o paralelismu"
+  }
+}

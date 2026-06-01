@@ -1,4 +1,5 @@
 import { phaseStem } from '../state/store.js';
+import { PARALLELISM_HINT } from './parallelismHint.js';
 import type { Phase, StepStatus } from '../state/types.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
@@ -141,6 +142,8 @@ ${stepsBlock}${notesBlock}
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+${PARALLELISM_HINT}
 ${progressBlock}
 
 # Report at the end of the session

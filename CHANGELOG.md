@@ -6,7 +6,18 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-06-01
+
 ### Added
+
+- **Parallelism guidance for the execution agent.** The `do` and `auto` prompts
+  now carry a shared instruction (`PARALLELISM_HINT`, alongside the existing
+  `GRAPH_USAGE_HINT`) on how to batch tool calls: run fragile/stateful commands
+  on their own — especially anything touching a server (start/stop, kill, pkill,
+  background jobs) — so they don't share a batch with other work; fire
+  independent reads and queries in parallel; and keep dependent steps sequential
+  when one command's output feeds the next. It lives only in the execution
+  prompts (not next/discuss/plan), where there is real work to parallelize.
 
 - **npm package metadata for discoverability.** `package.json` now carries
   `keywords` (claude, claude-code, anthropic, ai, llm, cli, orchestrator,
