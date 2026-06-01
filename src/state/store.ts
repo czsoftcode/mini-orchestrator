@@ -9,6 +9,7 @@ const PHASES_DIR = 'phases';
 const PHASES_PREV_DIR = 'phases-prev';
 const PROJECT_FILE = 'project.md';
 const STOP_FILE = 'STOP';
+const TODO_FILE = 'todo.md';
 
 /** Aktuální verze schématu stavu. 1 = starý monolitický `state.json`. */
 export const SCHEMA_VERSION = 2 as const;
@@ -80,6 +81,15 @@ export function projectPath(cwd: string = process.cwd()): string {
  */
 export function stopPath(cwd: string = process.cwd()): string {
   return join(dir(cwd), STOP_FILE);
+}
+
+/**
+ * Path to the ideas/changes archive `.mini/todo.md`. A human-readable markdown
+ * checklist managed by `mini todo`; the `mini next` prompt surfaces its open
+ * items as candidate phase ideas. Editable by hand too.
+ */
+export function todoPath(cwd: string = process.cwd()): string {
+  return join(dir(cwd), TODO_FILE);
 }
 
 export async function exists(cwd: string = process.cwd()): Promise<boolean> {

@@ -30,10 +30,19 @@ describe('installCommands', () => {
       'next.md',
       'plan.md',
       'status.md',
+      'todo.md',
       'undo.md',
       'upgrade.md',
       'verify.md',
     ]);
+  });
+
+  it('the todo command calls mini todo, not mini context', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'todo.md'), 'utf-8');
+    expect(md).toContain('mini todo');
+    expect(md).not.toContain('mini context');
+    expect(md).toContain('description:');
   });
 
   it('the upgrade command is non-interactive: --check preview then --yes apply', async () => {

@@ -56,6 +56,20 @@ describe('buildNextSessionPrompt', () => {
     expect(p).toContain('Last phase');
     expect(p).toContain('minule jsme udělali X');
   });
+
+  it('surfaces open todo items as candidate ideas', () => {
+    const p = buildNextSessionPrompt(PROJECT, state(), {
+      openTodos: ['add CSV export', 'support plugins'],
+    });
+    expect(p).toContain('Ideas in the backlog');
+    expect(p).toContain('- add CSV export');
+    expect(p).toContain('- support plugins');
+  });
+
+  it('omits the backlog block when there are no open todos', () => {
+    const p = buildNextSessionPrompt(PROJECT, state(), { openTodos: [] });
+    expect(p).not.toContain('Ideas in the backlog');
+  });
 });
 
 describe('buildPlanSessionPrompt', () => {

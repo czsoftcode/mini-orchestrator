@@ -6,7 +6,19 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-06-01
+
 ### Added
+
+- **`mini todo` command and `/mini:todo` slash command.** A new `mini todo`
+  keeps an archive of future ideas and changes in `.mini/todo.md` (a plain,
+  hand-editable markdown checklist): `mini todo` lists the numbered items
+  (open `[ ]` / done `[x]`), `add "<text>"` appends an open idea, and
+  `done <n>` / `remove <n>` act on the listed number. The `mini next` /
+  `/mini:next` prompt now surfaces the open items as candidate phase ideas, so
+  ideas collected earlier resurface when it's time to pick the next phase. The
+  matching `/mini:todo` slash command maps its arguments to the right
+  `mini todo` call (15 generated commands now).
 
 - **`mini upgrade` command and `/mini:upgrade` slash command.** A new
   `mini upgrade` checks npm for a newer `mini-orchestrator`, reports

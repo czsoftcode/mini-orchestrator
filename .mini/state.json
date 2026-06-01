@@ -482,6 +482,11 @@
       "id": 96,
       "title": "Kontrola upgrade při startu session",
       "status": "done"
+    },
+    {
+      "id": 97,
+      "title": "Příkaz mini todo a /mini:todo",
+      "status": "done"
     }
   ],
   "models": {

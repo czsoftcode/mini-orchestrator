@@ -11,6 +11,7 @@ import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { readDiscussNotes } from '../state/discussNotes.js';
 import { runReportExists } from '../state/runReport.js';
 import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
+import { readTodos } from '../state/todoStore.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
 import { buildVerifyContext, readReportVerify } from './verifyContext.js';
@@ -92,7 +93,12 @@ async function buildNextContext(
 ): Promise<string> {
   const userHint = extraArgs.join(' ').trim() || undefined;
   const lastMemoryMd = await readLastMemoryIfExists(cwd);
-  return buildNextSessionPrompt(projectMd, stateFromHeader(header), { userHint, lastMemoryMd });
+  const openTodos = (await readTodos(cwd)).filter((t) => !t.done).map((t) => t.text);
+  return buildNextSessionPrompt(projectMd, stateFromHeader(header), {
+    userHint,
+    lastMemoryMd,
+    openTodos,
+  });
 }
 
 /** Shared part for discuss/plan/do/done: they require an existing current phase. */

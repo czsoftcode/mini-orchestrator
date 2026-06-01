@@ -1,0 +1,39 @@
+{
+  "id": 97,
+  "title": "Příkaz mini todo a /mini:todo",
+  "goal": "Add a persistent archive of future ideas and changes in .mini/todo.md, managed by a non-interactive 'mini todo' command (list / add \"<text>\" / done|remove <n>) and a '/mini:todo' slash command for viewing and appending from Claude Code; the 'mini next' prompt surfaces the open todo items as candidate phase ideas so the human (or an autonomous run) can pick one instead of inventing from scratch.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Todo store and markdown format",
+      "status": "done",
+      "detail": "Add .mini/todo.md backed by a todoPath in store.ts; parse/serialize a markdown checklist (- [ ] open, - [x] done) into typed items {text, done}; round-trip unit test."
+    },
+    {
+      "title": "mini todo command",
+      "status": "done",
+      "detail": "Non-interactive command in commands/todo.ts registered in cli.ts: bare 'mini todo' lists items (numbered, open/done), 'add \"<text>\"' appends an open item, 'done <n>' / 'remove <n>' act on the 1-based index; idempotent and TTY-free; unit tests for each subcommand."
+    },
+    {
+      "title": "next prompt surfaces open todos",
+      "status": "done",
+      "detail": "Extend buildNextPhasePrompt with an optional '# Ideas in the backlog' block listing open todo items as candidate phase ideas; wire context.ts to load .mini/todo.md and pass it; prompt snapshot/unit test covers presence and absence."
+    },
+    {
+      "title": "/mini:todo slash command",
+      "status": "done",
+      "detail": "Add a 'todo' entry to install/commands.ts COMMANDS with its own body (like status: runs 'mini todo' to view, 'mini todo add' to append) and an argumentHint; update install-commands test/snapshot."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Document 'mini todo' and '/mini:todo' (the ideas/changes archive that next draws from) in README and add an English CHANGELOG entry."
+    }
+  ],
+  "startedAt": "2026-06-01T13:54:27.676Z",
+  "completedAt": "2026-06-01T14:02:24.723Z",
+  "autoCommit": {
+    "preSha": "8717200b8bc8ffd2318a1b5b2207f1a5010a648b",
+    "subject": "Phase 97: Příkaz mini todo a /mini:todo"
+  }
+}
