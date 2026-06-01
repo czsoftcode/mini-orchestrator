@@ -96,6 +96,20 @@ If a step runs into a blocker you can't get around yourself, stop and hand contr
 Run in Bash \`mini status\` and relay its output (an overview of the project phases) to the user in the chat. It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
   },
   {
+    name: 'changelog',
+    description: 'mini — show the project CHANGELOG.md changes (read-only)',
+    argumentHint: '[--all | --unreleased]',
+    body: `This is the **changelog** step of the mini workflow, run directly in Claude Code. It shows the project's \`CHANGELOG.md\` changes.
+
+The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a \`mini changelog\` call and relay its output to the user in the chat:
+
+- **Empty \`$ARGUMENTS\`** → run \`mini changelog\` (the latest released version's section).
+- **\`--unreleased\`** → run \`mini changelog --unreleased\` (the pending [Unreleased] section).
+- **\`--all\`** → run \`mini changelog --all\` (the whole history).
+
+It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
+  },
+  {
     name: 'map',
     description: 'mini — regenerate the project graph (supplementary)',
     body: `This is the **map** step of the mini workflow, run directly in Claude Code.

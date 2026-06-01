@@ -82,6 +82,7 @@ mini auto        # next → plan → do (with acceptEdits) → done; everything 
 | `mini verify` | Opens an interactive Claude Code session for the in-depth UI/UX review of the phase by a human (symmetric to `mini discuss`, the terminal counterpart of `/mini:verify`) — Claude guides you through a visual/UX review (based on the report's `verify` items) and writes the findings into the report (and, for a closed phase, into memory); it does not move the phase state. It targets the current phase, otherwise the last closed one |
 | `mini auto` | Chain: next → plan → do (acceptEdits) → done, everything without asking except done |
 | `mini status` | What the project is, where we are, models, phases and steps |
+| `mini changelog` | Shows the project's `CHANGELOG.md` changes: by default the latest released version's section, `--all` for the whole history, `--unreleased` for the pending section |
 | `mini todo` | Archive of future ideas and changes (`.mini/todo.md`, a markdown checklist). `mini todo` lists the items; `add "<text>"` appends one; `edit <n> "<text>"` rewrites one; `done <n>` / `remove <n>` act on the listed number; `clear` drops all done items. `mini next` offers the open items as candidate phase ideas — and, when it proposes its own ideas, offers to stash the extras back into the archive. `/mini:todo suggest` has Claude propose a batch of ideas and write them straight in (no phase needed). The open-idea count also shows in `mini status` |
 | `mini undo` | Reverts the last state change (1 step back, no deep history); if `mini done` auto-committed in the last step and HEAD still sits on a clean tree, it also offers to revert the commit (`git reset --soft`). `--dry-run` previews without changing anything, `--yes` skips the confirmation (used by `/mini:undo`) |
 | `mini stop` | Creates a cooperative stop signal `.mini/STOP` for the autonomous `/mini:auto` (typically from a second terminal); `--clear` removes it — see [Autonomous `/mini:auto`](#autonomous-miniauto) |
@@ -102,7 +103,7 @@ The whole cycle `next → discuss → plan → do → done` can also be run **di
 mini install-commands     # one-off in the target project
 ```
 
-This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,todo,map,audit,auto,undo,model,upgrade}.md`. Then in Claude Code:
+This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,todo,changelog,map,audit,auto,undo,model,upgrade}.md`. Then in Claude Code:
 
 ```
 /mini:init           # creates the project (questions in the chat) → offers /mini:map and /mini:audit
@@ -116,6 +117,7 @@ This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,statu
 /mini:map            # regenerates the project graph
 /mini:status         # overview of the phases (read-only)
 /mini:todo [args]    # ideas/changes archive: list, add <text>, edit <n> <text>, done <n>, remove <n>, clear, suggest
+/mini:changelog      # show CHANGELOG.md changes (--all | --unreleased)
 /mini:audit          # overview of the existing codebase into .mini/codebase.md
 /mini:undo           # reverts the last state change (preview → confirm in the chat → apply)
 /mini:model [args]   # views/sets the project model (show | reset | <scope> <model>)

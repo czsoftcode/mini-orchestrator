@@ -8,3 +8,4 @@
 - [x] mini todo clear --done — hromadné smazání odškrtnutých položek (úklid archivu)
 - [x] mini status zobrazí počet otevřených todo (Ideas: N open) vedle přehledu fází
 - [ ] CI workflow (GitHub Actions): build + tsc --noEmit + testy na push a PR
+- [x] přidat příkaz mini changelog a /mini:changelog, který vypíše změny v mini

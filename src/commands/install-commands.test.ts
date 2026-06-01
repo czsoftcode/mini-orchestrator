@@ -21,6 +21,7 @@ describe('installCommands', () => {
     expect(files).toEqual([
       'audit.md',
       'auto.md',
+      'changelog.md',
       'discuss.md',
       'do.md',
       'done.md',

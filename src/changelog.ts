@@ -77,3 +77,70 @@ export function stampUnreleased(content: string, version: string, date: string):
 
   return { content: lines.join('\n'), stamped: true };
 }
+
+/** A single `## [...]` section of the changelog. */
+export interface ChangelogSection {
+  /** The heading text without the leading `## `, e.g. `[1.10.4] - 2026-06-01`. */
+  heading: string;
+  /** The version inside the brackets (`1.10.4`), or `null` for `[Unreleased]`. */
+  version: string | null;
+  /** A released, dated section (`[x.y.z] - date`) as opposed to `[Unreleased]`. */
+  released: boolean;
+  /** The body under the heading, trimmed (no surrounding blank lines). */
+  body: string;
+}
+
+/** Captures the bracket label and an optional ` - date` suffix from a `## ` heading. */
+const VERSION_HEADING = /^##\s+\[([^\]]+)\]\s*(?:-\s*(.+))?$/;
+
+/**
+ * Splits the changelog into its `## [...]` sections (newest first, in file order).
+ * Anything before the first level-2 heading (the title/intro) is ignored. The
+ * `[Unreleased]` section has `version: null` and `released: false`.
+ */
+export function parseChangelogSections(content: string): ChangelogSection[] {
+  const lines = content.split('\n');
+  const sections: ChangelogSection[] = [];
+  let current: { heading: string; version: string | null; released: boolean; body: string[] } | null =
+    null;
+
+  const flush = (): void => {
+    if (current) {
+      sections.push({
+        heading: current.heading,
+        version: current.version,
+        released: current.released,
+        body: current.body.join('\n').trim(),
+      });
+    }
+  };
+
+  for (const line of lines) {
+    const m = VERSION_HEADING.exec(line);
+    if (m) {
+      flush();
+      const label = m[1]!.trim();
+      const isUnreleased = /^unreleased$/i.test(label);
+      current = {
+        heading: line.replace(/^##\s+/, '').trim(),
+        version: isUnreleased ? null : label,
+        released: !isUnreleased && Boolean(m[2]?.trim()),
+        body: [],
+      };
+    } else if (current) {
+      current.body.push(line);
+    }
+  }
+  flush();
+  return sections;
+}
+
+/** The most recent released (dated) section, or `null` when there is none. */
+export function latestReleased(sections: ChangelogSection[]): ChangelogSection | null {
+  return sections.find((s) => s.released) ?? null;
+}
+
+/** The `[Unreleased]` section, or `null` when absent. */
+export function unreleasedSection(sections: ChangelogSection[]): ChangelogSection | null {
+  return sections.find((s) => s.version === null) ?? null;
+}

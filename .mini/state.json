@@ -502,6 +502,11 @@
       "id": 100,
       "title": "Údržba todo: edit, clear, status",
       "status": "done"
+    },
+    {
+      "id": 101,
+      "title": "Příkaz mini changelog a /mini:changelog",
+      "status": "done"
     }
   ],
   "models": {

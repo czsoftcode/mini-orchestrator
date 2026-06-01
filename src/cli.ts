@@ -267,6 +267,18 @@ program
   });
 
 program
+  .command('changelog')
+  .description(
+    "Shows the project's CHANGELOG.md changes: by default the latest released version's section, --all for the whole history, --unreleased for the pending section.",
+  )
+  .option('--all', 'Print the whole changelog instead of a single section.')
+  .option('--unreleased', 'Print the pending [Unreleased] section.')
+  .action(async (opts: { all?: boolean; unreleased?: boolean }) => {
+    const { changelog } = await import('./commands/changelog.js');
+    await changelog({ all: opts.all, unreleased: opts.unreleased });
+  });
+
+program
   .command('import-gsd')
   .description('One-off import of an in-progress GSD project from .planning/.')
   .action(async () => {

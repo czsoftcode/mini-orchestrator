@@ -6,7 +6,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-06-01
+
 ### Added
+
+- **`mini changelog` command and `/mini:changelog` slash command.** A new
+  `mini changelog` prints the project's `CHANGELOG.md` changes: by default the
+  latest released version's section, `--unreleased` the pending `[Unreleased]`
+  section, and `--all` the whole history. A missing changelog is reported
+  gracefully. The read-only `/mini:changelog` slash command relays the same
+  output in Claude Code (16 generated commands now).
 
 - **`mini todo` maintenance and visibility.** The ideas archive gains two
   housekeeping actions — `mini todo edit <n> "<text>"` rewrites an item's text in

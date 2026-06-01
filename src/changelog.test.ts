@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { stampUnreleased, todayIso } from './changelog.js';
+import {
+  latestReleased,
+  parseChangelogSections,
+  stampUnreleased,
+  todayIso,
+  unreleasedSection,
+} from './changelog.js';
 
 const withUnreleased = (body: string) =>
   `# Changelog
@@ -76,5 +82,65 @@ describe('todayIso', () => {
   it('formátuje datum jako YYYY-MM-DD', () => {
     expect(todayIso(new Date(2026, 4, 30))).toBe('2026-05-30');
     expect(todayIso(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+});
+
+const SAMPLE = `# Changelog
+
+Intro paragraph that is not a section.
+
+## [Unreleased]
+
+### Added
+
+- pending thing
+
+## [1.2.0] - 2026-02-01
+
+### Added
+
+- a feature
+
+## [1.1.0] - 2026-01-01
+
+### Fixed
+
+- a bug
+`;
+
+describe('parseChangelogSections', () => {
+  it('splits into sections in file order, ignoring the intro', () => {
+    const s = parseChangelogSections(SAMPLE);
+    expect(s.map((x) => x.heading)).toEqual([
+      '[Unreleased]',
+      '[1.2.0] - 2026-02-01',
+      '[1.1.0] - 2026-01-01',
+    ]);
+  });
+
+  it('marks Unreleased (version null, not released) and dated versions', () => {
+    const s = parseChangelogSections(SAMPLE);
+    expect(s[0]).toMatchObject({ version: null, released: false });
+    expect(s[1]).toMatchObject({ version: '1.2.0', released: true });
+    expect(s[1]!.body).toContain('- a feature');
+  });
+
+  it('returns an empty list when there are no sections', () => {
+    expect(parseChangelogSections('# Changelog\n\njust intro\n')).toEqual([]);
+  });
+});
+
+describe('latestReleased / unreleasedSection', () => {
+  it('picks the newest dated section', () => {
+    expect(latestReleased(parseChangelogSections(SAMPLE))?.version).toBe('1.2.0');
+  });
+
+  it('returns the Unreleased section body', () => {
+    expect(unreleasedSection(parseChangelogSections(SAMPLE))?.body).toContain('- pending thing');
+  });
+
+  it('latestReleased is null with no dated sections', () => {
+    const onlyUnreleased = '# Changelog\n\n## [Unreleased]\n\n- x\n';
+    expect(latestReleased(parseChangelogSections(onlyUnreleased))).toBeNull();
   });
 });

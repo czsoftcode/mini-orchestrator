@@ -1,0 +1,34 @@
+{
+  "id": 101,
+  "title": "Příkaz mini changelog a /mini:changelog",
+  "goal": "Add a 'mini changelog' command (and a read-only /mini:changelog slash command) that prints the project's CHANGELOG.md changes: by default the latest released version's section, with --all for the whole history and --unreleased for the pending Unreleased section; a missing changelog is reported gracefully.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Changelog section parser",
+      "status": "done",
+      "detail": "In changelog.ts add parseChangelogSections(content) -> [{heading, version, released, body}] splitting on level-2 headings, plus a selector for the latest released (dated) section and the Unreleased one; unit tests."
+    },
+    {
+      "title": "mini changelog command",
+      "status": "done",
+      "detail": "commands/changelog.ts + cli.ts registration. Bare 'mini changelog' prints the latest released section; '--all' prints the whole history; '--unreleased' prints the Unreleased section; a missing/!found CHANGELOG.md is reported gracefully. Unit tests."
+    },
+    {
+      "title": "/mini:changelog slash command",
+      "status": "done",
+      "detail": "Add a read-only 'changelog' entry to install/commands.ts (own body like status: runs 'mini changelog' and relays); bump the generated-command count (15->16) in install/update/install-commands tests."
+    },
+    {
+      "title": "README and CHANGELOG",
+      "status": "done",
+      "detail": "Document 'mini changelog' / '/mini:changelog' in README (commands table + slash list + generated file list) and add an English CHANGELOG entry."
+    }
+  ],
+  "startedAt": "2026-06-01T15:15:00.400Z",
+  "completedAt": "2026-06-01T15:19:12.890Z",
+  "autoCommit": {
+    "preSha": "d849c9d57c9a5ba7bdab823ec806bad347f8fba9",
+    "subject": "Phase 101: Příkaz mini changelog a /mini:changelog"
+  }
+}
