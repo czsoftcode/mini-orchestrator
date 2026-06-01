@@ -55,6 +55,35 @@ describe('todo', () => {
     expect(await readTodos(cwd)).toEqual([{ text: 'c', done: false }]);
   });
 
+  it('edit rewrites an item text, preserving its done state', async () => {
+    await todo('add', ['old text']);
+    await todo('done', ['1']);
+    await todo('edit', ['1', 'new', 'text']);
+    expect(await readTodos(cwd)).toEqual([{ text: 'new text', done: true }]);
+  });
+
+  it('edit with empty text leaves the item unchanged', async () => {
+    await todo('add', ['keep me']);
+    await todo('edit', ['1']);
+    expect(await readTodos(cwd)).toEqual([{ text: 'keep me', done: false }]);
+  });
+
+  it('clear drops all done items, keeping the open ones', async () => {
+    await todo('add', ['a']);
+    await todo('add', ['b']);
+    await todo('add', ['c']);
+    await todo('done', ['1']);
+    await todo('done', ['3']);
+    await todo('clear');
+    expect(await readTodos(cwd)).toEqual([{ text: 'b', done: false }]);
+  });
+
+  it('clear with no done items leaves the archive unchanged', async () => {
+    await todo('add', ['only open']);
+    await todo('clear');
+    expect(await readTodos(cwd)).toEqual([{ text: 'only open', done: false }]);
+  });
+
   it('out-of-range index changes nothing', async () => {
     await todo('add', ['only']);
     await todo('done', ['5']);

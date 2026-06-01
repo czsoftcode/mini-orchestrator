@@ -8,6 +8,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`mini todo` maintenance and visibility.** The ideas archive gains two
+  housekeeping actions — `mini todo edit <n> "<text>"` rewrites an item's text in
+  place (keeping its done state) and `mini todo clear` drops all ticked-off items
+  at once — and `mini status` now shows the open-idea count (`Ideas: N open`) in
+  its header when the archive has open items. The `/mini:todo` `argument-hint`,
+  slash body and the listing's actions hint list the new actions.
+
 - **Feeding the todo archive with Claude's ideas.** Two ways to fill the
   ideas/changes backlog without starting a phase or hunting for ideas elsewhere:
   (1) when `mini next` / `/mini:next` proposes its own ideas (the "leave it to

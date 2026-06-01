@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   describeModels,
+  ideasSummaryLine,
   isOrphanedDoing,
   nextActionHint,
   openVerifyCount,
@@ -26,6 +27,16 @@ function phase(id: number, status: Phase['status']): Phase {
 function summary(overrides: Partial<RunReportSummary> = {}): RunReportSummary {
   return { verdict: 'done', verify: [], unparseable: false, ...overrides };
 }
+
+describe('ideasSummaryLine', () => {
+  it('summarizes open ideas when there are any', () => {
+    expect(ideasSummaryLine(3)).toBe('Ideas: 3 open (mini todo)');
+  });
+
+  it('returns null for an empty/closed archive', () => {
+    expect(ideasSummaryLine(0)).toBeNull();
+  });
+});
 
 describe('nextActionHint', () => {
   it('proposes the first phase when currentPhaseId is null', () => {

@@ -497,6 +497,11 @@
       "id": 99,
       "title": "Návrhy nápadů do todo",
       "status": "done"
+    },
+    {
+      "id": 100,
+      "title": "Údržba todo: edit, clear, status",
+      "status": "done"
     }
   ],
   "models": {

@@ -39,8 +39,16 @@ export async function todo(action?: string, args: string[] = []): Promise<void> 
     case 'rm':
       await remove(items, args, cwd);
       return;
+    case 'edit':
+      await edit(items, args, cwd);
+      return;
+    case 'clear':
+      await clearDone(items, cwd);
+      return;
     default:
-      log.warn(`Unknown action "${action}". Use: list | add <text> | done <n> | remove <n>.`);
+      log.warn(
+        `Unknown action "${action}". Use: list | add <text> | edit <n> <text> | done <n> | remove <n> | clear.`,
+      );
   }
 }
 
@@ -57,7 +65,7 @@ function list(items: TodoItem[]): void {
   });
   const open = items.filter((it) => !it.done).length;
   log.hint(`${open} open / ${items.length} total`);
-  log.hint('Actions: list · add "<text>" · done <n> · remove <n>');
+  log.hint('Actions: list · add "<text>" · edit <n> "<text>" · done <n> · remove <n> · clear');
 }
 
 async function add(items: TodoItem[], args: string[], cwd: string): Promise<void> {
@@ -92,6 +100,33 @@ async function remove(items: TodoItem[], args: string[], cwd: string): Promise<v
   if (!removed) return;
   await writeTodos(items, cwd);
   log.success(`Removed: ${removed.text}`);
+}
+
+async function edit(items: TodoItem[], args: string[], cwd: string): Promise<void> {
+  const idx = parseIndex(args[0], items.length);
+  if (idx === null) return;
+  const item = items[idx];
+  if (!item) return;
+  const text = args.slice(1).join(' ').trim();
+  if (!text) {
+    log.warn('Nothing to set. Usage: `mini todo edit <n> "<text>"`.');
+    return;
+  }
+  item.text = text;
+  await writeTodos(items, cwd);
+  log.success(`Edited ${idx + 1}: ${text}`);
+}
+
+/** Drops every ticked-off item, keeping only the open ones. */
+async function clearDone(items: TodoItem[], cwd: string): Promise<void> {
+  const kept = items.filter((it) => !it.done);
+  const removed = items.length - kept.length;
+  if (removed === 0) {
+    log.info('No done items to clear.');
+    return;
+  }
+  await writeTodos(kept, cwd);
+  log.success(`Cleared ${removed} done item${removed === 1 ? '' : 's'}.`);
 }
 
 /** Parses a 1-based index argument and validates the range; warns on failure. */

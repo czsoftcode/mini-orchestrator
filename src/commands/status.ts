@@ -7,6 +7,7 @@ import {
   type RunVerdict,
 } from '../state/runReport.js';
 import { exists, load, readProject } from '../state/store.js';
+import { readTodos } from '../state/todoStore.js';
 import type { Phase, PhaseStatus, ProjectState, StepStatus } from '../state/types.js';
 import { log } from '../ui/log.js';
 
@@ -42,7 +43,11 @@ export async function status(): Promise<void> {
     return;
   }
 
-  const [projectMd, state] = await Promise.all([readProject(cwd), load(cwd)]);
+  const [projectMd, state, todos] = await Promise.all([
+    readProject(cwd),
+    load(cwd),
+    readTodos(cwd),
+  ]);
 
   const titleMatch = projectMd.match(/^#\s+(.+)$/m);
   const title = titleMatch?.[1]?.trim() ?? '(untitled)';
@@ -59,6 +64,10 @@ export async function status(): Promise<void> {
   const modelLine = describeModels(state);
   if (modelLine) {
     log.dim(`  Models: ${modelLine}`);
+  }
+  const ideas = ideasSummaryLine(todos.filter((t) => !t.done).length);
+  if (ideas) {
+    log.dim(`  ${ideas}`);
   }
 
   console.log();
@@ -124,6 +133,16 @@ function printPhase(
 
 function renderStatus(entry: { label: string; color: (s: string) => string }): string {
   return entry.color(entry.label.padEnd(STATUS_WIDTH));
+}
+
+/**
+ * Header line about the ideas archive (`mini todo`). Shown only when there is at
+ * least one open item, so an empty archive adds no noise. The hint points at the
+ * command that lists them.
+ */
+export function ideasSummaryLine(openCount: number): string | null {
+  if (openCount <= 0) return null;
+  return `Ideas: ${openCount} open (mini todo)`;
 }
 
 export function describeModels(state: ProjectState): string {
