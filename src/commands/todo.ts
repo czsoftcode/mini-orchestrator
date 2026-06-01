@@ -57,7 +57,7 @@ function list(items: TodoItem[]): void {
   });
   const open = items.filter((it) => !it.done).length;
   log.hint(`${open} open / ${items.length} total`);
-  log.hint('Actions: add "<text>" · done <n> · remove <n>');
+  log.hint('Actions: list · add "<text>" · done <n> · remove <n>');
 }
 
 async function add(items: TodoItem[], args: string[], cwd: string): Promise<void> {

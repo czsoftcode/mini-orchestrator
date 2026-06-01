@@ -69,6 +69,7 @@ describe('todo', () => {
     const out = spy.mock.calls.map((c) => c.join(' ')).join('\n');
     spy.mockRestore();
     expect(out).toContain('Actions:');
+    expect(out).toContain('list');
     expect(out).toContain('done <n>');
     expect(out).toContain('remove <n>');
   });

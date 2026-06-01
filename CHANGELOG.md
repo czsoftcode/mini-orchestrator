@@ -10,8 +10,10 @@ All notable changes to this project are recorded here. The format is based on
 
 - **`mini todo` listing now shows the available actions.** After the
   `N open / M total` summary the listing prints a one-line hint
-  (`Actions: add "<text>" · done <n> · remove <n>`), so the sub-commands are
-  discoverable without consulting the help.
+  (`Actions: list · add "<text>" · done <n> · remove <n>`), so the sub-commands —
+  including the explicit `list` action (the same as a bare `mini todo`) — are
+  discoverable without consulting the help. The `/mini:todo` `argument-hint` and
+  the CLI description now list `list` as well.
 
 ## [1.10.0] - 2026-06-01
 

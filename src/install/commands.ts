@@ -203,12 +203,12 @@ Never run a bare \`mini upgrade\` here — it would block on an interactive conf
   {
     name: 'todo',
     description: 'mini — archive of future ideas and changes (mini todo)',
-    argumentHint: '[add <text> | done <n> | remove <n>]',
+    argumentHint: '[list | add <text> | done <n> | remove <n>]',
     body: `This is the **todo** step of the mini workflow, run directly in Claude Code. It manages the project's archive of future ideas and changes (\`.mini/todo.md\`); \`/mini:next\` later offers the open items as candidate phase ideas. The archive is a plain markdown checklist — change it only via \`mini todo\`, never by editing \`.mini/todo.md\` by hand mid-session.
 
 The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a non-interactive \`mini todo\` call and relay the output to the user in the chat:
 
-- **Empty \`$ARGUMENTS\`** → run \`mini todo\` to list the items (numbered, open \`[ ]\` / done \`[x]\`).
+- **\`list\` (or empty \`$ARGUMENTS\`)** → run \`mini todo\` to list the items (numbered, open \`[ ]\` / done \`[x]\`).
 - **\`add <text>\`** → run \`mini todo add "<text>"\` to append a new open idea (quote the text).
 - **\`done <n>\`** → run \`mini todo done <n>\` to tick item number \`n\` off.
 - **\`remove <n>\`** (or \`rm <n>\`) → run \`mini todo remove <n>\` to drop item number \`n\`.

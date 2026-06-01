@@ -259,7 +259,7 @@ program
 program
   .command('todo [action] [args...]')
   .description(
-    'Ideas/changes archive (.mini/todo.md). "mini todo" lists items; "add <text>" appends one; "done <n>" / "remove <n>" act on the listed number. mini next offers the open items as candidate phase ideas.',
+    'Ideas/changes archive (.mini/todo.md). "mini todo" or "mini todo list" lists items; "add <text>" appends one; "done <n>" / "remove <n>" act on the listed number. mini next offers the open items as candidate phase ideas.',
   )
   .action(async (action?: string, args?: string[]) => {
     const { todo } = await import('./commands/todo.js');
