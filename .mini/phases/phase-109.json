@@ -1,0 +1,29 @@
+{
+  "id": 109,
+  "title": "Docs for import-gsd",
+  "goal": "Add docs/interactive/import-gsd.md and docs/non-interactive/import-gsd.md following the existing per-command convention (sibling links, related commands), and list import-gsd in the docs/README.md index.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "CLI page non-interactive/import-gsd.md",
+      "status": "done",
+      "detail": "Document mini import-gsd: synopsis (bare, --prompt, --apply, --force), description of the one-off GSD import flow, examples, sibling + related links matching the existing convention."
+    },
+    {
+      "title": "Slash page interactive/import-gsd.md",
+      "status": "done",
+      "detail": "Document /mini:import-gsd: what it does, in-session flow (check .planning/, confirm overwrite, --prompt, self-extract the contract, pipe into --apply), example, related links."
+    },
+    {
+      "title": "List import-gsd in docs/README.md index",
+      "status": "done",
+      "detail": "Add a Project setup row linking both variants and verify the cross-links resolve."
+    }
+  ],
+  "startedAt": "2026-06-02T06:13:14.152Z",
+  "completedAt": "2026-06-02T06:16:39.969Z",
+  "autoCommit": {
+    "preSha": "c9e5679b90a63981f830cd9813e8d1695b32e883",
+    "subject": "Phase 109: Docs for import-gsd"
+  }
+}

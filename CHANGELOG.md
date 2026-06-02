@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-06-02
+
 ### Changed
 
 - **`mini update` is now an alias for `mini upgrade`.** Typing `mini update`
@@ -39,6 +41,11 @@ All notable changes to this project are recorded here. The format is based on
   `non-interactive/` (console-only, no slash variant). Mirrors the structure of
   [miniorchestrator.com/en/docs](https://miniorchestrator.com/en/docs); the
   README will later link to these pages.
+
+- **Reference pages for `import-gsd`.** Added `docs/interactive/import-gsd.md`
+  and `docs/non-interactive/import-gsd.md` — the one command that was still
+  missing its docs — and listed `import-gsd` in the `docs/README.md` index under
+  Project setup. Now every user-facing command has both variant pages.
 
 ### Changed
 

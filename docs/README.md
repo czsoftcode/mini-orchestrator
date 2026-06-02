@@ -24,6 +24,7 @@ Each page links to its sibling variant and to related commands.
 | Command | Interactive | Non-interactive |
 | --- | --- | --- |
 | Create a new project | [`/mini:init`](interactive/init.md) | [`mini init`](non-interactive/init.md) |
+| Import a GSD project (one-off) | [`/mini:import-gsd`](interactive/import-gsd.md) | [`mini import-gsd`](non-interactive/import-gsd.md) |
 | Regenerate the project graph | [`/mini:map`](interactive/map.md) | [`mini map`](non-interactive/map.md) |
 | Overview of an existing codebase | [`/mini:audit`](interactive/audit.md) | [`mini audit`](non-interactive/audit.md) |
 
