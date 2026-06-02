@@ -572,6 +572,11 @@
       "id": 114,
       "title": "README demo of the cycle",
       "status": "done"
+    },
+    {
+      "id": 115,
+      "title": "GitHub issue templates + CONTRIBUTING",
+      "status": "done"
     }
   ],
   "models": {

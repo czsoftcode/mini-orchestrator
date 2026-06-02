@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/czsoftcode/mini-orchestrator/discussions
+    about: Ask how to use mini, share setups, or discuss ideas before opening an issue.
+  - name: Documentation
+    url: https://github.com/czsoftcode/mini-orchestrator#readme
+    about: The README and per-command docs cover most commands and the workflow.
+  - name: Website
+    url: https://miniorchestrator.com
+    about: Project overview and getting started.

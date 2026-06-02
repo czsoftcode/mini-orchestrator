@@ -1,0 +1,39 @@
+{
+  "id": 115,
+  "title": "GitHub issue templates + CONTRIBUTING",
+  "goal": "Add GitHub community files: issue forms (bug report + feature request) under .github/ISSUE_TEMPLATE with a config.yml, a pull-request template, and a root CONTRIBUTING.md that links the existing dev-setup and mini workflow docs — guiding contributors through reporting and submitting changes.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Issue forms for bug and feature",
+      "status": "done",
+      "detail": ".github/ISSUE_TEMPLATE/bug_report.yml and feature_request.yml as GitHub issue forms (valid YAML, required fields, labels)."
+    },
+    {
+      "title": "Issue template chooser config",
+      "status": "done",
+      "detail": ".github/ISSUE_TEMPLATE/config.yml — disable blank issues and add contact links (docs / website / discussions)."
+    },
+    {
+      "title": "Pull request template",
+      "status": "done",
+      "detail": ".github/PULL_REQUEST_TEMPLATE.md with a contributor checklist (typecheck, tests, CHANGELOG, scope)."
+    },
+    {
+      "title": "CONTRIBUTING.md at repo root",
+      "status": "done",
+      "detail": "Dev setup (clone, npm install, build, test, typecheck), the mini phase workflow, commit/PR conventions, links to README sections and LICENSE."
+    },
+    {
+      "title": "Wrap up and checks",
+      "status": "done",
+      "detail": "Tick mini todo done 14, assert every new YAML parses, npm run typecheck and npm test stay green."
+    }
+  ],
+  "startedAt": "2026-06-02T08:51:05.602Z",
+  "completedAt": "2026-06-02T09:00:14.790Z",
+  "autoCommit": {
+    "preSha": "2c6e380a3969a69aefad429c0dc5b260f20d27f4",
+    "subject": "Phase 115: GitHub issue templates + CONTRIBUTING"
+  }
+}

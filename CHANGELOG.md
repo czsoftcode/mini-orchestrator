@@ -8,6 +8,12 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **GitHub community files.** Added contributor onboarding under `.github/`: issue
+  forms for bug reports and feature requests (`ISSUE_TEMPLATE/*.yml`) with a
+  `config.yml` that disables blank issues and links to Discussions/docs/website, a
+  pull-request template with a checklist, and a root `CONTRIBUTING.md` (dev setup,
+  PR workflow, language policy, links into the README and LICENSE).
+
 - **README demo of the workflow cycle.** A recorded terminal GIF of the full
   `init → next → plan → do → done` loop now sits at the top of the *Quick start*
   section (with a `<details>` text transcript as a fallback). It is produced from

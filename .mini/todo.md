@@ -16,4 +16,4 @@
 - [x] Příkaz import-gsd udělat i jako slash příkaz /mini:import-gsd
 - [x] vytvorit dokumentaci pro import-gsd
 - [x] README screenshot/asciinema demo cyklu
-- [ ] GitHub Issues šablony, CONTRIBUTING
+- [x] GitHub Issues šablony, CONTRIBUTING
