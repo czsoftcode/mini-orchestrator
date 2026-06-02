@@ -424,6 +424,13 @@ Yes, `mini` just runs `claude` as a subprocess — authentication is handled by 
 - If Claude proposes nonsense in `mini next` in auto, **press Ctrl+C** and run without auto
 - After every phase, `mini status` shows the overall progress
 
+## Support
+
+mini is free and open source. If it saves you time, you can support its
+development through [**GitHub Sponsors**](https://github.com/sponsors/czsoftcode)
+— or just use the **Sponsor** button at the top of the repository. Every bit
+helps keep the project moving, one small phase at a time. 🙏
+
 ## License
 
 Released under the [MIT License](./LICENSE) — © 2026 Stanislav Kremeň. Free to

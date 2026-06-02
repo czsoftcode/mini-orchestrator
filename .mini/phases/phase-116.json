@@ -1,0 +1,29 @@
+{
+  "id": 116,
+  "title": "GitHub Sponsors FUNDING.yml",
+  "goal": "Add .github/FUNDING.yml pointing the repo Sponsor button at the GitHub Sponsors account czsoftcode, and document the sponsor button in the README so contributors can support the project.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add .github/FUNDING.yml",
+      "status": "done",
+      "detail": "github: [czsoftcode] so the repo Sponsor button points at GitHub Sponsors; valid YAML."
+    },
+    {
+      "title": "Document sponsoring in README",
+      "status": "done",
+      "detail": "A short Support section (near License) pointing at the Sponsor button / GitHub Sponsors."
+    },
+    {
+      "title": "Wrap up and checks",
+      "status": "done",
+      "detail": "FUNDING.yml parses as YAML, npm run typecheck and npm test stay green."
+    }
+  ],
+  "startedAt": "2026-06-02T09:37:24.333Z",
+  "completedAt": "2026-06-02T09:38:50.489Z",
+  "autoCommit": {
+    "preSha": "7af311563252bdc74d94fb65240b48c5d5dba43a",
+    "subject": "Phase 116: GitHub Sponsors FUNDING.yml"
+  }
+}

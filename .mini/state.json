@@ -577,6 +577,11 @@
       "id": 115,
       "title": "GitHub issue templates + CONTRIBUTING",
       "status": "done"
+    },
+    {
+      "id": 116,
+      "title": "GitHub Sponsors FUNDING.yml",
+      "status": "done"
     }
   ],
   "models": {

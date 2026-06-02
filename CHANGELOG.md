@@ -8,6 +8,10 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **GitHub Sponsors funding.** Added `.github/FUNDING.yml` (`github: czsoftcode`)
+  so the repository's Sponsor button points at GitHub Sponsors, plus a short
+  "Support" section in the README.
+
 - **GitHub community files.** Added contributor onboarding under `.github/`: issue
   forms for bug reports and feature requests (`ISSUE_TEMPLATE/*.yml`) with a
   `config.yml` that disables blank issues and links to Discussions/docs/website, a
