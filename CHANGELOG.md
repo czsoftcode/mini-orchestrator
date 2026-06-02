@@ -6,6 +6,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- **Project website.** The package `homepage` now points to
+  [miniorchestrator.com](https://miniorchestrator.com) (previously the GitHub
+  README), and the README links to it. `repository` and `bugs` still point to
+  GitHub.
+
 ## [1.12.0] - 2026-06-01
 
 ### Added

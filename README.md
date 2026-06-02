@@ -2,6 +2,8 @@
 
 A minimalist CLI orchestrator built on top of **Claude Code**. It keeps the project state, sends Claude only the essentials, and uses your Pro/Max subscription (no API keys).
 
+**Website:** [miniorchestrator.com](https://miniorchestrator.com)
+
 It was created as a simpler alternative to [GSD](https://github.com/gsd-build/get-shit-done), which consumes too many tokens — it generates a pile of MD files (`RESEARCH.md`, `PLAN.md`, `VERIFICATION.md`, …) and reads them repeatedly. `mini` keeps a **minimal state** (a one-page `project.md` + a lightweight `state.json` header with phase detail in `.mini/phases/`) and sends Claude typically 1 page + the current task.
 
 ## Requirements

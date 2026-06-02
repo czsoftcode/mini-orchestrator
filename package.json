@@ -1,6 +1,6 @@
 {
   "name": "mini-orchestrator",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "Mini orchestrator on top of Claude Code — keeps the project state and sends Claude only the essentials.",
   "keywords": [
     "claude",
@@ -18,7 +18,7 @@
   ],
   "license": "MIT",
   "author": "Stanislav Kremeň",
-  "homepage": "https://github.com/czsoftcode/mini-orchestrator#readme",
+  "homepage": "https://miniorchestrator.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/czsoftcode/mini-orchestrator.git"
