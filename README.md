@@ -1,6 +1,8 @@
 # mini
 
+<!-- CI badge temporarily hidden while a GitHub account billing issue is resolved (Actions can't run until then). Re-enable by uncommenting the line below.
 [![CI](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml)
+-->
 
 A minimalist CLI orchestrator built on top of **Claude Code**. It keeps the project state, sends Claude only the essentials, and uses your Pro/Max subscription (no API keys).
 
