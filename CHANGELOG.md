@@ -6,6 +6,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- **`mini update` is now an alias for `mini upgrade`.** Typing `mini update`
+  checks npm for a newer `mini-orchestrator` and installs it (with the same
+  `--check` / `--yes` flags) — so a slip between the two similarly named commands
+  does the expected thing, silently. Its previous behavior (syncing the project's
+  generated `.mini/` skeleton + slash commands) is no longer reached via
+  `mini update`; use `mini install-commands` to refresh the slash commands. The
+  `mini doctor` out-of-date-commands hint now points to `mini install-commands`.
+
 ### Added
 
 - **Per-command documentation under `docs/`.** Every user-facing command now has

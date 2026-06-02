@@ -16,7 +16,7 @@ Claude also mentions the suggested fix. It is **read-only**.
 
 1. Claude runs `mini doctor` in Bash.
 2. It relays the checklist, and when a line is flagged it points out the fix
-   command (e.g. `mini update`, [`/mini:upgrade`](upgrade.md)).
+   command (e.g. `mini install-commands`, [`/mini:upgrade`](upgrade.md)).
 
 ## Example
 
@@ -24,7 +24,7 @@ Claude also mentions the suggested fix. It is **read-only**.
 You:    /mini:doctor
 Claude: [mini doctor]
         [ok]   State file, schema v2
-        [warn] Slash commands out of date → run: mini update
+        [warn] Slash commands out of date → run: mini install-commands
         [ok]   mini 1.12.1 (latest)
 ```
 

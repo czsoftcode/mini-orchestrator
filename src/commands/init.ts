@@ -125,8 +125,8 @@ export async function init(): Promise<void> {
   await writeProject(projectMd, cwd);
   await save(newState(), cwd);
 
-  // The static skeleton (.mini/ directories + .gitignore) from the same source of
-  // truth as `mini update` — project.md and state.json stay generated above.
+  // The static skeleton (.mini/ directories + .gitignore) from the shared
+  // source of truth (`syncSkeleton`) — project.md and state.json stay generated above.
   await syncSkeleton(cwd);
 
   log.success(`Project "${(answers as InitAnswers).name}" created in .mini/`);

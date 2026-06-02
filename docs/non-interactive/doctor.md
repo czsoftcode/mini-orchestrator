@@ -32,7 +32,7 @@ mini doctor
   [ok]   State file (.mini/state.json), schema v2
   [ok]   project.md present
   [ok]   CHANGELOG.md present
-  [warn] Slash commands out of date → run: mini update
+  [warn] Slash commands out of date → run: mini install-commands
   [ok]   mini 1.12.1 (latest)
 ```
 
@@ -40,7 +40,7 @@ mini doctor
 
 - Read-only — it changes no state.
 - When something is flagged, the line includes the suggested fix command (e.g.
-  `mini update`, [`mini upgrade`](upgrade.md)).
+  `mini install-commands`, [`mini upgrade`](upgrade.md)).
 
 ## Related
 

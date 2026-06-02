@@ -367,11 +367,12 @@ program
 
 program
   .command('update')
-  .description('Brings the non-generated part of the project up to the current mini version: the static .mini/ skeleton (directories + .gitignore) and the slash commands .claude/commands/mini/*.md. Idempotent — creates the missing, overwrites the changed, leaves the rest.')
-  .option('--dry-run', 'Preview only — print what would be created/changed, but write nothing.')
-  .action(async (opts: { dryRun?: boolean }) => {
-    const { update } = await import('./commands/update.js');
-    const r = await update(process.cwd(), { dryRun: opts.dryRun });
+  .description('Alias for `mini upgrade` — checks npm for a newer mini-orchestrator and installs it. Kept so that `mini update` does the expected thing; see `mini upgrade` for the canonical command.')
+  .option('--check', 'Only check and report the latest published version; do not install.')
+  .option('--yes', 'Skip the confirmation and install directly (non-interactive).')
+  .action(async (opts: { check?: boolean; yes?: boolean }) => {
+    const { upgrade } = await import('./commands/upgrade.js');
+    const r = await upgrade({ check: opts.check, yes: opts.yes });
     if (!r.ok) process.exit(1);
   });
 

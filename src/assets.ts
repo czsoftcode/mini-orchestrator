@@ -3,22 +3,22 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Statický skeleton `.mini/` (adresářová struktura + `.gitignore`) je jediný
- * zdroj pravdy pro `mini init` (zakládání) i `mini update` (srovnání projektu).
- * Tenhle modul ho najde na disku a vyjmenuje jeho položky.
+ * The static `.mini/` skeleton (directory structure + `.gitignore`) is the single
+ * source of truth that `syncSkeleton` writes into a project (used by `mini init`
+ * when creating one). This module finds it on disk and enumerates its entries.
  *
- * Skeleton žije na dvou místech podle toho, odkud mini běží:
- * - z buildu/instalace (`dist/assets.js`) → `dist/skeleton/.mini` (kopíruje tam
- *   ho `scripts/copy-assets.mjs`; jen `dist` se balí a instaluje),
- * - ze zdrojáku (dev/testy přes tsx/vitest, `src/assets.ts`) → repo
+ * The skeleton lives in two places depending on where mini runs from:
+ * - from a build/install (`dist/assets.js`) → `dist/skeleton/.mini` (copied there
+ *   by `scripts/copy-assets.mjs`; only `dist` is packed and installed),
+ * - from source (dev/tests via tsx/vitest, `src/assets.ts`) → the repo
  *   `assets/skeleton/.mini`.
  *
- * Gitignore drží skeleton pod npm-safe jménem `gitignore` (bez tečky) a do
- * projektu ho zapisuje jako `.gitignore` — viz `FILE_RENAMES` níže.
+ * The gitignore is stored under the npm-safe name `gitignore` (no dot) and written
+ * into the project as `.gitignore` — see `FILE_RENAMES` below.
  *
- * Cesty se odvozují od umístění tohoto modulu (`import.meta.url`) jako u
- * `version.ts`. Kandidáty zkoušíme v pořadí a vrátíme první, který existuje —
- * funguje to v obou režimech bez ohledu na to, jestli proběhl build.
+ * Paths are derived from this module's location (`import.meta.url`), like in
+ * `version.ts`. The candidates are tried in order and the first that exists is
+ * returned — it works in both modes regardless of whether a build ran.
  */
 const SKELETON_CANDIDATES = [
   './skeleton/.mini', // build/instalace: dist/skeleton/.mini

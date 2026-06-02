@@ -12,3 +12,5 @@
 - [x] mini doctor: diagnostika projektu (schema stavu, slash commandy, statusline, čerstvost verze) jako checklist
 - [x] mini status --json: strojově čitelný výstup stavu projektu pro skripty/integrace
 - [x] mini status zobrazí dobu trvání fáze z startedAt/completedAt
+- [ ] Zrušit příkaz update a udělat z něj alias pro upgrade (kdyby se někdo spletl)
+- [ ] Příkaz import-gsd udělat i jako slash příkaz /mini:import-gsd

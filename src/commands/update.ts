@@ -1,10 +1,7 @@
 import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { readSkeletonEntries, skeletonDir } from '../assets.js';
-import { exists } from '../state/store.js';
 import { log } from '../ui/log.js';
-import { installCommands } from './install-commands.js';
-import type { StepOutcome } from './types.js';
 
 /** Project state directory — the root the skeleton is mirrored into. */
 const STATE_DIR = '.mini';
@@ -109,48 +106,4 @@ export async function syncSkeleton(
   }
 
   return result;
-}
-
-/**
- * `mini update` — brings the non-generated part of the project up to the current
- * mini version: the static `.mini/` skeleton (directories + `.gitignore`) and the
- * slash commands `.claude/commands/mini/*.md`. Idempotent; with `--dry-run` it
- * only shows a preview.
- *
- * It deliberately does NOT touch generated/per-project files (`project.md`,
- * `state.json`, `phases/`, `graph/`, …) and does not run one-off migrations
- * (`mini migrate`).
- */
-export async function update(
-  cwd: string = process.cwd(),
-  { dryRun = false }: UpdateOptions = {},
-): Promise<StepOutcome> {
-  if (!(await exists(cwd))) {
-    log.warn('There is no project in this directory (.mini/state.json).');
-    log.hint('Start with: mini init');
-    return { ok: false, reason: 'no-project' };
-  }
-
-  log.title(dryRun ? 'mini update — preview (nothing will be written)' : 'mini update');
-
-  log.info('Skeleton .mini/:');
-  const skel = await syncSkeleton(cwd, { dryRun });
-
-  console.log();
-  log.info('Slash commands:');
-  const cmds = await installCommands(cwd, { dryRun });
-
-  const changed =
-    skel.createdDirs + skel.createdFiles + skel.updatedFiles + cmds.created + cmds.updated;
-
-  console.log();
-  if (changed === 0) {
-    log.success('The project is up to date — nothing to add.');
-  } else if (dryRun) {
-    log.success(`Preview: ${changed} ${changed === 1 ? 'item' : 'items'} to sync. Run without --dry-run to write.`);
-  } else {
-    log.success(`Done — project synced to the current mini version (${changed} ${changed === 1 ? 'change' : 'changes'}).`);
-  }
-
-  return { ok: true };
 }

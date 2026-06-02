@@ -45,10 +45,10 @@ describe('buildDiagnostics', () => {
     expect(c.hint).toContain('install-commands');
   });
 
-  it('warns to update when slash commands are outdated', () => {
+  it('warns to reinstall the slash commands when they are outdated', () => {
     const c = find({ ...HEALTHY, installedCommands: 15 }, 'Slash commands');
     expect(c.status).toBe('warn');
-    expect(c.hint).toContain('mini update');
+    expect(c.hint).toContain('install-commands');
   });
 
   it('warns to upgrade when a newer version is available', () => {

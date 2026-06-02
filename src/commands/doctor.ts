@@ -102,7 +102,7 @@ export function buildDiagnostics(input: DoctorInput): DoctorCheck[] {
       label: 'Slash commands',
       status: 'warn',
       detail: `${input.installedCommands}/${input.expectedCommands} installed (outdated)`,
-      hint: 'Run `mini update` to refresh them',
+      hint: 'Run `mini install-commands` to refresh them',
     });
   } else {
     checks.push({

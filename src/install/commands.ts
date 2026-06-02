@@ -293,9 +293,10 @@ export interface WriteCommandsResult {
  * what differs (atomically via tmp+rename) and logs each created/changed file.
  * With `dryRun` it only counts and prints what would happen, touching no disk.
  *
- * This is the single source of truth for generating the commands — the project
- * installer (`installCommands`), `mini update` and the npm postinstall hook all
- * go through it, so their output can't drift.
+ * This is the single source of truth for generating the commands — the
+ * project-scoped installer (`installCommands`), the user/project installer
+ * (`installSlashCommands`) and the npm postinstall hook all go through it, so
+ * their output can't drift.
  */
 export async function writeCommandsTo(
   targetDir: string,

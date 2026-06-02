@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { skeletonDir } from '../assets.js';
-import { syncSkeleton, update } from './update.js';
+import { syncSkeleton } from './update.js';
 
 let cwd: string;
 
@@ -83,43 +83,5 @@ describe('syncSkeleton', () => {
     expect(res.createdFiles).toBe(1);
     expect(await pathExists(join(cwd, '.mini', 'phases'))).toBe(false);
     expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(false);
-  });
-});
-
-describe('update', () => {
-  it('ends with no-project and creates nothing without a project', async () => {
-    const res = await update(cwd);
-    expect(res).toEqual({ ok: false, reason: 'no-project' });
-    expect(await pathExists(join(cwd, '.mini'))).toBe(false);
-    expect(await pathExists(join(cwd, '.claude'))).toBe(false);
-  });
-
-  it('syncs both the skeleton and the slash commands', async () => {
-    await makeProject(cwd);
-    const res = await update(cwd);
-
-    expect(res.ok).toBe(true);
-    expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(true);
-    const commands = (await readdir(join(cwd, '.claude', 'commands', 'mini'))).sort();
-    expect(commands).toContain('next.md');
-    expect(commands).toContain('init.md');
-    expect(commands).toContain('audit.md');
-    expect(commands).toContain('verify.md');
-    expect(commands).toContain('undo.md');
-    expect(commands).toContain('model.md');
-    expect(commands).toContain('upgrade.md');
-    expect(commands).toContain('todo.md');
-    expect(commands).toContain('changelog.md');
-    expect(commands).toContain('doctor.md');
-    expect(commands.length).toBe(17);
-  });
-
-  it('--dry-run writes nothing even for the commands', async () => {
-    await makeProject(cwd);
-    const res = await update(cwd, { dryRun: true });
-
-    expect(res.ok).toBe(true);
-    expect(await pathExists(join(cwd, '.mini', '.gitignore'))).toBe(false);
-    expect(await pathExists(join(cwd, '.claude'))).toBe(false);
   });
 });

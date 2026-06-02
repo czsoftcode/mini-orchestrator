@@ -532,6 +532,11 @@
       "id": 106,
       "title": "Per-command docs in docs/",
       "status": "done"
+    },
+    {
+      "id": 107,
+      "title": "update as silent alias for upgrade",
+      "status": "done"
     }
   ],
   "models": {

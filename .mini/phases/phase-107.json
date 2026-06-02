@@ -1,0 +1,34 @@
+{
+  "id": 107,
+  "title": "update as silent alias for upgrade",
+  "goal": "Route the 'mini update' CLI command to perform the 'upgrade' action (check npm + install latest mini-orchestrator), silently — typing 'mini update' runs upgrade with the same --check/--yes behavior and no warning that it differs. The distinct .mini skeleton + slash-command sync is no longer reachable via 'mini update'; keep the syncSkeleton() function since 'mini init' still uses it. Fix the now-stale references: the 'mini doctor' hint for out-of-date slash commands points to 'mini install-commands' (which still refreshes them), and README + docs/{interactive,non-interactive}/*.md and the CLI command description are updated to describe update as an alias of upgrade. Adjust the existing update tests accordingly.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Route mini update to the upgrade action",
+      "status": "done",
+      "detail": "In cli.ts the 'update' command takes --check/--yes (drop --dry-run), its action imports and calls upgrade(), and its description says it is an alias for 'mini upgrade'. 'mini update --check' behaves like 'mini upgrade --check'."
+    },
+    {
+      "title": "Remove the orphaned skeleton-sync update()",
+      "status": "done",
+      "detail": "Delete the now-unused update() wrapper from commands/update.ts and its describe('update') tests; keep syncSkeleton() (and its tests) which mini init still imports. Build and test suite stay green."
+    },
+    {
+      "title": "Repoint stale mini update references",
+      "status": "done",
+      "detail": "The doctor 'slash commands out of date' hint points to 'mini install-commands'; code comments in assets.ts, install-commands.ts and init.ts that describe 'mini update' as the skeleton sync are corrected to reference syncSkeleton()/mini init."
+    },
+    {
+      "title": "Update README and docs",
+      "status": "done",
+      "detail": "The README 'mini update' row describes it as a silent alias of upgrade; docs/non-interactive/doctor.md and docs/interactive/doctor.md change the stale-commands fix hint from 'mini update' to 'mini install-commands'."
+    }
+  ],
+  "startedAt": "2026-06-02T05:44:42.029Z",
+  "completedAt": "2026-06-02T05:50:59.895Z",
+  "autoCommit": {
+    "preSha": "4338bfec3e2707558e4584f493dfd68b972dbfce",
+    "subject": "Phase 107: update as silent alias for upgrade"
+  }
+}

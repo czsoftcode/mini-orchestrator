@@ -24,8 +24,7 @@ export type InstallCommandsResult = WriteCommandsResult;
  * happen, without touching the disk.
  *
  * The actual writing is delegated to the shared `writeCommandsTo`; this wrapper
- * adds the project-scoped summary line and the usage hint. It is used by
- * `mini update` and by the hidden manual-install fallback.
+ * adds the project-scoped summary line and the usage hint.
  */
 export async function installCommands(
   cwd: string = process.cwd(),
