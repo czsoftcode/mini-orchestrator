@@ -8,6 +8,15 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **Zero-touch trial via `npx`.** The `install-commands` command is no longer
+  hidden, so `npx mini-orchestrator install-commands` is a documented way to try
+  mini **without a global install**: npx runs it one-off, it asks where to put the
+  `/mini:*` commands (this project vs all projects), and it never writes into
+  `~/.claude/settings.json` on its own. New top-level README section "Try it
+  without touching `~/.claude`" and reference pages
+  `docs/non-interactive/install-commands.md` and
+  `docs/non-interactive/uninstall.md`.
+
 - **`mini uninstall` command.** A visible counterpart to install/postinstall that
   cleans up everything mini wrote outside the project tree: it removes the
   `/mini:*` slash commands (user-scope `~/.claude/commands/mini` and, when

@@ -13,9 +13,11 @@ command comes in **two variants**, and this reference documents both:
   forms are what the slash commands call under the hood. See
   [`non-interactive/`](non-interactive/).
 
-> One command has only a single page: [`mini stop`](non-interactive/stop.md) is
-> console-only (it signals a running autonomous run to stop) and has no
-> `/mini:stop` slash variant.
+> A few commands are **console-only** and have a single page (no `/mini:*` slash
+> variant): [`mini stop`](non-interactive/stop.md) signals a running autonomous
+> run to stop, while [`mini install-commands`](non-interactive/install-commands.md)
+> and [`mini uninstall`](non-interactive/uninstall.md) set up and remove the slash
+> commands themselves.
 
 Each page links to its sibling variant and to related commands.
 
@@ -57,3 +59,13 @@ Each page links to its sibling variant and to related commands.
 | Show the CHANGELOG | [`/mini:changelog`](interactive/changelog.md) | [`mini changelog`](non-interactive/changelog.md) |
 | Health check of the setup | [`/mini:doctor`](interactive/doctor.md) | [`mini doctor`](non-interactive/doctor.md) |
 | Update mini itself | [`/mini:upgrade`](interactive/upgrade.md) | [`mini upgrade`](non-interactive/upgrade.md) |
+
+## Install & cleanup
+
+These are **console-only** (no `/mini:*` slash variant) — they set up or remove
+the slash commands themselves.
+
+| Command | Interactive | Non-interactive |
+| --- | --- | --- |
+| Install the `/mini:*` slash commands | — | [`mini install-commands`](non-interactive/install-commands.md) |
+| Remove the slash commands + status line | — | [`mini uninstall`](non-interactive/uninstall.md) |

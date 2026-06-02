@@ -423,12 +423,13 @@ program
     await checkVersion();
   });
 
-// Hidden fallback for installing the slash commands by hand — the normal path is
-// the npm `postinstall` hook. Stays available for when postinstall is skipped
-// (`--ignore-scripts`, `npm ci`, CI). Without --user/--project and with a TTY it
-// asks where to install; without a TTY it uses the detected default.
+// Installs the slash commands by hand — the npm `postinstall` hook is the usual
+// path, but this is also the zero-touch trial entry point: `npx mini-orchestrator
+// install-commands` runs it one-off and, with a TTY, asks where to install
+// (project vs user) without writing anything globally on its own. Also covers
+// installs where postinstall was skipped (`--ignore-scripts`, `npm ci`, CI).
 program
-  .command('install-commands', { hidden: true })
+  .command('install-commands')
   .description('Installs the /mini:* slash commands. Idempotent. Asks project vs user when interactive; override with --user/--project.')
   .option('--user', 'Install into the user-level ~/.claude/commands/mini (all projects).')
   .option('--project', 'Install into the current project .claude/commands/mini.')

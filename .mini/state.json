@@ -557,6 +557,11 @@
       "id": 111,
       "title": "Příkaz mini uninstall",
       "status": "done"
+    },
+    {
+      "id": 112,
+      "title": "Zviditelnění npx zkušební cesty",
+      "status": "done"
     }
   ],
   "models": {

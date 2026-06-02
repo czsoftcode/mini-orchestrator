@@ -1,0 +1,39 @@
+{
+  "id": 112,
+  "title": "Zviditelnění npx zkušební cesty",
+  "goal": "Unhide the install-commands CLI command (so it appears in --help), document a zero-touch npx mini-orchestrator install-commands trial at the top of README (one-off, asks project vs user scope, writes nothing into ~/.claude automatically), and add a docs/non-interactive/uninstall.md page following the existing docs convention.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Unhide install-commands in CLI",
+      "status": "done",
+      "detail": "Remove { hidden: true } from the install-commands command in cli.ts so it shows in mini --help; flags/behavior unchanged."
+    },
+    {
+      "title": "README: npx zero-touch trial",
+      "status": "done",
+      "detail": "Add a short 'Try it without touching ~/.claude' section near the top of README — npx mini-orchestrator install-commands (one-off via npx, asks project vs user scope, writes nothing globally automatically), with a pointer to mini uninstall for cleanup."
+    },
+    {
+      "title": "docs pages: uninstall + install-commands",
+      "status": "done",
+      "detail": "Add docs/non-interactive/uninstall.md and docs/non-interactive/install-commands.md per the convention (description, usage/flags, examples with sample output, edge cases, related-command links). Console-only, no slash sibling."
+    },
+    {
+      "title": "docs index rows",
+      "status": "done",
+      "detail": "List install-commands and uninstall in docs/README.md (State & control), marked console-only (em dash in the interactive column), like mini stop."
+    },
+    {
+      "title": "Verify: typecheck, tests, --help",
+      "status": "done",
+      "detail": "npm run typecheck and npm test green; mini --help (via tsx) lists install-commands and uninstall; new doc links resolve."
+    }
+  ],
+  "startedAt": "2026-06-02T07:35:04.543Z",
+  "completedAt": "2026-06-02T07:39:04.815Z",
+  "autoCommit": {
+    "preSha": "e44a80bfe475d97cc65c4622da6840094483646b",
+    "subject": "Phase 112: Zviditelnění npx zkušební cesty"
+  }
+}

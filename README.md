@@ -11,6 +11,17 @@ It was created as a simpler alternative to [GSD](https://github.com/gsd-build/ge
 - [Claude Code](https://claude.com/claude-code) (signed in via Pro/Max or with an API key)
 - Node.js 20+
 
+## Try it without touching `~/.claude`
+
+Want to evaluate mini without a global install? Run it one-off with **npx** (npx ships with npm — it fetches the package into a temporary cache and runs it once, without installing it globally):
+
+```bash
+cd your-project
+npx mini-orchestrator install-commands   # asks where to put the /mini:* commands: this project or all projects
+```
+
+It writes only where you choose and never edits `~/.claude/settings.json` on its own. Pick **this project** to keep everything inside the repo's `.claude/commands/mini`. When you're done evaluating, remove what it added with [`mini uninstall`](docs/non-interactive/uninstall.md).
+
 ## Installation
 
 ```bash
@@ -19,7 +30,7 @@ npm install -g mini-orchestrator@latest
 
 The command is called `mini`. To update: run the same command again. To uninstall: `npm uninstall -g mini-orchestrator`.
 
-A global install (`npm i -g`) sets up Claude Code automatically — even though npm runs the postinstall hook without a terminal: it writes the `/mini:*` slash commands into `~/.claude/commands/mini` (user scope, for all projects) and wires the mini status line into `~/.claude/settings.json` (only when you have no `statusLine` yet — an existing one is never touched). A local / CI install stays quiet and only prints a hint; run `mini install-commands` there by hand.
+A global install (`npm i -g`) writes the `/mini:*` slash commands into `~/.claude/commands/mini` (user scope, for all projects) automatically — even though npm runs the postinstall hook without a terminal. The status line stays **opt-in**: it is never written into your `~/.claude/settings.json` without a terminal to ask first (an interactive install offers it; an existing `statusLine` is never touched). The postinstall prints a summary of what it created plus a one-line full-removal hint. A local / CI install stays quiet and only prints a hint; run `mini install-commands` there by hand. To remove everything mini added, run [`mini uninstall`](docs/non-interactive/uninstall.md) (then `npm uninstall -g mini-orchestrator`).
 
 Installing without `sudo`: point the global npm prefix into your home directory (one-off) and have its `bin` on your `PATH`:
 
