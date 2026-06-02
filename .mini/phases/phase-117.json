@@ -1,0 +1,24 @@
+{
+  "id": 117,
+  "title": "README Backers section",
+  "goal": "Add a Backers section to the README that thanks sponsors, with an auto-generation placeholder (comment markers for a tool like sponsorkit) and a call-to-action linking to GitHub Sponsors, placed next to the Support section.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add Backers section to README",
+      "status": "done",
+      "detail": "A Backers section near Support thanking sponsors, with an auto-generation placeholder (sponsorkit-style comment markers) and a Sponsor call-to-action linking to github.com/sponsors/czsoftcode."
+    },
+    {
+      "title": "Wrap up and checks",
+      "status": "done",
+      "detail": "npm run typecheck and npm test stay green; the new section links resolve."
+    }
+  ],
+  "startedAt": "2026-06-02T10:31:09.889Z",
+  "completedAt": "2026-06-02T10:32:28.137Z",
+  "autoCommit": {
+    "preSha": "ebf383ef5b249b28dbb11bbcf0fd1c1c5990479f",
+    "subject": "Phase 117: README Backers section"
+  }
+}

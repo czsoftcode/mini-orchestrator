@@ -431,6 +431,14 @@ development through [**GitHub Sponsors**](https://github.com/sponsors/czsoftcode
 — or just use the **Sponsor** button at the top of the repository. Every bit
 helps keep the project moving, one small phase at a time. 🙏
 
+## Backers
+
+Thank you to everyone who supports mini's development! 💛 Be the first to back the
+project via [**GitHub Sponsors**](https://github.com/sponsors/czsoftcode) — your
+name and avatar can appear right here.
+
+<!-- sponsors --><!-- sponsors -->
+
 ## License
 
 Released under the [MIT License](./LICENSE) — © 2026 Stanislav Kremeň. Free to

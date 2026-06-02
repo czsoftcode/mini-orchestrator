@@ -8,6 +8,10 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **README "Backers" section.** A thank-you/call-to-action section with a
+  sponsorkit-style `<!-- sponsors -->` placeholder, ready to list project backers
+  once GitHub Sponsors goes live.
+
 - **GitHub Sponsors funding.** Added `.github/FUNDING.yml` (`github: czsoftcode`)
   so the repository's Sponsor button points at GitHub Sponsors, plus a short
   "Support" section in the README.
