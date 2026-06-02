@@ -6,6 +6,19 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **Per-command documentation under `docs/`.** Every user-facing command now has
+  a detailed reference page, split by variant: `docs/interactive/` for the
+  `/mini:*` slash commands and `docs/non-interactive/` for the `mini *` CLI
+  commands. Each page has a description, usage/flags, worked examples with sample
+  output, edge-case notes, and links to its sibling variant and related commands.
+  `docs/README.md` is the index, grouped like the website (Project setup / Phase
+  loop / Autonomous / State & control). `mini stop` has a single page under
+  `non-interactive/` (console-only, no slash variant). Mirrors the structure of
+  [miniorchestrator.com/en/docs](https://miniorchestrator.com/en/docs); the
+  README will later link to these pages.
+
 ### Changed
 
 - **Project website.** The package `homepage` now points to

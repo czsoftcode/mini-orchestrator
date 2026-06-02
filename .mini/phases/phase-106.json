@@ -1,0 +1,34 @@
+{
+  "id": 106,
+  "title": "Per-command docs in docs/",
+  "goal": "Create detailed per-command documentation under docs/, split into docs/interactive/ (the /mini:* slash commands) and docs/non-interactive/ (the mini * CLI commands), one markdown page per user-facing command mirroring miniorchestrator.com/en/docs. Each page has description, usage/flags, worked examples with sample output, edge-case notes and links to related commands. Covered commands: init, next, discuss, plan, do, verify, done, auto, status, undo, model, todo, changelog, doctor, map, audit, upgrade (both variants), plus mini stop which has a single page under non-interactive/ (console-only, no slash variant). README cross-linking comes in a later phase.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Scaffold docs dirs + index page",
+      "status": "done",
+      "detail": "Create docs/interactive/ and docs/non-interactive/ dirs and docs/README.md as a navigation index grouped like the website (Project setup / Phase loop / Autonomous / State & control), linking every command page."
+    },
+    {
+      "title": "Non-interactive CLI command pages",
+      "status": "done",
+      "detail": "Write docs/non-interactive/<cmd>.md for all user-facing CLI commands plus stop (init, next, discuss, plan, do, verify, done, auto, status, undo, model, todo, changelog, doctor, map, audit, upgrade, stop). Each: description, usage/flags, worked examples with sample output, edge-case notes, links."
+    },
+    {
+      "title": "Interactive slash command pages",
+      "status": "done",
+      "detail": "Write docs/interactive/<cmd>.md for the 17 /mini:* slash commands (no stop). Each: description, how it behaves in a Claude Code session, examples, links to related commands and the CLI sibling."
+    },
+    {
+      "title": "Cross-linking and consistency pass",
+      "status": "done",
+      "detail": "Every page links to its sibling variant and related commands; verify all index and inter-page links resolve and formatting is consistent across pages."
+    }
+  ],
+  "startedAt": "2026-06-02T05:13:54.291Z",
+  "completedAt": "2026-06-02T05:21:12.332Z",
+  "autoCommit": {
+    "preSha": "c5a4c93b1f805999148953d92b4a2c4642096653",
+    "subject": "Phase 106: Per-command docs in docs/"
+  }
+}
