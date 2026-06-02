@@ -537,6 +537,11 @@
       "id": 107,
       "title": "update as silent alias for upgrade",
       "status": "done"
+    },
+    {
+      "id": 108,
+      "title": "/mini:import-gsd slash command",
+      "status": "done"
     }
   ],
   "models": {

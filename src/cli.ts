@@ -292,7 +292,22 @@ program
 program
   .command('import-gsd')
   .description('One-off import of an in-progress GSD project from .planning/.')
-  .action(async () => {
+  .option('--prompt', 'Print the GSD extraction prompt to stdout and exit (no Claude, no project needed). For /mini:import-gsd.')
+  .option('--apply', 'Non-interactively read the extraction response from stdin, parse it and save the project + phases (no Claude). For /mini:import-gsd.')
+  .option('--force', 'With --apply: overwrite an existing project (its model config is preserved).')
+  .action(async (opts: { prompt?: boolean; apply?: boolean; force?: boolean }) => {
+    if (opts.prompt) {
+      const { buildImportGsdPrompt } = await import('./prompts/importGsd.js');
+      const text = buildImportGsdPrompt();
+      process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
+      return;
+    }
+    if (opts.apply) {
+      const { applyImport } = await import('./commands/import-gsd.js');
+      const r = await applyImport(await readStdin(), { force: opts.force });
+      if (!r.ok) process.exit(1);
+      return;
+    }
     const { importGsd } = await import('./commands/import-gsd.js');
     await importGsd();
   });

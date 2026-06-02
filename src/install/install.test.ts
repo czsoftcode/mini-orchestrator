@@ -42,7 +42,8 @@ describe('installSlashCommands', () => {
     expect(res.target.scope).toBe('project');
     const files = await readdir(join(cwd, COMMANDS_DIR));
     expect(files).toContain('next.md');
-    expect(files.length).toBe(17);
+    expect(files).toContain('import-gsd.md');
+    expect(files.length).toBe(18);
   });
 
   it('dry-run writes nothing', async () => {

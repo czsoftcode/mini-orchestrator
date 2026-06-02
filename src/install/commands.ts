@@ -244,6 +244,32 @@ The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a non-inter
 
 The numbers are the 1-based positions from the listing. Except for \`suggest\` (where you do the thinking), it's a self-contained command — it changes no phase state in \`.mini/state.json\`.`,
   },
+  {
+    name: 'import-gsd',
+    description: 'mini — import a GSD project from .planning/ into mini (one-off)',
+    body: `This is the **import-gsd** step of the mini workflow, run directly in Claude Code. It imports a work-in-progress GSD project from \`.planning/\` into a new mini project. The state in \`.mini/\` is created by the \`mini import-gsd --apply\` command — never write \`.mini/state.json\` or \`.mini/project.md\` by hand.
+
+Proceed in this order:
+
+1. **Check the source.** Confirm \`.planning/\` exists in the current directory (e.g. \`ls .planning\`). If it is missing, there is no GSD project to import — tell the user and stop.
+2. **Check for an existing project.** If \`.mini/state.json\` already exists, a mini project is already here. Warn the user that importing **overwrites** it (the existing phase history is lost) and **ask them to confirm**. Wait for their answer — only continue with their approval (you then pass \`--force\` in step 5). If no project exists yet, skip this.
+3. **Get the extraction prompt.** Run in Bash \`mini import-gsd --prompt\` — it prints the extraction instructions and the strict response contract (\`NAME:\` / \`WHAT:\` / \`FOR_WHOM:\` / \`CONSTRAINTS:\` + a \`PHASES:\` table). No Claude is spawned and no project is required.
+4. **Extract — you do this yourself.** Follow those instructions: read the \`.planning/\` files (Read/Glob/Grep, write nothing) and build the response in EXACTLY that contract — nothing else around it. (You are already a capable session, so no nested \`mini import-gsd\` Claude call is needed.)
+5. **Save.** Pipe your response into \`mini import-gsd --apply\` (append \`--force\` only when overwriting a project the user confirmed). It parses the contract, preserves the phase statuses and writes \`.mini/\`. For example, via a heredoc:
+   \`\`\`
+   mini import-gsd --apply <<'EOF'
+   NAME: …
+   WHAT: …
+   FOR_WHOM: …
+   CONSTRAINTS: …
+
+   PHASES:
+   1 | done | …
+   2 | doing | …
+   EOF
+   \`\`\`
+6. **Relay.** Report the result to the user and suggest \`/mini:status\` to review the imported phases (then \`/mini:next\` to continue). It is a one-off setup step — typically run instead of \`/mini:init\` when migrating from GSD.`,
+  },
 ];
 
 /** Renders the content of a single .md command. */

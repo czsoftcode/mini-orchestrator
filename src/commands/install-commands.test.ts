@@ -26,6 +26,7 @@ describe('installCommands', () => {
       'do.md',
       'doctor.md',
       'done.md',
+      'import-gsd.md',
       'init.md',
       'map.md',
       'model.md',

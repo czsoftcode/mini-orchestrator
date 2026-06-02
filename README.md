@@ -90,7 +90,7 @@ mini auto        # next → plan → do (with acceptEdits) → done; everything 
 | `mini undo` | Reverts the last state change (1 step back, no deep history); if `mini done` auto-committed in the last step and HEAD still sits on a clean tree, it also offers to revert the commit (`git reset --soft`). `--dry-run` previews without changing anything, `--yes` skips the confirmation (used by `/mini:undo`) |
 | `mini stop` | Creates a cooperative stop signal `.mini/STOP` for the autonomous `/mini:auto` (typically from a second terminal); `--clear` removes it — see [Autonomous `/mini:auto`](#autonomous-miniauto) |
 | `mini model …` | Per-project / per-scope model choice (see below) |
-| `mini import-gsd` | One-off import of an in-progress GSD project from `.planning/` |
+| `mini import-gsd` | One-off import of an in-progress GSD project from `.planning/`. Bare, it reads `.planning/` (via a Claude call) and saves a mini project. For the `/mini:import-gsd` slash command it also exposes `--prompt` (print the extraction prompt) and `--apply` (read the extraction response from stdin and save, preserving phase statuses; `--force` overwrites an existing project) |
 | `mini migrate` | One-off conversion of the old monolithic `state.json` to the v2 layout (lightweight header + `.mini/phases/`); with `--renumber` it renumbers phases to consecutive numbers and unifies file names |
 | `mini update` | Alias for `mini upgrade` — typing `mini update` checks npm for a newer `mini-orchestrator` and installs it, so a slip of the tongue does the expected thing. Accepts the same `--check` / `--yes` flags. (To refresh a project's generated `.mini/` skeleton + slash commands, use `mini install-commands`.) |
 | `mini upgrade` | Checks npm for a newer `mini-orchestrator` and installs it (`npm install -g mini-orchestrator@latest`); reports current → latest and asks first. `--check` only reports, `--yes` installs without asking. A status-line indicator (`↑ <version>`) also signals when a newer version is available — see [Status line](#status-line) |
@@ -335,6 +335,8 @@ mini import-gsd
 ```
 
 Claude reads `PROJECT.md` and the roadmap, creates `.mini/project.md` and `.mini/state.json`. It imports only the skeleton — phases + statuses. The detailed MD files in `.planning/` stay, but `mini` ignores them.
+
+You can also run it **from Claude Code** with the `/mini:import-gsd` slash command: the session reads `.planning/` itself (no nested Claude) and saves via `mini import-gsd --apply`, asking before it overwrites an existing project.
 
 ## FAQ
 

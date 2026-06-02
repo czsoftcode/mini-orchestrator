@@ -1,0 +1,34 @@
+{
+  "id": 108,
+  "title": "/mini:import-gsd slash command",
+  "goal": "Add a /mini:import-gsd slash command following the mini pattern (no nested Claude, no interactive hang). Refactor 'mini import-gsd' to expose two non-interactive forms: '--prompt' prints the GSD extraction prompt to stdout (no Claude, no project required), and '--apply' reads the structured response from stdin, parses it preserving phase statuses, and saves the project + phases ('--force' overwrites an existing project, preserving its model config). The slash command body checks for .planning/, confirms overwrite when a project exists, runs 'mini import-gsd --prompt', has the in-session Claude read .planning/ and produce the contract, then pipes it into 'mini import-gsd --apply'. The bare 'mini import-gsd' terminal flow keeps working (now sharing the parse/save logic). Add import-gsd to COMMAND_DEFS (18 commands), update the slash-command-count test (17->18), README, and add unit tests for applyImport.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Extract shared save + add applyImport",
+      "status": "done",
+      "detail": "In import-gsd.ts factor the project.md/state build + save into a shared helper; add applyImport(text, {cwd, force}) that checks for an existing project (errors without --force, preserves its models), parses the response (preserving statuses) and saves. The bare importGsd() reuses the shared save."
+    },
+    {
+      "title": "Wire CLI --prompt / --apply / --force",
+      "status": "done",
+      "detail": "In cli.ts the import-gsd command gains --prompt (print buildImportGsdPrompt() to stdout, no project needed), --apply (read stdin and call applyImport) and --force; bare 'mini import-gsd' keeps the interactive flow."
+    },
+    {
+      "title": "Add the /mini:import-gsd slash command",
+      "status": "done",
+      "detail": "Add import-gsd to COMMAND_DEFS with a body that checks .planning/, confirms overwrite if a project exists, runs 'mini import-gsd --prompt', reads .planning/ in-session, and pipes the contract into 'mini import-gsd --apply' (+ --force). Update the slash-command-count test 17->18."
+    },
+    {
+      "title": "README + applyImport tests",
+      "status": "done",
+      "detail": "Note /mini:import-gsd in README; add unit tests for applyImport (parses + saves with statuses, refuses an existing project without --force, preserves models, rejects an unreadable response)."
+    }
+  ],
+  "startedAt": "2026-06-02T06:00:51.749Z",
+  "completedAt": "2026-06-02T06:06:24.621Z",
+  "autoCommit": {
+    "preSha": "9fbd00f1ca27c61c4efbf7c8ce184444e165b1c9",
+    "subject": "Phase 108: /mini:import-gsd slash command"
+  }
+}

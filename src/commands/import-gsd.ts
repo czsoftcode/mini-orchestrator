@@ -4,10 +4,11 @@ import { askClaude } from '../claude/ask.js';
 import { buildImportGsdPrompt } from '../prompts/importGsd.js';
 import { resolveModel } from '../state/models.js';
 import { exists, load, newState, save, writeProject } from '../state/store.js';
-import type { Phase, PhaseStatus, ProjectModels } from '../state/types.js';
+import type { Phase, PhaseStatus, ProjectModels, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
 import { log } from '../ui/log.js';
 import { logUsage } from '../ui/usage.js';
+import type { StepOutcome } from './types.js';
 
 interface ParsedImport {
   name: string;
@@ -138,7 +139,15 @@ export async function importGsd(): Promise<void> {
     return;
   }
 
-  const projectMd = `# ${parsed.name}
+  await saveImport(parsed, cwd, preservedModels);
+
+  log.success('Imported into .mini/.');
+  log.hint('Run: mini status');
+}
+
+/** Builds the `project.md` body from a parsed import. */
+function buildImportProjectMd(parsed: ParsedImport): string {
+  return `# ${parsed.name}
 
 ## What I'm building
 ${parsed.what}
@@ -149,7 +158,10 @@ ${parsed.forWhom || '(not specified)'}
 ## Main constraints
 ${parsed.constraints || '(none)'}
 `;
+}
 
+/** Builds the state for a parsed import: phases with their statuses + the current-phase pointer. */
+function buildImportState(parsed: ParsedImport, preservedModels?: ProjectModels): ProjectState {
   const state = newState();
   state.phases = parsed.phases.map(
     (p, i): Phase => ({
@@ -166,12 +178,54 @@ ${parsed.constraints || '(none)'}
   if (preservedModels) {
     state.models = preservedModels;
   }
+  return state;
+}
 
-  await writeProject(projectMd, cwd);
-  await save(state, cwd);
+/** Writes `project.md` + `state.json` for a parsed import. */
+async function saveImport(
+  parsed: ParsedImport,
+  cwd: string,
+  preservedModels?: ProjectModels,
+): Promise<void> {
+  await writeProject(buildImportProjectMd(parsed), cwd);
+  await save(buildImportState(parsed, preservedModels), cwd);
+}
 
-  log.success('Imported into .mini/.');
+/**
+ * Non-interactive import (for `/mini:import-gsd`): take the GSD extraction
+ * response that the in-session Claude produced (the `NAME:/WHAT:/…/PHASES:`
+ * contract), parse it preserving phase statuses, and save the project + phases.
+ *
+ * Refuses to overwrite an existing project unless `force` is set; on an
+ * overwrite the existing model configuration is preserved. Errors (unreadable
+ * response, project exists without force) are logged and returned as `ok: false`.
+ */
+export async function applyImport(
+  text: string,
+  { cwd = process.cwd(), force = false }: { cwd?: string; force?: boolean } = {},
+): Promise<StepOutcome> {
+  let preservedModels: ProjectModels | undefined;
+  if (await exists(cwd)) {
+    if (!force) {
+      log.error('A mini project already exists in this directory (.mini/state.json).');
+      log.hint('Re-run with --force to overwrite it (the existing phase history will be lost).');
+      return { ok: false, reason: 'exists' };
+    }
+    preservedModels = (await load(cwd)).models;
+  }
+
+  const parsed = parseResponse(text);
+  if (!parsed) {
+    log.error('Could not read the GSD import response (expected the NAME/WHAT/…/PHASES contract).');
+    return { ok: false, reason: 'parse' };
+  }
+
+  await saveImport(parsed, cwd, preservedModels);
+  log.success(
+    `Imported ${parsed.phases.length} ${parsed.phases.length === 1 ? 'phase' : 'phases'} into .mini/.`,
+  );
   log.hint('Run: mini status');
+  return { ok: true };
 }
 
 function normalize(value: string | undefined): string {

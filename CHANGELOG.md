@@ -18,6 +18,17 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`/mini:import-gsd` slash command.** GSD import can now run from inside Claude
+  Code, following the mini pattern (no nested Claude session, no interactive
+  hang). `mini import-gsd` gained two non-interactive forms: `--prompt` prints
+  the extraction prompt to stdout, and `--apply` reads the extraction response
+  from stdin, parses it (preserving phase statuses) and saves the project +
+  phases (`--force` overwrites an existing project, keeping its model config).
+  The slash command checks `.planning/`, confirms before overwriting, has the
+  in-session Claude read `.planning/` and produce the contract, then pipes it
+  into `mini import-gsd --apply`. The bare `mini import-gsd` terminal flow is
+  unchanged (18 generated slash commands now).
+
 - **Per-command documentation under `docs/`.** Every user-facing command now has
   a detailed reference page, split by variant: `docs/interactive/` for the
   `/mini:*` slash commands and `docs/non-interactive/` for the `mini *` CLI
