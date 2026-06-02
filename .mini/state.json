@@ -547,6 +547,11 @@
       "id": 109,
       "title": "Docs for import-gsd",
       "status": "done"
+    },
+    {
+      "id": 110,
+      "title": "Status line opt-in při auto instalaci",
+      "status": "done"
     }
   ],
   "models": {

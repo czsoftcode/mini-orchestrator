@@ -80,7 +80,7 @@ describe('runPostinstall (non-interactive, local/CI install)', () => {
 });
 
 describe('runPostinstall (non-interactive, global install)', () => {
-  it('installs the slash commands into the user scope and sets up the status line', async () => {
+  it('installs the slash commands into the user scope but leaves the status line opt-in', async () => {
     process.env.npm_config_global = 'true';
     await runPostinstall();
 
@@ -88,15 +88,13 @@ describe('runPostinstall (non-interactive, global install)', () => {
     expect(await pathExists(join(home, COMMANDS_DIR))).toBe(true);
     expect(await pathExists(join(cwd, COMMANDS_DIR))).toBe(false);
 
-    // The status line is wired into ~/.claude/settings.json.
+    // The user's settings.json is left untouched — the status line is opt-in,
+    // never written silently on a non-TTY global install.
     const settingsPath = join(home, '.claude', 'settings.json');
-    expect(await pathExists(settingsPath)).toBe(true);
-    const settings = JSON.parse(await readFile(settingsPath, 'utf8'));
-    expect(settings.statusLine).toMatchObject({ type: 'command' });
-    expect(settings.statusLine.command).toContain('statusline');
+    expect(await pathExists(settingsPath)).toBe(false);
   });
 
-  it('never overwrites an existing foreign status line', async () => {
+  it('never touches an existing foreign status line', async () => {
     process.env.npm_config_global = 'true';
     const settingsPath = join(home, '.claude', 'settings.json');
     const foreign = { statusLine: { type: 'command', command: 'my-own-statusline' } };

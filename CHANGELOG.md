@@ -6,6 +6,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- **Global install no longer silently edits `~/.claude/settings.json`.** On a
+  non-TTY global install (`npm i -g mini-orchestrator`) mini still writes the
+  `/mini:*` slash commands (additive, namespaced), but the status line is now
+  opt-in — it is never wired into your `settings.json` without a TTY to ask
+  first. The postinstall prints an honest summary of what it created plus a
+  one-line full-removal hint. The interactive install still offers the status
+  line as before.
+
 ## [1.13.0] - 2026-06-02
 
 ### Changed

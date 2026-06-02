@@ -1,0 +1,34 @@
+{
+  "id": 110,
+  "title": "Status line opt-in při auto instalaci",
+  "goal": "In the auto (non-TTY global install) branch of runPostinstall, stop silently editing ~/.claude/settings.json — the status line becomes opt-in — and print an honest summary of which slash commands were created plus a one-line full-removal hint.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Drop silent status-line write in auto branch",
+      "status": "done",
+      "detail": "In runPostinstall, the auto (non-TTY global) branch no longer calls offerStatusline with forced confirm; ~/.claude/settings.json stays untouched. The interactive postinstall path still offers the status line as before."
+    },
+    {
+      "title": "Print honest install summary + removal hint",
+      "status": "done",
+      "detail": "After writing the commands in the auto branch, print what was created (count + ~/.claude/commands/mini/), note the status line is optional/not enabled, and a one-line full-removal hint (npm uninstall -g mini-orchestrator + remove the commands dir)."
+    },
+    {
+      "title": "Update postinstall tests for opt-in status line",
+      "status": "done",
+      "detail": "Global non-interactive install writes the commands but no longer touches settings.json; assert no statusLine is written; the foreign-status-line test stays consistent."
+    },
+    {
+      "title": "Verify: typecheck, tests, simulated global install",
+      "status": "done",
+      "detail": "npm run typecheck and npm test green; simulate npm_config_global=true non-interactive run -> commands created, settings.json absent, summary printed."
+    }
+  ],
+  "startedAt": "2026-06-02T07:15:22.942Z",
+  "completedAt": "2026-06-02T07:20:52.207Z",
+  "autoCommit": {
+    "preSha": "d311491fdc35aee16c2206ff03bccadb1f3c053d",
+    "subject": "Phase 110: Status line opt-in při auto instalaci"
+  }
+}
