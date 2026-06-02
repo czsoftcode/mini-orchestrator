@@ -567,6 +567,11 @@
       "id": 113,
       "title": "Příkaz mini install-statusline",
       "status": "done"
+    },
+    {
+      "id": 114,
+      "title": "README demo of the cycle",
+      "status": "done"
     }
   ],
   "models": {

@@ -6,6 +6,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **README demo of the workflow cycle.** A recorded terminal GIF of the full
+  `init → next → plan → do → done` loop now sits at the top of the *Quick start*
+  section (with a `<details>` text transcript as a fallback). It is produced from
+  a real, fully offline run — the new `demo/cycle.sh` drives every step through
+  the non-interactive `--apply` flags (no Claude API), and `demo/record.sh`
+  records it with asciinema and renders `demo/cycle.gif` via agg. Re-run
+  `demo/record.sh` to refresh the GIF.
+
 ## [1.14.0] - 2026-06-02
 
 ### Added

@@ -1,0 +1,39 @@
+{
+  "id": 114,
+  "title": "README demo of the cycle",
+  "goal": "Add a real terminal demo of the mini workflow cycle to README: a committed, reproducible recording script (a scripted non-interactive walkthrough recorded with asciinema and converted to a GIF via agg, no live Claude API) plus the generated GIF embedded near the Quick start section, with a static annotated fallback block for renderers that don't load the image.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Scripted cycle walkthrough",
+      "status": "done",
+      "detail": "demo/cycle.sh — non-interactive bash that prints the mini cycle (next/plan/do/done) as annotated $ commands plus real safe output (mini status / mini todo / --help), no live Claude API; runs end-to-end in a temp dir."
+    },
+    {
+      "title": "Recording script",
+      "status": "done",
+      "detail": "demo/record.sh — wraps cycle.sh with asciinema rec --command into a .cast, then agg into demo/cycle.gif; puts ~/.cargo/bin on PATH, documents prerequisites, idempotent."
+    },
+    {
+      "title": "Generate and commit the GIF",
+      "status": "done",
+      "detail": "Run record.sh to produce a valid non-empty demo/cycle.gif; keep the intermediate .cast out of git."
+    },
+    {
+      "title": "Embed demo in README",
+      "status": "done",
+      "detail": "Add the GIF after Quick start via an absolute raw.githubusercontent URL (renders on GitHub and npm) with a static annotated fallback transcript and a link to demo/."
+    },
+    {
+      "title": "Wrap up and checks",
+      "status": "done",
+      "detail": "Tick mini todo done 13, gitignore the .cast artifact, npm run typecheck and npm test stay green."
+    }
+  ],
+  "startedAt": "2026-06-02T08:33:11.654Z",
+  "completedAt": "2026-06-02T08:47:27.101Z",
+  "autoCommit": {
+    "preSha": "de0231ca5c2736645e21cb852382a0ca04864324",
+    "subject": "Phase 114: README demo of the cycle"
+  }
+}

@@ -15,3 +15,5 @@
 - [x] Zrušit příkaz update a udělat z něj alias pro upgrade (kdyby se někdo spletl)
 - [x] Příkaz import-gsd udělat i jako slash příkaz /mini:import-gsd
 - [x] vytvorit dokumentaci pro import-gsd
+- [x] README screenshot/asciinema demo cyklu
+- [ ] GitHub Issues šablony, CONTRIBUTING

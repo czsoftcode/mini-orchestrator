@@ -13,3 +13,6 @@ npm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# Demo recording intermediates (the committed artifact is demo/cycle.gif)
+demo/*.cast

@@ -63,6 +63,45 @@ Older versions are kept around so you can roll back — delete them manually if 
 
 ## Quick start
 
+The whole loop — **init → next → plan → do → done** — in one screen:
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/czsoftcode/mini-orchestrator/main/demo/cycle.gif"
+       alt="mini workflow cycle: init, next, plan, do, done — recorded terminal session"
+       width="760">
+</p>
+
+<sub>The GIF is generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). Re-run it to refresh.</sub>
+
+<details>
+<summary>Image not loading? The same cycle as a text transcript</summary>
+
+```console
+$ mini init --apply --name "todo-api" --what "A small REST API for todos" --for-whom "Backend developers" --constraints "Node + TypeScript"
+[ok] Project "todo-api" created in .mini/
+
+# Claude proposes the next phase
+$ mini next --apply --title "Health endpoint" --goal "Add GET /health returning {status:ok} with a test"
+[ok] Added: phase 1 — Health endpoint
+
+# break it into concrete, verifiable steps
+$ printf '%s\n' "Add the route :: GET /health returns 200 JSON" "Write a test :: vitest covers it" | mini plan --apply
+[ok] Phase 1 broken down into 2 steps.
+
+# work the phase — normally "mini do" opens an interactive Claude session
+$ mini do --apply
+[ok] Phase 1 (Health endpoint) marked as in progress.
+$ mini do --apply --step-done "Add the route"
+$ mini do --apply --step-done "Write a test"
+
+# close it — verify, write a memory note, commit
+$ mini done --apply
+[ok] Phase 1 (Health endpoint) done.
+[ok] Commit: Phase 1: Health endpoint
+```
+
+</details>
+
 ```bash
 mkdir my-project && cd my-project
 
