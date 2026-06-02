@@ -15,9 +15,10 @@ command comes in **two variants**, and this reference documents both:
 
 > A few commands are **console-only** and have a single page (no `/mini:*` slash
 > variant): [`mini stop`](non-interactive/stop.md) signals a running autonomous
-> run to stop, while [`mini install-commands`](non-interactive/install-commands.md)
-> and [`mini uninstall`](non-interactive/uninstall.md) set up and remove the slash
-> commands themselves.
+> run to stop, while [`mini install-commands`](non-interactive/install-commands.md),
+> [`mini install-statusline`](non-interactive/install-statusline.md) and
+> [`mini uninstall`](non-interactive/uninstall.md) set up and remove the slash
+> commands and status line themselves.
 
 Each page links to its sibling variant and to related commands.
 
@@ -68,4 +69,5 @@ the slash commands themselves.
 | Command | Interactive | Non-interactive |
 | --- | --- | --- |
 | Install the `/mini:*` slash commands | — | [`mini install-commands`](non-interactive/install-commands.md) |
+| Enable the status line | — | [`mini install-statusline`](non-interactive/install-statusline.md) |
 | Remove the slash commands + status line | — | [`mini uninstall`](non-interactive/uninstall.md) |

@@ -562,6 +562,11 @@
       "id": 112,
       "title": "Zviditelnění npx zkušební cesty",
       "status": "done"
+    },
+    {
+      "id": 113,
+      "title": "Příkaz mini install-statusline",
+      "status": "done"
     }
   ],
   "models": {

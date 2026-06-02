@@ -62,9 +62,7 @@ export async function runPostinstall(): Promise<void> {
       // Non-TTY global install: we cannot ask, so the status line stays opt-in —
       // we never silently edit the user's ~/.claude/settings.json. Be honest
       // about what we wrote and how to undo all of it again.
-      log.hint(
-        'Status line not enabled (opt-in). Turn it on later by adding a "statusLine" block to ~/.claude/settings.json.',
-      );
+      log.hint('Status line not enabled (opt-in). Turn it on later with:  mini install-statusline');
       log.hint(
         `Remove everything: npm uninstall -g mini-orchestrator  (then delete ${result.target.displayDir})`,
       );

@@ -6,7 +6,18 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-06-02
+
 ### Added
+
+- **`mini install-statusline` command.** The opt-in counterpart to the install:
+  enables the mini status line by adding a `statusLine` block to
+  `~/.claude/settings.json` (creating the file if missing, preserving every other
+  key). It never overwrites an existing status line — an already-present mini one
+  is a no-op, a foreign one is left untouched and reported. Supports `--dry-run`.
+  This rounds out the install/uninstall symmetry (`install-commands` +
+  `install-statusline` in, `uninstall` out) and is what the postinstall hint now
+  points to for turning the status line on.
 
 - **Zero-touch trial via `npx`.** The `install-commands` command is no longer
   hidden, so `npx mini-orchestrator install-commands` is a documented way to try

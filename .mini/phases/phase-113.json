@@ -1,0 +1,44 @@
+{
+  "id": 113,
+  "title": "Příkaz mini install-statusline",
+  "goal": "Add a visible mini install-statusline command (the install counterpart to mini uninstall) that enables the mini status line via the existing installStatusline() — adding the statusLine block to ~/.claude/settings.json, never overwriting a foreign one and preserving other keys — with --dry-run and a clear summary, plus docs (README + docs/non-interactive/install-statusline.md) and updated pointers from the postinstall opt-in hint and mini uninstall.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "install-statusline command logic",
+      "status": "done",
+      "detail": "New src/commands/install-statusline.ts: calls installStatusline(); --dry-run previews; prints a clear summary distinguishing added / already enabled (mini's own) / left a foreign statusLine untouched (via isMiniStatusline on the current file). Names the ~/.claude/settings.json path."
+    },
+    {
+      "title": "Wire visible mini install-statusline into CLI",
+      "status": "done",
+      "detail": "Add a visible install-statusline command in cli.ts with --dry-run, delegating to the new command."
+    },
+    {
+      "title": "Update pointers",
+      "status": "done",
+      "detail": "Postinstall opt-in hint points to mini install-statusline; mini uninstall note/related and the install-commands docs mention it as the enable counterpart."
+    },
+    {
+      "title": "Tests for install-statusline",
+      "status": "done",
+      "detail": "Added on missing/empty file, idempotent when mini's already present, leaves a foreign statusLine untouched, --dry-run writes nothing."
+    },
+    {
+      "title": "Docs: README + page + index",
+      "status": "done",
+      "detail": "Update the README opt-in wording, add docs/non-interactive/install-statusline.md (console-only) per convention, add an index row under Install & cleanup."
+    },
+    {
+      "title": "Verify: typecheck, tests, --help, smoke",
+      "status": "done",
+      "detail": "npm run typecheck + npm test green; mini --help lists install-statusline; smoke test in an isolated HOME (added -> idempotent -> foreign left intact)."
+    }
+  ],
+  "startedAt": "2026-06-02T07:48:38.933Z",
+  "completedAt": "2026-06-02T07:53:52.264Z",
+  "autoCommit": {
+    "preSha": "ffefb0597b9cc67c1c88cfda49c3560505cbde4f",
+    "subject": "Phase 113: Příkaz mini install-statusline"
+  }
+}

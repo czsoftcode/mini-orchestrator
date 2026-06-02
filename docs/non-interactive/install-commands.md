@@ -81,11 +81,13 @@ $ mini install-commands --user --dry-run
 - The slash commands are how the interactive (`/mini:*`) variants exist at all —
   see the [`interactive/`](../interactive/) pages for what each one does.
 - This command never edits `~/.claude/settings.json`. To enable the status line
-  see [`mini upgrade`](upgrade.md) / the README; to remove everything mini added
-  use [`mini uninstall`](uninstall.md).
+  use [`mini install-statusline`](install-statusline.md); to remove everything
+  mini added use [`mini uninstall`](uninstall.md).
 
 ## Related
 
+- [`mini install-statusline`](install-statusline.md) — enable the status line
+  (the separate, opt-in part of the setup).
 - [`mini uninstall`](uninstall.md) — removes the commands this installs (and the
   mini status line).
 - [`mini upgrade`](upgrade.md) / [`/mini:upgrade`](../interactive/upgrade.md) —

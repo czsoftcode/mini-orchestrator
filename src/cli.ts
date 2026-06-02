@@ -441,6 +441,17 @@ program
   });
 
 program
+  .command('install-statusline')
+  .description(
+    "Enables the mini status line by adding a statusLine block to ~/.claude/settings.json. Opt-in counterpart to the install — never overwrites an existing/foreign status line. Use --dry-run to preview.",
+  )
+  .option('--dry-run', 'Preview only — print what would happen, change nothing.')
+  .action(async (opts: { dryRun?: boolean }) => {
+    const { installStatuslineCommand } = await import('./commands/install-statusline.js');
+    await installStatuslineCommand({ dryRun: opts.dryRun });
+  });
+
+program
   .command('uninstall')
   .description(
     "Removes the /mini:* slash commands (user-scope ~/.claude/commands/mini and the project-scope .claude/commands/mini) and mini's own status line from ~/.claude/settings.json. A foreign status line is left intact. Run before/after `npm uninstall -g mini-orchestrator` to clean up fully.",

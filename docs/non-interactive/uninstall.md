@@ -89,5 +89,7 @@ mini uninstall will:
 
 - [`mini install-commands`](install-commands.md) — installs the commands this
   removes.
+- [`mini install-statusline`](install-statusline.md) — enables the status line
+  this removes (its opt-in counterpart).
 - [`mini upgrade`](upgrade.md) / [`/mini:upgrade`](../interactive/upgrade.md) —
   update mini instead of removing it.
