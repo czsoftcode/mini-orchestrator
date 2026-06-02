@@ -454,7 +454,7 @@ program
 program
   .command('uninstall')
   .description(
-    "Removes the /mini:* slash commands (user-scope ~/.claude/commands/mini and the project-scope .claude/commands/mini) and mini's own status line from ~/.claude/settings.json. A foreign status line is left intact. Run before/after `npm uninstall -g mini-orchestrator` to clean up fully.",
+    "Removes the /mini:* slash commands (user-scope ~/.claude/commands/mini and the project-scope .claude/commands/mini) and mini's own status line from ~/.claude/settings.json. A foreign status line is left intact. Run this BEFORE `npm uninstall -g mini-orchestrator` (which does not run it for you and removes the mini binary); afterwards use `npx mini-orchestrator uninstall`.",
   )
   .option('--dry-run', 'Preview only — print what would be removed, change nothing.')
   .option('-y, --yes', 'Skip the confirmation prompt.')

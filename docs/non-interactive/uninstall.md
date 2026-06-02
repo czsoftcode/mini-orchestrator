@@ -5,8 +5,8 @@
 > [`mini install-commands`](install-commands.md) and the npm `postinstall` hook.
 
 > **Console-only.** This command has **no** `/mini:*` slash variant — you run it
-> in a terminal, typically right before or after `npm uninstall -g
-> mini-orchestrator` to clean up fully.
+> in a terminal, typically **right before** `npm uninstall -g mini-orchestrator`
+> to clean up fully (it needs the `mini` binary, which the npm uninstall removes).
 
 ## Synopsis
 
@@ -78,8 +78,18 @@ mini uninstall will:
 
 ## Notes
 
-- It removes config mini wrote, **not** the npm package itself — finish with
-  `npm uninstall -g mini-orchestrator`.
+- It removes config mini wrote, **not** the npm package itself. **Run it first,
+  then** remove the package — `npm uninstall -g mini-orchestrator` does **not**
+  run `mini uninstall` for you (npm runs no script on uninstall), and once the
+  package is gone the `mini` binary is too. Full cleanup:
+
+  ```bash
+  mini uninstall                       # remove mini's Claude Code config
+  npm uninstall -g mini-orchestrator   # then remove the package
+  ```
+
+  If you already removed the package, run the cleanup via npx:
+  `npx mini-orchestrator uninstall`.
 - Your project's `.mini/` state directory is **never** touched; this command is
   about Claude Code's global/project config only.
 - Safe to run when nothing is installed: it reports "nothing to remove" and exits
