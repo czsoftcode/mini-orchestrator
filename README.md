@@ -1,5 +1,7 @@
 # mini
 
+[![CI](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml)
+
 A minimalist CLI orchestrator built on top of **Claude Code**. It keeps the project state, sends Claude only the essentials, and uses your Pro/Max subscription (no API keys).
 
 **Website:** [miniorchestrator.com](https://miniorchestrator.com)

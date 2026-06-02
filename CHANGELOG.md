@@ -6,7 +6,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-06-02
+
 ### Added
+
+- **Continuous integration.** Added a GitHub Actions workflow
+  (`.github/workflows/ci.yml`) that runs `typecheck`, the test suite and `build`
+  on push to `main` and on pull requests, across Node 20 and 22, plus a CI status
+  badge in the README.
 
 - **README "Backers" section.** A thank-you/call-to-action section with a
   sponsorkit-style `<!-- sponsors -->` placeholder, ready to list project backers

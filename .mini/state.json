@@ -587,6 +587,11 @@
       "id": 117,
       "title": "README Backers section",
       "status": "done"
+    },
+    {
+      "id": 118,
+      "title": "CI workflow for tests and typecheck",
+      "status": "done"
     }
   ],
   "models": {

@@ -1,0 +1,29 @@
+{
+  "id": 118,
+  "title": "CI workflow for tests and typecheck",
+  "goal": "Add a GitHub Actions CI workflow (.github/workflows/ci.yml) that runs typecheck, tests and build on push to main and on pull requests across Node 20 and 22, and add a CI status badge to the README.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add .github/workflows/ci.yml",
+      "status": "done",
+      "detail": "GitHub Actions: on push to main + pull_request, matrix Node 20 and 22, steps checkout / setup-node (npm cache) / npm ci / npm run typecheck / npm test / npm run build."
+    },
+    {
+      "title": "Add CI badge to README",
+      "status": "done",
+      "detail": "A CI status badge near the top of the README pointing at the ci.yml workflow runs."
+    },
+    {
+      "title": "Wrap up and checks",
+      "status": "done",
+      "detail": "Validate ci.yml is valid YAML, npm run typecheck and npm test stay green locally."
+    }
+  ],
+  "startedAt": "2026-06-02T10:36:19.176Z",
+  "completedAt": "2026-06-02T10:38:00.440Z",
+  "autoCommit": {
+    "preSha": "975b1d7871a7e74fdd57cf63e7ed9825ce00c4b5",
+    "subject": "Phase 118: CI workflow for tests and typecheck"
+  }
+}
