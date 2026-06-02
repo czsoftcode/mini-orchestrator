@@ -552,6 +552,11 @@
       "id": 110,
       "title": "Status line opt-in při auto instalaci",
       "status": "done"
+    },
+    {
+      "id": 111,
+      "title": "Příkaz mini uninstall",
+      "status": "done"
     }
   ],
   "models": {

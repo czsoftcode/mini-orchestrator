@@ -6,6 +6,18 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **`mini uninstall` command.** A visible counterpart to install/postinstall that
+  cleans up everything mini wrote outside the project tree: it removes the
+  `/mini:*` slash commands (user-scope `~/.claude/commands/mini` and, when
+  present, the project-scope `.claude/commands/mini`) and strips **only mini's
+  own** status line from `~/.claude/settings.json` — a foreign status line is
+  left intact. Supports `--dry-run` (preview, changes nothing) and `-y/--yes`
+  (skip the confirmation); without a TTY and without `--yes` it aborts rather
+  than act unprompted. Run it before/after `npm uninstall -g mini-orchestrator`
+  to fully clean up.
+
 ### Changed
 
 - **Global install no longer silently edits `~/.claude/settings.json`.** On a

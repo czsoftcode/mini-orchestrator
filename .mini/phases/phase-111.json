@@ -1,0 +1,39 @@
+{
+  "id": 111,
+  "title": "Příkaz mini uninstall",
+  "goal": "Add a visible mini uninstall command that removes the /mini:* slash commands (user-scope ~/.claude/commands/mini and, when present, project-scope .claude/commands/mini) and strips only mini's own statusLine block from ~/.claude/settings.json (recognized by the mini statusline command, leaving a foreign one intact), with --dry-run and a confirmation prompt.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Recognize + remove mini statusLine",
+      "status": "done",
+      "detail": "In statuslineSettings.ts add isMiniStatusline(command) (matches mini's .../cli.js statusline, not a foreign one like my-own-statusline), a pure removeStatusline(settings) and an IO removeStatuslineFromSettings({home, dryRun}) that strips only mini's statusLine, preserves other keys, leaves a foreign/absent one untouched. Unit tests."
+    },
+    {
+      "title": "uninstall() command logic",
+      "status": "done",
+      "detail": "New src/commands/uninstall.ts: removes user-scope ~/.claude/commands/mini and project-scope .claude/commands/mini when present, calls removeStatuslineFromSettings; --dry-run reports without writing; confirmation prompt (skipped by --yes; without a TTY and without --yes it aborts with a hint). Prints a summary of what was removed."
+    },
+    {
+      "title": "Wire visible mini uninstall into CLI",
+      "status": "done",
+      "detail": "Add a visible command in cli.ts with --dry-run and --yes, delegating to uninstall()."
+    },
+    {
+      "title": "Tests for uninstall",
+      "status": "done",
+      "detail": "Both scopes removed when present, mini statusLine stripped, foreign statusLine kept, --dry-run writes nothing, nothing-to-do path."
+    },
+    {
+      "title": "Verify: typecheck + full tests",
+      "status": "done",
+      "detail": "npm run typecheck and npm test green."
+    }
+  ],
+  "startedAt": "2026-06-02T07:23:47.372Z",
+  "completedAt": "2026-06-02T07:28:58.128Z",
+  "autoCommit": {
+    "preSha": "409e787eee659ba79c1cf8832d2e86f744d34135",
+    "subject": "Phase 111: Příkaz mini uninstall"
+  }
+}

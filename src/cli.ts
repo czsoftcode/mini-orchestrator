@@ -440,6 +440,18 @@ program
   });
 
 program
+  .command('uninstall')
+  .description(
+    "Removes the /mini:* slash commands (user-scope ~/.claude/commands/mini and the project-scope .claude/commands/mini) and mini's own status line from ~/.claude/settings.json. A foreign status line is left intact. Run before/after `npm uninstall -g mini-orchestrator` to clean up fully.",
+  )
+  .option('--dry-run', 'Preview only — print what would be removed, change nothing.')
+  .option('-y, --yes', 'Skip the confirmation prompt.')
+  .action(async (opts: { dryRun?: boolean; yes?: boolean }) => {
+    const { uninstall } = await import('./commands/uninstall.js');
+    await uninstall({ dryRun: opts.dryRun, yes: opts.yes });
+  });
+
+program
   .command('model [scope] [name]')
   .description('Model for the project. Examples: "mini model" (interactive), "mini model show", "mini model sonnet" (default), "mini model do opus", "mini model do default" (clears the override), "mini model reset".')
   .action(async (scope?: string, name?: string) => {
