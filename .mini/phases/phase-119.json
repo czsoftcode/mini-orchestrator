@@ -1,0 +1,29 @@
+{
+  "id": 119,
+  "title": "Critical-feedback rule in CLAUDE.md",
+  "goal": "Add a short \"Working style\" section to the project CLAUDE.md instructing Claude not to blindly agree and to give honest, including critical, feedback.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add \"Working style\" section to CLAUDE.md",
+      "status": "done",
+      "detail": "New ## Working style section in the project CLAUDE.md with two English instructions: don't blindly agree with proposals; give honest, including critical, feedback."
+    },
+    {
+      "title": "Place it without clashing with language rules",
+      "status": "done",
+      "detail": "Section sits separately from the Project language block so behavioral guidance isn't mixed with the English-only program-text rules; wording stays consistent with the file's tone."
+    },
+    {
+      "title": "Wrap up and checks",
+      "status": "done",
+      "detail": "Re-read the section in context; confirm it's valid English and reads cleanly."
+    }
+  ],
+  "startedAt": "2026-06-03T14:05:48.377Z",
+  "completedAt": "2026-06-03T14:13:37.570Z",
+  "autoCommit": {
+    "preSha": "6cfbe1f8548e1de0252dca8bd73ecb8473c9fe6e",
+    "subject": "Phase 119: Critical-feedback rule in CLAUDE.md"
+  }
+}

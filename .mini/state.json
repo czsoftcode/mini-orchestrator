@@ -592,6 +592,11 @@
       "id": 118,
       "title": "CI workflow for tests and typecheck",
       "status": "done"
+    },
+    {
+      "id": 119,
+      "title": "Critical-feedback rule in CLAUDE.md",
+      "status": "done"
     }
   ],
   "models": {

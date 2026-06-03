@@ -22,3 +22,10 @@ Left untouched (not translated):
 - quoted foreign error messages and tool output
 - the parsers' response contract (`TITLE:`, `GOAL:`, `STEP:`, …) and status
   words (`done`/`doing`/`todo`/…)
+
+## Working style
+
+- **Don't blindly agree with everything I propose.** If an idea is flawed,
+  risky or has a better alternative, say so.
+- **Give me honest feedback, including critical feedback.** Point out problems,
+  trade-offs and mistakes directly rather than smoothing them over.
