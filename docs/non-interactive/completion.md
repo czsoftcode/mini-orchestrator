@@ -18,13 +18,15 @@ mini completion zsh     # print the zsh completion script
 
 The script is written to stdout — you wire it into your shell once and then
 `Tab` completes `mini`'s subcommands (`mini ver<Tab>` → `mini verify`,
-`mini <Tab>` → the full command list) and, after a command, that command's
-option flags (`mini done --<Tab>` → `--apply --accept-verify --bump --push`).
-Arguments that don't start with `-` fall back to filename completion.
+`mini <Tab>` → the full command list), after a command that command's option
+flags (`mini done --<Tab>` → `--apply --accept-verify --bump --push`), and after
+a flag that takes a fixed set of values, those values (`mini done --bump <Tab>` →
+`none patch minor major`). Arguments that don't start with `-` and aren't a
+known flag value fall back to filename completion.
 
-The completed commands and their flags are derived from `mini` itself at the
-moment you generate the script, so they always match the installed version —
-regenerate it after an upgrade to pick up new commands or flags.
+The completed commands, flags and flag values are derived from `mini` itself at
+the moment you generate the script, so they always match the installed version —
+regenerate it after an upgrade to pick up new commands, flags or values.
 
 ## Enabling it
 
@@ -56,9 +58,10 @@ effect.
 ## Notes
 
 - Regenerate the script after `mini upgrade` so completion knows about any new
-  commands or flags.
-- Completion covers command names and each command's option flags; it does not
-  complete a flag's *value* (e.g. the level after `--bump`).
+  commands, flags or values.
+- Flag-value completion covers only flags with a fixed set of choices (currently
+  `--bump`); free-form values (a title, a path, a number) fall back to filename
+  completion.
 
 ## Related
 

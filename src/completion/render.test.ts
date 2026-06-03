@@ -4,9 +4,12 @@ import { isShell, renderCompletion, SHELLS } from './render.js';
 const SPEC = {
   binName: 'mini',
   commands: [
-    { name: 'init', flags: ['--apply', '--name'] },
+    { name: 'init', flags: [{ name: '--apply' }, { name: '--name' }] },
     { name: 'next', flags: [] },
-    { name: 'done', flags: ['--apply', '--bump', '--push'] },
+    {
+      name: 'done',
+      flags: [{ name: '--apply' }, { name: '--bump', values: ['none', 'patch', 'minor', 'major'] }],
+    },
   ],
 };
 
@@ -35,15 +38,17 @@ describe('renderCompletion bash', () => {
   });
 
   it('completes a command’s flags when the word starts with a dash', () => {
-    expect(script).toContain('done) flags="--apply --bump --push" ;;');
+    expect(script).toContain('done) flags="--apply --bump" ;;');
   });
 
-  it('omits a case branch for flagless commands', () => {
-    expect(script).not.toContain('next) flags=');
+  it('completes a flag’s enumerated values when it is the previous word', () => {
+    expect(script).toContain(
+      'done:--bump) COMPREPLY=( $(compgen -W "none patch minor major" -- "${cur}") ); return 0 ;;',
+    );
   });
 
-  it('falls back to file completion for further arguments', () => {
-    expect(script).toContain('compgen -f');
+  it('omits a value branch for flags without values', () => {
+    expect(script).not.toContain('done:--apply)');
   });
 
   it('matches the snapshot', () => {
@@ -51,20 +56,24 @@ describe('renderCompletion bash', () => {
       "# bash completion for mini
       # Enable with: source <(mini completion bash)
       _mini_completion() {
-        local cur cword cmd flags
+        local cur prev cword cmd flags
         cur="\${COMP_WORDS[COMP_CWORD]}"
+        prev="\${COMP_WORDS[COMP_CWORD-1]}"
         cword=\${COMP_CWORD}
         local commands="init next done"
         if [ "\${cword}" -eq 1 ]; then
           COMPREPLY=( $(compgen -W "\${commands}" -- "\${cur}") )
           return 0
         fi
+        cmd="\${COMP_WORDS[1]}"
+        case "\${cmd}:\${prev}" in
+            done:--bump) COMPREPLY=( $(compgen -W "none patch minor major" -- "\${cur}") ); return 0 ;;
+        esac
         if [[ "\${cur}" == -* ]]; then
-          cmd="\${COMP_WORDS[1]}"
           flags=""
           case "\${cmd}" in
             init) flags="--apply --name" ;;
-            done) flags="--apply --bump --push" ;;
+            done) flags="--apply --bump" ;;
           esac
           COMPREPLY=( $(compgen -W "\${flags}" -- "\${cur}") )
           return 0
@@ -89,12 +98,8 @@ describe('renderCompletion zsh', () => {
     expect(script).toContain('compdef _mini mini');
   });
 
-  it('lists the command names', () => {
-    expect(script).toContain('commands=(init next done)');
-  });
-
-  it('completes a command’s flags', () => {
-    expect(script).toContain('done) flags=(--apply --bump --push) ;;');
+  it('completes a flag’s enumerated values', () => {
+    expect(script).toContain('done:--bump) compadd -- none patch minor major; return ;;');
   });
 
   it('matches the snapshot', () => {
@@ -104,15 +109,21 @@ describe('renderCompletion zsh', () => {
       # Enable with: source <(mini completion zsh)
       _mini() {
         local -a commands flags
+        local cmd prev
         commands=(init next done)
         if (( CURRENT == 2 )); then
           compadd -- \${commands}
           return
         fi
+        cmd=\${words[2]}
+        prev=\${words[CURRENT-1]}
+        case \${cmd}:\${prev} in
+            done:--bump) compadd -- none patch minor major; return ;;
+        esac
         if [[ \${words[CURRENT]} == -* ]]; then
-          case \${words[2]} in
+          case \${cmd} in
             init) flags=(--apply --name) ;;
-            done) flags=(--apply --bump --push) ;;
+            done) flags=(--apply --bump) ;;
           esac
           compadd -- \${flags}
           return

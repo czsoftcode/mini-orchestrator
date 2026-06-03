@@ -14,21 +14,22 @@ describe('completion command', () => {
     });
 
     const ok = completion('bash', [
-      { name: 'init', flags: ['--apply'] },
-      { name: 'next', flags: [] },
+      { name: 'init', flags: [{ name: '--apply' }] },
+      { name: 'done', flags: [{ name: '--bump', values: ['none', 'patch'] }] },
     ]);
 
     expect(ok).toBe(true);
     expect(out).toContain('complete -F _mini_completion mini');
-    expect(out).toContain('init next');
+    expect(out).toContain('init done');
     expect(out).toContain('init) flags="--apply" ;;');
+    expect(out).toContain('done:--bump) COMPREPLY=( $(compgen -W "none patch"');
   });
 
   it('reports an error and returns false for an unsupported shell', () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
     const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
-    const ok = completion('fish', [{ name: 'init', flags: [] }]);
+    const ok = completion('fish', [{ name: 'init', flags: [{ name: '--apply' }] }]);
 
     expect(ok).toBe(false);
     expect(write).not.toHaveBeenCalled();

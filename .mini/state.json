@@ -607,6 +607,11 @@
       "id": 121,
       "title": "Flag completion in mini completion",
       "status": "done"
+    },
+    {
+      "id": 122,
+      "title": "Flag value completion",
+      "status": "done"
     }
   ],
   "models": {

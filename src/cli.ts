@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command, InvalidArgumentError } from 'commander';
+import { Command, InvalidArgumentError, Option } from 'commander';
 import { readPackageVersion } from './version.js';
 
 const program = new Command();
@@ -10,13 +10,6 @@ function parseMaxTurns(value: string): number {
     throw new InvalidArgumentError('Must be a positive integer (e.g. 5).');
   }
   return n;
-}
-
-function parseBumpLevel(value: string): 'patch' | 'minor' | 'major' | 'none' {
-  if (value !== 'patch' && value !== 'minor' && value !== 'major' && value !== 'none') {
-    throw new InvalidArgumentError('Must be none, patch, minor or major.');
-  }
-  return value;
 }
 
 /**
@@ -181,7 +174,12 @@ program
   .description('Human verification — asks whether it works and moves the state forward.')
   .option('--apply', 'Non-interactively move the state according to the report (no questions). For /mini:done.')
   .option('--accept-verify', 'With --apply: treat items for manual verification as approved (verification happened in the chat).')
-  .option('--bump <level>', 'Version bump level in package.json when closing the phase: none | patch | minor | major (default none — do not bump). With --push patch | minor | major is required.', parseBumpLevel)
+  .addOption(
+    new Option(
+      '--bump <level>',
+      'Version bump level in package.json when closing the phase: none | patch | minor | major (default none — do not bump). With --push patch | minor | major is required.',
+    ).choices(['none', 'patch', 'minor', 'major']),
+  )
   .option('--push', 'After committing the phase, push to the remote (git push). Requires --bump patch | minor | major.')
   .action(async (opts: { apply?: boolean; acceptVerify?: boolean; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean }) => {
     ensurePushHasBump(opts.bump, opts.push);
@@ -203,7 +201,12 @@ program
   .command('auto')
   .description('Auto chain: next → plan → (do → done){for each step}. Drives the phase on its own, but stops and asks a human at items for manual verification (verify) — it is not a fully unattended run.')
   .option('--max-turns <n>', 'Maximum number of Claude Code responses in each session — after N responses the session stops automatically (saves tokens).', parseMaxTurns)
-  .option('--bump <level>', 'Version bump level in package.json when closing the phase: none | patch | minor | major (default none — do not bump). With --push patch | minor | major is required.', parseBumpLevel)
+  .addOption(
+    new Option(
+      '--bump <level>',
+      'Version bump level in package.json when closing the phase: none | patch | minor | major (default none — do not bump). With --push patch | minor | major is required.',
+    ).choices(['none', 'patch', 'minor', 'major']),
+  )
   .option('--push', 'After committing the phase, push to the remote (git push). Requires --bump patch | minor | major.')
   .action(async (opts: { maxTurns?: number; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean }) => {
     ensurePushHasBump(opts.bump, opts.push);
@@ -483,7 +486,12 @@ program
       .filter((c) => (c as unknown as { _hidden?: boolean })._hidden !== true)
       .map((c) => ({
         name: c.name(),
-        flags: c.options.flatMap((o) => [o.short, o.long].filter((f): f is string => !!f)),
+        flags: c.options.flatMap((o) => {
+          const values = o.argChoices && o.argChoices.length > 0 ? o.argChoices : undefined;
+          return [o.short, o.long]
+            .filter((f): f is string => !!f)
+            .map((name) => (values ? { name, values } : { name }));
+        }),
       }));
     if (!commands.some((c) => c.name === 'help')) commands.push({ name: 'help', flags: [] });
     if (!completion(shell, commands)) process.exit(1);

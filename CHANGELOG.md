@@ -9,12 +9,20 @@ All notable changes to this project are recorded here. The format is based on
 ### Added
 
 - **Shell completion.** New console-only command `mini completion <bash|zsh>`
-  prints a completion script that completes `mini`'s subcommands and each
-  command's option flags (e.g. `mini done --`+Tab → `--apply --accept-verify
-  --bump --push`). Enable it with `source <(mini completion bash)` (or `zsh`) in
-  your shell rc; the bash script needs no `bash-completion` package. The commands
-  and flags are derived from the CLI at generation time, so they stay in sync
-  across upgrades.
+  prints a completion script that completes `mini`'s subcommands, each command's
+  option flags (e.g. `mini done --`+Tab → `--apply --accept-verify --bump
+  --push`) and fixed flag values (`mini done --bump`+Tab → `none patch minor
+  major`). Enable it with `source <(mini completion bash)` (or `zsh`) in your
+  shell rc; the bash script needs no `bash-completion` package. The commands,
+  flags and values are derived from the CLI at generation time, so they stay in
+  sync across upgrades.
+
+### Changed
+
+- **`--bump` now validates its value.** The `--bump` option on `mini done` /
+  `mini auto` is defined with an explicit choice set, so an invalid level (e.g.
+  `--bump foo`) is rejected with a clear "Allowed choices are none, patch, minor,
+  major" message and the choices show up in `--help`.
 
 ## [1.15.0] - 2026-06-02
 
