@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { context, isContextCommand, CONTEXT_COMMANDS } from './context.js';
 import { save } from '../state/store.js';
 import { writeProject } from '../state/store.js';
+import { writeTodos } from '../state/todoStore.js';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import type { Phase, ProjectState } from '../state/types.js';
 
@@ -75,6 +76,23 @@ describe('context', () => {
     await context('next', ['add', 'CSV', 'export']);
     expect(out).toContain('add CSV export');
     expect(out).toContain("User's idea");
+  });
+
+  it('next surfaces open todos with their archive numbers (counting done items)', async () => {
+    await setupProject([], null);
+    await writeTodos(
+      [
+        { text: 'already shipped', done: true },
+        { text: 'add CSV export', done: false },
+      ],
+      cwd,
+    );
+    await context('next');
+    expect(out).toContain('Ideas in the backlog');
+    // The open item is at archive position 2, so --from-todo would be 2.
+    expect(out).toContain('- [2] add CSV export');
+    expect(out).not.toContain('already shipped');
+    expect(out).toContain('--from-todo');
   });
 
   it('plan without a current phase → exit code 1', async () => {

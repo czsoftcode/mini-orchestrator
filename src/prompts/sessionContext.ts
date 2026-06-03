@@ -30,12 +30,19 @@ const PHASE_WORD: Record<PhaseStatus, string> = {
   skipped: 'skipped',
 };
 
+/** An open backlog item with its 1-based position in `.mini/todo.md`. */
+export interface OpenTodo {
+  /** 1-based archive position (counted over all items) — the `<n>` for `--from-todo`. */
+  index: number;
+  text: string;
+}
+
 export interface NextSessionOptions {
   userHint?: string;
   /** Obsah `.mini/last-memory.md`, pokud existuje. */
   lastMemoryMd?: string;
   /** Open items from the `.mini/todo.md` archive, offered as candidate ideas. */
-  openTodos?: string[];
+  openTodos?: OpenTodo[];
 }
 
 /**
@@ -71,12 +78,18 @@ export function buildNextSessionPrompt(
     : `# Ask first\nThe user gave you nothing for the next phase. Before you propose anything, **ask them** whether they have their own idea for the next phase (they may have forgotten to provide it), or whether to leave it up to you. Only then continue based on the answer:\n- if they have their own idea → start from exactly that,\n- if they leave it to you → sketch **2-3** candidate ideas based on the progress so far and the state of the code; propose the most sensible one as the phase, and **offer to stash the rest** into the project's ideas archive with \`mini todo add "<text>"\` (one call per idea, only after the user approves) so they aren't lost.\n\n`;
 
   // Open items from `.mini/todo.md` — candidate ideas the user collected earlier.
-  const openTodos = (options.openTodos ?? []).map((t) => t.trim()).filter(Boolean);
+  // Each keeps its 1-based archive position so a phase born from one can be saved
+  // with `mini next --apply --from-todo <n>`, which ticks the item off in one go.
+  const openTodos = (options.openTodos ?? [])
+    .map((t) => ({ index: t.index, text: t.text.trim() }))
+    .filter((t) => t.text);
   const todoBlock =
     openTodos.length > 0
-      ? `# Ideas in the backlog\nThe project keeps an ideas/changes archive (\`mini todo\`). Open items, any of which could become the next phase:\n${openTodos
-          .map((t) => `- ${t}`)
-          .join('\n')}\nIf one of them fits as the next step, propose it (and after it's done, tick it off with \`mini todo done <n>\`).\n\n`
+      ? `# Ideas in the backlog\nThe project keeps an ideas/changes archive (\`mini todo\`). Open items (numbered by their archive position), any of which could become the next phase:\n${openTodos
+          .map((t) => `- [${t.index}] ${t.text}`)
+          .join(
+            '\n',
+          )}\nIf one of them fits as the next step, propose it. When you save such a phase, add \`--from-todo <n>\` (the bracketed number) to \`mini next --apply\` so the source item is ticked off automatically.\n\n`
       : '';
 
   return `You are in a Claude Code session helping the user build a project in small phases.
@@ -94,6 +107,8 @@ Show the proposal (name, max 5 words + goal in 1 sentence) briefly to the user. 
 \`\`\`
 mini next --apply --title "<name>" --goal "<phase goal>"
 \`\`\`
+
+If the phase comes from a backlog item above, append \`--from-todo <n>\` (its bracketed number) so that item is ticked off in the archive automatically.
 
 Change the phase state only with this command — never edit \`.mini/state.json\` by hand.
 

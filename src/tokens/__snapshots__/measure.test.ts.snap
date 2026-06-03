@@ -5,7 +5,7 @@ exports[`render > konzolový výpis nad fixními vstupy (snapshot) 1`] = `
   auto         reálný=1272  šablona=1027  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
   do           reálný=1174  šablona=1154  kontext=20  (vkládaný kontext 20 tok: fáze (název + cíl) 60 %, kroky 40 %)
   plan         reálný=822  šablona=577  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
-  next         reálný=778  šablona=585  kontext=193  (vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %)
+  next         reálný=816  šablona=623  kontext=193  (vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %)
   done         reálný=694  šablona=612  kontext=82  (vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %)
   discuss      reálný=641  šablona=521  kontext=120  (vkládaný kontext 120 tok: projekt 83 %, fáze (název + cíl) 10 %)
   writeMemory  reálný=485  šablona=358  kontext=127  (vkládaný kontext 127 tok: projekt 79 %, fáze (název + cíl) 9 %)"
@@ -23,7 +23,7 @@ obsahových bloků (projekt, historie fází, poznámky, …).
 | auto | 1272 | 1027 | 245 |
 | do | 1174 | 1154 | 20 |
 | plan | 822 | 577 | 245 |
-| next | 778 | 585 | 193 |
+| next | 816 | 623 | 193 |
 | done | 694 | 612 | 82 |
 | discuss | 641 | 521 | 120 |
 | writeMemory | 485 | 358 | 127 |

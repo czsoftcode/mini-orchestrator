@@ -57,13 +57,18 @@ describe('buildNextSessionPrompt', () => {
     expect(p).toContain('minule jsme udělali X');
   });
 
-  it('surfaces open todo items as candidate ideas', () => {
+  it('surfaces open todo items as candidate ideas with their archive numbers', () => {
     const p = buildNextSessionPrompt(PROJECT, state(), {
-      openTodos: ['add CSV export', 'support plugins'],
+      openTodos: [
+        { index: 3, text: 'add CSV export' },
+        { index: 7, text: 'support plugins' },
+      ],
     });
     expect(p).toContain('Ideas in the backlog');
-    expect(p).toContain('- add CSV export');
-    expect(p).toContain('- support plugins');
+    expect(p).toContain('- [3] add CSV export');
+    expect(p).toContain('- [7] support plugins');
+    // The prompt points Claude at --from-todo so the source item is auto-ticked.
+    expect(p).toContain('--from-todo');
   });
 
   it('omits the backlog block when there are no open todos', () => {

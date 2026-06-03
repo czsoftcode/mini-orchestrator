@@ -93,7 +93,12 @@ async function buildNextContext(
 ): Promise<string> {
   const userHint = extraArgs.join(' ').trim() || undefined;
   const lastMemoryMd = await readLastMemoryIfExists(cwd);
-  const openTodos = (await readTodos(cwd)).filter((t) => !t.done).map((t) => t.text);
+  // Keep each open item's 1-based archive position (counted over all items, like
+  // `mini todo done <n>`) so the prompt can offer `--from-todo <n>`.
+  const openTodos = (await readTodos(cwd))
+    .map((t, i) => ({ index: i + 1, text: t.text, done: t.done }))
+    .filter((t) => !t.done)
+    .map(({ index, text }) => ({ index, text }));
   return buildNextSessionPrompt(projectMd, stateFromHeader(header), {
     userHint,
     lastMemoryMd,

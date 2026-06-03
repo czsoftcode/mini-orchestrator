@@ -116,12 +116,17 @@ program
   .option('--apply', 'Non-interactively save a phase from --title/--goal (no Claude). For /mini:next.')
   .option('--title <title>', 'Title of the new phase (with --apply).')
   .option('--goal <goal>', 'Goal of the new phase (with --apply).')
-  .action(async (opts: { apply?: boolean; title?: string; goal?: string }) => {
+  .option(
+    '--from-todo <n>',
+    'Tick off backlog item number <n> (mini todo) after saving the phase (with --apply).',
+  )
+  .action(async (opts: { apply?: boolean; title?: string; goal?: string; fromTodo?: string }) => {
     if (opts.apply) {
       const title = requireOption(opts.title, '--title');
       const goal = requireOption(opts.goal, '--goal');
+      const fromTodo = opts.fromTodo !== undefined ? Number(opts.fromTodo) : undefined;
       const { applyNewPhase } = await import('./commands/next.js');
-      const r = await applyNewPhase(title, goal);
+      const r = await applyNewPhase(title, goal, fromTodo !== undefined ? { fromTodo } : {});
       if (!r.ok) process.exit(1);
       return;
     }

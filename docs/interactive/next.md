@@ -21,7 +21,8 @@ an argument; otherwise Claude looks at the progress so far and the
 2. It shows the proposed phase (short title + a one-sentence goal).
 3. After you approve, it saves with `mini next --apply --title … --goal …` and
    tells you to continue with [`/mini:discuss`](discuss.md) or
-   [`/mini:plan`](plan.md).
+   [`/mini:plan`](plan.md). If the phase came from a [todo](todo.md) backlog
+   item, it adds `--from-todo <n>` so that item is ticked off automatically.
 
 ## Example
 

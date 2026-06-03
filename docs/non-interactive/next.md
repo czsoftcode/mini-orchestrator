@@ -9,8 +9,9 @@ command proposes a phase in the session (using your idea or the
 ## Synopsis
 
 ```bash
-mini next                                   # interactive: Claude proposes a phase
-mini next --apply --title "…" --goal "…"    # non-interactively save a phase
+mini next                                          # interactive: Claude proposes a phase
+mini next --apply --title "…" --goal "…"           # non-interactively save a phase
+mini next --apply --title "…" --goal "…" --from-todo 3   # …and tick off backlog item 3
 ```
 
 ## Description
@@ -28,6 +29,7 @@ current phase in `proposed` state.
 | `--apply` | Non-interactively save a phase from `--title`/`--goal` (no Claude). |
 | `--title <title>` | Title of the new phase. **Required with `--apply`.** |
 | `--goal <goal>` | Goal of the new phase (one clear, verifiable sentence). **Required with `--apply`.** |
+| `--from-todo <n>` | After saving, tick off [todo](todo.md) item number `n` — the backlog item the phase came from. A bad reference (out of range / already done) only warns; the phase is still saved. Use with `--apply`. |
 
 ## Examples
 
@@ -45,7 +47,9 @@ $ mini next --apply \
   it into steps).
 - The open items in the [todo](todo.md) archive are offered by the interactive
   variant as candidate ideas — a place to park ideas you don't want to start
-  yet.
+  yet. Each is shown with its archive number; when a phase is born from one,
+  `--from-todo <n>` ticks that item off as the phase is saved, so the backlog
+  doesn't drift out of sync.
 
 ## Related
 

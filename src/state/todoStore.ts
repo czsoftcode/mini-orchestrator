@@ -48,6 +48,46 @@ export function serializeTodos(items: TodoItem[]): string {
   return `${HEADER}${body}\n`;
 }
 
+/** Outcome of {@link markTodoDone} — what happened to the referenced item. */
+export type MarkTodoResult =
+  | { status: 'ticked'; text: string }
+  | { status: 'already-done'; text: string }
+  | { status: 'out-of-range' }
+  | { status: 'no-todos' };
+
+/**
+ * Ticks off the archive item at the 1-based position `n` (counted over **all**
+ * items, done and open alike — the same numbering as `mini todo done <n>`),
+ * persisting the change. Used by `mini next --apply --from-todo <n>` to tick off
+ * the backlog item a phase was created from.
+ *
+ * Never throws on a bad reference: an empty archive, an out-of-range index or an
+ * item that is already ticked off each yield a descriptive result the caller can
+ * turn into a warning.
+ */
+export async function markTodoDone(
+  n: number,
+  cwd: string = process.cwd(),
+): Promise<MarkTodoResult> {
+  const items = await readTodos(cwd);
+  if (items.length === 0) {
+    return { status: 'no-todos' };
+  }
+  if (!Number.isInteger(n) || n < 1 || n > items.length) {
+    return { status: 'out-of-range' };
+  }
+  const item = items[n - 1];
+  if (!item) {
+    return { status: 'out-of-range' };
+  }
+  if (item.done) {
+    return { status: 'already-done', text: item.text };
+  }
+  item.done = true;
+  await writeTodos(items, cwd);
+  return { status: 'ticked', text: item.text };
+}
+
 /** Reads and parses `.mini/todo.md`; a missing file yields an empty list. */
 export async function readTodos(cwd: string = process.cwd()): Promise<TodoItem[]> {
   try {

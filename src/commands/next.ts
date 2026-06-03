@@ -5,6 +5,7 @@ import { buildNextPhasePrompt } from '../prompts/nextPhase.js';
 import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { resolveModel } from '../state/models.js';
 import { exists, load, readProject, save } from '../state/store.js';
+import { markTodoDone } from '../state/todoStore.js';
 import type { Phase, ProjectState } from '../state/types.js';
 import { ask, nonEmpty, trim } from '../ui/ask.js';
 import { log } from '../ui/log.js';
@@ -182,15 +183,43 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
 export async function applyNewPhase(
   title: string,
   goal: string,
-  cwd: string = process.cwd(),
+  opts: { fromTodo?: number; cwd?: string } = {},
 ): Promise<StepOutcome> {
+  const cwd = opts.cwd ?? process.cwd();
   if (!(await exists(cwd))) {
     log.warn('No project in this directory.');
     log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
   const state = await load(cwd);
-  return commitPhase(state, cwd, title, goal, { auto: true });
+  const outcome = await commitPhase(state, cwd, title, goal, { auto: true });
+  if (outcome.ok && opts.fromTodo !== undefined) {
+    await tickSourceTodo(opts.fromTodo, cwd);
+  }
+  return outcome;
+}
+
+/**
+ * Ticks off the backlog item a phase was created from (`--from-todo <n>`). A bad
+ * reference (out of range, already done, empty archive) is reported as a warning
+ * only — the phase is already saved, so it must not fail the command.
+ */
+async function tickSourceTodo(n: number, cwd: string): Promise<void> {
+  const result = await markTodoDone(n, cwd);
+  switch (result.status) {
+    case 'ticked':
+      log.success(`Ticked off todo ${n}: ${result.text}`);
+      return;
+    case 'already-done':
+      log.dim(`Todo ${n} was already done: ${result.text}`);
+      return;
+    case 'out-of-range':
+      log.warn(`Could not tick off todo ${n}: no such item in the archive.`);
+      return;
+    case 'no-todos':
+      log.warn(`Could not tick off todo ${n}: the archive is empty.`);
+      return;
+  }
 }
 
 async function addPhaseManually(

@@ -7,6 +7,7 @@ import { applyPlanSteps, parseStepsFromStdin } from './plan.js';
 import { applyDoStart } from './do.js';
 import { applyDone } from './done.js';
 import { load, save } from '../state/store.js';
+import { readTodos, writeTodos } from '../state/todoStore.js';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import type { Phase, ProjectState } from '../state/types.js';
 import { writePhaseMemory } from './writeMemory.js';
@@ -103,13 +104,13 @@ describe('parseStepsFromStdin', () => {
 
 describe('applyNewPhase', () => {
   it('without a project returns no-project', async () => {
-    const r = await applyNewPhase('A', 'goal', cwd);
+    const r = await applyNewPhase('A', 'goal', { cwd });
     expect(r).toEqual({ ok: false, reason: 'no-project' });
   });
 
   it('saves a new phase and sets it as current when it is the first', async () => {
     await save(makeState([], null), cwd);
-    const r = await applyNewPhase('First phase', 'when it is done', cwd);
+    const r = await applyNewPhase('First phase', 'when it is done', { cwd });
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases).toHaveLength(1);
@@ -119,11 +120,42 @@ describe('applyNewPhase', () => {
 
   it('the next phase gets an id 1 higher and the current one does not change', async () => {
     await save(makeState([{ id: 1, title: 'A', status: 'doing' }], 1), cwd);
-    const r = await applyNewPhase('B', 'goal B', cwd);
+    const r = await applyNewPhase('B', 'goal B', { cwd });
     expect(r.ok).toBe(true);
     const state = await load(cwd);
     expect(state.phases.map((p) => p.id)).toEqual([1, 2]);
     expect(state.currentPhaseId).toBe(1);
+  });
+
+  it('--from-todo ticks off the source backlog item after saving', async () => {
+    await save(makeState([], null), cwd);
+    await writeTodos(
+      [
+        { text: 'first idea', done: false },
+        { text: 'second idea', done: false },
+      ],
+      cwd,
+    );
+
+    const r = await applyNewPhase('From backlog', 'goal', { cwd, fromTodo: 2 });
+
+    expect(r.ok).toBe(true);
+    expect(await readTodos(cwd)).toEqual([
+      { text: 'first idea', done: false },
+      { text: 'second idea', done: true },
+    ]);
+  });
+
+  it('an out-of-range --from-todo does not fail the save', async () => {
+    await save(makeState([], null), cwd);
+    await writeTodos([{ text: 'only idea', done: false }], cwd);
+
+    const r = await applyNewPhase('From backlog', 'goal', { cwd, fromTodo: 9 });
+
+    expect(r.ok).toBe(true);
+    const state = await load(cwd);
+    expect(state.phases).toHaveLength(1);
+    expect(await readTodos(cwd)).toEqual([{ text: 'only idea', done: false }]);
   });
 });
 

@@ -1,0 +1,34 @@
+{
+  "id": 123,
+  "title": "Next odškrtne zdrojovou todo",
+  "goal": "mini next --apply gets an optional --from-todo <n> flag that, after saving the phase, ticks off that item in .mini/todo.md; the mini context next / slash-command instructions guide Claude to pass <n> when the idea came from the archive. Out-of-range or already-done items are handled with a warning, not a crash. Verifiable via tests.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "todoStore: helper markTodoDone(n)",
+      "status": "done",
+      "detail": "New function in todoStore.ts that ticks off an item by 1-based index (over all items); returns 'ticked' | 'out-of-range' | 'already-done' | 'no-todos' plus the item text. Reuses read/writeTodos. Covered by a unit test."
+    },
+    {
+      "title": "next --apply --from-todo <n> flag",
+      "status": "done",
+      "detail": "Add --from-todo <n> option to the next command, threaded into applyNewPhase; after saving the phase it calls markTodoDone, and an out-of-range / already-done index only warns (log.warn), never crashes. Test in next.test.ts."
+    },
+    {
+      "title": "Backlog block shows archive numbers + instruction",
+      "status": "done",
+      "detail": "openTodos carries its 1-based archive position, rendered as '- [n] text'; the prompt guides Claude to pass --from-todo <n> when the phase comes from the backlog. Update context.ts + buildNextSessionPrompt and sessionContext.test.ts."
+    },
+    {
+      "title": "Docs + snapshots",
+      "status": "done",
+      "detail": "Document --from-todo in docs/non-interactive/next.md (and cross-reference in todo.md); refresh the affected snapshots/tests."
+    }
+  ],
+  "startedAt": "2026-06-03T21:19:09.832Z",
+  "completedAt": "2026-06-03T21:27:01.567Z",
+  "autoCommit": {
+    "preSha": "3f5a36f62e829e4e78564361e89c79321b11a93e",
+    "subject": "Phase 123: Next odškrtne zdrojovou todo"
+  }
+}

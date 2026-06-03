@@ -23,6 +23,10 @@ A plain-markdown checklist of ideas you don't want to start as a phase yet. The
 open items are offered by [`mini next`](next.md) as candidate phase ideas. The
 `<n>` is the 1-based position from the listing. It changes **no** phase state.
 
+When a phase is born from a backlog item, you don't tick it off by hand —
+[`mini next --apply --from-todo <n>`](next.md) does it for you as the phase is
+saved, using the same `<n>`.
+
 ## Examples
 
 ```bash

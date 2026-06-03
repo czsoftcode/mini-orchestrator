@@ -17,6 +17,13 @@ All notable changes to this project are recorded here. The format is based on
   flags and values are derived from the CLI at generation time, so they stay in
   sync across upgrades.
 
+- **`mini next --apply --from-todo <n>`.** When you save a phase that grew out of
+  a [todo](docs/non-interactive/todo.md) backlog item, the new flag ticks that
+  item off in `.mini/todo.md` automatically, so the backlog never drifts out of
+  sync. The `/mini:next` prompt now lists open items with their archive number
+  (`- [n] …`) and tells Claude to pass `--from-todo <n>`. A bad reference (out of
+  range or already done) only warns — the phase is still saved.
+
 ### Changed
 
 - **`--bump` now validates its value.** The `--bump` option on `mini done` /
