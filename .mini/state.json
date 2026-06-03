@@ -622,6 +622,11 @@
       "id": 124,
       "title": "mini status --phase <n>",
       "status": "done"
+    },
+    {
+      "id": 125,
+      "title": "Doctor: orphaned phases & reports",
+      "status": "done"
     }
   ],
   "models": {

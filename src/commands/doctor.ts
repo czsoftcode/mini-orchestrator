@@ -3,10 +3,20 @@ import { join } from 'node:path';
 import pc from 'picocolors';
 import { CHANGELOG_FILE } from '../changelog.js';
 import { COMMAND_DEFS, COMMANDS_DIR } from '../install/commands.js';
-import { SCHEMA_VERSION, exists, projectPath, statePath } from '../state/store.js';
+import { RUN_DIR } from '../state/runReport.js';
+import {
+  SCHEMA_VERSION,
+  exists,
+  load,
+  phaseStem,
+  projectPath,
+  statePath,
+} from '../state/store.js';
+import type { Phase } from '../state/types.js';
 import { log } from '../ui/log.js';
 import { isNewer, readCache } from '../upgrade/versionCheck.js';
 import { readPackageVersion } from '../version.js';
+import { isOrphanedDoing } from './status.js';
 
 export type DoctorStatus = 'ok' | 'warn' | 'fail';
 
@@ -30,6 +40,16 @@ export interface DoctorInput {
   expectedSchema: number;
   hasProjectMd: boolean;
   hasChangelog: boolean;
+  /**
+   * Ids of phases stuck in `doing` with no open work left (orphaned) — should be
+   * closed via `mini done`. Empty when the project is healthy or has no phases.
+   */
+  orphanedDoingPhases: number[];
+  /**
+   * Filenames of run reports in `.mini/run/` whose phase no longer exists in the
+   * state (stale leftovers, e.g. after `mini undo` / `migrate --renumber`).
+   */
+  staleRunReports: string[];
   /** Number of `*.md` slash commands installed in the project scope. */
   installedCommands: number;
   /** Number of slash commands this mini build ships. */
@@ -63,6 +83,35 @@ export function buildDiagnostics(input: DoctorInput): DoctorCheck[] {
     });
   } else {
     checks.push({ label: 'Project', status: 'ok', detail: `state schema v${input.schemaVersion}` });
+  }
+
+  // Phase hygiene — only meaningful for an existing project.
+  if (input.projectExists) {
+    // Orphaned `doing` phases: stuck in "doing" with no open work left.
+    if (input.orphanedDoingPhases.length > 0) {
+      const ids = input.orphanedDoingPhases.join(', ');
+      checks.push({
+        label: 'Phases',
+        status: 'warn',
+        detail: `phase ${ids} stuck in "doing" with no open work`,
+        hint: 'Close it via `mini done` (or `mini undo` to step back)',
+      });
+    } else {
+      checks.push({ label: 'Phases', status: 'ok', detail: 'no orphaned "doing" phases' });
+    }
+
+    // Stale run reports: report files with no matching phase in the state.
+    if (input.staleRunReports.length > 0) {
+      const names = input.staleRunReports.join(', ');
+      checks.push({
+        label: 'Run reports',
+        status: 'warn',
+        detail: `${input.staleRunReports.length} stale (${names})`,
+        hint: 'Leftover reports with no phase — safe to delete from `.mini/run/`',
+      });
+    } else {
+      checks.push({ label: 'Run reports', status: 'ok', detail: 'no stale reports' });
+    }
   }
 
   // project.md.
@@ -134,6 +183,28 @@ export function buildDiagnostics(input: DoctorInput): DoctorCheck[] {
   return checks;
 }
 
+/**
+ * Picks the stale run reports out of a `.mini/run/` directory listing: report
+ * files (`phase-<id>.md`, not the transient `.prev.md` backups) whose `<id>`
+ * matches no phase in the state. Pure, so it is unit-testable. Returned sorted
+ * for a stable checklist.
+ */
+export function findStaleRunReports(runDirFiles: string[], phases: readonly Phase[]): string[] {
+  const valid = new Set(phases.map((p) => `${phaseStem(p.id)}.md`));
+  return runDirFiles
+    .filter((f) => /^phase-\d+(?:\.\d+)?\.md$/.test(f) && !valid.has(f))
+    .sort();
+}
+
+/** Lists the `.mini/run/` directory, returning `[]` when it doesn't exist. */
+async function listRunDir(cwd: string): Promise<string[]> {
+  try {
+    return await readdir(join(cwd, RUN_DIR));
+  } catch {
+    return [];
+  }
+}
+
 async function fileExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -177,13 +248,26 @@ const STATUS_RENDER: Record<DoctorStatus, { symbol: string; color: (s: string) =
 export async function doctor(): Promise<void> {
   const cwd = process.cwd();
 
-  const [projectExists, hasProjectMd, hasChangelog, installedCommands, cache] = await Promise.all([
-    exists(cwd),
-    fileExists(projectPath(cwd)),
-    fileExists(join(cwd, CHANGELOG_FILE)),
-    countInstalledCommands(cwd),
-    readCache(),
-  ]);
+  const [projectExists, hasProjectMd, hasChangelog, installedCommands, runDirFiles, cache] =
+    await Promise.all([
+      exists(cwd),
+      fileExists(projectPath(cwd)),
+      fileExists(join(cwd, CHANGELOG_FILE)),
+      countInstalledCommands(cwd),
+      listRunDir(cwd),
+      readCache(),
+    ]);
+
+  // Phase-level hygiene needs the full state (steps live in per-phase files).
+  let orphanedDoingPhases: number[] = [];
+  let staleRunReports: string[] = [];
+  if (projectExists) {
+    const state = await load(cwd);
+    orphanedDoingPhases = state.phases
+      .filter((p) => isOrphanedDoing(p, state.phases))
+      .map((p) => p.id);
+    staleRunReports = findStaleRunReports(runDirFiles, state.phases);
+  }
 
   const checks = buildDiagnostics({
     projectExists,
@@ -191,6 +275,8 @@ export async function doctor(): Promise<void> {
     expectedSchema: SCHEMA_VERSION,
     hasProjectMd,
     hasChangelog,
+    orphanedDoingPhases,
+    staleRunReports,
     installedCommands,
     expectedCommands: COMMAND_DEFS.length,
     currentVersion: readPackageVersion(),

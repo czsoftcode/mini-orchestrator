@@ -20,5 +20,5 @@
 - [x] mini completion: bash/zsh shell completion script for the CLI (mini completion bash)
 - [ ] C/C++ language mapper for mini map (only major gap in language coverage)
 - [x] mini next auto-ticks the source todo item the phase was created from
-- [ ] mini doctor: check for orphaned 'doing' phases and stale run reports
+- [x] mini doctor: check for orphaned 'doing' phases and stale run reports
 - [x] mini status --phase <n>: detail of a single phase (steps + detail + run report)

@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-06-03
+
 ### Added
 
 - **Shell completion.** New console-only command `mini completion <bash|zsh>`
@@ -29,6 +31,11 @@ All notable changes to this project are recorded here. The format is based on
   detail**, and the phase's run report (verdict, items pending verification, and
   the free-text notes). Works with `--json` too for a machine-readable object. An
   unknown `<n>` fails with a clean error.
+
+- **`mini doctor` phase-hygiene checks.** The health check now also flags phases
+  stuck in `doing` with no open work left (pointing at `mini done`) and stale run
+  reports in `.mini/run/` whose phase no longer exists (leftovers after
+  `mini undo` / `migrate --renumber`).
 
 ### Changed
 

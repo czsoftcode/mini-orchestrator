@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { type DoctorInput, buildDiagnostics } from './doctor.js';
+import { type DoctorInput, buildDiagnostics, findStaleRunReports } from './doctor.js';
+import type { Phase } from '../state/types.js';
 
 const HEALTHY: DoctorInput = {
   projectExists: true,
@@ -7,6 +8,8 @@ const HEALTHY: DoctorInput = {
   expectedSchema: 2,
   hasProjectMd: true,
   hasChangelog: true,
+  orphanedDoingPhases: [],
+  staleRunReports: [],
   installedCommands: 17,
   expectedCommands: 17,
   currentVersion: '1.11.1',
@@ -61,5 +64,45 @@ describe('buildDiagnostics', () => {
     const c = find({ ...HEALTHY, latestVersion: null }, 'Version');
     expect(c.status).toBe('ok');
     expect(c.detail).toContain('latest unknown');
+  });
+
+  it('warns about an orphaned "doing" phase and names it', () => {
+    const c = find({ ...HEALTHY, orphanedDoingPhases: [7] }, 'Phases');
+    expect(c.status).toBe('warn');
+    expect(c.detail).toContain('7');
+    expect(c.hint).toContain('mini done');
+  });
+
+  it('warns about stale run reports and counts them', () => {
+    const c = find({ ...HEALTHY, staleRunReports: ['phase-009.md', 'phase-010.md'] }, 'Run reports');
+    expect(c.status).toBe('warn');
+    expect(c.detail).toContain('2 stale');
+  });
+
+  it('omits the phase-hygiene checks when there is no project', () => {
+    const checks = buildDiagnostics({ ...HEALTHY, projectExists: false });
+    expect(checks.find((c) => c.label === 'Phases')).toBeUndefined();
+    expect(checks.find((c) => c.label === 'Run reports')).toBeUndefined();
+  });
+});
+
+describe('findStaleRunReports', () => {
+  const phases: Phase[] = [
+    { id: 1, title: 'A', status: 'done' },
+    { id: 12, title: 'B', status: 'done' },
+  ];
+
+  it('flags report files whose phase is gone, leaving valid ones', () => {
+    const files = ['phase-001.md', 'phase-009.md', 'phase-012.md', 'phase-013.md'];
+    expect(findStaleRunReports(files, phases)).toEqual(['phase-009.md', 'phase-013.md']);
+  });
+
+  it('ignores .prev.md backups and non-report files', () => {
+    const files = ['phase-009.prev.md', 'phase-001.md', 'README.md', '.gitkeep'];
+    expect(findStaleRunReports(files, phases)).toEqual([]);
+  });
+
+  it('returns [] when every report has a phase', () => {
+    expect(findStaleRunReports(['phase-001.md', 'phase-012.md'], phases)).toEqual([]);
   });
 });

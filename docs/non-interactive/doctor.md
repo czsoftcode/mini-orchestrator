@@ -18,6 +18,10 @@ mini doctor
 anything that isn't ok, a hint on how to fix it. It checks:
 
 - the state file and its **schema version**,
+- **orphaned `doing` phases** — a phase stuck in "doing" with no open work left
+  (all steps/subphases closed), which should be closed via [`mini done`](done.md),
+- **stale run reports** — `phase-<id>.md` files in `.mini/run/` with no matching
+  phase (leftovers after [`mini undo`](undo.md) / `migrate --renumber`),
 - the presence of `project.md` and `CHANGELOG.md`,
 - the **installed slash commands** (`.claude/commands/mini/*.md`),
 - the **mini version freshness** (whether a newer release is available).
@@ -30,6 +34,9 @@ It is **read-only** and takes no flags.
 $ mini doctor
 mini doctor
   [ok]   State file (.mini/state.json), schema v2
+  [warn] Phases: phase 7 stuck in "doing" with no open work
+         Close it via `mini done` (or `mini undo` to step back)
+  [ok]   Run reports: no stale reports
   [ok]   project.md present
   [ok]   CHANGELOG.md present
   [warn] Slash commands out of date → run: mini install-commands
