@@ -70,4 +70,5 @@ the slash commands themselves.
 | --- | --- | --- |
 | Install the `/mini:*` slash commands | — | [`mini install-commands`](non-interactive/install-commands.md) |
 | Enable the status line | — | [`mini install-statusline`](non-interactive/install-statusline.md) |
+| Shell completion (bash/zsh) | — | [`mini completion`](non-interactive/completion.md) |
 | Remove the slash commands + status line | — | [`mini uninstall`](non-interactive/uninstall.md) |

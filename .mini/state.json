@@ -597,6 +597,11 @@
       "id": 119,
       "title": "Critical-feedback rule in CLAUDE.md",
       "status": "done"
+    },
+    {
+      "id": 120,
+      "title": "mini completion shell script",
+      "status": "done"
     }
   ],
   "models": {

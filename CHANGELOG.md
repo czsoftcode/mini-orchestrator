@@ -6,6 +6,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **Shell completion.** New console-only command `mini completion <bash|zsh>`
+  prints a completion script that completes `mini`'s subcommands. Enable it with
+  `source <(mini completion bash)` (or `zsh`) in your shell rc; the bash script
+  needs no `bash-completion` package. The command list is derived from the CLI at
+  generation time, so it stays in sync across upgrades.
+
 ## [1.15.0] - 2026-06-02
 
 ### Added

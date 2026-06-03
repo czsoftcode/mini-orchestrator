@@ -149,6 +149,7 @@ mini auto        # next → plan → do (with acceptEdits) → done; everything 
 | `mini update` | Alias for `mini upgrade` — typing `mini update` checks npm for a newer `mini-orchestrator` and installs it, so a slip of the tongue does the expected thing. Accepts the same `--check` / `--yes` flags. (To refresh a project's generated `.mini/` skeleton + slash commands, use `mini install-commands`.) |
 | `mini upgrade` | Checks npm for a newer `mini-orchestrator` and installs it (`npm install -g mini-orchestrator@latest`); reports current → latest and asks first. `--check` only reports, `--yes` installs without asking. A status-line indicator (`↑ <version>`) also signals when a newer version is available — see [Status line](#status-line) |
 | `mini install-commands` | Generates `.claude/commands/mini/*.md` (the `/mini:*` slash commands) into the project — see below |
+| `mini completion <bash\|zsh>` | Prints a shell completion script that completes `mini`'s subcommands. Enable with `source <(mini completion bash)` in your shell rc — see [`docs/non-interactive/completion.md`](docs/non-interactive/completion.md) |
 | `mini context <cmd>` | Prints the current session prompt for a cycle step (`next`/`discuss`/`plan`/`do`/`done`/`verify`) to stdout; called by the slash commands |
 | `mini statusline` | Renders the mini status line for Claude Code (reads the status JSON on stdin) — wired into `settings.json`, not run by hand; see below |
 

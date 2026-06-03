@@ -1,0 +1,29 @@
+{
+  "id": 120,
+  "title": "mini completion shell script",
+  "goal": "Add a 'mini completion <bash|zsh>' subcommand that prints a shell completion script for the CLI, completing top-level command names and common flags; verifiable via snapshot tests of the generated script.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Completion script renderer",
+      "status": "done",
+      "detail": "Pure module src/completion/render.ts: SHELLS list, isShell guard, renderCompletion(shell, { binName, commands }) returning a bash/zsh completion script that completes top-level mini command names (with a generic file fallback for further args). No side effects, snapshot-friendly."
+    },
+    {
+      "title": "completion command + CLI wiring",
+      "status": "done",
+      "detail": "src/commands/completion.ts validates the shell and writes the script to stdout (unknown shell -> clear error + exit 1); register program.command('completion <shell>') in cli.ts, deriving command names from program.commands (skipping hidden ones like check-version) and passing them to the renderer."
+    },
+    {
+      "title": "Tests, docs, wrap-up",
+      "status": "done",
+      "detail": "Snapshot tests for bash and zsh output plus the unknown-shell error path; add docs/completion.md and a short README note (source <(mini completion bash)); run typecheck and the full test suite."
+    }
+  ],
+  "startedAt": "2026-06-03T16:31:02.319Z",
+  "completedAt": "2026-06-03T16:35:12.530Z",
+  "autoCommit": {
+    "preSha": "89b104d5a6eb43cb980e3fab5afccc4e74848614",
+    "subject": "Phase 120: mini completion shell script"
+  }
+}

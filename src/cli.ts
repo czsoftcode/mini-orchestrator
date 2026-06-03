@@ -471,6 +471,21 @@ program
     await model(scope, name);
   });
 
+program
+  .command('completion <shell>')
+  .description('Prints a shell completion script for `mini` (bash | zsh). Enable with: source <(mini completion bash).')
+  .action(async (shell: string) => {
+    const { completion } = await import('./commands/completion.js');
+    // Derive the completed command names from commander itself so the script
+    // never drifts from the real command set. Skip hidden helpers (e.g.
+    // check-version) and add the implicit `help` subcommand.
+    const names = program.commands
+      .filter((c) => (c as unknown as { _hidden?: boolean })._hidden !== true)
+      .map((c) => c.name());
+    if (!names.includes('help')) names.push('help');
+    if (!completion(shell, names)) process.exit(1);
+  });
+
 program.parseAsync().catch((err) => {
   console.error(err);
   process.exit(1);
