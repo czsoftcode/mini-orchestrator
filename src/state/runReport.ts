@@ -303,16 +303,18 @@ export interface RunReportSummary {
   verify: RunReportVerifyItem[];
   /** `true`, když report existuje, ale nejde naparsovat (chybí YAML apod.). */
   unparseable: boolean;
+  /** Volný text pod YAML blokem (poznámky pro člověka), bez okolních prázdných řádků. */
+  body?: string;
 }
 
 /**
- * Vytáhne z textu reportu jen verdikt a verify body — bez tvrdé validace kroků.
- * Určeno výhradně pro zobrazení v `mini status`.
+ * Vytáhne z textu reportu jen verdikt, verify body a volný text — bez tvrdé
+ * validace kroků. Určeno výhradně pro zobrazení v `mini status`.
  */
 export function summarizeRunReportText(text: string): RunReportSummary {
   try {
     const normalized = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
-    const match = /^---\s*\n([\s\S]*?)\n---[ \t]*(?:\n[\s\S]*)?$/.exec(normalized);
+    const match = /^---\s*\n([\s\S]*?)\n---[ \t]*\n?([\s\S]*)$/.exec(normalized);
     if (!match) {
       return { verdict: null, verify: [], unparseable: true };
     }
@@ -325,7 +327,10 @@ export function summarizeRunReportText(text: string): RunReportSummary {
     } catch {
       verify = [];
     }
-    return { verdict, verify, unparseable: false };
+    const summary: RunReportSummary = { verdict, verify, unparseable: false };
+    const body = (match[2] ?? '').trim();
+    if (body) summary.body = body;
+    return summary;
   } catch {
     return { verdict: null, verify: [], unparseable: true };
   }

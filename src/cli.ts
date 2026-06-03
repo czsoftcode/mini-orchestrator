@@ -249,9 +249,18 @@ program
   .command('status')
   .description('Shows where we currently are in the project. With --json prints a machine-readable object.')
   .option('--json', 'Print a machine-readable JSON object instead of the human overview.')
-  .action(async (opts: { json?: boolean }) => {
+  .option('--phase <n>', 'Show the detail of a single phase (steps + detail + run report) instead of the overview.')
+  .action(async (opts: { json?: boolean; phase?: string }) => {
+    let phase: number | undefined;
+    if (opts.phase !== undefined) {
+      phase = Number(opts.phase);
+      if (!Number.isFinite(phase)) {
+        console.error(`Invalid --phase value: "${opts.phase}". Give a phase number (e.g. 12).`);
+        process.exit(1);
+      }
+    }
     const { status } = await import('./commands/status.js');
-    await status({ json: opts.json });
+    await status({ json: opts.json, phase });
   });
 
 program

@@ -616,6 +616,7 @@ text
       { title: 'Ověř UI', detail: 'vizuální' },
       { title: 'Ověř flow' },
     ]);
+    expect(s.body).toBe('text');
   });
 
   it('verdict je null u neznámé hodnoty, ale parse nepadne', () => {
@@ -628,6 +629,7 @@ steps: []
     expect(s.unparseable).toBe(false);
     expect(s.verdict).toBeNull();
     expect(s.verify).toEqual([]);
+    expect(s.body).toBeUndefined();
   });
 
   it('označí report bez YAML hlavičky jako unparseable', () => {

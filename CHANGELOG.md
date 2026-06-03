@@ -24,6 +24,12 @@ All notable changes to this project are recorded here. The format is based on
   (`- [n] …`) and tells Claude to pass `--from-todo <n>`. A bad reference (out of
   range or already done) only warns — the phase is still saved.
 
+- **`mini status --phase <n>`.** Zoom in on a single phase instead of the whole
+  overview: its title, goal, status and duration, every step **with its planning
+  detail**, and the phase's run report (verdict, items pending verification, and
+  the free-text notes). Works with `--json` too for a machine-readable object. An
+  unknown `<n>` fails with a clean error.
+
 ### Changed
 
 - **`--bump` now validates its value.** The `--bump` option on `mini done` /

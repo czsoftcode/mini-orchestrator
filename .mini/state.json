@@ -617,6 +617,11 @@
       "id": 123,
       "title": "Next odškrtne zdrojovou todo",
       "status": "done"
+    },
+    {
+      "id": 124,
+      "title": "mini status --phase <n>",
+      "status": "done"
     }
   ],
   "models": {

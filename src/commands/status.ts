@@ -37,6 +37,8 @@ const STATUS_WIDTH = 10;
 export interface StatusOptions {
   /** Print a machine-readable JSON object instead of the human overview. */
   json?: boolean;
+  /** Show the detail of a single phase (by id) instead of the whole overview. */
+  phase?: number;
 }
 
 export async function status(opts: StatusOptions = {}): Promise<void> {
@@ -59,6 +61,11 @@ export async function status(opts: StatusOptions = {}): Promise<void> {
   ]);
 
   const openTodos = todos.filter((t) => !t.done).length;
+
+  if (opts.phase !== undefined) {
+    await showPhaseDetail(state, opts.phase, cwd, opts.json ?? false);
+    return;
+  }
 
   if (opts.json) {
     console.log(JSON.stringify(buildStatusJson(projectMd, state, openTodos), null, 2));
@@ -110,6 +117,45 @@ export async function status(opts: StatusOptions = {}): Promise<void> {
 
   console.log();
   log.hint(nextActionHint(state));
+}
+
+/**
+ * `mini status --phase <n>` — detail of a single phase. Reads the phase's run
+ * report (tolerantly — never crashes on a stale report) and prints either the
+ * human detail view or, with `--json`, a machine-readable object. An unknown id
+ * fails cleanly (warning + exit code 1 / a JSON error object).
+ */
+async function showPhaseDetail(
+  state: ProjectState,
+  phaseId: number,
+  cwd: string,
+  json: boolean,
+): Promise<void> {
+  const phase = state.phases.find((p) => p.id === phaseId);
+  if (!phase) {
+    if (json) {
+      console.log(JSON.stringify({ error: 'no-such-phase', phase: phaseId }));
+    } else {
+      log.warn(`There is no phase ${phaseId} in this project.`);
+      log.hint('List the phases with: mini status');
+    }
+    process.exitCode = 1;
+    return;
+  }
+
+  const summary = await readRunReportSummary(cwd, phase.id);
+
+  const isCurrent = phase.id === state.currentPhaseId;
+  if (json) {
+    console.log(JSON.stringify(buildPhaseDetailJson(phase, summary, isCurrent), null, 2));
+    return;
+  }
+
+  console.log();
+  for (const line of renderPhaseDetail(phase, summary, isCurrent)) {
+    console.log(line);
+  }
+  console.log();
 }
 
 function printPhase(
@@ -216,6 +262,70 @@ export interface StatusJson {
   phases: StatusJsonPhase[];
 }
 
+/** A single step in the phase-detail JSON — includes the planning `detail`. */
+export interface PhaseDetailJsonStep {
+  title: string;
+  status: StepStatus;
+  detail?: string;
+}
+
+/** Machine-readable run report for the phase-detail JSON. */
+export interface PhaseDetailJsonRunReport {
+  verdict: RunVerdict | null;
+  unparseable: boolean;
+  verify: RunReportVerifyItem[];
+  body?: string;
+}
+
+/** `mini status --phase <n> --json` — detail of one phase with its run report. */
+export interface PhaseDetailJson {
+  id: number;
+  title: string;
+  goal: string | null;
+  status: PhaseStatus;
+  isCurrent: boolean;
+  startedAt?: string;
+  completedAt?: string;
+  durationMs?: number;
+  steps: PhaseDetailJsonStep[];
+  runReport: PhaseDetailJsonRunReport | null;
+}
+
+/** Builds the machine-readable detail of a single phase (`mini status --phase <n> --json`). Pure. */
+export function buildPhaseDetailJson(
+  phase: Phase,
+  summary: RunReportSummary | null,
+  isCurrent = false,
+): PhaseDetailJson {
+  const out: PhaseDetailJson = {
+    id: phase.id,
+    title: phase.title,
+    goal: phase.goal ?? null,
+    status: phase.status,
+    isCurrent,
+    steps: (phase.steps ?? []).map((s) => {
+      const step: PhaseDetailJsonStep = { title: s.title, status: s.status };
+      if (s.detail) step.detail = s.detail;
+      return step;
+    }),
+    runReport: null,
+  };
+  if (phase.startedAt) out.startedAt = phase.startedAt;
+  if (phase.completedAt) out.completedAt = phase.completedAt;
+  const dur = phaseDuration(phase);
+  if (dur !== null) out.durationMs = dur;
+  if (summary) {
+    const rr: PhaseDetailJsonRunReport = {
+      verdict: summary.verdict,
+      unparseable: summary.unparseable,
+      verify: summary.verify,
+    };
+    if (summary.body) rr.body = summary.body;
+    out.runReport = rr;
+  }
+  return out;
+}
+
 /** Builds the machine-readable status object (`mini status --json`). Pure. */
 export function buildStatusJson(
   projectMd: string,
@@ -247,6 +357,66 @@ export function buildStatusJson(
   });
 
   return { title, what, models, currentPhaseId: state.currentPhaseId, ideasOpen: openTodos, phases };
+}
+
+/**
+ * Detailed view of a single phase (`mini status --phase <n>`). Pure: returns the
+ * lines to print, so it is testable without a TTY. Picocolors disables colors
+ * outside a TTY, so the output is plain text in tests. Shows the phase header
+ * (status, title, goal, duration), every step with its `detail`, and — when a
+ * run report exists — the verdict, items for manual verification and the
+ * free-text body.
+ */
+export function renderPhaseDetail(
+  phase: Phase,
+  summary: RunReportSummary | null,
+  isCurrent: boolean,
+): string[] {
+  const lines: string[] = [];
+
+  const status = renderStatus(PHASE_LABELS[phase.status]);
+  const marker = isCurrent ? pc.cyan('>') : ' ';
+  const ms = phaseDuration(phase);
+  const took = ms !== null ? ` ${pc.dim(`(took ${formatDuration(ms)})`)}` : '';
+  lines.push(`${status} ${marker} ${phase.id}. ${pc.bold(phase.title)}${took}`);
+
+  if (phase.goal) {
+    lines.push(pc.dim(`  Goal: ${phase.goal}`));
+  }
+  if (phase.humanNotes) {
+    lines.push(pc.dim(`  Notes: ${phase.humanNotes}`));
+  }
+
+  lines.push('');
+  const steps = phase.steps ?? [];
+  if (steps.length === 0) {
+    lines.push(pc.dim('  No steps.'));
+  } else {
+    lines.push(pc.bold('  Steps:'));
+    for (const step of steps) {
+      const sStatus = renderStatus(STEP_LABELS[step.status]);
+      lines.push(`    ${sStatus} ${step.title}`);
+      if (step.detail) {
+        lines.push(pc.dim(`               ${step.detail}`));
+      }
+    }
+  }
+
+  if (summary) {
+    lines.push('');
+    lines.push(pc.bold('  Run report:'));
+    for (const line of runReportSummaryLines(summary, phase)) {
+      lines.push(`    ${line}`);
+    }
+    if (summary.body) {
+      lines.push('');
+      for (const line of summary.body.split('\n')) {
+        lines.push(line ? `    ${line}` : '');
+      }
+    }
+  }
+
+  return lines;
 }
 
 export function describeModels(state: ProjectState): string {

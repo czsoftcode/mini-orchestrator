@@ -1,0 +1,34 @@
+{
+  "id": 124,
+  "title": "mini status --phase <n>",
+  "goal": "mini status --phase <n> prints a detailed view of one phase: title, goal, status, duration, every step with its detail and status, and the phase run report (verdict, verify items, free-text body); an unknown <n> fails with a clean error. Works with --json too (the single phase, with run report body). Verifiable via tests.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Pure renderer renderPhaseDetail",
+      "status": "done",
+      "detail": "Pure function in status.ts that turns a phase (+ optional run report) into detail lines: title/goal/status/duration, every step with its detail and status, and the run report (verdict, verify items, free-text body). TTY-free, covered by a unit test."
+    },
+    {
+      "title": "status --phase <n>: human view",
+      "status": "done",
+      "detail": "Add --phase <n> to StatusOptions + cli.ts; it looks the phase up (unknown <n> → clean error, exit 1), reads its run report and prints via the renderer instead of the whole overview. Test in status.test.ts."
+    },
+    {
+      "title": "--json --phase <n>: single-phase detail",
+      "status": "done",
+      "detail": "When both flags are set, output JSON for just that one phase — steps including their detail, and the run report (verdict, verify, body). Dedicated builder, covered by a test."
+    },
+    {
+      "title": "Docs",
+      "status": "done",
+      "detail": "Document --phase in docs/non-interactive/status.md (both the human and --json modes)."
+    }
+  ],
+  "startedAt": "2026-06-03T21:36:39.784Z",
+  "completedAt": "2026-06-03T21:43:31.498Z",
+  "autoCommit": {
+    "preSha": "9ce1c2bb62073fbf0a5102fc09de2b46fe7ce439",
+    "subject": "Phase 124: mini status --phase <n>"
+  }
+}

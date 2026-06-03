@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
+  buildPhaseDetailJson,
   buildStatusJson,
   describeModels,
   formatDuration,
@@ -8,9 +12,14 @@ import {
   nextActionHint,
   openVerifyCount,
   phaseDuration,
+  renderPhaseDetail,
   runReportSummaryLines,
+  status,
 } from './status.js';
 import type { RunReportSummary } from '../state/runReport.js';
+import { ensureRunDir, runReportPath } from '../state/runReport.js';
+import { save, writeProject } from '../state/store.js';
+import { writeFile } from 'node:fs/promises';
 import type { Phase, ProjectState } from '../state/types.js';
 
 function makeState(overrides: Partial<ProjectState> = {}): ProjectState {
@@ -315,5 +324,198 @@ describe('isOrphanedDoing', () => {
     const parent = phase(2, 'doing');
     const sub = { ...phase(2, 'doing'), id: 2.1 };
     expect(isOrphanedDoing(parent, [parent, sub])).toBe(false);
+  });
+});
+
+describe('renderPhaseDetail', () => {
+  it('renders the header, goal, steps with their detail, and the run report', () => {
+    const p: Phase = {
+      id: 5,
+      title: 'Some phase',
+      goal: 'do the thing',
+      status: 'done',
+      steps: [
+        { title: 'step one', status: 'done', detail: 'criterion A' },
+        { title: 'step two', status: 'todo' },
+      ],
+    };
+    const out = renderPhaseDetail(
+      p,
+      summary({ verdict: 'partial', body: 'Free notes line.' }),
+      false,
+    ).join('\n');
+
+    expect(out).toContain('5. Some phase');
+    expect(out).toContain('Goal: do the thing');
+    expect(out).toContain('step one');
+    expect(out).toContain('criterion A');
+    expect(out).toContain('step two');
+    expect(out).toContain('Run report:');
+    expect(out).toContain('verdict partial');
+    expect(out).toContain('Free notes line.');
+  });
+
+  it('without a run report shows no Run report section', () => {
+    const p: Phase = { id: 1, title: 'P', status: 'proposed', steps: [] };
+    const out = renderPhaseDetail(p, null, true).join('\n');
+    expect(out).toContain('No steps.');
+    expect(out).not.toContain('Run report:');
+  });
+});
+
+describe('buildPhaseDetailJson', () => {
+  it('includes step detail, duration and the run report (verdict, verify, body)', () => {
+    const p: Phase = {
+      id: 7,
+      title: 'A phase',
+      goal: 'reach the goal',
+      status: 'done',
+      startedAt: '2026-01-01T00:00:00.000Z',
+      completedAt: '2026-01-01T00:05:00.000Z',
+      steps: [
+        { title: 'one', status: 'done', detail: 'criterion' },
+        { title: 'two', status: 'skipped' },
+      ],
+    };
+    const json = buildPhaseDetailJson(
+      p,
+      summary({ verdict: 'partial', verify: [{ title: 'check UI' }], body: 'notes' }),
+      true,
+    );
+
+    expect(json).toMatchObject({
+      id: 7,
+      title: 'A phase',
+      goal: 'reach the goal',
+      status: 'done',
+      isCurrent: true,
+      durationMs: 300000,
+    });
+    expect(json.steps).toEqual([
+      { title: 'one', status: 'done', detail: 'criterion' },
+      { title: 'two', status: 'skipped' },
+    ]);
+    expect(json.runReport).toEqual({
+      verdict: 'partial',
+      unparseable: false,
+      verify: [{ title: 'check UI' }],
+      body: 'notes',
+    });
+  });
+
+  it('runReport is null when there is no report', () => {
+    const p: Phase = { id: 1, title: 'P', goal: undefined, status: 'proposed' };
+    const json = buildPhaseDetailJson(p, null);
+    expect(json.runReport).toBeNull();
+    expect(json.goal).toBeNull();
+    expect(json.steps).toEqual([]);
+    expect(json.isCurrent).toBe(false);
+  });
+});
+
+describe('status --phase (integration)', () => {
+  let cwd: string;
+  let out: string;
+  let cwdSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'mini-status-phase-'));
+    out = '';
+    cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(cwd);
+    logSpy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      out += `${args.join(' ')}\n`;
+    });
+    process.exitCode = undefined;
+    await writeProject('# Demo\n\n## What I am building\nThing.', cwd);
+  });
+
+  afterEach(async () => {
+    cwdSpy.mockRestore();
+    logSpy.mockRestore();
+    process.exitCode = undefined;
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  function makeFullState(phases: Phase[], currentPhaseId: number | null): ProjectState {
+    return { version: 2, createdAt: '2026-01-01T00:00:00.000Z', currentPhaseId, phases };
+  }
+
+  it('unknown phase → warning and exit code 1', async () => {
+    await save(makeFullState([{ id: 1, title: 'P', status: 'done' }], null), cwd);
+    await status({ phase: 9 });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('unknown phase with --json → JSON error object and exit code 1', async () => {
+    await save(makeFullState([{ id: 1, title: 'P', status: 'done' }], null), cwd);
+    await status({ phase: 9, json: true });
+    expect(process.exitCode).toBe(1);
+    expect(JSON.parse(out)).toEqual({ error: 'no-such-phase', phase: 9 });
+  });
+
+  it('existing phase prints its detail, steps and run report body', async () => {
+    await save(
+      makeFullState(
+        [
+          {
+            id: 2,
+            title: 'Target phase',
+            goal: 'do it',
+            status: 'done',
+            steps: [{ title: 'build the thing', status: 'done', detail: 'with a test' }],
+          },
+        ],
+        2,
+      ),
+      cwd,
+    );
+    await ensureRunDir(cwd);
+    await writeFile(
+      runReportPath(cwd, 2),
+      '---\nphase: 2\nverdict: done\nsteps:\n  - title: "build the thing"\n    status: done\n---\n\nAll went well.\n',
+      'utf-8',
+    );
+
+    await status({ phase: 2 });
+
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('2. Target phase');
+    expect(out).toContain('Goal: do it');
+    expect(out).toContain('build the thing');
+    expect(out).toContain('with a test');
+    expect(out).toContain('Run report:');
+    expect(out).toContain('All went well.');
+  });
+
+  it('existing phase with --json emits steps detail and run report body', async () => {
+    await save(
+      makeFullState(
+        [
+          {
+            id: 3,
+            title: 'JSON phase',
+            status: 'done',
+            steps: [{ title: 's1', status: 'done', detail: 'd1' }],
+          },
+        ],
+        null,
+      ),
+      cwd,
+    );
+    await ensureRunDir(cwd);
+    await writeFile(
+      runReportPath(cwd, 3),
+      '---\nphase: 3\nverdict: done\nsteps:\n  - title: "s1"\n    status: done\n---\n\nbody text\n',
+      'utf-8',
+    );
+
+    await status({ phase: 3, json: true });
+
+    const json = JSON.parse(out);
+    expect(json.id).toBe(3);
+    expect(json.steps).toEqual([{ title: 's1', status: 'done', detail: 'd1' }]);
+    expect(json.runReport.verdict).toBe('done');
+    expect(json.runReport.body).toBe('body text');
   });
 });
