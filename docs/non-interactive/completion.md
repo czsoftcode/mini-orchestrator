@@ -18,12 +18,13 @@ mini completion zsh     # print the zsh completion script
 
 The script is written to stdout — you wire it into your shell once and then
 `Tab` completes `mini`'s subcommands (`mini ver<Tab>` → `mini verify`,
-`mini <Tab>` → the full command list). Arguments past the command name fall back
-to filename completion.
+`mini <Tab>` → the full command list) and, after a command, that command's
+option flags (`mini done --<Tab>` → `--apply --accept-verify --bump --push`).
+Arguments that don't start with `-` fall back to filename completion.
 
-The completed command list is derived from `mini` itself at the moment you
-generate the script, so it always matches the installed version — regenerate it
-after an upgrade to pick up new commands.
+The completed commands and their flags are derived from `mini` itself at the
+moment you generate the script, so they always match the installed version —
+regenerate it after an upgrade to pick up new commands or flags.
 
 ## Enabling it
 
@@ -55,8 +56,9 @@ effect.
 ## Notes
 
 - Regenerate the script after `mini upgrade` so completion knows about any new
-  commands.
-- Only the top-level command names are completed; per-command flags are not.
+  commands or flags.
+- Completion covers command names and each command's option flags; it does not
+  complete a flag's *value* (e.g. the level after `--bump`).
 
 ## Related
 

@@ -476,14 +476,17 @@ program
   .description('Prints a shell completion script for `mini` (bash | zsh). Enable with: source <(mini completion bash).')
   .action(async (shell: string) => {
     const { completion } = await import('./commands/completion.js');
-    // Derive the completed command names from commander itself so the script
-    // never drifts from the real command set. Skip hidden helpers (e.g.
-    // check-version) and add the implicit `help` subcommand.
-    const names = program.commands
+    // Derive the completed commands and their flags from commander itself so the
+    // script never drifts from the real CLI. Skip hidden helpers (e.g.
+    // check-version) and add the implicit `help` subcommand (no flags).
+    const commands = program.commands
       .filter((c) => (c as unknown as { _hidden?: boolean })._hidden !== true)
-      .map((c) => c.name());
-    if (!names.includes('help')) names.push('help');
-    if (!completion(shell, names)) process.exit(1);
+      .map((c) => ({
+        name: c.name(),
+        flags: c.options.flatMap((o) => [o.short, o.long].filter((f): f is string => !!f)),
+      }));
+    if (!commands.some((c) => c.name === 'help')) commands.push({ name: 'help', flags: [] });
+    if (!completion(shell, commands)) process.exit(1);
   });
 
 program.parseAsync().catch((err) => {

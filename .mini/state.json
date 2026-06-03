@@ -602,6 +602,11 @@
       "id": 120,
       "title": "mini completion shell script",
       "status": "done"
+    },
+    {
+      "id": 121,
+      "title": "Flag completion in mini completion",
+      "status": "done"
     }
   ],
   "models": {

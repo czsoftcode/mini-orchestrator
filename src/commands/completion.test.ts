@@ -6,25 +6,29 @@ afterEach(() => {
 });
 
 describe('completion command', () => {
-  it('writes a bash script and returns true for a supported shell', () => {
+  it('writes a bash script with command names and flags, returns true', () => {
     let out = '';
     vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
       out += String(chunk);
       return true;
     });
 
-    const ok = completion('bash', ['init', 'next']);
+    const ok = completion('bash', [
+      { name: 'init', flags: ['--apply'] },
+      { name: 'next', flags: [] },
+    ]);
 
     expect(ok).toBe(true);
     expect(out).toContain('complete -F _mini_completion mini');
     expect(out).toContain('init next');
+    expect(out).toContain('init) flags="--apply" ;;');
   });
 
   it('reports an error and returns false for an unsupported shell', () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
     const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
-    const ok = completion('fish', ['init']);
+    const ok = completion('fish', [{ name: 'init', flags: [] }]);
 
     expect(ok).toBe(false);
     expect(write).not.toHaveBeenCalled();

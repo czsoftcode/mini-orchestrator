@@ -1,0 +1,29 @@
+{
+  "id": 121,
+  "title": "Flag completion in mini completion",
+  "goal": "Extend the bash/zsh completion scripts so that, after a command name, they also complete that command's option flags (e.g. 'mini done --' offers --bump/--push/--apply); the per-command flag map is derived from commander so it stays in sync. Verifiable via snapshot tests of the generated scripts.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Renderer carries per-command flags",
+      "status": "done",
+      "detail": "Change CompletionSpec to a structured command list ({ name, flags: string[] }); renderCompletion emits flag completion — when the current word starts with '-', complete the flags of the command in position 1 (bash via a case statement, zsh via a case), otherwise complete command names (first word) / files as before. Renderers stay pure and snapshot-friendly."
+    },
+    {
+      "title": "CLI derives flags from commander",
+      "status": "done",
+      "detail": "In cli.ts build the per-command flag list from each command's options (long and short forms via cmd.options), skip hidden commands, and pass the structured list to completion()/renderCompletion so the flags never drift from the real CLI."
+    },
+    {
+      "title": "Update tests, snapshots, docs",
+      "status": "done",
+      "detail": "Adapt render.test.ts and completion.test.ts to the new shape and add flag-completion cases (e.g. 'mini done --' offers --bump/--push); update docs/non-interactive/completion.md and the README note to mention flag completion; run typecheck and the full test suite."
+    }
+  ],
+  "startedAt": "2026-06-03T17:03:48.153Z",
+  "completedAt": "2026-06-03T17:09:40.841Z",
+  "autoCommit": {
+    "preSha": "4be5c614c478f0d02af123933319c481fac2165a",
+    "subject": "Phase 121: Flag completion in mini completion"
+  }
+}
