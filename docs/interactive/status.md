@@ -9,7 +9,9 @@
 
 `/mini:status` runs `mini status` and relays the phase overview into the chat:
 the project header (name, what, models) and the list of phases with their status
-and duration. It is **read-only** — it changes no state and saves nothing.
+and duration. Phases that carry a decision record (ADR) are flagged with a
+compact `✎ ADR` marker. It is **read-only** — it changes no state and saves
+nothing.
 
 ## In a session
 

@@ -30,6 +30,10 @@ All notable changes to this project are recorded here. The format is based on
   instruction; they only point you to `/mini:decision` when a phase makes a real
   decision, which keeps their prompts lean (the `done` prompt drops ~270 tokens
   per phase).
+- **ADR marker in `mini status`.** The phase overview now flags every phase that
+  carries a decision record with a compact `✎ ADR` marker after its title, and
+  `mini status --json` sets `hasDecision: true` for it. The whole overview costs a
+  single `readdir` of `.mini/decisions/` — no per-phase reads.
 
 ## [1.16.0] - 2026-06-03
 

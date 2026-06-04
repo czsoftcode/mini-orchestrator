@@ -85,6 +85,16 @@ describe('buildStatusJson', () => {
     const json = buildStatusJson(PROJECT, makeState({ phases: [phase(1, 'done')] }), 1);
     expect(() => JSON.parse(JSON.stringify(json))).not.toThrow();
   });
+
+  it('flags hasDecision from the supplied id set (false by default)', () => {
+    const state = makeState({ phases: [phase(1, 'done'), phase(2, 'done')] });
+    const json = buildStatusJson(PROJECT, state, 0, new Set([2]));
+    expect(json.phases[0]!.hasDecision).toBe(false);
+    expect(json.phases[1]!.hasDecision).toBe(true);
+
+    const noSet = buildStatusJson(PROJECT, state, 0);
+    expect(noSet.phases.every((p) => p.hasDecision === false)).toBe(true);
+  });
 });
 
 describe('formatDuration', () => {
@@ -559,5 +569,64 @@ describe('status --phase (integration)', () => {
     out = '';
     await status({ phase: 4, json: true });
     expect(JSON.parse(out).decision).toBe(adr);
+  });
+});
+
+describe('status overview (integration) — ADR marker', () => {
+  let cwd: string;
+  let out: string;
+  let cwdSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'mini-status-overview-'));
+    out = '';
+    cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(cwd);
+    logSpy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      out += `${args.join(' ')}\n`;
+    });
+    await writeProject('# Demo\n\n## What I am building\nThing.', cwd);
+  });
+
+  afterEach(async () => {
+    cwdSpy.mockRestore();
+    logSpy.mockRestore();
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  function makeFullState(phases: Phase[], currentPhaseId: number | null): ProjectState {
+    return { version: 2, createdAt: '2026-01-01T00:00:00.000Z', currentPhaseId, phases };
+  }
+
+  it('marks only the phase that has an ADR file', async () => {
+    await save(
+      makeFullState(
+        [
+          { id: 1, title: 'Plain phase', status: 'done' },
+          { id: 2, title: 'Decided phase', status: 'done' },
+        ],
+        null,
+      ),
+      cwd,
+    );
+    await mkdir(join(cwd, DECISIONS_DIR), { recursive: true });
+    await writeFile(decisionPath(cwd, 2), '# x\n\n## Decision\ny\n', 'utf-8');
+
+    await status();
+
+    const lines = out.split('\n');
+    const line1 = lines.find((l) => l.includes('1. Plain phase'))!;
+    const line2 = lines.find((l) => l.includes('2. Decided phase'))!;
+    expect(line1).not.toContain('ADR');
+    expect(line2).toContain('✎ ADR');
+  });
+
+  it('shows no marker when no decisions directory exists', async () => {
+    await save(makeFullState([{ id: 1, title: 'Lone phase', status: 'done' }], null), cwd);
+
+    await status();
+
+    const line = out.split('\n').find((l) => l.includes('1. Lone phase'))!;
+    expect(line).not.toContain('ADR');
   });
 });

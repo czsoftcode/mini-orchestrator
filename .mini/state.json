@@ -642,6 +642,11 @@
       "id": 128,
       "title": "On-demand mini:decision + thin trigger",
       "status": "done"
+    },
+    {
+      "id": 129,
+      "title": "Mark ADR phases in status",
+      "status": "done"
     }
   ],
   "models": {

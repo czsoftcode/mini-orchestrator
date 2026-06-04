@@ -7,6 +7,7 @@ import {
   decisionExists,
   decisionPath,
   hasHeading,
+  listDecisionPhaseIds,
   readDecision,
   writeDecision,
 } from './decisionStore.js';
@@ -119,5 +120,42 @@ describe('writeDecision — file handling', () => {
       reason: 'no-heading',
     });
     expect(await decisionExists(cwd, 4)).toBe(false);
+  });
+});
+
+describe('listDecisionPhaseIds', () => {
+  let cwd: string;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'mini-decision-list-'));
+  });
+
+  afterEach(async () => {
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('returns an empty set when the decisions directory is missing', async () => {
+    expect(await listDecisionPhaseIds(cwd)).toEqual(new Set());
+  });
+
+  it('returns an empty set for an empty decisions directory', async () => {
+    await mkdir(join(cwd, DECISIONS_DIR), { recursive: true });
+    expect(await listDecisionPhaseIds(cwd)).toEqual(new Set());
+  });
+
+  it('parses phase-{id}.md filenames back to numeric ids (zero-padded and dotted subphases)', async () => {
+    await mkdir(join(cwd, DECISIONS_DIR), { recursive: true });
+    for (const file of ['phase-007.md', 'phase-126.md', 'phase-1.5.md', 'phase-1000.md']) {
+      await writeFile(join(cwd, DECISIONS_DIR, file), '# x\n', 'utf8');
+    }
+    expect(await listDecisionPhaseIds(cwd)).toEqual(new Set([7, 126, 1.5, 1000]));
+  });
+
+  it('ignores files that do not match the phase-<number>.md shape', async () => {
+    await mkdir(join(cwd, DECISIONS_DIR), { recursive: true });
+    for (const file of ['phase-007.md', 'README.md', 'phase-.md', 'phase-007.txt', 'notes.md']) {
+      await writeFile(join(cwd, DECISIONS_DIR, file), '# x\n', 'utf8');
+    }
+    expect(await listDecisionPhaseIds(cwd)).toEqual(new Set([7]));
   });
 });

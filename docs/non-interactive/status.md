@@ -37,7 +37,8 @@ error (exit code 1).
 
 The overview JSON object includes `title`, `what`, `models`, `currentPhaseId`,
 the count of open ideas, and a `phases` array (each with `id`, `title`,
-`status`, timestamps, `durationMs`, and `steps`).
+`status`, timestamps, `durationMs`, `hasDecision` — whether the phase carries a
+decision record — and `steps`).
 
 The `--phase <n> --json` object describes one phase: `id`, `title`, `goal`,
 `status`, `isCurrent`, timestamps, `durationMs`, a `steps` array (each with
@@ -72,6 +73,11 @@ When the file exists, `mini status --phase <n>` renders its raw markdown under a
 `Decision:` heading (and `--json` carries it in the `decision` field). The raw
 text is shown as-is — `mini` does not parse the `Decision`/`Why` sections.
 
+In the **overview** (`mini status`), every phase that has a decision record is
+flagged with a compact `✎ ADR` marker after its title (and `--json` sets
+`hasDecision: true` for it). The whole overview costs a single `readdir` of
+`.mini/decisions/` — there is no per-phase read.
+
 ## Examples
 
 ```bash
@@ -80,6 +86,7 @@ mini orchestrator on top of Claude Code
   …
 Phases:
   [done]   1. Test infrastructure (took 3m 29s)
+  [done]   12. Pagination for /todos (took 1h 4m) ✎ ADR
   …
   Next: mini next (proposes the next phase)
 ```

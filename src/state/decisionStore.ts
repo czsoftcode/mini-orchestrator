@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { phaseStem } from './store.js';
 
@@ -37,6 +37,34 @@ export async function decisionExists(cwd: string, phaseId: number): Promise<bool
   } catch {
     return false;
   }
+}
+
+/**
+ * Lists the ids of all phases that carry an ADR — a **single** `readdir` of
+ * `.mini/decisions/`, parsing each `phase-{id}.md` filename back to its numeric
+ * id. The phase id is the inverse of `phaseStem` (`phase-007` → `7`,
+ * `phase-1.5` → `1.5`); a subphase keeps its dotted id.
+ *
+ * This is the cheap source for the `mini status` marker: one directory read
+ * instead of a `decisionExists` per phase. A missing directory (no decision ever
+ * recorded) yields an empty set, never an error. Files that do not match the
+ * `phase-<number>.md` shape are ignored.
+ */
+export async function listDecisionPhaseIds(cwd: string): Promise<Set<number>> {
+  let names: string[];
+  try {
+    names = await readdir(join(cwd, DECISIONS_DIR));
+  } catch {
+    return new Set();
+  }
+  const ids = new Set<number>();
+  for (const name of names) {
+    const match = name.match(/^phase-(\d+(?:\.\d+)?)\.md$/);
+    if (!match) continue;
+    const id = Number(match[1]);
+    if (Number.isFinite(id)) ids.add(id);
+  }
+  return ids;
 }
 
 /**

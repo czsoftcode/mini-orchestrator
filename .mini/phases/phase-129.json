@@ -1,0 +1,39 @@
+{
+  "id": 129,
+  "title": "Mark ADR phases in status",
+  "goal": "In the mini status overview, flag each phase that carries a decision record (ADR) with a compact, TTY-safe marker, gathered via a single readdir of .mini/decisions/ (no per-phase JSON reads) and exposed as hasDecision in --json. Add a shared listDecisionPhaseIds helper to decisionStore.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "listDecisionPhaseIds helper in decisionStore",
+      "status": "done",
+      "detail": "readdir .mini/decisions/ once, parse phase-*.md filenames back to numeric ids -> Set<number>; returns an empty set when the dir is missing (tolerant). Unit-tested in decisionStore.test.ts."
+    },
+    {
+      "title": "Read the ADR id set once in status()",
+      "status": "done",
+      "detail": "status() does a single listDecisionPhaseIds(cwd) alongside the existing loads; the set is threaded to both the overview renderer and the JSON builder, with no per-phase reads."
+    },
+    {
+      "title": "Render a compact ADR marker in the overview",
+      "status": "done",
+      "detail": "printPhase shows a dim, TTY-safe tag on the line of every phase whose id is in the set; verified by an updated status overview test."
+    },
+    {
+      "title": "Expose hasDecision in --json",
+      "status": "done",
+      "detail": "add hasDecision:boolean to StatusJsonPhase; buildStatusJson takes the id set and sets it per phase; covered by a buildStatusJson test."
+    },
+    {
+      "title": "Update docs for the ADR marker",
+      "status": "done",
+      "detail": "mention the ADR marker in docs/ (status) and README where the status output is described."
+    }
+  ],
+  "startedAt": "2026-06-04T17:24:26.280Z",
+  "completedAt": "2026-06-04T17:35:01.763Z",
+  "autoCommit": {
+    "preSha": "32c38106f1e479ad8bb0c24ef870dfd483b566e5",
+    "subject": "Phase 129: Mark ADR phases in status"
+  }
+}

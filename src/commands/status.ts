@@ -1,5 +1,5 @@
 import pc from 'picocolors';
-import { readDecision } from '../state/decisionStore.js';
+import { listDecisionPhaseIds, readDecision } from '../state/decisionStore.js';
 import { MODEL_SCOPES } from '../state/models.js';
 import {
   readRunReportSummary,
@@ -55,10 +55,11 @@ export async function status(opts: StatusOptions = {}): Promise<void> {
     return;
   }
 
-  const [projectMd, state, todos] = await Promise.all([
+  const [projectMd, state, todos, decisionIds] = await Promise.all([
     readProject(cwd),
     load(cwd),
     readTodos(cwd),
+    listDecisionPhaseIds(cwd),
   ]);
 
   const openTodos = todos.filter((t) => !t.done).length;
@@ -69,7 +70,7 @@ export async function status(opts: StatusOptions = {}): Promise<void> {
   }
 
   if (opts.json) {
-    console.log(JSON.stringify(buildStatusJson(projectMd, state, openTodos), null, 2));
+    console.log(JSON.stringify(buildStatusJson(projectMd, state, openTodos, decisionIds), null, 2));
     return;
   }
 
@@ -113,7 +114,7 @@ export async function status(opts: StatusOptions = {}): Promise<void> {
   console.log(pc.bold('Phases:'));
   for (const phase of state.phases) {
     const isCurrent = phase.id === state.currentPhaseId;
-    printPhase(phase, isCurrent, state, isCurrent ? currentSummary : null);
+    printPhase(phase, isCurrent, state, isCurrent ? currentSummary : null, decisionIds.has(phase.id));
   }
 
   console.log();
@@ -160,18 +161,28 @@ async function showPhaseDetail(
   console.log();
 }
 
+/**
+ * Compact marker shown after a phase title when an ADR exists for it. Dim, so it
+ * reads as metadata rather than competing with the title; the `✎` glyph is a
+ * common ASCII-art pencil and picocolors strips the color outside a TTY, so in
+ * tests it renders as the plain ` ✎ ADR` suffix.
+ */
+const ADR_MARKER = pc.dim('✎ ADR');
+
 function printPhase(
   p: Phase,
   isCurrent: boolean,
   state: ProjectState,
   summary: RunReportSummary | null,
+  hasDecision: boolean,
 ): void {
   const status = renderStatus(PHASE_LABELS[p.status]);
   const marker = isCurrent ? pc.cyan('>') : ' ';
   const title = isCurrent ? pc.bold(p.title) : p.title;
   const ms = phaseDuration(p);
   const took = ms !== null ? ` ${pc.dim(`(took ${formatDuration(ms)})`)}` : '';
-  console.log(`  ${status} ${marker} ${p.id}. ${title}${took}`);
+  const adr = hasDecision ? ` ${ADR_MARKER}` : '';
+  console.log(`  ${status} ${marker} ${p.id}. ${title}${took}${adr}`);
 
   if (p.humanNotes) {
     console.log(pc.dim(`              ${p.humanNotes}`));
@@ -252,6 +263,8 @@ export interface StatusJsonPhase {
   startedAt?: string;
   completedAt?: string;
   durationMs?: number;
+  /** Whether the phase carries a decision record (`.mini/decisions/phase-{id}.md`). */
+  hasDecision: boolean;
   steps: StatusJsonStep[];
 }
 
@@ -337,6 +350,7 @@ export function buildStatusJson(
   projectMd: string,
   state: ProjectState,
   openTodos: number,
+  decisionIds: ReadonlySet<number> = new Set(),
 ): StatusJson {
   const title = projectMd.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? '(untitled)';
   const what =
@@ -353,6 +367,7 @@ export function buildStatusJson(
       id: p.id,
       title: p.title,
       status: p.status,
+      hasDecision: decisionIds.has(p.id),
       steps: (p.steps ?? []).map((s) => ({ title: s.title, status: s.status })),
     };
     if (p.startedAt) out.startedAt = p.startedAt;
