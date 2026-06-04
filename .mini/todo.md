@@ -22,3 +22,4 @@
 - [x] mini next auto-ticks the source todo item the phase was created from
 - [x] mini doctor: check for orphaned 'doing' phases and stale run reports
 - [x] mini status --phase <n>: detail of a single phase (steps + detail + run report)
+- [ ] Lightweight decisions/ADR layer: capture the *why* behind a phase (rationale of a choice), not just goal + commit — today the reasoning is lost. Inspired by DocFlow's decisions/ folder; keep it lean (optional `decision` note per phase, surfaced in status/graph).
