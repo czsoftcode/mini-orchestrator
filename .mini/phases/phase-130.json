@@ -1,0 +1,39 @@
+{
+  "id": 130,
+  "title": "Doctor orphan-check for ADRs",
+  "goal": "mini doctor flags decision files in .mini/decisions/ whose phase no longer exists in the state, as a new 'Decisions' check mirroring the existing stale-run-reports check (findStaleDecisions helper + handle subphase ids like phase-1.5.md); covered by tests. The undo half of the backlog item (snapshot/restore the decision file) is deliberately deferred to a separate phase.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "findStaleDecisions helper in doctor",
+      "status": "done",
+      "detail": "pure helper mirroring findStaleRunReports: from a .mini/decisions/ listing pick phase-<id>.md files (incl. dotted subphase ids) with no matching phase in the state; returns them sorted. Unit-tested."
+    },
+    {
+      "title": "Gather stale decisions in doctor()",
+      "status": "done",
+      "detail": "doctor() lists .mini/decisions/ (a listDecisionDir helper, [] when missing, added to the existing Promise.all) and computes staleDecisions via findStaleDecisions only for an existing project."
+    },
+    {
+      "title": "Decisions check in buildDiagnostics",
+      "status": "done",
+      "detail": "add staleDecisions:string[] to DoctorInput; emit a Decisions check (ok = no stale decisions; warn = N stale (names) + delete hint), placed right after the Run reports check."
+    },
+    {
+      "title": "Tests for the Decisions check",
+      "status": "done",
+      "detail": "buildDiagnostics test (ok + warn cases) and a findStaleDecisions unit test (matching phase kept, missing phase flagged, subphase + non-matching files handled)."
+    },
+    {
+      "title": "Update doctor docs",
+      "status": "done",
+      "detail": "mention the Decisions orphan-check in docs/interactive/doctor.md + docs/non-interactive/doctor.md (and README if it lists the doctor checks)."
+    }
+  ],
+  "startedAt": "2026-06-04T17:42:28.127Z",
+  "completedAt": "2026-06-04T17:57:09.165Z",
+  "autoCommit": {
+    "preSha": "d44fddb9c36950a0327b8964a21792af88150920",
+    "subject": "Phase 130: Doctor orphan-check for ADRs"
+  }
+}

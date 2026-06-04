@@ -647,6 +647,11 @@
       "id": 129,
       "title": "Mark ADR phases in status",
       "status": "done"
+    },
+    {
+      "id": 130,
+      "title": "Doctor orphan-check for ADRs",
+      "status": "done"
     }
   ],
   "models": {

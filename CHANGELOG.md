@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-06-04
+
 ### Added
 
 - **Decision records (ADRs) for phases.** A phase can now carry a lightweight
@@ -34,6 +36,10 @@ All notable changes to this project are recorded here. The format is based on
   carries a decision record with a compact `✎ ADR` marker after its title, and
   `mini status --json` sets `hasDecision: true` for it. The whole overview costs a
   single `readdir` of `.mini/decisions/` — no per-phase reads.
+- **`mini doctor` orphan-check for decision records.** A new "Decisions" check
+  flags `phase-<id>.md` files in `.mini/decisions/` whose phase no longer exists
+  in the state (leftovers after `mini undo` / `migrate --renumber`), mirroring the
+  existing stale-run-reports check.
 
 ## [1.16.0] - 2026-06-03
 

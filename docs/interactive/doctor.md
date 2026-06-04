@@ -8,7 +8,8 @@ checklist reference.
 ## What it does
 
 `/mini:doctor` runs `mini doctor` and relays its health-check checklist into the
-chat: the state file and schema version, `project.md`/`CHANGELOG.md`, the
+chat: the state file and schema version, phase hygiene (orphaned `doing` phases,
+stale run reports and stale decision records), `project.md`/`CHANGELOG.md`, the
 installed slash commands, and the mini version freshness. For anything flagged,
 Claude also mentions the suggested fix. It is **read-only**.
 

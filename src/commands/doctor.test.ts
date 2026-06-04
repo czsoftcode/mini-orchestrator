@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { type DoctorInput, buildDiagnostics, findStaleRunReports } from './doctor.js';
+import {
+  type DoctorInput,
+  buildDiagnostics,
+  findStaleDecisions,
+  findStaleRunReports,
+} from './doctor.js';
 import type { Phase } from '../state/types.js';
 
 const HEALTHY: DoctorInput = {
@@ -10,6 +15,7 @@ const HEALTHY: DoctorInput = {
   hasChangelog: true,
   orphanedDoingPhases: [],
   staleRunReports: [],
+  staleDecisions: [],
   installedCommands: 17,
   expectedCommands: 17,
   currentVersion: '1.11.1',
@@ -79,10 +85,23 @@ describe('buildDiagnostics', () => {
     expect(c.detail).toContain('2 stale');
   });
 
+  it('stays ok with no stale decision records', () => {
+    expect(find(HEALTHY, 'Decisions').status).toBe('ok');
+  });
+
+  it('warns about stale decision records, counts and names them', () => {
+    const c = find({ ...HEALTHY, staleDecisions: ['phase-009.md', 'phase-010.md'] }, 'Decisions');
+    expect(c.status).toBe('warn');
+    expect(c.detail).toContain('2 stale');
+    expect(c.detail).toContain('phase-009.md');
+    expect(c.hint).toContain('.mini/decisions/');
+  });
+
   it('omits the phase-hygiene checks when there is no project', () => {
     const checks = buildDiagnostics({ ...HEALTHY, projectExists: false });
     expect(checks.find((c) => c.label === 'Phases')).toBeUndefined();
     expect(checks.find((c) => c.label === 'Run reports')).toBeUndefined();
+    expect(checks.find((c) => c.label === 'Decisions')).toBeUndefined();
   });
 });
 
@@ -104,5 +123,27 @@ describe('findStaleRunReports', () => {
 
   it('returns [] when every report has a phase', () => {
     expect(findStaleRunReports(['phase-001.md', 'phase-012.md'], phases)).toEqual([]);
+  });
+});
+
+describe('findStaleDecisions', () => {
+  const phases: Phase[] = [
+    { id: 1, title: 'A', status: 'done' },
+    { id: 12, title: 'B', status: 'done' },
+    { id: 1.5, title: 'A.1', status: 'done' },
+  ];
+
+  it('keeps ADRs with a matching phase (incl. a dotted subphase), flags the rest', () => {
+    const files = ['phase-001.md', 'phase-1.5.md', 'phase-009.md', 'phase-012.md', 'phase-013.md'];
+    expect(findStaleDecisions(files, phases)).toEqual(['phase-009.md', 'phase-013.md']);
+  });
+
+  it('ignores files that are not phase-<id>.md', () => {
+    const files = ['README.md', 'phase-009.prev.md', '.gitkeep', 'phase-.md'];
+    expect(findStaleDecisions(files, phases)).toEqual([]);
+  });
+
+  it('returns [] when every decision has a phase', () => {
+    expect(findStaleDecisions(['phase-001.md', 'phase-1.5.md', 'phase-012.md'], phases)).toEqual([]);
   });
 });

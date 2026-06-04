@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import pc from 'picocolors';
 import { CHANGELOG_FILE } from '../changelog.js';
 import { COMMAND_DEFS, COMMANDS_DIR } from '../install/commands.js';
+import { DECISIONS_DIR } from '../state/decisionStore.js';
 import { RUN_DIR } from '../state/runReport.js';
 import {
   SCHEMA_VERSION,
@@ -50,6 +51,11 @@ export interface DoctorInput {
    * state (stale leftovers, e.g. after `mini undo` / `migrate --renumber`).
    */
   staleRunReports: string[];
+  /**
+   * Filenames of decision records in `.mini/decisions/` whose phase no longer
+   * exists in the state (stale leftovers, same pattern as `staleRunReports`).
+   */
+  staleDecisions: string[];
   /** Number of `*.md` slash commands installed in the project scope. */
   installedCommands: number;
   /** Number of slash commands this mini build ships. */
@@ -111,6 +117,19 @@ export function buildDiagnostics(input: DoctorInput): DoctorCheck[] {
       });
     } else {
       checks.push({ label: 'Run reports', status: 'ok', detail: 'no stale reports' });
+    }
+
+    // Stale decision records: ADR files with no matching phase in the state.
+    if (input.staleDecisions.length > 0) {
+      const names = input.staleDecisions.join(', ');
+      checks.push({
+        label: 'Decisions',
+        status: 'warn',
+        detail: `${input.staleDecisions.length} stale (${names})`,
+        hint: 'Leftover ADRs with no phase — safe to delete from `.mini/decisions/`',
+      });
+    } else {
+      checks.push({ label: 'Decisions', status: 'ok', detail: 'no stale decisions' });
     }
   }
 
@@ -205,6 +224,32 @@ async function listRunDir(cwd: string): Promise<string[]> {
   }
 }
 
+/**
+ * Picks the stale decision records out of a `.mini/decisions/` directory listing:
+ * ADR files (`phase-<id>.md`, including dotted subphase ids) whose `<id>` matches
+ * no phase in the state. Pure, so it is unit-testable. Returned sorted for a
+ * stable checklist.
+ *
+ * Deliberately a sibling of {@link findStaleRunReports} rather than a shared
+ * generic helper: run reports and decision records are independent domains that
+ * may diverge later, and the body is just a few lines.
+ */
+export function findStaleDecisions(decisionDirFiles: string[], phases: readonly Phase[]): string[] {
+  const valid = new Set(phases.map((p) => `${phaseStem(p.id)}.md`));
+  return decisionDirFiles
+    .filter((f) => /^phase-\d+(?:\.\d+)?\.md$/.test(f) && !valid.has(f))
+    .sort();
+}
+
+/** Lists the `.mini/decisions/` directory, returning `[]` when it doesn't exist. */
+async function listDecisionDir(cwd: string): Promise<string[]> {
+  try {
+    return await readdir(join(cwd, DECISIONS_DIR));
+  } catch {
+    return [];
+  }
+}
+
 async function fileExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -248,25 +293,35 @@ const STATUS_RENDER: Record<DoctorStatus, { symbol: string; color: (s: string) =
 export async function doctor(): Promise<void> {
   const cwd = process.cwd();
 
-  const [projectExists, hasProjectMd, hasChangelog, installedCommands, runDirFiles, cache] =
-    await Promise.all([
-      exists(cwd),
-      fileExists(projectPath(cwd)),
-      fileExists(join(cwd, CHANGELOG_FILE)),
-      countInstalledCommands(cwd),
-      listRunDir(cwd),
-      readCache(),
-    ]);
+  const [
+    projectExists,
+    hasProjectMd,
+    hasChangelog,
+    installedCommands,
+    runDirFiles,
+    decisionDirFiles,
+    cache,
+  ] = await Promise.all([
+    exists(cwd),
+    fileExists(projectPath(cwd)),
+    fileExists(join(cwd, CHANGELOG_FILE)),
+    countInstalledCommands(cwd),
+    listRunDir(cwd),
+    listDecisionDir(cwd),
+    readCache(),
+  ]);
 
   // Phase-level hygiene needs the full state (steps live in per-phase files).
   let orphanedDoingPhases: number[] = [];
   let staleRunReports: string[] = [];
+  let staleDecisions: string[] = [];
   if (projectExists) {
     const state = await load(cwd);
     orphanedDoingPhases = state.phases
       .filter((p) => isOrphanedDoing(p, state.phases))
       .map((p) => p.id);
     staleRunReports = findStaleRunReports(runDirFiles, state.phases);
+    staleDecisions = findStaleDecisions(decisionDirFiles, state.phases);
   }
 
   const checks = buildDiagnostics({
@@ -277,6 +332,7 @@ export async function doctor(): Promise<void> {
     hasChangelog,
     orphanedDoingPhases,
     staleRunReports,
+    staleDecisions,
     installedCommands,
     expectedCommands: COMMAND_DEFS.length,
     currentVersion: readPackageVersion(),

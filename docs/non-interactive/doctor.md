@@ -22,6 +22,8 @@ anything that isn't ok, a hint on how to fix it. It checks:
   (all steps/subphases closed), which should be closed via [`mini done`](done.md),
 - **stale run reports** — `phase-<id>.md` files in `.mini/run/` with no matching
   phase (leftovers after [`mini undo`](undo.md) / `migrate --renumber`),
+- **stale decision records** — `phase-<id>.md` files in `.mini/decisions/` with
+  no matching phase (the same orphan pattern as run reports),
 - the presence of `project.md` and `CHANGELOG.md`,
 - the **installed slash commands** (`.claude/commands/mini/*.md`),
 - the **mini version freshness** (whether a newer release is available).
@@ -37,6 +39,7 @@ mini doctor
   [warn] Phases: phase 7 stuck in "doing" with no open work
          Close it via `mini done` (or `mini undo` to step back)
   [ok]   Run reports: no stale reports
+  [ok]   Decisions: no stale decisions
   [ok]   project.md present
   [ok]   CHANGELOG.md present
   [warn] Slash commands out of date → run: mini install-commands
