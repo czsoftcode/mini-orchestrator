@@ -1,0 +1,34 @@
+{
+  "id": 126,
+  "title": "Decisions storage + status detail",
+  "goal": "Introduce a .mini/decisions/ folder holding one lightweight markdown per phase (phase-XXX.md: heading + Decision + Why), with a pure helper to read a phase's decision file, and surface an existing ADR in 'mini status --phase <n>'. The file's existence is the single source of truth — no flag in state.json or phase-XXX.json. Unit-tested; collection in /mini:done, overview marking, doctor orphan check and undo handling are follow-up phases.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "decisionStore module + unit tests",
+      "status": "done",
+      "detail": "New src/state/decisionStore.ts mirroring runReport.ts: DECISIONS_DIR = .mini/decisions, decisionPath(cwd, id), decisionExists(cwd, id), readDecision(cwd, id) returning the raw markdown string or null when absent. Pure, covered by unit tests."
+    },
+    {
+      "title": "Surface ADR in status --phase text",
+      "status": "done",
+      "detail": "statusPhase loads the decision and passes it to renderPhaseDetail, which appends a 'Decision:' block with the markdown body when the file exists (nothing otherwise). Tested for the with-ADR and without-ADR cases."
+    },
+    {
+      "title": "Surface ADR in status --phase --json",
+      "status": "done",
+      "detail": "buildPhaseDetailJson gains a decision: string | null field carrying the raw markdown. Covered by a test."
+    },
+    {
+      "title": "Define lightweight format + docs",
+      "status": "done",
+      "detail": "Document the .mini/decisions/phase-XXX.md convention (heading + Decision + Why, max one decision per phase, no NNNN- numbering) and the new status --phase output in docs/non-interactive/status.md."
+    }
+  ],
+  "startedAt": "2026-06-04T14:40:07.124Z",
+  "completedAt": "2026-06-04T14:54:06.382Z",
+  "autoCommit": {
+    "preSha": "ded7aed2aa0f11aabb795cc458081ce51ff601c7",
+    "subject": "Phase 126: Decisions storage + status detail"
+  }
+}

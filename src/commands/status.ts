@@ -1,4 +1,5 @@
 import pc from 'picocolors';
+import { readDecision } from '../state/decisionStore.js';
 import { MODEL_SCOPES } from '../state/models.js';
 import {
   readRunReportSummary,
@@ -144,15 +145,16 @@ async function showPhaseDetail(
   }
 
   const summary = await readRunReportSummary(cwd, phase.id);
+  const decision = await readDecision(cwd, phase.id);
 
   const isCurrent = phase.id === state.currentPhaseId;
   if (json) {
-    console.log(JSON.stringify(buildPhaseDetailJson(phase, summary, isCurrent), null, 2));
+    console.log(JSON.stringify(buildPhaseDetailJson(phase, summary, isCurrent, decision), null, 2));
     return;
   }
 
   console.log();
-  for (const line of renderPhaseDetail(phase, summary, isCurrent)) {
+  for (const line of renderPhaseDetail(phase, summary, isCurrent, decision)) {
     console.log(line);
   }
   console.log();
@@ -288,6 +290,8 @@ export interface PhaseDetailJson {
   completedAt?: string;
   durationMs?: number;
   steps: PhaseDetailJsonStep[];
+  /** Raw markdown of the phase's ADR (`.mini/decisions/phase-{id}.md`), or `null` when absent. */
+  decision: string | null;
   runReport: PhaseDetailJsonRunReport | null;
 }
 
@@ -296,6 +300,7 @@ export function buildPhaseDetailJson(
   phase: Phase,
   summary: RunReportSummary | null,
   isCurrent = false,
+  decision: string | null = null,
 ): PhaseDetailJson {
   const out: PhaseDetailJson = {
     id: phase.id,
@@ -308,6 +313,7 @@ export function buildPhaseDetailJson(
       if (s.detail) step.detail = s.detail;
       return step;
     }),
+    decision,
     runReport: null,
   };
   if (phase.startedAt) out.startedAt = phase.startedAt;
@@ -371,6 +377,7 @@ export function renderPhaseDetail(
   phase: Phase,
   summary: RunReportSummary | null,
   isCurrent: boolean,
+  decision: string | null = null,
 ): string[] {
   const lines: string[] = [];
 
@@ -399,6 +406,14 @@ export function renderPhaseDetail(
       if (step.detail) {
         lines.push(pc.dim(`               ${step.detail}`));
       }
+    }
+  }
+
+  if (decision) {
+    lines.push('');
+    lines.push(pc.bold('  Decision:'));
+    for (const line of decision.split('\n')) {
+      lines.push(line ? `    ${line}` : '');
     }
   }
 

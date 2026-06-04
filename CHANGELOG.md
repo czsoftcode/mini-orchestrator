@@ -6,6 +6,19 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **Decision records (ADRs) for phases.** A phase can now carry a lightweight
+  decision record in `.mini/decisions/phase-<n>.md` that captures the *why*
+  behind a non-trivial choice (the rejected alternative and the reason) — what
+  the goal and the commit message don't preserve. The file's existence is the
+  single source of truth (no flag in the state, nothing to keep in sync), the
+  format is lean (heading + `Decision` + `Why`, max one per phase, no `NNNN-`
+  numbering). `mini status --phase <n>` renders it under a `Decision:` heading
+  and `mini status --phase <n> --json` carries it in a new `decision` field.
+  Collecting them automatically, an overview marker, a `doctor` orphan-check and
+  `undo` handling are follow-ups.
+
 ## [1.16.0] - 2026-06-03
 
 ### Added

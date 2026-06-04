@@ -627,6 +627,11 @@
       "id": 125,
       "title": "Doctor: orphaned phases & reports",
       "status": "done"
+    },
+    {
+      "id": 126,
+      "title": "Decisions storage + status detail",
+      "status": "done"
     }
   ],
   "models": {

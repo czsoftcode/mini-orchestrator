@@ -18,8 +18,9 @@ import {
 } from './status.js';
 import type { RunReportSummary } from '../state/runReport.js';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
+import { decisionPath, DECISIONS_DIR } from '../state/decisionStore.js';
 import { save, writeProject } from '../state/store.js';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import type { Phase, ProjectState } from '../state/types.js';
 
 function makeState(overrides: Partial<ProjectState> = {}): ProjectState {
@@ -361,6 +362,24 @@ describe('renderPhaseDetail', () => {
     expect(out).toContain('No steps.');
     expect(out).not.toContain('Run report:');
   });
+
+  it('renders a Decision section with the markdown body when an ADR is present', () => {
+    const p: Phase = { id: 5, title: 'P', goal: 'g', status: 'done', steps: [] };
+    const out = renderPhaseDetail(
+      p,
+      null,
+      false,
+      '# Warn, not error\n\nOrphaned-doing is a legitimate state.',
+    ).join('\n');
+    expect(out).toContain('Decision:');
+    expect(out).toContain('# Warn, not error');
+    expect(out).toContain('Orphaned-doing is a legitimate state.');
+  });
+
+  it('shows no Decision section when there is no ADR', () => {
+    const p: Phase = { id: 5, title: 'P', status: 'done', steps: [] };
+    expect(renderPhaseDetail(p, null, false, null).join('\n')).not.toContain('Decision:');
+  });
 });
 
 describe('buildPhaseDetailJson', () => {
@@ -410,6 +429,13 @@ describe('buildPhaseDetailJson', () => {
     expect(json.goal).toBeNull();
     expect(json.steps).toEqual([]);
     expect(json.isCurrent).toBe(false);
+    expect(json.decision).toBeNull();
+  });
+
+  it('carries the raw ADR markdown in the decision field', () => {
+    const p: Phase = { id: 5, title: 'P', status: 'done' };
+    const json = buildPhaseDetailJson(p, null, false, '# Title\n\nWhy.');
+    expect(json.decision).toBe('# Title\n\nWhy.');
   });
 });
 
@@ -517,5 +543,21 @@ describe('status --phase (integration)', () => {
     expect(json.steps).toEqual([{ title: 's1', status: 'done', detail: 'd1' }]);
     expect(json.runReport.verdict).toBe('done');
     expect(json.runReport.body).toBe('body text');
+  });
+
+  it('surfaces an existing ADR file in both text and --json output', async () => {
+    await save(makeFullState([{ id: 4, title: 'Phase with ADR', status: 'done' }], null), cwd);
+    await mkdir(join(cwd, DECISIONS_DIR), { recursive: true });
+    const adr = '# Warn, not error\n\n## Decision\nUse a warn.\n\n## Why\nLegitimate mid-phase state.';
+    await writeFile(decisionPath(cwd, 4), `${adr}\n`, 'utf-8');
+
+    await status({ phase: 4 });
+    expect(out).toContain('Decision:');
+    expect(out).toContain('# Warn, not error');
+    expect(out).toContain('Legitimate mid-phase state.');
+
+    out = '';
+    await status({ phase: 4, json: true });
+    expect(JSON.parse(out).decision).toBe(adr);
   });
 });
