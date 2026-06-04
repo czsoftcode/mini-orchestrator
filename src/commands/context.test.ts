@@ -42,9 +42,10 @@ async function setupProject(phases: Phase[], currentPhaseId: number | null): Pro
 }
 
 describe('isContextCommand', () => {
-  it('knows the cycle commands and verify', () => {
-    expect(CONTEXT_COMMANDS).toEqual(['next', 'discuss', 'plan', 'do', 'done', 'verify']);
+  it('knows the cycle commands, decision and verify', () => {
+    expect(CONTEXT_COMMANDS).toEqual(['next', 'discuss', 'plan', 'do', 'done', 'decision', 'verify']);
     expect(isContextCommand('plan')).toBe(true);
+    expect(isContextCommand('decision')).toBe(true);
     expect(isContextCommand('verify')).toBe(true);
     expect(isContextCommand('auto')).toBe(false);
   });
@@ -191,6 +192,22 @@ describe('context', () => {
     await context('done');
     expect(out).toContain('--accept-verify');
     expect(out).toContain('check the UI');
+  });
+
+  it('decision without a current phase → exit code 1', async () => {
+    await setupProject([], null);
+    await context('decision');
+    expect(process.exitCode).toBe(1);
+    expect(out).toBe('');
+  });
+
+  it('decision with a current phase prints the ADR drafting prompt', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 's', status: 'doing' }] }], 1);
+    await context('decision');
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('**decision** step');
+    expect(out).toContain('1: Phase A');
+    expect(out).toContain('mini decision --apply');
   });
 
   it('verify without a current or closed phase → exit code 1', async () => {

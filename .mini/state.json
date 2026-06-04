@@ -637,6 +637,11 @@
       "id": 127,
       "title": "Collect ADR in mini:done",
       "status": "done"
+    },
+    {
+      "id": 128,
+      "title": "On-demand mini:decision + thin trigger",
+      "status": "done"
     }
   ],
   "models": {

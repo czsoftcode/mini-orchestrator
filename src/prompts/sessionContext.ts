@@ -169,6 +169,59 @@ After saving, write that the next step is \`/mini:do\` (implement the phase).
 `;
 }
 
+/**
+ * Prompt pro `/mini:decision` — on-demand zápis decision record (ADR) k aktuální
+ * fázi. Drží **celou** instrukci k sepsání ADR (dřív žila v `done` promptu, kde
+ * se platila každou fázi). Načte se jen když ji člověk vědomě vyvolá; běžný cyklus
+ * (`do`/`done`) na ni jen tence ukazuje. Zápis dělá `mini decision --apply`, který
+ * cílí na aktuální fázi a odmítá už uzavřenou — tj. musí proběhnout před `done`.
+ */
+export function buildDecisionSessionPrompt(phase: Phase): string {
+  return `You are in a Claude Code session — the **decision** step of the mini workflow.
+You record a decision (ADR) behind phase **${phase.id}: ${phase.title}** — the *why* of a non-trivial choice, so it isn't lost.
+
+# When to write one — only on a real crossroads
+The **default is to write nothing.** Most phases carry no ADR. Write one **only**
+when this phase made a non-trivial decision: a concrete alternative was weighed
+and **rejected**, and the choice would not be obvious from the code half a year
+later (an architectural/contract call, a deliberate trade-off). Routine choices
+(naming, a loop style, an obvious library) get **no** ADR — do not invent a
+decision just to fill the file. If there was no real crossroads, say so and write
+nothing.
+
+This is **not** the CHANGELOG: the CHANGELOG says *what* changed for users, the
+ADR says *why* this path was chosen over another. Don't duplicate the text.
+
+# How to record it
+1. Draft a lean ADR and **show it to the user** in the chat for edits/approval —
+   never write it silently. Structure:
+   \`\`\`
+   # <short decision title>
+
+   ## Decision
+   <what was decided, 1-3 sentences>
+
+   ## Why
+   <the rejected alternative and the reason this path won>
+   \`\`\`
+2. After the user approves, write it (Bash) **before** \`/mini:done\` closes the
+   phase, so it lands in the phase commit:
+   \`\`\`
+   printf '%s\\n' \\
+     "# <short decision title>" \\
+     "" \\
+     "## Decision" \\
+     "<what was decided>" \\
+     "" \\
+     "## Why" \\
+     "<rejected alternative + reason>" | mini decision --apply
+   \`\`\`
+   It targets the current phase (${phase.id}), so it must run before the state
+   moves. An empty body or a body without a \`# \` heading writes nothing (then
+   just continue).
+`;
+}
+
 export interface DoneSessionInput {
   phase: Phase;
   /** Existuje report `.mini/run/phase-{id}.md`? */
@@ -238,43 +291,8 @@ Still **before** \`mini done --apply\`, record what the phase delivered into \`C
   is produced only by \`mini done --apply --push\` on a minor/major release; patches accumulate in Unreleased.
 - Purely internal changes with no user impact can be omitted.
 
-# Decision record (ADR) — only on a real crossroads
-The **default is to write nothing.** Most phases carry no ADR. Write one **only**
-when this phase made a non-trivial decision: a concrete alternative was weighed
-and **rejected**, and the choice would not be obvious from the code half a year
-later (an architectural/contract call, a deliberate trade-off). Routine choices
-(naming, a loop style, an obvious library) get **no** ADR — do not invent a
-decision just to fill the file.
-
-This is **not** the CHANGELOG: the CHANGELOG says *what* changed for users, the
-ADR says *why* this path was chosen over another. Don't duplicate the text.
-
-When there genuinely was such a decision:
-1. Draft a lean ADR and **show it to the user** in the chat for edits/approval —
-   never write it silently. Structure:
-   \`\`\`
-   # <short decision title>
-
-   ## Decision
-   <what was decided, 1-3 sentences>
-
-   ## Why
-   <the rejected alternative and the reason this path won>
-   \`\`\`
-2. After the user approves, write it **before** \`mini done --apply\` (Bash), so it
-   lands in the phase commit:
-   \`\`\`
-   printf '%s\\n' \\
-     "# <short decision title>" \\
-     "" \\
-     "## Decision" \\
-     "<what was decided>" \\
-     "" \\
-     "## Why" \\
-     "<rejected alternative + reason>" | mini decision --apply
-   \`\`\`
-   It targets the current phase, so it must run before the state moves. An empty
-   body or a body without a \`# \` heading writes nothing (then just continue).
+# Decision record (ADR)
+Did this phase make a **real** decision — a concrete alternative weighed and **rejected**, not obvious from the code later? Then capture the *why* with \`/mini:decision\` **before** \`mini done --apply\` (it lands in the phase commit). Most phases have no such crossroads — write nothing then, and skip this if you already recorded one.
 
 # Moving the state
 ${applyHint}

@@ -1,0 +1,42 @@
+{
+  "id": 128,
+  "title": "On-demand mini:decision + thin trigger",
+  "goal": "Move the full ADR drafting instruction out of the done prompt into a new on-demand 'mini context decision' command (add 'decision' to CONTEXT_COMMANDS) with a matching /mini:decision slash command; insert into the do/auto prompt only a sharp, apt, concise trigger that offers running /mini:decision when the phase hits a real crossroads; slim the heavy ADR block out of buildDoneSessionPrompt. Acceptance: the trigger must stay sharp enough not to raise the rate of forgotten ADRs.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "buildDecisionSessionPrompt + mini context decision",
+      "status": "done",
+      "detail": "New builder in sessionContext.ts holding the full ADR drafting instruction (draft -> show user -> mini decision --apply), lifted from the done block. Add 'decision' to CONTEXT_COMMANDS and route it through buildPhaseContext to the new builder. Update context.test.ts (CONTEXT_COMMANDS array) and add a test/snapshot for the new builder."
+    },
+    {
+      "title": "Slim buildDoneSessionPrompt to a thin pointer",
+      "status": "done",
+      "detail": "Remove the ~37-line ADR block, replace with a ~2-line conditional pointer to /mini:decision (run it before /mini:done; skip if already recorded). Update the done snapshot test."
+    },
+    {
+      "title": "Thin pointer in the do prompt (buildAutoPhasePrompt)",
+      "status": "done",
+      "detail": "~2 sharp lines near the report section: on a real crossroads, at the end tell the user to run /mini:decision before /mini:done -- do not write it yourself. Update the autoPhase snapshot test."
+    },
+    {
+      "title": "Register /mini:decision in COMMAND_DEFS",
+      "status": "done",
+      "detail": "New entry with the default thin body (runs mini context decision). Update the install-commands test."
+    },
+    {
+      "title": "Docs + README",
+      "status": "done",
+      "detail": "Add docs/interactive/decision.md; mention /mini:decision in the README slash-command list."
+    }
+  ],
+  "startedAt": "2026-06-04T16:40:16.745Z",
+  "resolvedVerify": [
+    "Are the two thin ADR pointers (do + done) sharp enough?"
+  ],
+  "completedAt": "2026-06-04T17:09:58.396Z",
+  "autoCommit": {
+    "preSha": "6b8bfa8913cd504ae4b2013924465f700930eb0e",
+    "subject": "Phase 128: On-demand mini:decision + thin trigger"
+  }
+}

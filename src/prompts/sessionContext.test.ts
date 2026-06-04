@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildDecisionSessionPrompt,
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
@@ -177,20 +178,37 @@ describe('buildDoneSessionPrompt', () => {
     expect(p).not.toContain('CHANGELOG.md');
   });
 
-  it('instruuje psát ADR jen na reálném rozcestí, přes mini decision --apply', () => {
+  it('ADR jen tence ukáže na /mini:decision (full instrukce tam nejsou)', () => {
     const p = buildDoneSessionPrompt({ phase, reportExists: true, verify: [] });
     expect(p).toContain('Decision record (ADR)');
-    expect(p).toContain('default is to write nothing');
-    expect(p).toContain('mini decision --apply');
-    // ADR draft is shown to the user, not written silently.
-    expect(p).toContain('show it to the user');
-    // ADR is distinguished from the CHANGELOG.
-    expect(p).toContain('not** the CHANGELOG');
+    // A thin pointer to the on-demand command, before the state moves.
+    expect(p).toContain('/mini:decision');
+    expect(p).toContain('before');
+    // The full drafting machinery moved out of the done prompt.
+    expect(p).not.toContain('mini decision --apply');
+    expect(p).not.toContain('show it to the user');
   });
 
-  it('ADR sekci nevkládá, když report chybí', () => {
+  it('pointer na /mini:decision nevkládá, když report chybí', () => {
     const p = buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
-    expect(p).not.toContain('mini decision --apply');
+    expect(p).not.toContain('/mini:decision');
+  });
+});
+
+describe('buildDecisionSessionPrompt', () => {
+  const phase: Phase = { id: 7, title: 'Rozcestí', goal: 'cíl', status: 'doing' };
+
+  it('drží celou ADR instrukci a cílí na aktuální fázi přes mini decision --apply', () => {
+    const p = buildDecisionSessionPrompt(phase);
+    expect(p).toContain('**decision** step');
+    expect(p).toContain('7: Rozcestí');
+    expect(p).toContain('default is to write nothing');
+    expect(p).toContain('show it to the user');
+    expect(p).toContain('mini decision --apply');
+    // It distinguishes the ADR from the CHANGELOG.
+    expect(p).toContain('not** the CHANGELOG');
+    // The current phase id is named so the write targets the right phase.
+    expect(p).toContain('current phase (7)');
   });
 });
 

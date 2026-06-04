@@ -161,7 +161,7 @@ The whole cycle `next → discuss → plan → do → done` can also be run **di
 mini install-commands     # one-off in the target project
 ```
 
-This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,status,todo,changelog,doctor,map,audit,auto,undo,model,upgrade}.md`. Then in Claude Code:
+This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,decision,verify,status,todo,changelog,doctor,map,audit,auto,undo,model,upgrade}.md`. Then in Claude Code:
 
 ```
 /mini:init           # creates the project (questions in the chat) → offers /mini:map and /mini:audit
@@ -170,6 +170,7 @@ This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,verify,statu
 /mini:plan           # breaks the phase into steps
 /mini:do             # implements the phase and writes a report
 /mini:done           # human verification in the chat → moves the state
+/mini:decision       # on-demand: record the decision (ADR) behind the phase, on a real crossroads
 /mini:verify         # in-depth UI/UX review of the phase by a human; writes findings into the report (and memory)
 /mini:auto [args]    # autonomous mode: completes several phases in a row (--max-phases N, --yolo, --verify, --discuss, --bump <level>, --push)
 /mini:map            # regenerates the project graph

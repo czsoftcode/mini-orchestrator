@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { buildAutoPhasePrompt } from '../prompts/autoPhase.js';
 import { buildDiscussPhasePrompt } from '../prompts/discussPhase.js';
 import {
+  buildDecisionSessionPrompt,
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
@@ -17,7 +18,7 @@ import { log } from '../ui/log.js';
 import { buildVerifyContext, readReportVerify } from './verifyContext.js';
 
 /** Sub-commands for which `mini context` can print a session prompt. */
-export const CONTEXT_COMMANDS = ['next', 'discuss', 'plan', 'do', 'done', 'verify'] as const;
+export const CONTEXT_COMMANDS = ['next', 'discuss', 'plan', 'do', 'done', 'decision', 'verify'] as const;
 export type ContextCommand = (typeof CONTEXT_COMMANDS)[number];
 
 export function isContextCommand(value: string): value is ContextCommand {
@@ -130,6 +131,9 @@ async function buildPhaseContext(
   if (cmd === 'plan') {
     const discussNotes = await readDiscussNotes(cwd, phase.id);
     return buildPlanSessionPrompt(projectMd, phase, discussNotes);
+  }
+  if (cmd === 'decision') {
+    return buildDecisionSessionPrompt(phase);
   }
   if (cmd === 'do') {
     // `/mini:do` runs in the same chat session as `/mini:plan` (or `auto`),

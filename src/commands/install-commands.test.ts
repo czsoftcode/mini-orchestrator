@@ -22,6 +22,7 @@ describe('installCommands', () => {
       'audit.md',
       'auto.md',
       'changelog.md',
+      'decision.md',
       'discuss.md',
       'do.md',
       'doctor.md',
@@ -38,6 +39,13 @@ describe('installCommands', () => {
       'upgrade.md',
       'verify.md',
     ]);
+  });
+
+  it('the decision command calls mini context decision (default thin body)', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'decision.md'), 'utf-8');
+    expect(md).toContain('mini context decision');
+    expect(md).toContain('description:');
   });
 
   it('the todo command calls mini todo, not mini context, and offers the suggest action', async () => {

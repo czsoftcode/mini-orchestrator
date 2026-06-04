@@ -2,9 +2,9 @@
 
 > Writes the current phase's decision record (ADR) to `.mini/decisions/` from stdin.
 
-**Interactive variant:** none of its own — this command is driven by
-[`/mini:done`](../interactive/done.md), which drafts the ADR in the session,
-gets the user's approval, and then calls this with `--apply`.
+**Interactive variant:** [`/mini:decision`](../interactive/decision.md) — the
+on-demand slash command that drafts the ADR in the session, gets the user's
+approval, and then calls this with `--apply`.
 
 ## Synopsis
 
@@ -21,10 +21,11 @@ be obvious from the code later. It is stored as a single markdown file
 existence is the only source of truth** (there is no flag in `state.json`).
 
 `mini decision --apply` reads the ADR body from **stdin** and writes it for the
-**current** phase (`currentPhaseId`). It must therefore run **before**
-[`mini done --apply`](done.md) — once `done` closes the phase, the current phase
-points to the next one, and the `done` phase commit picks up the decision file
-only if it already exists on disk.
+**current** phase (`currentPhaseId`). It is driven by
+[`/mini:decision`](../interactive/decision.md), which Claude offers when a phase
+hits a real crossroads. It must run **before** [`mini done --apply`](done.md) —
+once `done` closes the phase, the current phase points to the next one, and the
+`done` phase commit picks up the decision file only if it already exists on disk.
 
 The body stays free markdown; only a top-level `# ` heading is required. The
 conventional shape is `# <title>` + `## Decision` + `## Why`.
@@ -73,6 +74,6 @@ $ printf '%s\n' \
 
 ## Related
 
-- [`/mini:done`](../interactive/done.md) — drives this command
+- [`/mini:decision`](../interactive/decision.md) — drives this command
 - [`mini done`](done.md) — must run *after* `mini decision --apply`
 - [`mini status`](status.md) — `--phase <n>` shows a phase's ADR

@@ -143,6 +143,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
+
 ${PARALLELISM_HINT}
 ${progressBlock}
 

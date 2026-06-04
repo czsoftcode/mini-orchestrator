@@ -26,4 +26,4 @@
 - [x] Decision records: collection in /mini:done — agent drafts an ADR from what actually happened (or prompts), human approves/edits; nothing written when there was no real crossroads.
 - [ ] Decision records: consistency — mini doctor orphan-check (decision file with no matching phase, same pattern as stale run reports) and mini undo removes/restores the decision file.
 - [ ] Decision records: mark phases that have an ADR in the mini status overview (cheap via one readdir of .mini/decisions/, no per-phase JSON reads).
-- [ ] Slim the done prompt: move the ADR instruction to an on-demand 'mini context decision' (add decision to CONTEXT_COMMANDS); done keeps only a thin trigger. Saves ~250 tokens/phase ONLY IF the trigger stays sharp enough not to raise the rate of forgotten ADRs (acceptance criterion, not an implementation detail).
+- [x] Slim the done prompt: move the ADR instruction to an on-demand 'mini context decision' (add decision to CONTEXT_COMMANDS); done keeps only a thin trigger. Saves ~250 tokens/phase ONLY IF the trigger stays sharp enough not to raise the rate of forgotten ADRs (acceptance criterion, not an implementation detail).

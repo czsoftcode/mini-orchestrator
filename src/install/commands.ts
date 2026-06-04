@@ -85,6 +85,10 @@ If a step runs into a blocker you can't get around yourself, stop and hand contr
     description: 'mini — human verification and moving the phase state',
   },
   {
+    name: 'decision',
+    description: 'mini — record the decision (ADR) behind the current phase',
+  },
+  {
     name: 'verify',
     description: 'mini — in-depth UI/UX review of the phase by a human',
   },

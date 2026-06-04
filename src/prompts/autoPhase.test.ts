@@ -40,6 +40,9 @@ describe('buildAutoPhasePrompt', () => {
     expect(out).toContain('verdict: done');
     expect(out).toContain('- title: "Prompt builder pro celou fázi"');
     expect(out).toContain('- title: "Snapshot testy auto-promptu"');
+    // Thin ADR pointer: suggest /mini:decision on a real crossroads, don't self-write.
+    expect(out).toContain('/mini:decision');
+    expect(out).toContain("Don't write the ADR yourself");
     expect(out).toMatchSnapshot();
   });
 

@@ -28,6 +28,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
+
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 # Tracking step progress
@@ -105,6 +107,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
+
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 # Tracking step progress
@@ -169,6 +173,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
 
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
@@ -239,6 +245,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
+
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 # Tracking step progress
@@ -308,6 +316,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
 
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
@@ -382,6 +392,8 @@ Implement all remaining steps so that the phase meets its goal. The steps above 
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
 
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
+
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
 
@@ -441,6 +453,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
 
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 
@@ -511,6 +525,8 @@ Steps (a guide for the work — do not edit them in any file, they only serve as
 Implement all remaining steps so that the phase meets its goal. The steps above are a guide for the work — the order and granularity are up to you, and do not edit the files in \`.mini/state.json\` by hand. The user takes care of moving the phase status and the final step statuses via \`mini done\`, based on the report you write (see below).
 
 Read the files yourself as needed. You work in acceptEdits mode, so you can edit without asking.
+
+If you hit a **real** decision along the way — a concrete alternative weighed and **rejected**, not obvious from the code later — at the end tell the user to run \`/mini:decision\` (before \`/mini:done\`) to record the *why*. Don't write the ADR yourself; most phases have no such crossroads.
 
 On parallelizing tool calls: (1) run fragile/stateful commands on their own — anything touching a server (start/stop, kill, pkill, background jobs) must not share a batch with other work, so a failure or hang is isolated; (2) independent reads and queries can go in parallel — that is safe and saves time; (3) keep dependent steps sequential — when you need one command’s output for the next (e.g. an exact step name), wait for it before continuing.
 

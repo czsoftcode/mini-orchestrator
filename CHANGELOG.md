@@ -22,9 +22,14 @@ All notable changes to this project are recorded here. The format is based on
   phase's ADR to `.mini/decisions/phase-<n>.md` from stdin (targets the current
   phase, so run it before `mini done --apply` to land it in the phase commit).
   An empty body or a body without a top-level `# ` heading writes nothing — "no
-  decision" stays the file's absence. `/mini:done` now drafts a lean ADR from
-  what actually happened, shows it to you for approval, and writes it — but only
-  on a real crossroads (a weighed-and-rejected alternative), not routine choices.
+  decision" stays the file's absence.
+- **On-demand `/mini:decision`.** Drafting an ADR is its own command: it drafts a
+  lean record from what actually happened, shows it to you for approval, and
+  writes it — but only on a real crossroads (a weighed-and-rejected alternative),
+  not routine choices. `/mini:do` and `/mini:done` no longer carry the full
+  instruction; they only point you to `/mini:decision` when a phase makes a real
+  decision, which keeps their prompts lean (the `done` prompt drops ~270 tokens
+  per phase).
 
 ## [1.16.0] - 2026-06-03
 
