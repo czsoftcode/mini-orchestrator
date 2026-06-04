@@ -1,5 +1,5 @@
-import { access, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { phaseStem } from './store.js';
 
 /**
@@ -56,4 +56,55 @@ export async function readDecision(cwd: string, phaseId: number): Promise<string
   }
   const text = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trim();
   return text.length > 0 ? text : null;
+}
+
+/**
+ * Does the text carry at least one top-level Markdown heading (`# \u2026`)? The ADR
+ * convention is `# <title>` + `## Decision` + `## Why`, but only the top-level
+ * heading is enforced \u2014 the rest stays a writer's convention, not a reader's
+ * contract (see `readDecision`). A heading-only guard is enough to reject empty
+ * or obviously malformed bodies without over-validating the structure.
+ */
+export function hasHeading(text: string): boolean {
+  return text
+    .replace(/^\uFEFF/, '')
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .some((line) => /^# \S/.test(line.trimStart()));
+}
+
+/** Outcome of {@link writeDecision} \u2014 nothing is written unless `ok` is true. */
+export type WriteDecisionResult =
+  | { ok: true; path: string }
+  | { ok: false; reason: 'empty' | 'no-heading' };
+
+/**
+ * Writes (or overwrites) a phase's ADR file from a raw markdown body.
+ *
+ * Guards, mirroring the discussion for phase 127:
+ * - an empty / whitespace-only body writes **nothing** (`reason: 'empty'`) \u2014 the
+ *   "no decision" state is the file's absence, never an empty file,
+ * - a body without a top-level `# ` heading writes **nothing**
+ *   (`reason: 'no-heading'`) \u2014 see {@link hasHeading}.
+ *
+ * On success the `.mini/decisions/` directory is created if needed and the file
+ * is written/overwritten with a single trailing newline; the body is stored as
+ * given (only trimmed), since the structure is a convention for the writer.
+ */
+export async function writeDecision(
+  cwd: string,
+  phaseId: number,
+  body: string,
+): Promise<WriteDecisionResult> {
+  const text = body.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trim();
+  if (text.length === 0) {
+    return { ok: false, reason: 'empty' };
+  }
+  if (!hasHeading(text)) {
+    return { ok: false, reason: 'no-heading' };
+  }
+  const path = decisionPath(cwd, phaseId);
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, `${text}\n`, 'utf8');
+  return { ok: true, path };
 }

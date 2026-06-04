@@ -238,6 +238,44 @@ Still **before** \`mini done --apply\`, record what the phase delivered into \`C
   is produced only by \`mini done --apply --push\` on a minor/major release; patches accumulate in Unreleased.
 - Purely internal changes with no user impact can be omitted.
 
+# Decision record (ADR) — only on a real crossroads
+The **default is to write nothing.** Most phases carry no ADR. Write one **only**
+when this phase made a non-trivial decision: a concrete alternative was weighed
+and **rejected**, and the choice would not be obvious from the code half a year
+later (an architectural/contract call, a deliberate trade-off). Routine choices
+(naming, a loop style, an obvious library) get **no** ADR — do not invent a
+decision just to fill the file.
+
+This is **not** the CHANGELOG: the CHANGELOG says *what* changed for users, the
+ADR says *why* this path was chosen over another. Don't duplicate the text.
+
+When there genuinely was such a decision:
+1. Draft a lean ADR and **show it to the user** in the chat for edits/approval —
+   never write it silently. Structure:
+   \`\`\`
+   # <short decision title>
+
+   ## Decision
+   <what was decided, 1-3 sentences>
+
+   ## Why
+   <the rejected alternative and the reason this path won>
+   \`\`\`
+2. After the user approves, write it **before** \`mini done --apply\` (Bash), so it
+   lands in the phase commit:
+   \`\`\`
+   printf '%s\\n' \\
+     "# <short decision title>" \\
+     "" \\
+     "## Decision" \\
+     "<what was decided>" \\
+     "" \\
+     "## Why" \\
+     "<rejected alternative + reason>" | mini decision --apply
+   \`\`\`
+   It targets the current phase, so it must run before the state moves. An empty
+   body or a body without a \`# \` heading writes nothing (then just continue).
+
 # Moving the state
 ${applyHint}
 

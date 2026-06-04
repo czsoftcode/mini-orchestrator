@@ -632,6 +632,11 @@
       "id": 126,
       "title": "Decisions storage + status detail",
       "status": "done"
+    },
+    {
+      "id": 127,
+      "title": "Collect ADR in mini:done",
+      "status": "done"
     }
   ],
   "models": {

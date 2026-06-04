@@ -58,10 +58,14 @@ With --push you must choose a version level: --bump patch | minor | major.
   error.
 - Items flagged in the report's `verify` list block an automatic close unless
   you pass `--accept-verify` (only after a human actually reviewed them).
+- If the phase made a real decision worth recording, write the ADR with
+  [`mini decision --apply`](decision.md) **before** `mini done --apply`, so the
+  decision file lands in the same phase commit.
 
 ## Related
 
 - [`/mini:done`](../interactive/done.md) — interactive variant
 - [`mini do`](do.md) — produces the report this reads
+- [`mini decision`](decision.md) — record the *why* before closing (run first)
 - [`mini verify`](verify.md) — human review before closing
 - [`mini undo`](undo.md) — revert a `done` you regret

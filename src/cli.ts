@@ -203,6 +203,20 @@ program
   });
 
 program
+  .command('decision')
+  .description('Writes the current phase\'s decision record (ADR) to .mini/decisions/ from stdin. For /mini:done; run before mini done --apply.')
+  .option('--apply', 'Non-interactively write the ADR body read from stdin (empty stdin or a body without a "# " heading writes nothing). For /mini:done.')
+  .action(async (opts: { apply?: boolean }) => {
+    if (!opts.apply) {
+      console.error('mini decision needs --apply (the ADR body is read from stdin).');
+      process.exit(1);
+    }
+    const { applyDecision } = await import('./commands/decision.js');
+    const r = await applyDecision(await readStdin());
+    if (!r.ok) process.exit(1);
+  });
+
+program
   .command('auto')
   .description('Auto chain: next → plan → (do → done){for each step}. Drives the phase on its own, but stops and asks a human at items for manual verification (verify) — it is not a fully unattended run.')
   .option('--max-turns <n>', 'Maximum number of Claude Code responses in each session — after N responses the session stops automatically (saves tokens).', parseMaxTurns)

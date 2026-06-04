@@ -1,0 +1,34 @@
+{
+  "id": 127,
+  "title": "Collect ADR in mini:done",
+  "goal": "Add a 'mini decision --apply' command that writes .mini/decisions/phase-XXX.md from stdin (modeled on 'mini plan --apply'), add writeDecision() to decisionStore with unit tests, and extend the /mini:done prompt (buildDoneSessionPrompt) so Claude drafts a lean ADR (heading + Decision + Why) from what actually happened, lets the user approve/edit it, and writes it BEFORE 'mini done --apply' so it lands in the phase commit — writing nothing when there was no real crossroads. Doctor/undo consistency (item 22) and the status overview marker (item 23) are out of scope.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "writeDecision() + heading guard in decisionStore",
+      "status": "done",
+      "detail": "Add pure hasHeading(text) (true when a top-level '# ' heading line exists) and writeDecision(cwd, phaseId, body): trims body, rejects empty or heading-less body (returns an error, writes nothing), otherwise creates .mini/decisions/ and writes/overwrites phase-XXX.md. Unit tests: write, overwrite, empty->no write, missing heading->error, directory creation."
+    },
+    {
+      "title": "mini decision --apply command + CLI wiring",
+      "status": "done",
+      "detail": "applyDecision(cwd): loads state, resolves currentPhaseId with the same guards as applyPlanSteps (no-project / no-current-phase / inconsistent / phase-done), reads the ADR body from stdin, calls writeDecision, logs success/failure (exit 1 on error). Wire program.command('decision').option('--apply') into cli.ts using readStdin()."
+    },
+    {
+      "title": "ADR section in buildDoneSessionPrompt + snapshot",
+      "status": "done",
+      "detail": "Extend the /mini:done prompt: judge whether a real decision was made (strict threshold, default = write nothing); if so, show the user a drafted ADR (# title + ## Decision + ## Why) to edit/approve and write it via 'printf ... | mini decision --apply' BEFORE 'mini done --apply'; keep it distinct from the CHANGELOG (ADR = why, not what). Update the snapshot test."
+    },
+    {
+      "title": "Docs for the decision command",
+      "status": "done",
+      "detail": "Add docs/non-interactive/decision.md (and a mention in done.md) covering the stdin contract, empty stdin = nothing, the heading guard, and the required ordering before 'mini done --apply'."
+    }
+  ],
+  "startedAt": "2026-06-04T15:36:30.144Z",
+  "completedAt": "2026-06-04T16:00:29.199Z",
+  "autoCommit": {
+    "preSha": "dd96938d27565c749dc0322c33d22e006ec1ce15",
+    "subject": "Phase 127: Collect ADR in mini:done"
+  }
+}

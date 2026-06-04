@@ -176,6 +176,22 @@ describe('buildDoneSessionPrompt', () => {
     const p = buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
     expect(p).not.toContain('CHANGELOG.md');
   });
+
+  it('instruuje psát ADR jen na reálném rozcestí, přes mini decision --apply', () => {
+    const p = buildDoneSessionPrompt({ phase, reportExists: true, verify: [] });
+    expect(p).toContain('Decision record (ADR)');
+    expect(p).toContain('default is to write nothing');
+    expect(p).toContain('mini decision --apply');
+    // ADR draft is shown to the user, not written silently.
+    expect(p).toContain('show it to the user');
+    // ADR is distinguished from the CHANGELOG.
+    expect(p).toContain('not** the CHANGELOG');
+  });
+
+  it('ADR sekci nevkládá, když report chybí', () => {
+    const p = buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
+    expect(p).not.toContain('mini decision --apply');
+  });
 });
 
 describe('buildVerifySessionPrompt', () => {

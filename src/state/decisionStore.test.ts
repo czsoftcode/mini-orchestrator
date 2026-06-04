@@ -1,8 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DECISIONS_DIR, decisionExists, decisionPath, readDecision } from './decisionStore.js';
+import {
+  DECISIONS_DIR,
+  decisionExists,
+  decisionPath,
+  hasHeading,
+  readDecision,
+  writeDecision,
+} from './decisionStore.js';
 
 describe('decisionPath', () => {
   it('builds the path from the shared phaseStem (zero-padded)', () => {
@@ -51,5 +58,66 @@ describe('decisionExists / readDecision — file handling', () => {
     // The file exists, but it carries no decision.
     expect(await decisionExists(cwd, 3)).toBe(true);
     expect(await readDecision(cwd, 3)).toBeNull();
+  });
+});
+
+describe('hasHeading', () => {
+  it('accepts a top-level Markdown heading', () => {
+    expect(hasHeading('# Title')).toBe(true);
+    expect(hasHeading('intro\n# Title\nbody')).toBe(true);
+    expect(hasHeading('  # Indented heading')).toBe(true);
+    expect(hasHeading('﻿# Title with BOM')).toBe(true);
+  });
+
+  it('rejects text without a top-level heading', () => {
+    expect(hasHeading('')).toBe(false);
+    expect(hasHeading('just a paragraph')).toBe(false);
+    expect(hasHeading('## Decision\n## Why')).toBe(false); // only sub-headings
+    expect(hasHeading('#nospace')).toBe(false);
+    expect(hasHeading('# ')).toBe(false); // heading marker but no text
+  });
+});
+
+describe('writeDecision — file handling', () => {
+  let cwd: string;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'mini-decision-write-'));
+  });
+
+  afterEach(async () => {
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  const body = '# Warn, not error\n\n## Decision\nUse a warn.\n\n## Why\nLegit state.';
+
+  it('creates .mini/decisions/ and writes the trimmed body with a trailing newline', async () => {
+    // The directory does not exist yet — writeDecision must create it.
+    await expect(access(join(cwd, DECISIONS_DIR))).rejects.toThrow();
+
+    const r = await writeDecision(cwd, 7, `  \n${body}\n  `);
+    expect(r).toEqual({ ok: true, path: decisionPath(cwd, 7) });
+    expect(await decisionExists(cwd, 7)).toBe(true);
+    expect(await readDecision(cwd, 7)).toBe(body);
+  });
+
+  it('overwrites an existing decision file', async () => {
+    await writeDecision(cwd, 7, '# Old\n\n## Decision\nold');
+    const r = await writeDecision(cwd, 7, body);
+    expect(r.ok).toBe(true);
+    expect(await readDecision(cwd, 7)).toBe(body);
+  });
+
+  it('writes nothing for an empty / whitespace-only body', async () => {
+    expect(await writeDecision(cwd, 4, '   \n\t\n')).toEqual({ ok: false, reason: 'empty' });
+    expect(await decisionExists(cwd, 4)).toBe(false);
+  });
+
+  it('writes nothing when the body has no top-level heading', async () => {
+    expect(await writeDecision(cwd, 4, '## Decision\nfoo\n\n## Why\nbar')).toEqual({
+      ok: false,
+      reason: 'no-heading',
+    });
+    expect(await decisionExists(cwd, 4)).toBe(false);
   });
 });

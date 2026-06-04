@@ -41,6 +41,7 @@ Each page links to its sibling variant and to related commands.
 | Implement the phase | [`/mini:do`](interactive/do.md) | [`mini do`](non-interactive/do.md) |
 | In-depth UI/UX review | [`/mini:verify`](interactive/verify.md) | [`mini verify`](non-interactive/verify.md) |
 | Verify and move the state | [`/mini:done`](interactive/done.md) | [`mini done`](non-interactive/done.md) |
+| Record a decision (ADR) | (within `/mini:done`) | [`mini decision`](non-interactive/decision.md) |
 
 ## The autonomous loop
 
