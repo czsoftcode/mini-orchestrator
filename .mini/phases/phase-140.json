@@ -1,0 +1,47 @@
+{
+  "id": 140,
+  "title": "README: FAQ + Files → docs/",
+  "goal": "Move the FAQ and Files-in-the-project sections out of README into new docs/faq.md and docs/files.md (linked from docs/README.md), keeping only 3-4 new-user FAQ entries inline; drop the version-bump/undo/state-layout internals from README.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Create docs/files.md",
+      "status": "done",
+      "detail": "Move the full 'Files in the project' section (tree + state.json/phases/memory/graph prose) verbatim into a new docs/files.md with a short intro; nothing of it stays in README."
+    },
+    {
+      "title": "Create docs/faq.md",
+      "status": "done",
+      "detail": "New docs/faq.md holding the complete FAQ (all current entries, incl. version-bump/undo/memory internals)."
+    },
+    {
+      "title": "Trim README FAQ to new-user concerns",
+      "status": "done",
+      "detail": "Keep only 3-4 entries inline (pause & resume, API key vs Pro/Max, why permission prompts, commit/push), end with a link to docs/faq.md; drop version-bump/undo/memory internals from README."
+    },
+    {
+      "title": "Drop 'Files in the project' from README",
+      "status": "done",
+      "detail": "Remove the section; add a one-line pointer to docs/files.md near the .mini/ mention."
+    },
+    {
+      "title": "Link new pages from docs index",
+      "status": "done",
+      "detail": "Add a 'Concepts & guides' section to docs/README.md linking files.md and faq.md."
+    },
+    {
+      "title": "Verify links and length",
+      "status": "done",
+      "detail": "Check all relative links resolve and run wc -l README.md to confirm the drop; run typecheck/tests if anything non-doc changed."
+    }
+  ],
+  "startedAt": "2026-06-06T18:01:23.672Z",
+  "resolvedVerify": [
+    "Read the trimmed README FAQ — are the 4 kept questions the right ones?"
+  ],
+  "completedAt": "2026-06-06T18:07:16.606Z",
+  "autoCommit": {
+    "preSha": "592c7e25d7340e6686479eb497f7535a180eaad4",
+    "subject": "Phase 140: README: FAQ + Files → docs/"
+  }
+}

@@ -697,6 +697,11 @@
       "id": 139,
       "title": "Demo script: slash-command flow",
       "status": "done"
+    },
+    {
+      "id": 140,
+      "title": "README: FAQ + Files → docs/",
+      "status": "done"
     }
   ],
   "models": {

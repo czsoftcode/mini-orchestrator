@@ -23,6 +23,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: "FAQ" and "Files in the project" moved into `docs/`.** The full
+  state/layout reference (`.mini/` tree, state.json/phases/graph/memory prose)
+  now lives in [`docs/files.md`](docs/files.md) and the complete FAQ in
+  [`docs/faq.md`](docs/faq.md), both linked from a new "Concepts & guides"
+  section in [`docs/`](docs/README.md). README keeps only four new-user FAQ
+  entries (permission prompts, pause & resume, commit-after-phase, API key vs
+  Pro/Max) plus a one-line `.mini/` pointer; the version-bump/undo/memory
+  internals are out of the README. (−44 lines.)
 - **Demo: the cycle GIF now shows the slash-command flow.** `demo/cycle.sh` was
   rewritten from a CLI walkthrough into the interactive `/mini:*` dialog
   (`/mini:init → next → plan → do → done`) so the GIF matches the primary path

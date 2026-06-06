@@ -73,3 +73,10 @@ the slash commands themselves.
 | Enable the status line | — | [`mini install-statusline`](non-interactive/install-statusline.md) |
 | Shell completion (bash/zsh) | — | [`mini completion`](non-interactive/completion.md) |
 | Remove the slash commands + status line | — | [`mini uninstall`](non-interactive/uninstall.md) |
+
+## Concepts & guides
+
+Not command pages — background on how mini stores state and behaves:
+
+- [Files in the project](files.md) — what each file under `.mini/` is for.
+- [FAQ](faq.md) — version bump, undo, memory and other common questions.
