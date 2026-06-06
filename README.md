@@ -4,10 +4,6 @@
 [![node](https://img.shields.io/node/v/mini-orchestrator)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/mini-orchestrator)](LICENSE)
 
-<!-- CI badge temporarily hidden while a GitHub account billing issue is resolved (Actions can't run until then). Re-enable by uncommenting the line below.
-[![CI](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml)
--->
-
 **Keep your AI coding agent on a short leash — one verifiable phase at a time.**
 
 Letting Claude Code loose on a real project usually goes one of two ways: it makes huge, unreviewable changes in a single leap, or it cheerfully agrees with everything you say and praises every idea. Both are how projects quietly go off the rails.
@@ -30,7 +26,7 @@ The whole loop — **init → next → plan → do → done** — in one screen:
        width="760">
 </p>
 
-<sub>The GIF shows the `/mini:*` slash-command flow inside a Claude Code session, generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). Claude's replies are illustrative; the `[ok]` lines are real mini output. Re-run it to refresh.</sub>
+<sub>The GIF shows the `/mini:*` slash-command flow inside a Claude Code session, generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). The `[ok]` lines are real mini output. Re-run it to refresh.</sub>
 
 Image not loading? The same flow, step by step as text, is in the [Quick start walkthrough](#quick-start) below.
 

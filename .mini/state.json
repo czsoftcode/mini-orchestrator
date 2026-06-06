@@ -727,6 +727,11 @@
       "id": 145,
       "title": "README: drop duplicate transcript",
       "status": "done"
+    },
+    {
+      "id": 146,
+      "title": "README: A-block cleanups",
+      "status": "done"
     }
   ],
   "models": {

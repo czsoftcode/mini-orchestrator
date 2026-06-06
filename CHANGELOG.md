@@ -23,6 +23,11 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: dropped the hidden CI/billing comment and a redundant disclaimer.**
+  The commented-out CI badge with its "GitHub account billing issue" note was
+  removed from the public source; the npm/node/license badges stay. The
+  "illustrative" demo disclaimer now appears once (in the Quick start
+  walkthrough) instead of repeated across sections.
 - **README: "See it in action" no longer duplicates the demo as text.** The
   inline `<details>` console transcript of the full cycle was removed; the
   image-not-loading fallback is now a one-line link to the Quick start

@@ -1,0 +1,29 @@
+{
+  "id": 146,
+  "title": "README: A-block cleanups",
+  "goal": "Delete the CI/billing HTML comment (lines 7-9); reduce the 'illustrative' disclaimer to a single occurrence (keep the walkthrough one, trim the GIF caption to drop the illustrative clause while keeping the 'real [ok] output' credibility note). GIF existence already confirmed (481 KB, tracked in git) so no change needed there.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Delete the CI/billing HTML comment",
+      "status": "done",
+      "detail": "Remove the <!-- ... --> block (lines 7-9) hiding the CI badge and mentioning the billing issue; leave the npm/node/license badges intact."
+    },
+    {
+      "title": "Reduce 'illustrative' to one disclaimer",
+      "status": "done",
+      "detail": "Trim the GIF caption's 'Claude's replies are illustrative;' clause (keep 'the [ok] lines are real mini output'); keep the full disclaimer in the Quick start walkthrough."
+    },
+    {
+      "title": "Verify",
+      "status": "done",
+      "detail": "Confirm only one 'illustrative' remains, badges block well-formed, GIF caption still credible, no double blanks, wc -l README.md."
+    }
+  ],
+  "startedAt": "2026-06-06T19:31:03.031Z",
+  "completedAt": "2026-06-06T19:33:32.570Z",
+  "autoCommit": {
+    "preSha": "93cd45ff737106050f60dd69a03ca0d5df6c4fce",
+    "subject": "Phase 146: README: A-block cleanups"
+  }
+}
