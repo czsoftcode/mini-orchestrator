@@ -717,6 +717,11 @@
       "id": 143,
       "title": "README: trim GSD + move Workflow tips",
       "status": "done"
+    },
+    {
+      "id": 144,
+      "title": "README: move plan-mode section up",
+      "status": "done"
     }
   ],
   "models": {

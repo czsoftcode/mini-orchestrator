@@ -15,9 +15,9 @@ All notable changes to this project are recorded here. The format is based on
   not the CLI transcript. Snippets are explicitly labelled illustrative so the
   non-deterministic chat output isn't read as a fixed transcript.
 - **README: "How is this different from Claude Code's plan mode?" section.** A new
-  section (between Installation and Commands) preempts the "why not the built-in
-  plan mode?" question with a short comparison table (scope, persistence, memory,
-  git, autonomy). Framed honestly — native plan mode and its in-session todos are
+  section (above the install steps, right after the demo) preempts the "why not
+  the built-in plan mode?" question with a short comparison table (scope,
+  persistence, memory, git, autonomy). Framed honestly — native plan mode and its in-session todos are
   ephemeral; mini is the persistent, multi-session layer on disk — rather than as
   claims about what native plan mode can't do.
 

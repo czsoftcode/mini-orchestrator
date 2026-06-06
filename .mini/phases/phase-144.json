@@ -1,0 +1,32 @@
+{
+  "id": 144,
+  "title": "README: move plan-mode section up",
+  "goal": "Move the 'How is this different from Claude Code's plan mode?' section from below Installation to directly after 'See it in action' (above Quick start), so the why-use-this argument precedes the install steps; relocation only, no content change. Fix the stale CHANGELOG Unreleased wording that says the section sits between Installation and Commands.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Move the plan-mode section above Quick start",
+      "status": "done",
+      "detail": "Cut the whole 'How is this different from Claude Code's plan mode?' section (heading + intro + comparison table + closing paragraph) and reinsert it directly after 'See it in action', before ## Quick start; no wording change."
+    },
+    {
+      "title": "Fix stale CHANGELOG wording",
+      "status": "done",
+      "detail": "Update the Unreleased entry that says the section sits 'between Installation and Commands' to reflect its new position (after 'See it in action')."
+    },
+    {
+      "title": "Verify order and integrity",
+      "status": "done",
+      "detail": "Confirm the new section order via heading list, the table is intact (5 rows), no duplicate/lost heading, no double blank lines, wc -l README.md."
+    }
+  ],
+  "startedAt": "2026-06-06T18:53:42.744Z",
+  "resolvedVerify": [
+    "Read the README top-to-bottom flow — does 'How is this different' sit well between the demo and Quick start?"
+  ],
+  "completedAt": "2026-06-06T18:58:58.858Z",
+  "autoCommit": {
+    "preSha": "cd511cd9ffbd62c6f487820f33c462c6bf574a19",
+    "subject": "Phase 144: README: move plan-mode section up"
+  }
+}
