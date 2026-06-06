@@ -1,0 +1,37 @@
+{
+  "id": 133,
+  "title": "README first-phase walkthrough",
+  "goal": "Add a 'Your first phase' walkthrough section to README.md showing the first-5-minutes path after npm install — the first slash command to run (/mini:init then /mini:next, /mini:plan, /mini:do, /mini:done), what the user sees, and a short sample of the actual output, so a new user knows exactly how to start. Use the slash-command flow as the primary path (project priority), not the CLI cycle.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Verify real slash-command behaviour",
+      "status": "done",
+      "detail": "Before writing, confirm against the command sources/docs what each step actually shows (esp. /mini:init asks 4 questions; /mini:done is the human-verify-then-advance step) so example snippets are factually accurate."
+    },
+    {
+      "title": "Draft the walkthrough <details> block",
+      "status": "done",
+      "detail": "Collapsible <details><summary>Walk through your first phase</summary> block with illustrative chat snippets for /mini:init -> /mini:next -> /mini:plan -> /mini:do -> /mini:done, each labelled 'example - your output will differ'; show conversational specifics, not CLI [ok] output."
+    },
+    {
+      "title": "Insert after Quick start command list",
+      "status": "done",
+      "detail": "Place the block right after the Quick start command list (~line 80); no new top-level section, no reordering of existing sections."
+    },
+    {
+      "title": "Check duplication, contradictions, render",
+      "status": "done",
+      "detail": "No overlap with the CLI transcript in 'See it in action'; same command order/meanings as Quick start; no contradiction with Auto mode/FAQ; English only; <details> markdown renders on GitHub."
+    }
+  ],
+  "startedAt": "2026-06-06T16:16:17.980Z",
+  "resolvedVerify": [
+    "The <details> walkthrough renders correctly on GitHub"
+  ],
+  "completedAt": "2026-06-06T16:20:53.796Z",
+  "autoCommit": {
+    "preSha": "537a185b40847a921c34eb17f5d4ee6abb94db26",
+    "subject": "Phase 133: README first-phase walkthrough"
+  }
+}

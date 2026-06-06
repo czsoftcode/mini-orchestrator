@@ -79,6 +79,71 @@ A global install writes the `/mini:*` slash commands into `~/.claude/commands/mi
 
 That's the whole loop. You stay in control at every `done`.
 
+<details>
+<summary>Walk through your first phase (what you'll actually see in the chat)</summary>
+
+The slash commands run **inside your Claude Code session**, so each one is a short
+conversation, not a one-shot CLI print. Here's the shape of the first five minutes.
+The snippets are illustrative — **your wording and phases will differ.**
+
+**1. `/mini:init`** — Claude asks four short questions in the chat, then saves the project:
+
+```
+You:    /mini:init
+Claude: Let's set up the project. A few quick questions:
+        1) Project name?            → todo-api
+        2) What does it build?      → A small REST API for todos
+        3) Who is it for?           → Backend developers
+        4) Main constraints?        → Node + TypeScript
+        ✓ Project "todo-api" created in .mini/. Next: /mini:next
+```
+
+**2. `/mini:next`** — Claude proposes **one** next phase (name + goal) and waits for your OK before saving:
+
+```
+You:    /mini:next
+Claude: Proposed phase: "Health endpoint"
+        Goal: Add GET /health returning {status:"ok"}, covered by a test.
+        Save it? (it's small and verifiable)
+You:    yes
+Claude: ✓ Added: phase 1 — Health endpoint
+```
+
+**3. `/mini:plan`** — Claude breaks that phase into 3–7 concrete, verifiable steps:
+
+```
+You:    /mini:plan
+Claude: Steps for "Health endpoint":
+        1. Add the GET /health route → returns 200 with {status:"ok"}
+        2. Write a test → vitest covers the route
+        Save these? → ✓ Phase 1 broken down into 2 steps.
+```
+
+**4. `/mini:do`** — Claude implements **this phase only**, ticking off steps as it goes:
+
+```
+You:    /mini:do
+Claude: Working phase 1 (Health endpoint)…
+        ✓ Add the GET /health route
+        ✓ Write a test  (2 passing)
+        Report written. Run /mini:done when you've checked it.
+```
+
+**5. `/mini:done`** — you're the gate: Claude asks whether it works, then advances the state and commits:
+
+```
+You:    /mini:done
+Claude: Does phase 1 work as intended?
+You:    yes
+Claude: ✓ Phase 1 (Health endpoint) done.
+        ✓ Commit: Phase 1: Health endpoint
+        Run /mini:next for the next phase.
+```
+
+From here you repeat **next → plan → do → done** for each phase.
+
+</details>
+
 ### Prefer the terminal? The same loop as a CLI
 
 Every step also exists as a plain `mini` command, if you'd rather not run it from inside Claude Code:

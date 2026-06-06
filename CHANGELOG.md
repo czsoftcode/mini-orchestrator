@@ -8,6 +8,12 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **README: "Walk through your first phase" walkthrough.** A collapsible
+  `<details>` block in Quick start shows the first-five-minutes **slash-command**
+  path (`/mini:init` → `/mini:next` → `/mini:plan` → `/mini:do` → `/mini:done`) as
+  a short `You:`/`Claude:` conversation per step — the interactive chat experience,
+  not the CLI transcript. Snippets are explicitly labelled illustrative so the
+  non-deterministic chat output isn't read as a fixed transcript.
 - **README: "How is this different from Claude Code's plan mode?" section.** A new
   section (between Installation and Commands) preempts the "why not the built-in
   plan mode?" question with a short comparison table (scope, persistence, memory,

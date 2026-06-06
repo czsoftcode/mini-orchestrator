@@ -662,6 +662,11 @@
       "id": 132,
       "title": "README: mini vs. native plan mode",
       "status": "done"
+    },
+    {
+      "id": 133,
+      "title": "README first-phase walkthrough",
+      "status": "done"
     }
   ],
   "models": {
