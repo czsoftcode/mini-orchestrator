@@ -26,35 +26,38 @@ The whole loop — **init → next → plan → do → done** — in one screen:
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/czsoftcode/mini-orchestrator/main/demo/cycle.gif"
-       alt="mini workflow cycle: init, next, plan, do, done — recorded terminal session"
+       alt="mini inside Claude Code: the /mini:init → next → plan → do → done slash-command flow"
        width="760">
 </p>
 
-<sub>The GIF shows the equivalent terminal (CLI) cycle, generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). Re-run it to refresh.</sub>
+<sub>The GIF shows the `/mini:*` slash-command flow inside a Claude Code session, generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). Claude's replies are illustrative; the `[ok]` lines are real mini output. Re-run it to refresh.</sub>
 
 <details>
-<summary>Image not loading? The same cycle as a text transcript</summary>
+<summary>Image not loading? The same flow as a text transcript</summary>
+
+> Claude's replies are illustrative (a real session phrases them differently); the `[ok]` lines are real mini output.
 
 ```console
-$ mini init --apply --name "todo-api" --what "A small REST API for todos" --for-whom "Backend developers" --constraints "Node + TypeScript"
+> /mini:init
+✦ Claude: Four quick questions — name, what you're building, who for, constraints.
+> todo-api · A small REST API for todos · Backend developers · Node + TypeScript
 [ok] Project "todo-api" created in .mini/
 
-# Claude proposes the next phase
-$ mini next --apply --title "Health endpoint" --goal "Add GET /health returning {status:ok} with a test"
+> /mini:next  start with a health endpoint
+✦ Claude: I propose phase 1 — "Health endpoint": add GET /health returning {status:ok}, covered by a test. Save it?
+> yes
 [ok] Added: phase 1 — Health endpoint
 
-# break it into concrete, verifiable steps
-$ printf '%s\n' "Add the route :: GET /health returns 200 JSON" "Write a test :: vitest covers it" | mini plan --apply
+> /mini:plan
+✦ Claude: Breaking it into two small, verifiable steps:
 [ok] Phase 1 broken down into 2 steps.
 
-# work the phase — normally "mini do" opens an interactive Claude session
-$ mini do --apply
+> /mini:do
+✦ Claude: On it — I'll edit the code and tick each step off as I finish it.
 [ok] Phase 1 (Health endpoint) marked as in progress.
-$ mini do --apply --step-done "Add the route"
-$ mini do --apply --step-done "Write a test"
 
-# close it — verify, write a memory note, commit
-$ mini done --apply
+> /mini:done
+✦ Claude: Both steps done. Writing a memory note and committing the phase.
 [ok] Phase 1 (Health endpoint) done.
 [ok] Commit: Phase 1: Health endpoint
 ```

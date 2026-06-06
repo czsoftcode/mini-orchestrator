@@ -23,6 +23,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **Demo: the cycle GIF now shows the slash-command flow.** `demo/cycle.sh` was
+  rewritten from a CLI walkthrough into the interactive `/mini:*` dialog
+  (`/mini:init → next → plan → do → done`) so the GIF matches the primary path
+  in Quick start. It stays offline and deterministic: Claude's replies are
+  scripted/illustrative, but each `[ok] …` line is real output from the same
+  `mini … --apply` a slash command calls under the hood. The README GIF caption,
+  alt text and the text-transcript fallback were aligned to the new flow.
 - **README: top-level Documentation pointer.** Added a short `Documentation:`
   line near the intro (right after `Website:`) linking to [`docs/`](docs/README.md)
   as the central command reference, so the full two-variant reference is

@@ -692,6 +692,11 @@
       "id": 138,
       "title": "README top-level Documentation link",
       "status": "done"
+    },
+    {
+      "id": 139,
+      "title": "Demo script: slash-command flow",
+      "status": "done"
     }
   ],
   "models": {

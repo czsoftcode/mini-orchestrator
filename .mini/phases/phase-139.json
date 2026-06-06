@@ -1,0 +1,42 @@
+{
+  "id": 139,
+  "title": "Demo script: slash-command flow",
+  "goal": "Rewrite demo/cycle.sh to portray the interactive /mini:* slash-command dialog (a scripted You:/Claude: exchange per step, clearly labelled illustrative) instead of the CLI cycle, kept offline and deterministic; re-rendering cycle.gif via record.sh stays a manual step the user runs.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add You/Claude dialog helpers",
+      "status": "done",
+      "detail": "Add helpers to cycle.sh that render a chat exchange (you \"/mini:next …\" / claude \"…\") with a typewriter effect and visually distinct prefixes, plus one intro disclaimer line marking the Claude prose as illustrative."
+    },
+    {
+      "title": "Rewrite cycle as slash-command exchange",
+      "status": "done",
+      "detail": "Rewrite each step (init → next → plan → do → done) as a You: types /mini:* + Claude: short reply, while the real mini … --apply runs under the hood so the genuine [ok] output is preserved."
+    },
+    {
+      "title": "Update record.sh + script header",
+      "status": "done",
+      "detail": "Align the comments/title in record.sh and the cycle.sh header with the new slash-flow content (no mention of a CLI cycle); the asciinema→agg render mechanics stay unchanged."
+    },
+    {
+      "title": "Fix README GIF caption",
+      "status": "done",
+      "detail": "Rewrite the <sub> caption under the GIF in README so it reflects the slash-command flow instead of equivalent terminal CLI cycle, keeping the link to record.sh."
+    },
+    {
+      "title": "Run cycle.sh offline & verify",
+      "status": "done",
+      "detail": "Run bash demo/cycle.sh, confirm it completes offline with no live API, shows the dialog plus real [ok] output, and exits cleanly."
+    }
+  ],
+  "startedAt": "2026-06-06T17:22:35.239Z",
+  "resolvedVerify": [
+    "Re-render demo/cycle.gif from the new script"
+  ],
+  "completedAt": "2026-06-06T17:30:23.595Z",
+  "autoCommit": {
+    "preSha": "132023a494aec4380056ae54895dc39aeea76439",
+    "subject": "Phase 139: Demo script: slash-command flow"
+  }
+}

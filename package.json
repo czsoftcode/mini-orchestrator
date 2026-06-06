@@ -1,6 +1,6 @@
 {
   "name": "mini-orchestrator",
-  "version": "1.17.0",
+  "version": "1.17.1",
   "description": "Mini orchestrator on top of Claude Code — keeps the project state and sends Claude only the essentials.",
   "keywords": [
     "claude",

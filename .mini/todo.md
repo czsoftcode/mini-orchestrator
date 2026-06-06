@@ -29,8 +29,8 @@
 - [x] Slim the done prompt: move the ADR instruction to an on-demand 'mini context decision' (add decision to CONTEXT_COMMANDS); done keeps only a thin trigger. Saves ~250 tokens/phase ONLY IF the trigger stays sharp enough not to raise the rate of forgotten ADRs (acceptance criterion, not an implementation detail).
 - [x] README: "mini vs. native Claude Code plan mode" section — preempt the "why not the built-in plan mode?" question with a short comparison table (persistence, cross-session, progress tracking, git auto-commit, auto mode).
 - [x] README: "Your first phase" / first-5-minutes walkthrough after npm install — first command, what the user sees, sample output.
-- [ ] GitHub repo: add topics/tags for discoverability — claude-code, ai, cli, llm, workflow, developer-tools, anthropic (repo setting, not a code change).
-- [ ] demo: re-record demo/cycle.gif to show the slash-command flow (/mini:init/next/plan/do/done) instead of the CLI cycle, so the GIF matches the new primary path in the README quick start.
+- [x] GitHub repo: add topics/tags for discoverability — claude-code, ai, cli, llm, workflow, developer-tools, anthropic (repo setting, not a code change).
+- [x] demo: re-record demo/cycle.gif to show the slash-command flow (/mini:init/next/plan/do/done) instead of the CLI cycle, so the GIF matches the new primary path in the README quick start.
 - [x] README slim-down: merge ## Models + ## Status line into short blurbs that link to docs/ command pages (model.md, install-statusline.md) instead of re-documenting flags inline.
 - [x] README slim-down: condense the graph sections (## Machine-readable project map, ### Incremental update, ### Auto-update hook) into one short paragraph + link to docs/non-interactive/map.md; the detailed --file/hook mechanics belong in docs.
 - [x] README slim-down: trim ## Auto mode + ## Import from GSD to a short pointer each, linking to docs/{interactive,non-interactive}/auto.md and import-gsd.md instead of duplicating their behaviour.
