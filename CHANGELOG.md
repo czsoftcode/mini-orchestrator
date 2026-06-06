@@ -23,6 +23,11 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: "Import from GSD" trimmed and "Workflow tips" moved to docs.** The
+  GSD section drops to two sentences (positioning + how to import) keeping the
+  [`mini import-gsd`](docs/non-interactive/import-gsd.md) link; the four
+  workflow-tips bullets move into a new section in [`docs/faq.md`](docs/faq.md).
+  This completes moving the reference-style content out of the README. (−7 lines.)
 - **README: "What gets sent to Claude" + graph sections condensed.** The full
   context budget and the per-call cost-line example move into a new
   [`docs/context.md`](docs/context.md) (linked from "Concepts & guides"); README

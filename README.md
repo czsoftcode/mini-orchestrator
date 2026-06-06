@@ -296,7 +296,7 @@ mini can also build a **machine-readable map** of the project (`mini map`) — a
 
 ## Import from GSD
 
-mini started as a lighter-weight alternative to [GSD](https://github.com/gsd-build/get-shit-done): instead of a pile of regenerated markdown files (`RESEARCH.md`, `PLAN.md`, …) read over and over, mini keeps a **minimal state** (a one-page `project.md` plus a lightweight `state.json` header). If you have a GSD project in `.planning/`, bring it over with `mini import-gsd` (or the `/mini:import-gsd` slash command) — it imports only the skeleton (phases + statuses) and leaves the `.planning/` files untouched. Details: [`mini import-gsd`](docs/non-interactive/import-gsd.md).
+mini started as a lighter-weight alternative to [GSD](https://github.com/gsd-build/get-shit-done) — minimal state instead of a pile of regenerated markdown files. Already have a GSD project in `.planning/`? Bring over its phase skeleton with `mini import-gsd` (leaves the `.planning/` files untouched). Details: [`mini import-gsd`](docs/non-interactive/import-gsd.md).
 
 ## FAQ
 
@@ -313,13 +313,6 @@ When `mini done` (or `mini auto`) finalizes a phase, it runs `git add -A && git 
 Yes, `mini` just runs `claude` as a subprocess — authentication is handled by Claude Code itself, based on how it's configured.
 
 More — version bump/CHANGELOG/tag details, memory records, undo after a commit — in the [FAQ](docs/faq.md).
-
-## Workflow tips
-
-- Start with `mini auto` for the first 1-2 phases to see how it suits you
-- Then switch between `mini auto` (fast) and the classic `mini do` (control)
-- If Claude proposes nonsense in `mini next` in auto, **press Ctrl+C** and run without auto
-- After every phase, `mini status` shows the overall progress
 
 ## License
 

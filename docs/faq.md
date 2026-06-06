@@ -30,3 +30,10 @@ After finalizing a phase as `done` (and after the auto-commit), `.mini/memory/ph
 
 **Does it work with an API key instead of Pro/Max?**
 Yes, `mini` just runs `claude` as a subprocess — authentication is handled by Claude Code itself, based on how it's configured.
+
+## Workflow tips
+
+- Start with `mini auto` for the first 1-2 phases to see how it suits you
+- Then switch between `mini auto` (fast) and the classic `mini do` (control)
+- If Claude proposes nonsense in `mini next` in auto, **press Ctrl+C** and run without auto
+- After every phase, `mini status` shows the overall progress

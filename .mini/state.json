@@ -712,6 +712,11 @@
       "id": 142,
       "title": "README: context + graph → docs/",
       "status": "done"
+    },
+    {
+      "id": 143,
+      "title": "README: trim GSD + move Workflow tips",
+      "status": "done"
     }
   ],
   "models": {

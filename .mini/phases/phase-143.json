@@ -1,0 +1,29 @@
+{
+  "id": 143,
+  "title": "README: trim GSD + move Workflow tips",
+  "goal": "Cut 'Import from GSD' to a two-sentence mention (one line of positioning + how to import) keeping the docs/non-interactive/import-gsd.md link; move the four 'Workflow tips' bullets out of README into docs (faq.md or auto docs) and remove the standalone section.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Trim 'Import from GSD' in README",
+      "status": "done",
+      "detail": "Cut to two sentences — one line of positioning (lighter-weight GSD alternative) plus how to import (mini import-gsd), keeping the docs/non-interactive/import-gsd.md link."
+    },
+    {
+      "title": "Move Workflow tips to docs/faq.md",
+      "status": "done",
+      "detail": "Append the four bullets as a short 'Workflow tips' section in docs/faq.md; remove the standalone ## Workflow tips section from README."
+    },
+    {
+      "title": "Verify links and length",
+      "status": "done",
+      "detail": "Confirm import-gsd link resolves, tips present in faq.md and gone from README, no double blank lines, wc -l README.md."
+    }
+  ],
+  "startedAt": "2026-06-06T18:45:53.414Z",
+  "completedAt": "2026-06-06T18:47:44.986Z",
+  "autoCommit": {
+    "preSha": "88686df3757ec7e5ecf9d593a03ec313b51bcaa0",
+    "subject": "Phase 143: README: trim GSD + move Workflow tips"
+  }
+}
