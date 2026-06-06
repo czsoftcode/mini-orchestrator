@@ -18,6 +18,8 @@ It runs **inside your existing Claude Code session** (Pro/Max or API) via native
 
 **Website:** [miniorchestrator.com](https://miniorchestrator.com)
 
+**Documentation:** the full command reference — every command in both the interactive `/mini:*` and terminal `mini` variants, with all flags — lives in [`docs/`](docs/README.md).
+
 ## See it in action
 
 The whole loop — **init → next → plan → do → done** — in one screen:
@@ -251,7 +253,7 @@ The difference is **scope and persistence**. Native plan mode and its todos live
 
 Every command comes in **two variants**: the interactive `/mini:*` **slash commands** you run inside a Claude Code session (they drive a short dialog, ask when needed and save the state for you), and the plain `mini *` **terminal commands** that run to completion and are easy to script (the `--apply` forms are what the slash commands call under the hood). The [Quick start](#quick-start) above shows the core `init → next → plan → do → done` loop in both forms.
 
-📖 **The full command reference — every command, both variants, with all flags — lives in [`docs/`](docs/README.md).**
+📖 **Browse the per-command pages — each documents both variants and all flags — in [`docs/`](docs/README.md).**
 
 Set up the slash commands once per project with `mini install-commands` (idempotent — just re-run it after upgrading mini). The `.md` command bodies are deliberately thin: each only runs `mini context <cmd>` to print the current prompt, while the **state operations** (`.mini/state.json`, reports, moving phases) happen in the non-interactive `mini … --apply` sub-commands — so the state always stays in tested TypeScript. The CLI and the slash commands are two front-ends over the same core, not a replacement for one another.
 

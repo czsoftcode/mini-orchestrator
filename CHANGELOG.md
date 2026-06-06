@@ -23,6 +23,12 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: top-level Documentation pointer.** Added a short `Documentation:`
+  line near the intro (right after `Website:`) linking to [`docs/`](docs/README.md)
+  as the central command reference, so the full two-variant reference is
+  discoverable above the fold. The existing 📖 callout in `## Commands` was
+  reworded ("Browse the per-command pages …") so the two pointers have distinct
+  roles instead of being duplicates.
 - **README: slimmed the `## Auto mode` and `## Import from GSD` sections.** Both
   collapse to a short pointer each, linking to [`mini auto`](docs/non-interactive/auto.md)
   (and [`/mini:auto`](docs/interactive/auto.md)) and [`mini import-gsd`](docs/non-interactive/import-gsd.md)

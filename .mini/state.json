@@ -687,6 +687,11 @@
       "id": 137,
       "title": "README slim-down: Auto + GSD",
       "status": "done"
+    },
+    {
+      "id": 138,
+      "title": "README top-level Documentation link",
+      "status": "done"
     }
   ],
   "models": {

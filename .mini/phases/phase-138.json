@@ -1,0 +1,29 @@
+{
+  "id": 138,
+  "title": "README top-level Documentation link",
+  "goal": "Add a short Documentation pointer near the README intro/Quick start that links to docs/README.md, so the full two-variant command reference is discoverable from the top of the README.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add Documentation pointer near intro",
+      "status": "done",
+      "detail": "One short line linking to docs/README.md placed right after the intro paragraph / at the start of ## Quick start, phrased as the full command reference so it reads as the central index."
+    },
+    {
+      "title": "Keep the Commands-section callout non-duplicate",
+      "status": "done",
+      "detail": "Reword the existing 📖 callout (README.md:254) and/or the new top pointer so they are not redundant — top = discoverability, Commands = detailed reference."
+    },
+    {
+      "title": "Verify links and headings",
+      "status": "done",
+      "detail": "Confirm the relative link resolves to docs/README.md and the README heading structure is intact (no broken anchors), via a quick grep."
+    }
+  ],
+  "startedAt": "2026-06-06T17:01:52.032Z",
+  "completedAt": "2026-06-06T17:04:51.728Z",
+  "autoCommit": {
+    "preSha": "15d15c0d8c458f1f0225e325c68aec6d4b188459",
+    "subject": "Phase 138: README top-level Documentation link"
+  }
+}
