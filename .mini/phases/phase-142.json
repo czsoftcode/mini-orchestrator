@@ -1,0 +1,37 @@
+{
+  "id": 142,
+  "title": "README: context + graph → docs/",
+  "goal": "Move 'What gets sent to Claude' into a new docs/context.md (token budget, files-read-themselves, cost line), leaving ~2 lines in README; trim 'Machine-readable project map (graph)' to a sentence or two plus the existing docs/non-interactive/map.md link; link the new context page from the 'Concepts & guides' index in docs/README.md.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Create docs/context.md",
+      "status": "done",
+      "detail": "New docs/context.md with the full 'What gets sent to Claude' content — token budget, Claude reads files itself via Read/Glob/Grep, and the per-call cost line example."
+    },
+    {
+      "title": "Trim 'What gets sent' in README to ~2 lines",
+      "status": "done",
+      "detail": "Keep the token-efficiency selling point inline (roughly a page + phase + steps; Claude reads code itself) ending with a link to docs/context.md; move the cost-line example out. Soften the exact token count to a rough estimate (A4)."
+    },
+    {
+      "title": "Trim the graph section + index the context page",
+      "status": "done",
+      "detail": "Cut 'Machine-readable project map (graph)' to 1-2 sentences keeping the existing docs/non-interactive/map.md link; add docs/context.md to the 'Concepts & guides' index in docs/README.md."
+    },
+    {
+      "title": "Verify links and length",
+      "status": "done",
+      "detail": "Confirm docs/context.md + map links resolve, no stale anchors, no double blank lines, wc -l README.md."
+    }
+  ],
+  "startedAt": "2026-06-06T18:32:50.711Z",
+  "resolvedVerify": [
+    "Read the trimmed 'What gets sent to Claude' section — is the token-efficiency selling point still strong enough inline?"
+  ],
+  "completedAt": "2026-06-06T18:37:11.674Z",
+  "autoCommit": {
+    "preSha": "a682fddb4ac4ddda5e9be685bdfa2bd8c7560c64",
+    "subject": "Phase 142: README: context + graph → docs/"
+  }
+}

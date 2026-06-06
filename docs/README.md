@@ -79,4 +79,5 @@ the slash commands themselves.
 Not command pages — background on how mini stores state and behaves:
 
 - [Files in the project](files.md) — what each file under `.mini/` is for.
+- [What gets sent to Claude](context.md) — the per-step context budget and cost line.
 - [FAQ](faq.md) — version bump, undo, memory and other common questions.

@@ -23,6 +23,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: "What gets sent to Claude" + graph sections condensed.** The full
+  context budget and the per-call cost-line example move into a new
+  [`docs/context.md`](docs/context.md) (linked from "Concepts & guides"); README
+  keeps a two-paragraph summary — the token-efficiency pitch (softened to
+  *roughly* 600–1000 tokens) plus a one-line graph blurb linking to
+  [`mini map`](docs/non-interactive/map.md). The standalone
+  `## Machine-readable project map` section was folded into "What gets sent to
+  Claude". (−12 lines.)
 - **README: auto mode consolidated into one section.** The two overlapping auto
   blocks — the 13-line `### Autonomous /mini:auto` flag reference under Commands
   and the standalone `## Auto mode` section — collapse into a single short

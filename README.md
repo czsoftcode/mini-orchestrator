@@ -290,21 +290,9 @@ It is never forced and an existing status line is never touched. Enable it with 
 
 ## What gets sent to Claude
 
-`mini do` typically sends ~600-1000 tokens (1 page of `project.md` + the current phase + 5 steps). No history of old phases, no old plans, no verification reports.
+mini stays frugal with context: `mini do` sends only **roughly 600–1000 tokens** (1 page of `project.md` + the current phase + its steps) — no history of old phases, plans or reports. When Claude needs the existing code, **it reads the files itself** via `Read`/`Glob`/`Grep`. Details and the per-call cost line: [`docs/context.md`](docs/context.md).
 
-If Claude needs to understand the existing code, **it reads the files itself** via `Read`/`Glob`/`Grep` — that is cheaper than loading everything into context up front.
-
-After every Claude call (next/plan/import-gsd) you'll see its cost:
-
-```
-  (20.4k tokens · 5 output · 14.1k from cache · ~$0.028 in API)
-```
-
-## Machine-readable project map (graph)
-
-`mini map` builds a **machine-readable map** of the project — a lightweight index `.mini/graph.json` plus a per-file node `.mini/graph/<path>.md` (imports, exports and signatures, with `@L<start>-<end>` line anchors). It lets Claude **navigate without reading whole files**: find a symbol in the index, the lines in the node, then read just that section. Both files are derivations of the sources (gitignored) and can be regenerated anytime.
-
-For incremental remaps (`mini map --file …`) and the PostToolUse hook that keeps the graph fresh in autonomous mode, see [`mini map`](docs/non-interactive/map.md).
+mini can also build a **machine-readable map** of the project (`mini map`) — a lightweight index plus per-file nodes with line anchors — so Claude navigates to the right lines instead of reading whole files. See [`mini map`](docs/non-interactive/map.md).
 
 ## Import from GSD
 
