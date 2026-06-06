@@ -23,6 +23,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: slimmed the command sections, single reference in `docs/`.** The full
+  24-row `## Commands` table and the duplicate `## mini commands directly in Claude
+  Code` slash catalogue are gone. A concise `## Commands` block now explains the
+  two-variant model (interactive `/mini:*` vs. terminal `mini *`) and points to the
+  complete reference in [`docs/`](docs/README.md), so the command catalogue lives in
+  one place instead of being copied into the README (−57 lines). The
+  `### Autonomous /mini:auto` explanation is kept.
+
 - **Problem-first README intro.** The README now opens with a problem-first pitch
   (hook + the two ways an unsupervised agent goes off the rails + the
   *propose → plan → implement → verify* rhythm) instead of a terse technical

@@ -249,66 +249,11 @@ The difference is **scope and persistence**. Native plan mode and its todos live
 
 ## Commands
 
-| Command | What it does |
-|--------|---------|
-| `mini init` | Creates a new project (project.md + empty state). In a brownfield directory it offers to run `mini audit` at the end. |
-| `mini next` | Claude proposes the next phase |
-| `mini audit` | Goes through the existing code and creates/updates `.mini/codebase.md` (a project overview for later Claude sessions) |
-| `mini map` | Regenerates the machine-readable project map (`.mini/graph.json` + `.mini/graph/`). With `--file <path>` it remaps just one file (can be repeated); with `--hook` it reads the path from the hook JSON on stdin — see [Machine-readable project map](#machine-readable-project-map-graph) |
-| `mini discuss` | Optional discussion of the current phase before planning — Claude saves a summary into `.mini/discuss/phase-{id}.md`, which `plan` and `do` then use as context |
-| `mini plan` | Claude breaks the current phase down into 3-7 steps |
-| `mini do` | Builds the prompt, shows it to you, starts an interactive Claude Code |
-| `mini done` | Human verification ("does it work?"), moves the state, finds the next phase; after finishing a phase it optionally bumps the version in the place that fits the project's language (a `VERSION` file as fallback) and folds `CHANGELOG.md`, automatically commits the work to git (default `--bump none`, with `--push` also a tag `v<version>`) and writes a memory record (`.mini/memory/phase-{id}.md`) |
-| `mini verify` | Opens an interactive Claude Code session for the in-depth UI/UX review of the phase by a human (symmetric to `mini discuss`, the terminal counterpart of `/mini:verify`) — Claude guides you through a visual/UX review (based on the report's `verify` items) and writes the findings into the report (and, for a closed phase, into memory); it does not move the phase state. It targets the current phase, otherwise the last closed one |
-| `mini auto` | Chain: next → plan → do (acceptEdits) → done, everything without asking except done |
-| `mini status` | What the project is, where we are, models, phases and steps. Phases that carry a decision record (ADR) are flagged with a `✎ ADR` marker. `--json` prints a machine-readable object (title, models, currentPhaseId, open-idea count, phases with timestamps/durationMs/hasDecision/steps) for scripts |
-| `mini changelog [version]` | Shows the project's `CHANGELOG.md` changes: by default the latest released version's section, a `<version>` argument for a specific version, `--all` for the whole history, `--unreleased` for the pending section |
-| `mini doctor` | Health check of the project setup: state and schema version, phase hygiene (orphaned `doing` phases, stale run reports and stale decision records), `project.md`/`CHANGELOG.md` presence, installed slash-command count and mini version freshness — each line ok/warn/fail with a fix hint. Read-only |
-| `mini todo` | Archive of future ideas and changes (`.mini/todo.md`, a markdown checklist). `mini todo` lists the items; `add "<text>"` appends one; `edit <n> "<text>"` rewrites one; `done <n>` / `remove <n>` act on the listed number; `clear` drops all done items. `mini next` offers the open items as candidate phase ideas — and, when it proposes its own ideas, offers to stash the extras back into the archive. `/mini:todo suggest` has Claude propose a batch of ideas and write them straight in (no phase needed). The open-idea count also shows in `mini status` |
-| `mini undo` | Reverts the last state change (1 step back, no deep history); if `mini done` auto-committed in the last step and HEAD still sits on a clean tree, it also offers to revert the commit (`git reset --soft`). `--dry-run` previews without changing anything, `--yes` skips the confirmation (used by `/mini:undo`) |
-| `mini stop` | Creates a cooperative stop signal `.mini/STOP` for the autonomous `/mini:auto` (typically from a second terminal); `--clear` removes it — see [Autonomous `/mini:auto`](#autonomous-miniauto) |
-| `mini model …` | Per-project / per-scope model choice (see below) |
-| `mini import-gsd` | One-off import of an in-progress GSD project from `.planning/`. Bare, it reads `.planning/` (via a Claude call) and saves a mini project. For the `/mini:import-gsd` slash command it also exposes `--prompt` (print the extraction prompt) and `--apply` (read the extraction response from stdin and save, preserving phase statuses; `--force` overwrites an existing project) |
-| `mini migrate` | One-off conversion of the old monolithic `state.json` to the v2 layout (lightweight header + `.mini/phases/`); with `--renumber` it renumbers phases to consecutive numbers and unifies file names |
-| `mini update` | Alias for `mini upgrade` — typing `mini update` checks npm for a newer `mini-orchestrator` and installs it, so a slip of the tongue does the expected thing. Accepts the same `--check` / `--yes` flags. (To refresh a project's generated `.mini/` skeleton + slash commands, use `mini install-commands`.) |
-| `mini upgrade` | Checks npm for a newer `mini-orchestrator` and installs it (`npm install -g mini-orchestrator@latest`); reports current → latest and asks first. `--check` only reports, `--yes` installs without asking. A status-line indicator (`↑ <version>`) also signals when a newer version is available — see [Status line](#status-line) |
-| `mini install-commands` | Generates `.claude/commands/mini/*.md` (the `/mini:*` slash commands) into the project — see below |
-| `mini completion <bash\|zsh>` | Prints a shell completion script that completes `mini`'s subcommands, each command's flags (e.g. `mini done --`+Tab) and fixed flag values (`mini done --bump`+Tab → `none patch minor major`). Enable with `source <(mini completion bash)` in your shell rc — see [`docs/non-interactive/completion.md`](docs/non-interactive/completion.md) |
-| `mini context <cmd>` | Prints the current session prompt for a cycle step (`next`/`discuss`/`plan`/`do`/`done`/`verify`) to stdout; called by the slash commands |
-| `mini statusline` | Renders the mini status line for Claude Code (reads the status JSON on stdin) — wired into `settings.json`, not run by hand; see below |
+Every command comes in **two variants**: the interactive `/mini:*` **slash commands** you run inside a Claude Code session (they drive a short dialog, ask when needed and save the state for you), and the plain `mini *` **terminal commands** that run to completion and are easy to script (the `--apply` forms are what the slash commands call under the hood). The [Quick start](#quick-start) above shows the core `init → next → plan → do → done` loop in both forms.
 
-## mini commands directly in Claude Code
+📖 **The full command reference — every command, both variants, with all flags — lives in [`docs/`](docs/README.md).**
 
-The whole cycle `next → discuss → plan → do → done` can also be run **directly from Claude Code** via the native slash commands, without spawning a nested Claude inside the session.
-
-```bash
-mini install-commands     # one-off in the target project
-```
-
-This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,decision,verify,status,todo,changelog,doctor,map,audit,auto,undo,model,upgrade}.md`. Then in Claude Code:
-
-```
-/mini:init           # creates the project (questions in the chat) → offers /mini:map and /mini:audit
-/mini:next [idea]    # proposes and saves the next phase
-/mini:discuss        # discusses the phase, saves notes
-/mini:plan           # breaks the phase into steps
-/mini:do             # implements the phase and writes a report
-/mini:done           # human verification in the chat → moves the state
-/mini:decision       # on-demand: record the decision (ADR) behind the phase, on a real crossroads
-/mini:verify         # in-depth UI/UX review of the phase by a human; writes findings into the report (and memory)
-/mini:auto [args]    # autonomous mode: completes several phases in a row (--max-phases N, --yolo, --verify, --discuss, --bump <level>, --push)
-/mini:map            # regenerates the project graph
-/mini:status         # overview of the phases (read-only)
-/mini:todo [args]    # ideas/changes archive: list, add <text>, edit <n> <text>, done <n>, remove <n>, clear, suggest
-/mini:changelog      # show CHANGELOG.md changes (<version> | --all | --unreleased)
-/mini:doctor         # health check of the project setup (read-only)
-/mini:audit          # overview of the existing codebase into .mini/codebase.md
-/mini:undo           # reverts the last state change (preview → confirm in the chat → apply)
-/mini:model [args]   # views/sets the project model (show | reset | <scope> <model>)
-/mini:upgrade        # checks npm for a newer mini and installs it (preview → confirm in the chat → apply)
-```
-
-`/mini:undo` and `/mini:model` are the non-interactive counterparts of the interactive terminal commands `mini undo` / `mini model`: undo previews the change (`mini undo --dry-run`), confirms in the chat and applies it (`mini undo --yes`); model leans on the non-interactive sub-commands (`mini model show` / `<scope> <model>` / `reset`) — neither blocks on a TTY prompt in the Claude Code Bash.
+Set up the slash commands once per project with `mini install-commands` (idempotent — just re-run it after upgrading mini). The `.md` command bodies are deliberately thin: each only runs `mini context <cmd>` to print the current prompt, while the **state operations** (`.mini/state.json`, reports, moving phases) happen in the non-interactive `mini … --apply` sub-commands — so the state always stays in tested TypeScript. The CLI and the slash commands are two front-ends over the same core, not a replacement for one another.
 
 ### Autonomous `/mini:auto`
 
@@ -323,8 +268,6 @@ This creates `.claude/commands/mini/{init,next,discuss,plan,do,done,decision,ver
 - **Cooperative stop:** at the step boundaries it checks the stop signal (`.mini/STOP`) and finishes cleanly; for a hard interrupt mid-step use Esc/Ctrl+C. You create the signal with `mini stop` (from a second terminal), remove it with `mini stop --clear`.
 
 Note: this is the slash variant driven by Claude in a single session. The CLI `mini auto` (below) is a separate path that runs Claude as a subprocess and completes **one** phase.
-
-How it works: the `.md` command body is thin — it just runs `mini context <cmd>`, which always prints the current prompt including the project context. The agentic work is done by Claude in the running session; the **state operations** (`.mini/state.json`, reports, moving the phase) are performed by the non-interactive sub-commands `mini … --apply`, so the state stays in tested TS. `install-commands` is idempotent — run it again after updating mini. The CLI `mini …` via the terminal stays unchanged; the slash commands are an add-on, not a replacement.
 
 ## Models
 

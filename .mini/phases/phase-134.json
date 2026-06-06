@@ -1,0 +1,42 @@
+{
+  "id": 134,
+  "title": "README command tables → docs link",
+  "goal": "Replace the two inline command-listing sections (## Commands and ## mini commands directly in Claude Code) with one short overview plus a prominent link to the full reference in docs/README.md, so the command catalogue lives in one place and the README stops duplicating it.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Audit links & must-keep facts",
+      "status": "done",
+      "detail": "List internal anchors/links pointing into the two sections (mini stop -> #autonomous-miniauto, mini map -> graph, mini upgrade -> status line) and the unique info not in docs (the thin how-it-works architecture note, install-commands idempotency, the autonomous-auto prose). Output: short keep/relocate/fix list."
+    },
+    {
+      "title": "Draft concise replacement section",
+      "status": "done",
+      "detail": "One short ## Commands block: 2-3 sentence overview of the two variants (interactive /mini:* vs. terminal mini *), keep the thin state-ops-in-tested-TS / install-commands-is-idempotent note, and a prominent link to docs/README.md as the single full reference. No per-command flag tables."
+    },
+    {
+      "title": "Apply edit to README",
+      "status": "done",
+      "detail": "Remove the ## Commands table (250-278) and the slash-command catalogue/intro (280-311); insert the new block. Keep ### Autonomous /mini:auto and the How it works paragraph, re-parented under the new section so #autonomous-miniauto stays valid."
+    },
+    {
+      "title": "Fix dangling cross-references",
+      "status": "done",
+      "detail": "Repair links orphaned by the removed table (#autonomous-miniauto, graph and status-line cross-refs lived in removed rows) so no broken anchors remain; check for a TOC needing an update."
+    },
+    {
+      "title": "Verify result",
+      "status": "done",
+      "detail": "No contradiction with Quick start or docs/README.md; every internal anchor resolves; the docs/README.md link is correct; README line count dropped; English only; renders on GitHub."
+    }
+  ],
+  "startedAt": "2026-06-06T16:29:38.641Z",
+  "resolvedVerify": [
+    "GitHub render of the new ## Commands section"
+  ],
+  "completedAt": "2026-06-06T16:35:31.555Z",
+  "autoCommit": {
+    "preSha": "345fb10582847fe28e7b9ecbdef7761d2b0946e3",
+    "subject": "Phase 134: README command tables → docs link"
+  }
+}

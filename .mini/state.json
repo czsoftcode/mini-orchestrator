@@ -667,6 +667,11 @@
       "id": 133,
       "title": "README first-phase walkthrough",
       "status": "done"
+    },
+    {
+      "id": 134,
+      "title": "README command tables → docs link",
+      "status": "done"
     }
   ],
   "models": {
