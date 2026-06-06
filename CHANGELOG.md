@@ -23,6 +23,12 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: "See it in action" no longer duplicates the demo as text.** The
+  inline `<details>` console transcript of the full cycle was removed; the
+  image-not-loading fallback is now a one-line link to the Quick start
+  walkthrough, which already shows the same flow as text. Also moved the
+  plan-mode comparison section above the install steps (right after the demo)
+  so the "why use this" argument comes first. (Combined −30+ lines.)
 - **README: "Import from GSD" trimmed and "Workflow tips" moved to docs.** The
   GSD section drops to two sentences (positioning + how to import) keeping the
   [`mini import-gsd`](docs/non-interactive/import-gsd.md) link; the four

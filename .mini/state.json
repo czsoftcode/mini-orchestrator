@@ -722,6 +722,11 @@
       "id": 144,
       "title": "README: move plan-mode section up",
       "status": "done"
+    },
+    {
+      "id": 145,
+      "title": "README: drop duplicate transcript",
+      "status": "done"
     }
   ],
   "models": {

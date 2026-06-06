@@ -32,37 +32,7 @@ The whole loop — **init → next → plan → do → done** — in one screen:
 
 <sub>The GIF shows the `/mini:*` slash-command flow inside a Claude Code session, generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). Claude's replies are illustrative; the `[ok]` lines are real mini output. Re-run it to refresh.</sub>
 
-<details>
-<summary>Image not loading? The same flow as a text transcript</summary>
-
-> Claude's replies are illustrative (a real session phrases them differently); the `[ok]` lines are real mini output.
-
-```console
-> /mini:init
-✦ Claude: Four quick questions — name, what you're building, who for, constraints.
-> todo-api · A small REST API for todos · Backend developers · Node + TypeScript
-[ok] Project "todo-api" created in .mini/
-
-> /mini:next  start with a health endpoint
-✦ Claude: I propose phase 1 — "Health endpoint": add GET /health returning {status:ok}, covered by a test. Save it?
-> yes
-[ok] Added: phase 1 — Health endpoint
-
-> /mini:plan
-✦ Claude: Breaking it into two small, verifiable steps:
-[ok] Phase 1 broken down into 2 steps.
-
-> /mini:do
-✦ Claude: On it — I'll edit the code and tick each step off as I finish it.
-[ok] Phase 1 (Health endpoint) marked as in progress.
-
-> /mini:done
-✦ Claude: Both steps done. Writing a memory note and committing the phase.
-[ok] Phase 1 (Health endpoint) done.
-[ok] Commit: Phase 1: Health endpoint
-```
-
-</details>
+Image not loading? The same flow, step by step as text, is in the [Quick start walkthrough](#quick-start) below.
 
 ## How is this different from Claude Code's plan mode?
 
