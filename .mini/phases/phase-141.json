@@ -1,0 +1,29 @@
+{
+  "id": 141,
+  "title": "README: consolidate Auto mode",
+  "goal": "Merge the two auto sections (the full Autonomous /mini:auto flag reference under Commands and the standalone Auto mode section) into one short 'Autonomous mode' section: what auto does (chains phases, acceptEdits with Bash still asking, stops at the done checkpoint) plus the slash-vs-CLI distinction and links to docs/interactive/auto.md and docs/non-interactive/auto.md; drop the per-flag list since it is already in docs.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Write the consolidated Autonomous mode section",
+      "status": "done",
+      "detail": "Replace the flag-list ### Autonomous /mini:auto block under Commands with a ~5-line summary (chains phases, acceptEdits but Bash still asks, stops at done checkpoint, slash-vs-CLI one-liner) ending with links to both docs/auto pages."
+    },
+    {
+      "title": "Remove the standalone ## Auto mode section",
+      "status": "done",
+      "detail": "Delete the duplicate section near the end (the mini auto paragraph), so auto is described in exactly one place."
+    },
+    {
+      "title": "Verify links and length",
+      "status": "done",
+      "detail": "Confirm docs/auto links resolve, no stale anchors, no double blank lines, wc -l README.md."
+    }
+  ],
+  "startedAt": "2026-06-06T18:14:08.714Z",
+  "completedAt": "2026-06-06T18:24:45.102Z",
+  "autoCommit": {
+    "preSha": "50a42994e566c88089298c1f002021d59e6b038d",
+    "subject": "Phase 141: README: consolidate Auto mode"
+  }
+}

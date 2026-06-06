@@ -702,6 +702,11 @@
       "id": 140,
       "title": "README: FAQ + Files → docs/",
       "status": "done"
+    },
+    {
+      "id": 141,
+      "title": "README: consolidate Auto mode",
+      "status": "done"
     }
   ],
   "models": {

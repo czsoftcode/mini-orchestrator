@@ -260,19 +260,11 @@ Every command comes in **two variants**: the interactive `/mini:*` **slash comma
 
 Set up the slash commands once per project with `mini install-commands` (idempotent — just re-run it after upgrading mini). The `.md` command bodies are deliberately thin: each only runs `mini context <cmd>` to print the current prompt, while the **state operations** (`.mini/state.json`, reports, moving phases) happen in the non-interactive `mini … --apply` sub-commands — so the state always stays in tested TypeScript. The CLI and the slash commands are two front-ends over the same core, not a replacement for one another.
 
-### Autonomous `/mini:auto`
+### Autonomous mode
 
-`/mini:auto` goes through the whole phase cycle (`next → discuss(conditionally) → plan → do → verify(conditionally) → done`) and after finishing one phase smoothly continues with the next — **semi-autonomously**:
+Instead of running each step yourself, let mini **chain whole phases**. It goes through the cycle (`next → plan → do → done`, with `discuss`/`verify` when a phase needs them) and continues with the next — semi-autonomously. It runs with `--permission-mode acceptEdits` (Edit/Write happen without asking, but **Bash still asks** — no surprise `rm -rf`), and it always stops at the human checkpoints: your phase idea in `next` and the manual verification in `done`. Halt a running loop cleanly with [`mini stop`](docs/non-interactive/stop.md).
 
-- **`--max-phases N`** (default 1) — how many phases at most to complete in a row; `--yolo` = a run without unnecessary asking (works only in a session started with `--permission-mode acceptEdits`).
-- **`--verify`** — forces the `verify` step in every phase. Without it, auto runs `verify` only for **UI/UX phases** (judged from the goal/steps/report): it guides a human through an in-depth review between `do` and `done`, writes the findings into the report (and thus into memory) and fixes any problems within the same phase before closing.
-- **`--discuss`** — forces the `discuss` step in every phase. Without it, auto runs `discuss` only for **hard phases** (an ambiguous goal, multiple directions).
-- **`--bump <level>`** / **`--push`** — passed on to `mini done --apply` when closing **each** phase: `--bump patch | minor | major` bumps the version (default: no bump), `--push` pushes to the remote after the commit. As with `mini done`, `--push` requires an explicit `--bump` (on its own, or with `--bump none`, nothing is pushed).
-- **Stops and asks** at the steps where a human is needed: `next` (takes your phase idea), `discuss` (for hard phases or with `--discuss`), `verify` (UI/UX review) and at the items for **manual verification** in `done`.
-- **Quiet run for `do`** — it does not retell every edit into the chat, just briefly reports progress.
-- **Cooperative stop:** at the step boundaries it checks the stop signal (`.mini/STOP`) and finishes cleanly; for a hard interrupt mid-step use Esc/Ctrl+C. You create the signal with `mini stop` (from a second terminal), remove it with `mini stop --clear`.
-
-Note: this is the slash variant driven by Claude in a single session. The CLI `mini auto` (below) is a separate path that runs Claude as a subprocess and completes **one** phase.
+Two paths, same idea: [`/mini:auto`](docs/interactive/auto.md) drives it from inside one Claude Code session; the CLI [`mini auto`](docs/non-interactive/auto.md) runs Claude as a subprocess. Both pages document all flags (`--max-phases`, `--yolo`, `--verify`, `--discuss`, `--bump`/`--push`).
 
 ## Models
 
@@ -313,10 +305,6 @@ After every Claude call (next/plan/import-gsd) you'll see its cost:
 `mini map` builds a **machine-readable map** of the project — a lightweight index `.mini/graph.json` plus a per-file node `.mini/graph/<path>.md` (imports, exports and signatures, with `@L<start>-<end>` line anchors). It lets Claude **navigate without reading whole files**: find a symbol in the index, the lines in the node, then read just that section. Both files are derivations of the sources (gitignored) and can be regenerated anytime.
 
 For incremental remaps (`mini map --file …`) and the PostToolUse hook that keeps the graph fresh in autonomous mode, see [`mini map`](docs/non-interactive/map.md).
-
-## Auto mode
-
-`mini auto` runs the phase loop on its own — for each phase it goes `next → plan → do → done` and continues with the next, **without asking** along the way (Claude runs with `--permission-mode acceptEdits`: Edit/Write without asking, Bash still asks). It is **not** fully unattended: it always stops at the human verification in `done` — that's your checkpoint. The one-session-per-phase rationale, the report contract, and the 3-pass retry live in [`mini auto`](docs/non-interactive/auto.md) (or [`/mini:auto`](docs/interactive/auto.md) for the in-session variant).
 
 ## Import from GSD
 

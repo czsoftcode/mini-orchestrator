@@ -23,6 +23,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: auto mode consolidated into one section.** The two overlapping auto
+  blocks — the 13-line `### Autonomous /mini:auto` flag reference under Commands
+  and the standalone `## Auto mode` section — collapse into a single short
+  "Autonomous mode" summary (chains phases, `acceptEdits` with Bash still asking,
+  human checkpoints at `next`/`done`, `mini stop` to halt) linking to
+  [`/mini:auto`](docs/interactive/auto.md) and [`mini auto`](docs/non-interactive/auto.md).
+  The per-flag list moves out of the README — it is already documented on both
+  pages. (−12 lines.)
 - **README: "FAQ" and "Files in the project" moved into `docs/`.** The full
   state/layout reference (`.mini/` tree, state.json/phases/graph/memory prose)
   now lives in [`docs/files.md`](docs/files.md) and the complete FAQ in
