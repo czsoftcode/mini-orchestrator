@@ -652,6 +652,11 @@
       "id": 130,
       "title": "Doctor orphan-check for ADRs",
       "status": "done"
+    },
+    {
+      "id": 131,
+      "title": "Problem-first README intro + badges",
+      "status": "done"
     }
   ],
   "models": {

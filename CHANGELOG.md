@@ -6,6 +6,25 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- **Problem-first README intro.** The README now opens with a problem-first pitch
+  (hook + the two ways an unsupervised agent goes off the rails + the
+  *propose → plan → implement → verify* rhythm) instead of a terse technical
+  description. The heading is `# mini-orchestrator` (matching the npm package and
+  website; the CLI command stays `mini`), with npm version / Node / license
+  badges. The top region is reordered to intro → *See it in action* → *Quick
+  start* (slash commands as the primary flow, the CLI loop secondary) →
+  *Requirements* → *Installation* (the npx, no-sudo and from-git notes folded into
+  collapsible blocks). The GSD comparison moved out of the product definition into
+  the *Import from GSD* section.
+
+### Removed
+
+- **Sponsorship asks.** Dropped the README *Support* and *Backers* sections and
+  the `.github/FUNDING.yml` (and thus the repository's Sponsor button) — premature
+  for a project still gathering its first users.
+
 ## [1.17.0] - 2026-06-04
 
 ### Added

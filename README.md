@@ -1,71 +1,24 @@
-# mini
+# mini-orchestrator
+
+[![npm](https://img.shields.io/npm/v/mini-orchestrator)](https://www.npmjs.com/package/mini-orchestrator)
+[![node](https://img.shields.io/node/v/mini-orchestrator)](https://nodejs.org)
+[![license](https://img.shields.io/npm/l/mini-orchestrator)](LICENSE)
 
 <!-- CI badge temporarily hidden while a GitHub account billing issue is resolved (Actions can't run until then). Re-enable by uncommenting the line below.
 [![CI](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/czsoftcode/mini-orchestrator/actions/workflows/ci.yml)
 -->
 
-A minimalist CLI orchestrator built on top of **Claude Code**. It keeps the project state, sends Claude only the essentials, and uses your Pro/Max subscription (no API keys).
+**Keep your AI coding agent on a short leash — one verifiable phase at a time.**
+
+Letting Claude Code loose on a real project usually goes one of two ways: it makes huge, unreviewable changes in a single leap, or it cheerfully agrees with everything you say and praises every idea. Both are how projects quietly go off the rails.
+
+**mini** forces a different rhythm. It breaks work into small phases you approve one by one — *propose → plan → implement → verify* — and keeps the agent focused on the current step instead of rewriting half your codebase. Every phase lives in `.mini/`, so progress is explicit, inspectable, and versioned right next to your code. You stay at the helm at every `done` — and you won't burn through your context window, or your usage limit, on one runaway turn.
+
+It runs **inside your existing Claude Code session** (Pro/Max or API) via native `/mini:*` slash commands — no extra API keys, no separate UI. The CLI command is `mini`; the npm package is `mini-orchestrator`.
 
 **Website:** [miniorchestrator.com](https://miniorchestrator.com)
 
-It was created as a simpler alternative to [GSD](https://github.com/gsd-build/get-shit-done), which consumes too many tokens — it generates a pile of MD files (`RESEARCH.md`, `PLAN.md`, `VERIFICATION.md`, …) and reads them repeatedly. `mini` keeps a **minimal state** (a one-page `project.md` + a lightweight `state.json` header with phase detail in `.mini/phases/`) and sends Claude typically 1 page + the current task.
-
-## Requirements
-
-- [Claude Code](https://claude.com/claude-code) (signed in via Pro/Max or with an API key)
-- Node.js 20+
-
-## Try it without touching `~/.claude`
-
-Want to evaluate mini without a global install? Run it one-off with **npx** (npx ships with npm — it fetches the package into a temporary cache and runs it once, without installing it globally):
-
-```bash
-cd your-project
-npx mini-orchestrator install-commands   # asks where to put the /mini:* commands: this project or all projects
-```
-
-It writes only where you choose and never edits `~/.claude/settings.json` on its own. Pick **this project** to keep everything inside the repo's `.claude/commands/mini`. When you're done evaluating, remove what it added with [`mini uninstall`](docs/non-interactive/uninstall.md).
-
-## Installation
-
-```bash
-npm install -g mini-orchestrator@latest
-```
-
-The command is called `mini`. To update: run the same command again. To uninstall: `npm uninstall -g mini-orchestrator`.
-
-A global install (`npm i -g`) writes the `/mini:*` slash commands into `~/.claude/commands/mini` (user scope, for all projects) automatically — even though npm runs the postinstall hook without a terminal. The status line stays **opt-in**: it is never written into your `~/.claude/settings.json` without a terminal to ask first (an interactive install offers it; an existing `statusLine` is never touched). Enable it anytime with [`mini install-statusline`](docs/non-interactive/install-statusline.md). The postinstall prints a summary of what it created plus a one-line full-removal hint. A local / CI install stays quiet and only prints a hint; run `mini install-commands` there by hand. To remove everything mini added, run [`mini uninstall`](docs/non-interactive/uninstall.md) (then `npm uninstall -g mini-orchestrator`).
-
-Installing without `sudo`: point the global npm prefix into your home directory (one-off) and have its `bin` on your `PATH`:
-
-```bash
-npm config set prefix "$HOME/.local" --location=user   # ~/.local/bin must be on PATH
-```
-
-### From git / for development
-
-```bash
-git clone https://github.com/czsoftcode/mini-orchestrator.git
-cd mini-orchestrator
-npm install
-npm run build
-node dist/cli.js --help        # or: alias mini='node $(pwd)/dist/cli.js'
-```
-
-To install your local build onto your `PATH` (the same layout Claude Code uses), run:
-
-```bash
-npm run install-local
-```
-
-It builds the project and installs it under `~/.local`:
-
-- `~/.local/bin/mini` → symlink to the built CLI
-- `~/.local/share/mini/versions/<version>/` → the package's own files and production deps
-
-Older versions are kept around so you can roll back — delete them manually if they get in the way. Make sure `~/.local/bin` is on your `PATH`, then verify with `mini --version`.
-
-## Quick start
+## See it in action
 
 The whole loop — **init → next → plan → do → done** — in one screen:
 
@@ -75,7 +28,7 @@ The whole loop — **init → next → plan → do → done** — in one screen:
        width="760">
 </p>
 
-<sub>The GIF is generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). Re-run it to refresh.</sub>
+<sub>The GIF shows the equivalent terminal (CLI) cycle, generated from a real, offline run by [`demo/record.sh`](demo/record.sh) (asciinema → agg). Re-run it to refresh.</sub>
 
 <details>
 <summary>Image not loading? The same cycle as a text transcript</summary>
@@ -106,6 +59,30 @@ $ mini done --apply
 
 </details>
 
+## Quick start
+
+Install once:
+
+```bash
+npm install -g mini-orchestrator@latest
+```
+
+A global install writes the `/mini:*` slash commands into `~/.claude/commands/mini` automatically (see [Installation](#installation) for the details and alternatives). Then, inside any project, drive the whole loop **from your Claude Code session**:
+
+```
+/mini:init     # describe the project once (4 questions in the chat)
+/mini:next     # let Claude propose the next phase
+/mini:plan     # break it into 3–7 concrete steps
+/mini:do       # implement this phase — and only this phase
+/mini:done     # you verify, then it advances
+```
+
+That's the whole loop. You stay in control at every `done`.
+
+### Prefer the terminal? The same loop as a CLI
+
+Every step also exists as a plain `mini` command, if you'd rather not run it from inside Claude Code:
+
 ```bash
 mkdir my-project && cd my-project
 
@@ -122,6 +99,72 @@ Or the shortcut:
 ```bash
 mini auto        # next → plan → do (with acceptEdits) → done; everything without asking except the final "does it work?"
 ```
+
+## Requirements
+
+- [Claude Code](https://claude.com/claude-code) (signed in via Pro/Max or with an API key)
+- Node.js 20+
+
+## Installation
+
+```bash
+npm install -g mini-orchestrator@latest
+```
+
+The command is called `mini`. To update: run the same command again. To uninstall: `npm uninstall -g mini-orchestrator`.
+
+A global install (`npm i -g`) writes the `/mini:*` slash commands into `~/.claude/commands/mini` (user scope, for all projects) automatically — even though npm runs the postinstall hook without a terminal. The status line stays **opt-in**: it is never written into your `~/.claude/settings.json` without a terminal to ask first (an interactive install offers it; an existing `statusLine` is never touched). Enable it anytime with [`mini install-statusline`](docs/non-interactive/install-statusline.md). The postinstall prints a summary of what it created plus a one-line full-removal hint. A local / CI install stays quiet and only prints a hint; run `mini install-commands` there by hand. To remove everything mini added, run [`mini uninstall`](docs/non-interactive/uninstall.md) (then `npm uninstall -g mini-orchestrator`).
+
+<details>
+<summary>Try it without touching <code>~/.claude</code> (npx, one-off)</summary>
+
+Want to evaluate mini without a global install? Run it one-off with **npx** (npx ships with npm — it fetches the package into a temporary cache and runs it once, without installing it globally):
+
+```bash
+cd your-project
+npx mini-orchestrator install-commands   # asks where to put the /mini:* commands: this project or all projects
+```
+
+It writes only where you choose and never edits `~/.claude/settings.json` on its own. Pick **this project** to keep everything inside the repo's `.claude/commands/mini`. When you're done evaluating, remove what it added with [`mini uninstall`](docs/non-interactive/uninstall.md).
+
+</details>
+
+<details>
+<summary>Installing without <code>sudo</code></summary>
+
+Point the global npm prefix into your home directory (one-off) and have its `bin` on your `PATH`:
+
+```bash
+npm config set prefix "$HOME/.local" --location=user   # ~/.local/bin must be on PATH
+```
+
+</details>
+
+<details>
+<summary>From git / for development</summary>
+
+```bash
+git clone https://github.com/czsoftcode/mini-orchestrator.git
+cd mini-orchestrator
+npm install
+npm run build
+node dist/cli.js --help        # or: alias mini='node $(pwd)/dist/cli.js'
+```
+
+To install your local build onto your `PATH` (the same layout Claude Code uses), run:
+
+```bash
+npm run install-local
+```
+
+It builds the project and installs it under `~/.local`:
+
+- `~/.local/bin/mini` → symlink to the built CLI
+- `~/.local/share/mini/versions/<version>/` → the package's own files and production deps
+
+Older versions are kept around so you can roll back — delete them manually if they get in the way. Make sure `~/.local/bin` is on your `PATH`, then verify with `mini --version`.
+
+</details>
 
 ## Commands
 
@@ -384,6 +427,8 @@ The reports in `.mini/run/` stay as history after the phase is finalized — you
 
 ## Import from GSD
 
+mini started as a lighter-weight alternative to [GSD](https://github.com/gsd-build/get-shit-done): instead of a pile of regenerated markdown files (`RESEARCH.md`, `PLAN.md`, `VERIFICATION.md`, …) that get read over and over, mini keeps a **minimal state** — a one-page `project.md` plus a lightweight `state.json` header (with phase detail in `.mini/phases/`) — and typically sends Claude about a page plus the current task. If you have a GSD project in progress, you can bring it over.
+
 In a directory with `.planning/`:
 
 ```bash
@@ -429,21 +474,6 @@ Yes, `mini` just runs `claude` as a subprocess — authentication is handled by 
 - Then switch between `mini auto` (fast) and the classic `mini do` (control)
 - If Claude proposes nonsense in `mini next` in auto, **press Ctrl+C** and run without auto
 - After every phase, `mini status` shows the overall progress
-
-## Support
-
-mini is free and open source. If it saves you time, you can support its
-development through [**GitHub Sponsors**](https://github.com/sponsors/czsoftcode)
-— or just use the **Sponsor** button at the top of the repository. Every bit
-helps keep the project moving, one small phase at a time. 🙏
-
-## Backers
-
-Thank you to everyone who supports mini's development! 💛 Be the first to back the
-project via [**GitHub Sponsors**](https://github.com/sponsors/czsoftcode) — your
-name and avatar can appear right here.
-
-<!-- sponsors --><!-- sponsors -->
 
 ## License
 

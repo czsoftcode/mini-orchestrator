@@ -1,0 +1,43 @@
+{
+  "id": 131,
+  "title": "Problem-first README intro + badges",
+  "goal": "Replace the top of README.md with a problem-first intro (hook, both agent failure modes, the propose->plan->implement->verify rhythm, quick start) and add npm version/node/license badges, moving the GSD comparison out of the product definition; verify the /mini:* example commands match reality.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Intro block: H1 + badges + hook",
+      "status": "done",
+      "detail": "Replace # mini with # mini-orchestrator, add npm version + node + license badges, then a problem-first intro (hook, both agent failure modes, the propose->plan->implement->verify rhythm); note the CLI command stays mini. Do NOT add downloads or CI badges; keep the CI badge commented out."
+    },
+    {
+      "title": "See it in action + merged Quick start",
+      "status": "done",
+      "detail": "A demo section reusing demo/cycle.gif (raw githubusercontent URL) with a caption that it shows the equivalent CLI cycle, then a single Quick start: npm install -g mini-orchestrator@latest first, slash commands (/mini:init->next->plan->do->done) as the primary path, the CLI flow as the secondary alternative. Exactly one Quick start heading."
+    },
+    {
+      "title": "Consolidate installation passages",
+      "status": "done",
+      "detail": "Demote the npx try-it, the no-sudo prefix tip and the from-git/for-development block into one lower Installation area (details where it fits). No duplicate install instructions remain."
+    },
+    {
+      "title": "Demote GSD comparison out of the intro",
+      "status": "done",
+      "detail": "Remove the GSD-as-product-definition paragraph from the top and fold a short version into the existing Import from GSD section."
+    },
+    {
+      "title": "Verify anchors and command honesty",
+      "status": "done",
+      "detail": "grep '](#' so every in-page anchor still resolves to a heading; confirm no two Quick start headings, CI badge still commented out, English-only prose, and every shown /mini:* and mini command exists and behaves as written."
+    }
+  ],
+  "startedAt": "2026-06-06T15:38:16.067Z",
+  "resolvedVerify": [
+    "Read the new top region top-to-bottom for tone/flow",
+    "Render the page on GitHub and confirm the three badges resolve"
+  ],
+  "completedAt": "2026-06-06T15:49:53.674Z",
+  "autoCommit": {
+    "preSha": "d5b17eb8b1341c3d19ec14001b1c13094dfe5b7d",
+    "subject": "Phase 131: Problem-first README intro + badges"
+  }
+}
