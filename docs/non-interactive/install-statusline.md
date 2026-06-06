@@ -35,6 +35,43 @@ it on when you want it:
 
 With `--dry-run` it prints what it would do and writes nothing.
 
+## What the status line shows
+
+On one line, rendered by [`mini statusline`](../non-interactive/):
+
+```
+mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28%
+```
+
+The segments are: the (shortened) project directory, the model with its version,
+the context-window size (`200k`/`1M`), and a gauge plus percentage of the
+**context-window usage**. The usage is recovered from the session transcript,
+since Claude Code does not report token counts to the status line directly.
+
+When a newer mini is available on npm, a yellow `↑ <version>` segment is appended:
+
+```
+mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28% · ↑ 1.9.1
+```
+
+Run [`mini upgrade`](upgrade.md) to install it (or `mini upgrade --check` to just
+see what's available).
+
+## How the version check refreshes
+
+The status line never blocks on the network. It reads a small cached record of
+the latest published version (in the OS temp dir) and fires a **detached
+background refresh** to update it for next time:
+
+- The refresh runs **on every new Claude Code session** (detected via the session
+  id in the status payload) — so you get a fresh check each time you start Claude.
+- Within a single long-running session it then refreshes again only once the cache
+  is older than **5 hours**.
+- A short retry cooldown keeps a failing fetch from re-firing on every render.
+
+The renderer is the `mini statusline` command (it reads the status JSON on stdin);
+you normally never run it by hand — Claude Code calls it on every refresh.
+
 ## Options
 
 | Flag | Description |

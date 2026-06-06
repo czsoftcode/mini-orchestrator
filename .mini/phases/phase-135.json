@@ -1,0 +1,42 @@
+{
+  "id": 135,
+  "title": "README slim-down: Models + Status line",
+  "goal": "Replace the long inline ## Models and ## Status line sections with two short blurbs that link to the docs pages (model.md, install-statusline.md), moving the detailed flags and status-line cache/refresh mechanics into docs so the README stops duplicating them.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Audit must-keep facts vs. docs",
+      "status": "done",
+      "detail": "List which README facts are absent from model.md/install-statusline.md — gauge anatomy, the up-version segment, cache/refresh mechanics (5h, detached, per-session), cheaper-model economics note; decide kept-in-README vs. moved-to-docs."
+    },
+    {
+      "title": "Enrich install-statusline.md docs",
+      "status": "done",
+      "detail": "Add the gauge/segment anatomy, the up-version hint, and cache/refresh mechanics (temp-dir cache, detached background refresh, per-session check + 5h cooldown) to docs/non-interactive/install-statusline.md so nothing is lost."
+    },
+    {
+      "title": "Slim ## Models to a blurb",
+      "status": "done",
+      "detail": "Replace the section with ~3 lines: one example, the recommended sonnet/opus combo, the cheaper-model economics note, and a link to docs model.md."
+    },
+    {
+      "title": "Slim ## Status line to a blurb",
+      "status": "done",
+      "detail": "Replace the section with ~3 lines: one gauge example line plus what it shows, the opt-in note, and a link to docs/non-interactive/install-statusline.md."
+    },
+    {
+      "title": "Fix cross-refs, relocate token-cost line, verify",
+      "status": "done",
+      "detail": "Re-home the orphaned token-cost example, check all docs links resolve, confirm README is meaningfully shorter with no dangling references."
+    }
+  ],
+  "startedAt": "2026-06-06T16:39:05.100Z",
+  "resolvedVerify": [
+    "README reads well after the slim-down"
+  ],
+  "completedAt": "2026-06-06T16:44:27.940Z",
+  "autoCommit": {
+    "preSha": "a09e06641ca213f764293e37eae5f945d5ddec9d",
+    "subject": "Phase 135: README slim-down: Models + Status line"
+  }
+}

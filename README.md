@@ -271,85 +271,37 @@ Note: this is the slash variant driven by Claude in a single session. The CLI `m
 
 ## Models
 
-Configured per project in `.mini/state.json`. Can be set separately for `next`, `plan`, `do`, `importGsd`, `audit`, `memory`, or jointly via `default`.
+Each project picks its Claude model in `.mini/state.json` — a `default` plus optional per-scope overrides (`next`, `plan`, `do`, …):
 
 ```bash
-mini model                       # interactively (scope → model)
-mini model show                  # a table of the current settings
-mini model sonnet                # default = sonnet
-mini model do opus               # do (Claude session) = opus
-mini model plan haiku            # plan = haiku
-mini model do default            # clears the override (inherits default)
-mini model reset                 # clears everything
+mini model show      # current setup
+mini model sonnet    # default = sonnet
+mini model do opus   # do (the coding session) = opus
 ```
 
-**Recommended combination for saving:**
-```bash
-mini model sonnet                # default = sonnet for light things
-mini model do opus               # do = opus for complex coding
-```
+A good saving combo is `sonnet` as the default with `do` on `opus`. Note that a "cheaper" model doesn't always cost less overall — it often needs more iterations; for real coding (`do`) Opus is usually the most economical anyway. Full flags and scopes: [`mini model`](docs/non-interactive/model.md).
 
 ## Status line
 
-mini ships its own Claude Code status line. It shows, on one line:
+mini ships an opt-in Claude Code status line showing the project dir, model, and context-window usage (plus a `↑ <version>` hint when a newer mini is out):
 
 ```
 mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28%
 ```
 
-— the (shortened) project directory, the model with its version, the
-context-window size (`200k`/`1M`), and a gauge plus percentage of the
-**context-window usage** (recovered from the session transcript, since Claude
-Code does not report token counts to the status line directly).
-
-When a newer mini version is available on npm, a yellow `↑ <version>` segment is
-appended at the end:
-
-```
-mini · Opus 4.8 · 1M ▰▰▰▱▱▱▱▱▱▱ 28% · ↑ 1.9.1
-```
-
-The status line never blocks on the network for this: it reads a small cached
-reading of the latest published version (in the OS temp dir) and fires a detached
-background refresh to update it for next time. The refresh runs **on every new
-Claude Code session** (detected via the session id in the status payload), so you
-get a fresh check each time you start Claude; within a single long-running session
-it then refreshes again only once the cache is older than **5 hours** (a short
-retry cooldown keeps a failing fetch from re-firing on every render). Run
-`mini upgrade` to install the new version (or `mini upgrade --check` to just see
-what's available).
-
-**Install:** on `npm install` the postinstall hook offers it — but only when you
-have **no** status line configured yet. In an interactive install it asks first;
-a global install (`npm i -g`) sets it up without asking, since it runs without a
-terminal. Either way it is never forced and an existing status line (yours,
-GSD's, Claude's) is never touched. It writes a single `statusLine` entry into
-`~/.claude/settings.json`:
-
-```json
-{
-  "statusLine": { "type": "command", "command": "node \"…/mini/dist/cli.js\" statusline" }
-}
-```
-
-**Disable:** remove the `statusLine` block from `~/.claude/settings.json`.
-
-The renderer is the `mini statusline` command (reads the status JSON on stdin);
-you normally never run it by hand — Claude Code calls it on every refresh.
-
-**Note:** a "cheaper" model does not always mean saving on the Pro/Max limit. Cheaper models often need more iterations → a larger total token consumption. For `do` (real coding), Opus is usually the most economical anyway.
-
-After every Claude call (next/plan/import-gsd) you'll see:
-
-```
-  (20.4k tokens · 5 output · 14.1k from cache · ~$0.028 in API)
-```
+It is never forced and an existing status line is never touched. Enable it with [`mini install-statusline`](docs/non-interactive/install-statusline.md), which also documents the gauge anatomy and the background version-check refresh.
 
 ## What gets sent to Claude
 
 `mini do` typically sends ~600-1000 tokens (1 page of `project.md` + the current phase + 5 steps). No history of old phases, no old plans, no verification reports.
 
 If Claude needs to understand the existing code, **it reads the files itself** via `Read`/`Glob`/`Grep` — that is cheaper than loading everything into context up front.
+
+After every Claude call (next/plan/import-gsd) you'll see its cost:
+
+```
+  (20.4k tokens · 5 output · 14.1k from cache · ~$0.028 in API)
+```
 
 ## Machine-readable project map (graph)
 

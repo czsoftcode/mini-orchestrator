@@ -23,6 +23,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: slimmed the `## Models` and `## Status line` sections.** Both are now
+  short blurbs that link to the full docs ([`mini model`](docs/non-interactive/model.md),
+  [`mini install-statusline`](docs/non-interactive/install-statusline.md)) instead of
+  re-documenting flags and status-line internals inline (README −48 lines). The
+  status-line gauge/segment anatomy and the cache/refresh mechanics (temp-dir cache,
+  detached background refresh, per-session check + 5h cooldown) were **added to
+  `docs/non-interactive/install-statusline.md`** first, so the detail moved rather
+  than being lost. The per-call token-cost example moved next to `## What gets sent
+  to Claude`.
+
 - **README: slimmed the command sections, single reference in `docs/`.** The full
   24-row `## Commands` table and the duplicate `## mini commands directly in Claude
   Code` slash catalogue are gone. A concise `## Commands` block now explains the
