@@ -1,0 +1,32 @@
+{
+  "id": 132,
+  "title": "README: mini vs. native plan mode",
+  "goal": "Add a 'How is this different from Claude Code's plan mode?' section to README.md with a short comparison table (persistence, cross-session, progress tracking, git auto-commit, auto mode), preempting the 'why not the built-in plan mode?' question; frame it as a difference in approach rather than hard claims about what native plan mode cannot do.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Insert section after Installation",
+      "status": "done",
+      "detail": "Add '## How is this different from Claude Code's plan mode?' between Installation and Commands: an honest opening (native plan mode exists and may be all some users need), a 5-row comparison table (Scope, Persistence, Memory, Git, Autonomy), and a closing 'Use native plan mode for a one-off / Use mini when a project spans many sessions' paragraph."
+    },
+    {
+      "title": "Fact-check claims vs Claude Code and README",
+      "status": "done",
+      "detail": "Confirm no claim about native plan mode is false (it has both plan mode and in-session todos; the differentiator is persistence/cross-session), and that the auto-commit and /mini:auto wording does not contradict the existing Auto mode and FAQ sections."
+    },
+    {
+      "title": "Verify markdown and structure",
+      "status": "done",
+      "detail": "Table has a header + separator row and no broken pipes; all in-page anchors (grep '](#') still resolve; exactly one occurrence of the new heading; English-only prose."
+    }
+  ],
+  "startedAt": "2026-06-06T15:58:38.853Z",
+  "resolvedVerify": [
+    "Render the section on GitHub and read it for tone"
+  ],
+  "completedAt": "2026-06-06T16:04:38.895Z",
+  "autoCommit": {
+    "preSha": "c264be111654d757b2df44eba62d557955a69db6",
+    "subject": "Phase 132: README: mini vs. native plan mode"
+  }
+}

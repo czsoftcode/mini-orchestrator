@@ -657,6 +657,11 @@
       "id": 131,
       "title": "Problem-first README intro + badges",
       "status": "done"
+    },
+    {
+      "id": 132,
+      "title": "README: mini vs. native plan mode",
+      "status": "done"
     }
   ],
   "models": {

@@ -27,7 +27,7 @@
 - [ ] Decision records: consistency — mini doctor orphan-check (decision file with no matching phase, same pattern as stale run reports) and mini undo removes/restores the decision file.
 - [x] Decision records: mark phases that have an ADR in the mini status overview (cheap via one readdir of .mini/decisions/, no per-phase JSON reads).
 - [x] Slim the done prompt: move the ADR instruction to an on-demand 'mini context decision' (add decision to CONTEXT_COMMANDS); done keeps only a thin trigger. Saves ~250 tokens/phase ONLY IF the trigger stays sharp enough not to raise the rate of forgotten ADRs (acceptance criterion, not an implementation detail).
-- [ ] README: "mini vs. native Claude Code plan mode" section — preempt the "why not the built-in plan mode?" question with a short comparison table (persistence, cross-session, progress tracking, git auto-commit, auto mode).
+- [x] README: "mini vs. native Claude Code plan mode" section — preempt the "why not the built-in plan mode?" question with a short comparison table (persistence, cross-session, progress tracking, git auto-commit, auto mode).
 - [ ] README: "Your first phase" / first-5-minutes walkthrough after npm install — first command, what the user sees, sample output.
 - [ ] GitHub repo: add topics/tags for discoverability — claude-code, ai, cli, llm, workflow, developer-tools, anthropic (repo setting, not a code change).
 - [ ] demo: re-record demo/cycle.gif to show the slash-command flow (/mini:init/next/plan/do/done) instead of the CLI cycle, so the GIF matches the new primary path in the README quick start.

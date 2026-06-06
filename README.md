@@ -166,6 +166,22 @@ Older versions are kept around so you can roll back — delete them manually if 
 
 </details>
 
+## How is this different from Claude Code's plan mode?
+
+Claude Code already has a built-in **plan mode**: it drafts a plan, shows it to you, and waits for your approval before editing. It also keeps an in-session todo list while it works. If that already covers what you need, you may not need mini — and that's fine.
+
+The difference is **scope and persistence**. Native plan mode and its todos live inside one conversation: they're in-memory and ephemeral, so when the session ends there's no lasting record of what was done, what's next, or why. mini is the **persistent, multi-session layer** on top of that same idea — it keeps the plan and the progress on disk, next to your code.
+
+| | Native plan mode | mini |
+|---|---|---|
+| Scope | A single answer / turn | A whole project, phase by phase |
+| Persistence | In-memory, per session (ephemeral todos) | On disk in `.mini/`, versioned with your code, resumes across sessions |
+| Memory | None | Summaries of completed phases for continuity |
+| Git | Manual | Optional auto-commit per phase |
+| Autonomy | One plan at a time | `/mini:auto` chains phases with human checkpoints |
+
+**Use native plan mode** for a one-off change you'll finish in a single sitting. **Use mini** when a project spans many sessions and you want the structure — and the record of what was done — to survive between them.
+
 ## Commands
 
 | Command | What it does |
