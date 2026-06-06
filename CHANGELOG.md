@@ -23,6 +23,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: slimmed the `## Auto mode` and `## Import from GSD` sections.** Both
+  collapse to a short pointer each, linking to [`mini auto`](docs/non-interactive/auto.md)
+  (and [`/mini:auto`](docs/interactive/auto.md)) and [`mini import-gsd`](docs/non-interactive/import-gsd.md)
+  (README −32 lines). The auto report contract, the one-session-per-phase
+  rationale and the 3-pass retry were **added to `docs/non-interactive/auto.md`**
+  first; the GSD positioning sentence (mini as a lighter-weight alternative) is
+  kept in the README.
+
 - **README: slimmed the graph sections into one blurb.** The three sections
   (`## Machine-readable project map`, `### Incremental update (--file)`,
   `### Auto-update after an edit (hook)`) collapse to a single short paragraph plus

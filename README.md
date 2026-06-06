@@ -342,43 +342,11 @@ The files in `.mini/memory/` (`phase-{id}.md`, with a discriminator `phase-{id}-
 
 ## Auto mode
 
-`mini auto` automates one phase:
-
-1. `[1/4]` Proposes the next phase (or continues an in-progress one) — without asking
-2. `[2/4]` Breaks it into steps (or skips if it already has steps) — without asking
-3. `[3/4]` Starts Claude Code with `--permission-mode acceptEdits` (Edit/Write without asking, Bash still asks) — without asking
-4. `[4/4]` Verification: asks **you** whether it works
-
-Auto **always** ends at the human verification in `done` — that's your checkpoint.
-
-### One Claude session for the whole phase
-
-Unlike the interactive `mini do` (which you start manually for one step), auto runs **one Claude session for the whole phase**. The reason: every Claude restart means re-exploring the project (Read/Glob, loading context) with no added value.
-
-Before the session ends, Claude writes a report into `.mini/run/phase-{id}.md`. The report has two parts:
-
-- **YAML front matter** with the step statuses (`done` / `skipped` / `blocked` / `todo`) and the overall phase verdict (`done` / `partial` / `blocked`) — `done({auto})` moves the state in `state.json` from it.
-- **Free text** below the YAML block — a short summary for you (what went well, what Claude ran into, open questions).
-
-If unclosed steps remain after the session (Claude didn't finish, or the report is missing), auto runs another attempt — **at most 3 passes** in total. The second and third attempt get a link to the backed-up report (`phase-{id}.prev.md`) in the prompt, so Claude knows where the previous attempt ended. After exhausting the limit, auto finishes with a warning and hands the baton to you.
-
-When a Claude session ends without a report (a crash, `--max-turns`, a manual `/exit` without writing), auto won't blindly mark anything — it drops into the interactive `done` and asks you per step.
-
-The reports in `.mini/run/` stay as history after the phase is finalized — you can read them back later.
+`mini auto` runs the phase loop on its own — for each phase it goes `next → plan → do → done` and continues with the next, **without asking** along the way (Claude runs with `--permission-mode acceptEdits`: Edit/Write without asking, Bash still asks). It is **not** fully unattended: it always stops at the human verification in `done` — that's your checkpoint. The one-session-per-phase rationale, the report contract, and the 3-pass retry live in [`mini auto`](docs/non-interactive/auto.md) (or [`/mini:auto`](docs/interactive/auto.md) for the in-session variant).
 
 ## Import from GSD
 
-mini started as a lighter-weight alternative to [GSD](https://github.com/gsd-build/get-shit-done): instead of a pile of regenerated markdown files (`RESEARCH.md`, `PLAN.md`, `VERIFICATION.md`, …) that get read over and over, mini keeps a **minimal state** — a one-page `project.md` plus a lightweight `state.json` header (with phase detail in `.mini/phases/`) — and typically sends Claude about a page plus the current task. If you have a GSD project in progress, you can bring it over.
-
-In a directory with `.planning/`:
-
-```bash
-mini import-gsd
-```
-
-Claude reads `PROJECT.md` and the roadmap, creates `.mini/project.md` and `.mini/state.json`. It imports only the skeleton — phases + statuses. The detailed MD files in `.planning/` stay, but `mini` ignores them.
-
-You can also run it **from Claude Code** with the `/mini:import-gsd` slash command: the session reads `.planning/` itself (no nested Claude) and saves via `mini import-gsd --apply`, asking before it overwrites an existing project.
+mini started as a lighter-weight alternative to [GSD](https://github.com/gsd-build/get-shit-done): instead of a pile of regenerated markdown files (`RESEARCH.md`, `PLAN.md`, …) read over and over, mini keeps a **minimal state** (a one-page `project.md` plus a lightweight `state.json` header). If you have a GSD project in `.planning/`, bring it over with `mini import-gsd` (or the `/mini:import-gsd` slash command) — it imports only the skeleton (phases + statuses) and leaves the `.planning/` files untouched. Details: [`mini import-gsd`](docs/non-interactive/import-gsd.md).
 
 ## FAQ
 

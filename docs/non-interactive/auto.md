@@ -52,6 +52,34 @@ $ mini auto --push
 With --push you must choose a version level: --bump patch | minor | major.
 ```
 
+## How a phase runs
+
+Each phase runs as **one Claude session for the whole phase**, started with
+`--permission-mode acceptEdits` (Edit/Write happen without asking; Bash still
+asks). The single session is deliberate: every Claude restart would re-explore
+the project (Read/Glob, reloading context) with no added value, so the whole
+phase is implemented in one pass.
+
+Before the session ends, Claude writes a report into `.mini/run/phase-{id}.md`
+with two parts:
+
+- **YAML front matter** — the per-step statuses (`done` / `skipped` / `blocked` /
+  `todo`) and the overall phase verdict (`done` / `partial` / `blocked`). The
+  auto close (`done({auto})`) moves the state in `state.json` from this block.
+- **Free text** — a short summary for you (what went well, what Claude ran into,
+  open questions).
+
+If unclosed steps remain after a session (Claude didn't finish, or the report is
+missing), auto runs another attempt — **at most 3 passes** in total. The second
+and third attempts get a link to the backed-up report (`phase-{id}.prev.md`) in
+the prompt, so Claude knows where the previous attempt stopped. After the limit
+is exhausted, auto finishes with a warning and hands control back to you.
+
+When a session ends **without** a report (a crash, `--max-turns`, a manual
+`/exit`), auto won't blindly mark anything — it drops into the interactive
+[`done`](done.md) and asks you per step. The reports in `.mini/run/` stay as
+history after a phase is finalized.
+
 ## Notes
 
 - Auto stops on its own at: the configured phase limit, a finished project, a

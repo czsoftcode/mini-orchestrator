@@ -1,0 +1,42 @@
+{
+  "id": 137,
+  "title": "README slim-down: Auto + GSD",
+  "goal": "Trim the ## Auto mode and ## Import from GSD sections to a short pointer each, linking to docs/{interactive,non-interactive}/auto.md and import-gsd.md, moving the duplicated behaviour (3-pass retry, report contract, GSD import details) into docs while keeping any positioning text that belongs in the README.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Audit auto/import docs coverage gaps",
+      "status": "done",
+      "detail": "auto.md is missing the one-session rationale, the report contract (YAML statuses + free text, the done({auto}) source), the 3-pass retry (prev.md link, fallback to interactive done on missing report), and the acceptEdits permission detail. import-gsd.md is complete; the README's GSD positioning is marketing, keep a trimmed version in README not in docs."
+    },
+    {
+      "title": "Enrich auto.md docs",
+      "status": "done",
+      "detail": "Add the one-Claude-session rationale, the report contract, the 3-pass retry mechanics, and the acceptEdits permission note to docs/non-interactive/auto.md so nothing is lost."
+    },
+    {
+      "title": "Slim ## Auto mode to a pointer",
+      "status": "done",
+      "detail": "Replace the section and its One Claude session subsection with a short blurb (auto loops next-plan-do-done unattended, always stops at human verify) plus a link to docs auto.md."
+    },
+    {
+      "title": "Slim ## Import from GSD to a pointer",
+      "status": "done",
+      "detail": "Keep one positioning sentence (mini as a lighter alternative to GSD) plus the mini import-gsd command, and link the mechanics to docs import-gsd.md."
+    },
+    {
+      "title": "Fix cross-refs and verify",
+      "status": "done",
+      "detail": "Confirm all docs links resolve, README is meaningfully shorter, and no dangling references remain."
+    }
+  ],
+  "startedAt": "2026-06-06T16:55:08.499Z",
+  "resolvedVerify": [
+    "Auto + GSD blurbs read well after the slim-down"
+  ],
+  "completedAt": "2026-06-06T16:57:40.207Z",
+  "autoCommit": {
+    "preSha": "9e04b98bd5481bf433b362fdf1f3bc1d96ee218a",
+    "subject": "Phase 137: README slim-down: Auto + GSD"
+  }
+}

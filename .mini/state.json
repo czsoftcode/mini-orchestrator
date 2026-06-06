@@ -682,6 +682,11 @@
       "id": 136,
       "title": "README slim-down: graph sections",
       "status": "done"
+    },
+    {
+      "id": 137,
+      "title": "README slim-down: Auto + GSD",
+      "status": "done"
     }
   ],
   "models": {
