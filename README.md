@@ -305,44 +305,9 @@ After every Claude call (next/plan/import-gsd) you'll see its cost:
 
 ## Machine-readable project map (graph)
 
-`mini map` goes through the source files and creates a **machine-readable map** of the project:
+`mini map` builds a **machine-readable map** of the project — a lightweight index `.mini/graph.json` plus a per-file node `.mini/graph/<path>.md` (imports, exports and signatures, with `@L<start>-<end>` line anchors). It lets Claude **navigate without reading whole files**: find a symbol in the index, the lines in the node, then read just that section. Both files are derivations of the sources (gitignored) and can be regenerated anytime.
 
-- `.mini/graph.json` — a lightweight index: for each file its path, its node and the export names,
-- `.mini/graph/<path>.md` — a node per file: imports, exports and signatures with anchors to lines (`@L<start>-<end>`).
-
-It helps Claude **navigate without reading whole files**: from the index it finds where a symbol is, from the node which lines, and only then reads just that section. Both files are derivations of the source files (gitignored) — they can be regenerated anytime.
-
-### Incremental update (`--file`)
-
-A full `mini map` remaps the whole tree. For narrow changes there is an incremental path that touches **only one node**:
-
-```bash
-mini map --file src/foo.ts          # remaps only src/foo.ts (node + index record)
-mini map --file a.ts --file b.ts    # several files at once
-```
-
-Because the graph nodes are purely per-file (no back edges), the result is identical to a full rebuild of the affected file — just much faster. When `graph.json` does not exist yet, `--file` falls back to a full build. Non-mappable extensions and ignored directories (`node_modules`, `dist`, …) are a no-op; when a source file has disappeared in the meantime, its node is removed too.
-
-### Auto-update after an edit (hook)
-
-For **autonomous mode** it pays off to keep the graph fresh after every edit. A PostToolUse hook does that — after every `Edit`/`Write` it remaps just the affected file (a local operation, no tokens). Add this to the `.claude/settings.json` of the target project:
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          { "type": "command", "command": "mini map --hook >/dev/null 2>&1 || true" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-`mini map --hook` reads the edited file path from the hook JSON on stdin itself (no dependency on `jq`); `>/dev/null 2>&1 || true` keeps the hook quiet and non-blocking even without `mini` installed. The hook does not catch file deletions and renames (via the shell) — for those occasionally run a full `mini map` as a reconciliation.
+For incremental remaps (`mini map --file …`) and the PostToolUse hook that keeps the graph fresh in autonomous mode, see [`mini map`](docs/non-interactive/map.md).
 
 ## Files in the project
 
@@ -355,7 +320,7 @@ my-project/
     ├── state.prev.json                  # header backup for `mini undo` (only 1 step back)
     ├── phases/
     │   └── phase-{id}.json              # detail of one phase — steps, report, verify (layout v2)
-    ├── graph.json                       # lightweight index of the machine-readable map (see below)
+    ├── graph.json                       # lightweight index of the machine-readable map (see above)
     ├── graph/
     │   └── <path>.md                    # map node per file — imports, exports, signatures
     ├── last-memory.md                   # short summary of the latest memory record (input of the `next` prompt)

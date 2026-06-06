@@ -32,6 +32,6 @@
 - [ ] GitHub repo: add topics/tags for discoverability — claude-code, ai, cli, llm, workflow, developer-tools, anthropic (repo setting, not a code change).
 - [ ] demo: re-record demo/cycle.gif to show the slash-command flow (/mini:init/next/plan/do/done) instead of the CLI cycle, so the GIF matches the new primary path in the README quick start.
 - [x] README slim-down: merge ## Models + ## Status line into short blurbs that link to docs/ command pages (model.md, install-statusline.md) instead of re-documenting flags inline.
-- [ ] README slim-down: condense the graph sections (## Machine-readable project map, ### Incremental update, ### Auto-update hook) into one short paragraph + link to docs/non-interactive/map.md; the detailed --file/hook mechanics belong in docs.
+- [x] README slim-down: condense the graph sections (## Machine-readable project map, ### Incremental update, ### Auto-update hook) into one short paragraph + link to docs/non-interactive/map.md; the detailed --file/hook mechanics belong in docs.
 - [ ] README slim-down: trim ## Auto mode + ## Import from GSD to a short pointer each, linking to docs/{interactive,non-interactive}/auto.md and import-gsd.md instead of duplicating their behaviour.
 - [ ] README: add a top-level Documentation link near the intro/Quick start pointing to docs/README.md (the full two-variant command reference), so the central index is discoverable from the README.

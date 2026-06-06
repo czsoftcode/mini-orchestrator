@@ -677,6 +677,11 @@
       "id": 135,
       "title": "README slim-down: Models + Status line",
       "status": "done"
+    },
+    {
+      "id": 136,
+      "title": "README slim-down: graph sections",
+      "status": "done"
     }
   ],
   "models": {

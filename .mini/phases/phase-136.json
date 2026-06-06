@@ -1,0 +1,37 @@
+{
+  "id": 136,
+  "title": "README slim-down: graph sections",
+  "goal": "Condense the three graph sections (## Machine-readable project map, ### Incremental update, ### Auto-update hook) into one short paragraph plus a link to docs/non-interactive/map.md, moving the --file incremental mechanics and the PostToolUse hook snippet into docs so the README stops duplicating them.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Audit map.md coverage gaps",
+      "status": "done",
+      "detail": "List README graph facts absent from docs/non-interactive/map.md — the full PostToolUse hook block + rationale (no-jq, quiet/non-blocking, deletion/rename reconciliation) and the --file nuances (per-file = identical to full rebuild, graph.json fallback, no-op for ignored/non-mappable, node removal on delete). Decide kept-in-README vs. moved-to-docs."
+    },
+    {
+      "title": "Enrich map.md docs",
+      "status": "done",
+      "detail": "Add the full PostToolUse settings.json hook snippet with its rationale and the --file incremental nuances to docs/non-interactive/map.md so nothing is lost."
+    },
+    {
+      "title": "Slim graph sections to a blurb",
+      "status": "done",
+      "detail": "Replace the three README sections (## Machine-readable project map + ### Incremental update + ### Auto-update hook) with one short paragraph (what the graph is, gitignored, regenerate anytime) plus a link to docs/non-interactive/map.md."
+    },
+    {
+      "title": "Fix cross-refs and verify",
+      "status": "done",
+      "detail": "Re-home the (see below) reference in the ## Files tree, confirm all docs links resolve, README is meaningfully shorter, and no dangling references remain."
+    }
+  ],
+  "startedAt": "2026-06-06T16:48:25.952Z",
+  "resolvedVerify": [
+    "Graph blurb reads well after the slim-down"
+  ],
+  "completedAt": "2026-06-06T16:51:44.823Z",
+  "autoCommit": {
+    "preSha": "78915a573635160bd8fcf65036b29d52f65ab990",
+    "subject": "Phase 136: README slim-down: graph sections"
+  }
+}

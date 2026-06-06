@@ -23,6 +23,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **README: slimmed the graph sections into one blurb.** The three sections
+  (`## Machine-readable project map`, `### Incremental update (--file)`,
+  `### Auto-update after an edit (hook)`) collapse to a single short paragraph plus
+  a link to [`mini map`](docs/non-interactive/map.md) (README −35 lines). The
+  `--file` incremental nuances and the full PostToolUse hook `settings.json`
+  snippet were **added to `docs/non-interactive/map.md`** first, so the detail moved
+  rather than being lost.
+
 - **README: slimmed the `## Models` and `## Status line` sections.** Both are now
   short blurbs that link to the full docs ([`mini model`](docs/non-interactive/model.md),
   [`mini install-statusline`](docs/non-interactive/install-statusline.md)) instead of
