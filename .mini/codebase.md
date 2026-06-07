@@ -10,6 +10,7 @@ Po uzavřené fázi (`done` / `--apply`) běží side-effecty v pevném pořadí
 - `src/` — všechen zdrojový kód (rootDir v `tsconfig.json`); ke každému modulu je vedle `*.test.ts` (vitest)
   - `src/cli.ts` — entrypoint (`bin: mini`), commander dispatch
   - `src/version.ts` — verze nástroje + semver bump `package.json`
+  - `src/projectVersion.ts` — čtení verze **orchestrovaného** projektu (cizí projekt v cwd) podle jazyka manifestu (package.json / Cargo.toml / pyproject.toml / composer.json / build.gradle / pom.xml)
   - `src/changelog.ts` — práce s `CHANGELOG.md` (keepachangelog, stamp Unreleased)
   - `src/assets.ts` — lokace statického skeletonu `.mini/` (init/update)
   - `src/git.ts` — tenký wrapper nad `git` subprocess (commit, push, tag, soft reset, dotazy)
@@ -20,15 +21,17 @@ Po uzavřené fázi (`done` / `--apply`) běží side-effecty v pevném pořadí
   - `src/graph/` — strojová mapa projektu: mappery 10 jazyků + render do `.mini/graph/` + index
   - `src/ui/` — formátování konzolového výstupu, prompts wrapper, detekce TTY
   - `src/tokens/` — měření token ceny promptů jednotlivých příkazů
+  - `src/statusline/` — čistá logika status line pro Claude Code (bez I/O); buildery dat + render
+  - `src/install/` — instalátor `/mini:*` slash commandů + npm `postinstall` hook + nabídka status line
 - `assets/skeleton/.mini/` — statická kostra `.mini/` (prázdné adresáře přes `.gitkeep` + `gitignore` bez tečky); zdroj pravdy pro `init`/`update`. `scripts/copy-assets.mjs` ji při buildu kopíruje do `dist/skeleton/`
-- `scripts/` — `copy-assets.mjs` (build krok), `install-local.sh` (lokální instalace), `measure-prompt-tokens.ts`
+- `scripts/` — `copy-assets.mjs` (build krok), `postinstall.mjs` (guarded launcher npm `postinstall` hooku — čistý Node, deleguje na `dist/install/postinstall.js`, nikdy nepoloží instalaci), `install-local.sh` (lokální instalace), `measure-prompt-tokens.ts`
 - `dist/` — build output (gitignored; `tsc` + skeleton)
 - `.mini/` — runtime data projektu: `state.json` (hlavička v2), `state.prev.json`, `phases/` + `phases-prev/`, `project.md`, `discuss/`, `run/`, `memory/`, `graph/` + `graph.json`, `codebase.md`, `last-memory.md`, `STOP` (stop signál), `token-report.md`
 
 ## Klíčové moduly
 
 ### Entrypoint a CLI
-- `src/cli.ts` — commander definice všech subcommandů, dynamický `import()` handlerů (rychlejší startup). Subcommandy: `init`, `next`, `plan`, `do`, `done`, `auto`, `discuss`, `undo`, `status`, `stop`, `import-gsd`, `migrate`, `audit`, `map`, `context`, `update`, `install-commands`, `model`. Většina mutujících má `--apply` (neinteraktivní headless mód pro slash commandy); helpery `parseMaxTurns`/`parseBumpLevel`/`ensurePushHasBump`/`readHookFilePath`
+- `src/cli.ts` — commander definice všech subcommandů, dynamický `import()` handlerů (rychlejší startup). Subcommandy: `init`, `next`, `plan`, `do`, `done`, `auto`, `discuss`, `undo`, `status`, `stop`, `import-gsd`, `migrate`, `audit`, `map`, `context`, `update`, `statusline`, `install-commands` (skrytý), `model`. Většina mutujících má `--apply` (neinteraktivní headless mód pro slash commandy); helpery `parseMaxTurns`/`parseBumpLevel`/`ensurePushHasBump`/`readHookFilePath`/`collectFile`/`requireOption`
 - `src/version.ts` — `readPackageVersion()` (verze nástroje z vlastního `package.json`), `bumpSemver`/`bumpPackageVersion` (textová náhrada jen hodnoty `"version"`), typy `BumpLevel`/`BumpChoice`
 - `src/changelog.ts` — `CHANGELOG_FILE`, `todayIso()`, `stampUnreleased()` (zaklapne `## [Unreleased]` do datované sekce při minor/major vydání; patche se kumulují)
 - `src/assets.ts` — najde statický skeleton `.mini/` (dist nebo repo), `readSkeletonEntries()`; `FILE_RENAMES` (`gitignore` → `.gitignore`, npm-safe), `GITKEEP`
@@ -49,7 +52,8 @@ Po uzavřené fázi (`done` / `--apply`) běží side-effecty v pevném pořadí
 - `src/commands/migrate.ts` — `mini migrate`: jednorázový převod monolitického `state.json` (v1) na layout v2 (hlavička + `phases/`). Crash-safe (hlavička až nakonec), idempotentní
 - `src/commands/renumber.ts` — `mini migrate --renumber [--dry-run]`: přečíslování fází na souvislá celá čísla + sjednocení názvů souborů (orchestruje čistou logiku z `state/renumber.ts`)
 - `src/commands/update.ts` — `mini update [--dry-run]`: srovná negenerovanou část projektu na aktuální verzi mini — `syncSkeleton()` (skeleton `.mini/`) + `installCommands()` (slash commandy). Idempotentní, nesahá na generované soubory
-- `src/commands/install-commands.ts` — `mini install-commands`: vygeneruje `.claude/commands/mini/*.md`. `COMMAND_DEFS` drží tělo každého slash commandu (vč. dlouhého těla `auto`), `renderCommandMd()`. `COMMANDS_DIR = .claude/commands/mini`
+- `src/commands/install-commands.ts` — tenký **re-export shim** kvůli zpětné kompatibilitě (staré import path v testech); reálná logika generování commandů žije v `src/install/commands.ts`
+- `src/commands/statusline.ts` — `mini statusline`: tenký IO wrapper status line pro Claude Code (čte status JSON ze stdin + transcript), deleguje na čistý modul `src/statusline/`. Importuje minimum (rychlý start, volá se při každém refreshi), nikdy nehází — při chybě nevypíše nic
 - `src/commands/import-gsd.ts` — jednorázový import GSD projektu z `.planning/`; parsuje `NAME:`/`WHAT:`/`PHASES:`, mapuje statusy přes `STATUS_MAP`
 - `src/commands/status.ts` — barevný přehled fází a kroků (picocolors) + hint na další akci
 - `src/commands/undo.ts` — restore `state.prev.json` → `state.json` (a `phases-prev/` → `phases/`); když poslední fáze měla `autoCommit` a HEAD pořád sedí + čistý strom (`classifyRevert`), nabídne i `git reset --soft preSha`
@@ -101,8 +105,19 @@ Po uzavřené fázi (`done` / `--apply`) běží side-effecty v pevném pořadí
 ### Tokens (`src/tokens/`)
 - `measure.ts` — měření token ceny promptů příkazů (heuristika délka/4): `measureAll()`, rozpad na šablonu vs. vkládaný kontext po blocích, render do `.mini/token-report.md` i konzole. Runner: `scripts/measure-prompt-tokens.ts`
 
+### Statusline (`src/statusline/`) — status line pro Claude Code
+- `statusline.ts` — čistá logika bez I/O: typ `StatusInput` (JSON, který Claude Code posílá na stdin), `StatuslineData`, `buildData(input, transcript)`, `extractUsage()` (poslední `message.usage` z transcriptu), `windowForModel()` (200k vs. 1M podle modelu); ukazuje zkrácené cwd, model a využití context window
+- `render.ts` — `renderStatusline(StatuslineData)` → finální jednořádkový string. Barvy přes **syrové ANSI escapy** (ne picocolors — Claude Code volá příkaz s pipnutým stdout), `color` opt-out kvůli snapshot testům; helpery `shortDir`/`windowLabel`/`usagePercent`/`usageBar`/`usageColor`
+
+### Install (`src/install/`) — instalace slash commandů + npm postinstall
+- `commands.ts` — **zdroj pravdy** generování commandů: `COMMAND_DEFS` (tělo každého `/mini:*`, vč. dlouhého těla `auto`), `renderCommandMd()`, `writeCommandsTo()` (idempotentní diff-based zápis, atomicky tmp+rename), `installCommands`, `COMMANDS_DIR = .claude/commands/mini`. Společné pro CLI, `mini update` i postinstall hook
+- `install.ts` — sdílený instalátor `/mini:*`: `installSlashCommands()` (scope `project`/`user`, explicitní nebo interaktivně/detekcí), `resolveTarget`, `userCommandsDir`, typy `InstallScope`/`InstallResult`. Obsahuje i `offerStatusline()` — opt-in nabídka zadrátovat status line (jen s TTY a jen když uživatel `statusLine` ještě nemá)
+- `postinstall.ts` — `runPostinstall()`: cílový (zkompilovaný) endpoint npm `postinstall` hooku + `isGlobalInstall()` (`npm_config_global`). Globální instalace bez TTY → tiše nainstaluje user-scope commandy a status line; lokální/CI bez TTY → jen hint; s TTY → interaktivně. Respektuje `MINI_SKIP_POSTINSTALL`, nikdy nepoloží instalaci
+- `detectClaude.ts` — `detectClaude()` (najde `claude` v PATH = global, nebo `node_modules/.bin/claude` = local; čisté a synchronní, injektovatelné pro testy), `recommendedScope()`
+- `statuslineSettings.ts` — čtení/zápis bloku `statusLine` v `~/.claude/settings.json`: `installStatusline()`, čistá `mergeStatusline()` (přidá jen když žádný `statusLine` není — nikdy nepřepíše cizí), `miniStatuslineCommand()` (absolutní `node <cli.js> statusline`). Zbytek settings zachová, nikdy nehází
+
 ## Technologie
-- **Balík:** `mini-orchestrator` (npm), bin `mini` → `dist/cli.js`; publikuje se jen `dist` + `README.md`, `prepublishOnly` buildí
+- **Balík:** `mini-orchestrator` (npm), bin `mini` → `dist/cli.js`; publikuje se `dist` + `scripts/postinstall.mjs` + `README.md`, `prepublishOnly` buildí. Klíčová slova v `package.json` (`keywords`) pro npm search
 - **Jazyk:** TypeScript 5.6, strict + `noUncheckedIndexedAccess` + `noImplicitOverride`, target ES2022, module NodeNext (čisté ESM s `.js` importy)
 - **Runtime:** Node ≥20 (`engines`), `"type": "module"`
 - **CLI framework:** [commander](https://www.npmjs.com/package/commander) ^12.1.0 (s `InvalidArgumentError` pro vlastní parsery `--max-turns`/`--bump`)
@@ -114,5 +129,5 @@ Po uzavřené fázi (`done` / `--apply`) běží side-effecty v pevném pořadí
 - **Test runner:** [vitest](https://vitest.dev/) ^4.1.7; ke každému modulu `*.test.ts`, snapshot testy v `__snapshots__/` (prompts, graph, tokens)
 - **Externí závislost runtime:** binárka `claude` (Claude Code CLI) v `PATH` — subprocess režim (`do`/`discuss`/`audit`/`import-gsd`/`auto`) ji spawnuje; nativní `/mini:` commandy už běží uvnitř Claude Code a `claude` nespouštějí
 - **Volitelná externí závislost:** binárka `git` — auto-commit/push/tag po fázi a soft reset v undo (`src/git.ts`); chybí-li, side-effecty se tiše přeskočí
-- **Instalace:** `npm install -g mini-orchestrator` (publish vyžaduje 2FA OTP); pro vývoj `npm run install-local` (`scripts/install-local.sh`)
-- **Nativní integrace s Claude Code:** `mini install-commands` / `mini update` generují `.claude/commands/mini/*.md` (slash commandy `/mini:*`), které volají `mini context <cmd>`; volitelný PostToolUse hook na `mini map --hook` udržuje graf aktuální
+- **Instalace:** `npm install -g mini-orchestrator` (publish vyžaduje 2FA OTP); pro vývoj `npm run install-local` (`scripts/install-local.sh`). Po globální instalaci npm `postinstall` hook (`scripts/postinstall.mjs` → `dist/install/postinstall.js`) sám nainstaluje user-scope slash commandy a (interaktivně) nabídne zadrátování status line; nikdy nepoloží instalaci (CI/`npm ci`/bez TTY → jen hint nebo no-op)
+- **Nativní integrace s Claude Code:** `/mini:*` slash commandy v `.claude/commands/mini/*.md` (postinstall / skrytý `mini install-commands` / `mini update`) volají `mini context <cmd>`; volitelný PostToolUse hook na `mini map --hook` udržuje graf aktuální; `mini statusline` jako `statusLine` v `settings.json` ukazuje cwd/model/context window

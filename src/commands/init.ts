@@ -1,5 +1,6 @@
 import { basename } from 'node:path';
 import { isBrownfield } from '../state/brownfield.js';
+import { renderProjectMd } from '../state/projectMd.js';
 import { exists, newState, save, writeProject } from '../state/store.js';
 import { ask, nonEmpty, trim } from '../ui/ask.js';
 import { log } from '../ui/log.js';
@@ -49,7 +50,7 @@ export async function applyInit(opts: ApplyInitOptions): Promise<{ ok: boolean }
     constraints: (opts.constraints ?? '').trim(),
   };
 
-  const projectMd = renderProjectMd(answers);
+  const projectMd = renderProjectMd({ ...answers, constraints: answers.constraints || '(none)' });
 
   await writeProject(projectMd, cwd);
   await save(newState(), cwd);
@@ -120,7 +121,8 @@ export async function init(): Promise<void> {
     },
   ]);
 
-  const projectMd = renderProjectMd(answers as InitAnswers);
+  const a = answers as InitAnswers;
+  const projectMd = renderProjectMd({ ...a, constraints: a.constraints || '(none)' });
 
   await writeProject(projectMd, cwd);
   await save(newState(), cwd);
@@ -150,18 +152,4 @@ export async function init(): Promise<void> {
 
   log.hint('For autonomous mode: enable graph auto-update after edits (a hook in .claude/settings.json) — see README "Machine-readable project map".');
   log.hint('Next step: mini next');
-}
-
-function renderProjectMd(d: InitAnswers): string {
-  return `# ${d.name}
-
-## What I'm building
-${d.what}
-
-## Who it's for
-${d.forWhom}
-
-## Main constraints
-${d.constraints || '(none)'}
-`;
 }

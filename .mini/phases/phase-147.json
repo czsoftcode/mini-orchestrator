@@ -1,0 +1,39 @@
+{
+  "id": 147,
+  "title": "Shared project.md renderer",
+  "goal": "Extract renderProjectMd into a new src/state/projectMd.ts with optional Approach/Non-goals/Success fields, and have init.ts and import-gsd.ts import it so that with the optional fields omitted the output is byte-identical (existing init.test.ts and import-gsd.test.ts pass unchanged).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Create src/state/projectMd.ts renderer",
+      "status": "done",
+      "detail": "Export renderProjectMd({ name, what, forWhom, constraints, approach?, nonGoals?, success? }) + Fields type. Pure layout, no internal fallbacks. Section order name -> What I'm building -> Who it's for -> [Approach] -> [Non-goals] -> [Success criteria] -> Main constraints; optional sections rendered only when non-empty; single trailing newline."
+    },
+    {
+      "title": "Unit test src/state/projectMd.test.ts",
+      "status": "done",
+      "detail": "Covers: required-only output equals the exact current template string; each optional section renders in the right place when filled; empty/omitted optionals are dropped; Main constraints stays last with optionals present."
+    },
+    {
+      "title": "Rewrite init.ts to use shared renderer",
+      "status": "done",
+      "detail": "Delete local renderProjectMd (init.ts:155), import from ../state/projectMd.js, call with forWhom as-is and constraints || '(none)'. No optional fields passed."
+    },
+    {
+      "title": "Rewrite import-gsd.ts to use shared renderer",
+      "status": "done",
+      "detail": "Delete buildImportProjectMd (import-gsd.ts:149), import shared renderer, call with forWhom || '(not specified)' and constraints || '(none)'. No optional fields passed."
+    },
+    {
+      "title": "Verify byte-identity: tests + build",
+      "status": "done",
+      "detail": "npm test — init.test.ts and import-gsd.test.ts pass UNCHANGED (proof of byte-identity), new projectMd.test.ts passes; npm run build clean; status.ts untouched."
+    }
+  ],
+  "startedAt": "2026-06-07T18:31:55.871Z",
+  "completedAt": "2026-06-07T18:38:02.207Z",
+  "autoCommit": {
+    "preSha": "a0f5b858313e9113f17b3ccad6516a96eb771a3b",
+    "subject": "Phase 147: Shared project.md renderer"
+  }
+}

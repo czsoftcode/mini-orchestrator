@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { askClaude } from '../claude/ask.js';
 import { buildImportGsdPrompt } from '../prompts/importGsd.js';
 import { resolveModel } from '../state/models.js';
+import { renderProjectMd } from '../state/projectMd.js';
 import { exists, load, newState, save, writeProject } from '../state/store.js';
 import type { Phase, PhaseStatus, ProjectModels, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
@@ -146,20 +147,6 @@ export async function importGsd(): Promise<void> {
 }
 
 /** Builds the `project.md` body from a parsed import. */
-function buildImportProjectMd(parsed: ParsedImport): string {
-  return `# ${parsed.name}
-
-## What I'm building
-${parsed.what}
-
-## Who it's for
-${parsed.forWhom || '(not specified)'}
-
-## Main constraints
-${parsed.constraints || '(none)'}
-`;
-}
-
 /** Builds the state for a parsed import: phases with their statuses + the current-phase pointer. */
 function buildImportState(parsed: ParsedImport, preservedModels?: ProjectModels): ProjectState {
   const state = newState();
@@ -187,7 +174,13 @@ async function saveImport(
   cwd: string,
   preservedModels?: ProjectModels,
 ): Promise<void> {
-  await writeProject(buildImportProjectMd(parsed), cwd);
+  const projectMd = renderProjectMd({
+    name: parsed.name,
+    what: parsed.what,
+    forWhom: parsed.forWhom || '(not specified)',
+    constraints: parsed.constraints || '(none)',
+  });
+  await writeProject(projectMd, cwd);
   await save(buildImportState(parsed, preservedModels), cwd);
 }
 

@@ -732,6 +732,11 @@
       "id": 146,
       "title": "README: A-block cleanups",
       "status": "done"
+    },
+    {
+      "id": 147,
+      "title": "Shared project.md renderer",
+      "status": "done"
     }
   ],
   "models": {
