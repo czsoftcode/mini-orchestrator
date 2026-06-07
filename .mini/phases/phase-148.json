@@ -1,0 +1,39 @@
+{
+  "id": 148,
+  "title": "mini project --apply contract",
+  "goal": "In src/commands/project.ts add applyProject (requires an existing project, else error 'run mini init first'; renders via the shared src/state/projectMd.ts and writes only project.md, never state.json) and a block parser parseProjectContract (labels NAME/WHAT/FOR_WHOM/CONSTRAINTS/APPROACH/NON_GOALS/SUCCESS, modeled on the import-gsd parser; each value runs up to the next known label or EOF). Cover with src/commands/project.test.ts: multi-line bullet sections, empty optional fields, a label-like string inside text. Scope is parser + apply + tests only — no CLI/context/session wiring (those are todo 35/36).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "parseProjectContract block parser",
+      "status": "done",
+      "detail": "In new src/commands/project.ts: ParsedProject type (name, what required; forWhom, constraints, approach?, nonGoals?, success?) and a block parser. A known label starts a field only at column 0 (^(NAME|WHAT|FOR_WHOM|CONSTRAINTS|APPROACH|NON_GOALS|SUCCESS):); value runs to next label/EOF, trim, internal newlines kept, lone '-' -> empty; returns null when NAME or WHAT is missing."
+    },
+    {
+      "title": "applyProject writes only project.md",
+      "status": "done",
+      "detail": "applyProject(parsed, cwd?): exists(cwd) else {ok:false, reason:'no-project'} + error 'run mini init first'; fallbacks forWhom||'(not specified)', constraints||'(none)', optional sections only when non-empty; render via renderProjectMd from projectMd.ts, writeProject; never touches state.json. Returns StepOutcome."
+    },
+    {
+      "title": "Tests: parseProjectContract",
+      "status": "done",
+      "detail": "src/commands/project.test.ts - multi-line bullet sections (Approach/Non-goals/Success) survive, empty optionals omitted, label-like text NOT at column 0 stays as content, missing NAME/WHAT -> null, lone '-' -> empty."
+    },
+    {
+      "title": "Tests: applyProject",
+      "status": "done",
+      "detail": "rendered project.md contains the new sections and keeps the '## What I'm building' heading; errors without an existing project; verify state.json is not created/changed."
+    },
+    {
+      "title": "Green: npm test + npm run build",
+      "status": "done",
+      "detail": "full test suite passes (incl. unchanged init.test.ts/import-gsd.test.ts) and the TypeScript build is clean."
+    }
+  ],
+  "startedAt": "2026-06-07T19:02:06.400Z",
+  "completedAt": "2026-06-07T19:06:14.371Z",
+  "autoCommit": {
+    "preSha": "00a59854aeaa405522386e04547b8e8fca933397",
+    "subject": "Phase 148: mini project --apply contract"
+  }
+}
