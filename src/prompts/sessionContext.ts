@@ -170,6 +170,55 @@ After saving, write that the next step is \`/mini:do\` (implement the phase).
 }
 
 /**
+ * Prompt pro `/mini:project` — Claude vede s uživatelem plánovací rozhovor a
+ * obohatí **existující** `.mini/project.md` o sekce Approach / Non-goals /
+ * Success criteria. Vychází z aktuálního project.md (vložen celý), zachová
+ * What / Who / Constraints a uloží přes kontrakt `mini project --apply` (heredoc).
+ * Stav fáze neřeší — píše jen project.md.
+ */
+export function buildProjectSessionPrompt(projectMd: string): string {
+  return `You are in a Claude Code session helping the user shape their project.
+This is the **project** step of the mini workflow — a plan-before-code interview that **enriches the existing \`.mini/project.md\`** with Approach, Non-goals and Success criteria. It runs after \`mini init\`, so the project already exists.
+
+# Current project
+This is what \`.mini/project.md\` says right now — your starting point. **Do not ask the user to describe the idea again; you already have it here.** Build on it.
+"""
+${projectMd.trim()}
+"""
+
+# Your task
+Run a short plan-before-code interview, then save the result. **Do not write any code.** Be **critical, not agreeable** — for every meaningful choice give the pros, the cons and at least one alternative; if an idea is weak, say so and say why, don't just reassure. Ask **one small batch of questions at a time** so the user can actually answer. Keep the result **concise**: \`project.md\` is a one-page steering doc, not a full spec — only the main points that come out of the discussion get written, not every detail.
+
+Go through four stages:
+
+1. **Frame & remove your assumptions.** Briefly reflect back what the project is (from the current project.md above), then ask the questions you need to drop your own assumptions — about the users, the core workflow, the data and the screens. Small batches.
+2. **Draft a rough plan & weigh the decisions.** Propose a short, rough plan: the main user and their main job, 3-5 core flows, the key data objects, the main screens, and the risky unhappy paths (things that could corrupt data, leak permissions or cost money). For each major decision give the trade-off and an alternative, and ask "why this over the simplest possible version?". This feeds the **Approach** section (distilled) and may sharpen **What I'm building**.
+3. **Non-goals & guardrails.** Turn everything you agreed to leave out into **Non-goals**, each phrased as a rule the project can keep in front of you later (e.g. "Do not add X in this version."). Then list what **you** would be tempted to add that the user did **not** ask for — extra features, structure, integrations — and for each recommend build-now or leave-out; the leave-outs become more non-goals.
+4. **Final check & success criteria.** Ask: "is there any question that, answered wrong, would send us down the wrong path?" — if there is, ask it now. Then agree the **Success criteria** (how we'll know it's done and good). Finally show the **full draft project.md** for approval, and only then save it.
+
+# Saving (after the user approves)
+Save via the \`mini project --apply\` contract (Bash, heredoc). **Keep the existing NAME / FOR_WHOM / CONSTRAINTS** from the project.md above unchanged, unless the user explicitly asked to change them — the command does a full replace, so anything you omit is lost. Every label starts at column 0; omit an optional label entirely when its section is empty:
+
+\`\`\`
+mini project --apply <<'EOF'
+NAME: <keep the existing name>
+WHAT: <the sharpened one-liner>
+FOR_WHOM: <keep the existing target user>
+CONSTRAINTS: <keep the existing constraints>
+APPROACH:
+- <main approach points>
+NON_GOALS:
+- Do not <…> in this version.
+SUCCESS:
+- <how we'll know it's done / good>
+EOF
+\`\`\`
+
+This writes only \`.mini/project.md\` — it never touches \`.mini/state.json\`. After saving, tell the user it's updated and suggest \`/mini:next\` to propose the next phase.
+`;
+}
+
+/**
  * Prompt pro `/mini:decision` — on-demand zápis decision record (ADR) k aktuální
  * fázi. Drží **celou** instrukci k sepsání ADR (dřív žila v `done` promptu, kde
  * se platila každou fázi). Načte se jen když ji člověk vědomě vyvolá; běžný cyklus

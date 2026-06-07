@@ -1,0 +1,47 @@
+{
+  "id": 149,
+  "title": "mini project session flow",
+  "goal": "Wire the full /mini:project (Part 1c) on top of phase 148: buildProjectSessionPrompt in sessionContext.ts (keep existing NAME/FOR_WHOM/CONSTRAINTS, interview for vision/Approach/Non-goals/Success, emit a heredoc contract to 'mini project --apply'), a 'project' branch in context.ts + CONTEXT_COMMANDS (no active phase needed), the CLI 'project' command (bare interactive via workWithClaude like discuss.ts + --apply reading stdin -> parseProjectContract -> readable error on null -> applyProject), a COMMAND_DEFS entry generating the /mini:project slash, docs/interactive/project.md, and the install-commands.test.ts snapshot (insert 'project.md' between 'plan.md' and 'status.md'). The conversation protocol for the session prompt is supplied by the user in /mini:discuss; fall back to a clearly marked placeholder per docs/design/mini-project.md only if not supplied. No model scope, no state.json writes, no status.ts changes.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "buildProjectSessionPrompt with 4-stage protocol",
+      "status": "done",
+      "detail": "In sessionContext.ts add buildProjectSessionPrompt(projectMd): inline the current project.md, the distilled 4-stage interview (frame -> plan with pros/cons/alternatives -> non-goals as rules -> final check + Success), keep NAME/FOR_WHOM/CONSTRAINTS, heredoc contract template to 'mini project --apply'. Covered by a snapshot/unit test (contains the heredoc template and the 'read the existing project.md' instruction; no verbatim block dump)."
+    },
+    {
+      "title": "context project branch (no active phase)",
+      "status": "done",
+      "detail": "In context.ts add 'project' to CONTEXT_COMMANDS and route it in context() before buildPhaseContext (no current phase needed); narrow buildPhaseContext's type to Exclude<ContextCommand,'next'|'verify'|'project'>. 'mini context project' prints the prompt."
+    },
+    {
+      "title": "CLI project command + interactive session",
+      "status": "done",
+      "detail": "cli.ts program.command('project'): --apply reads stdin -> parseProjectContract -> readable error + non-zero exit on null -> applyProject; bare runs an interactive workWithClaude session (new projectSession() in project.ts modeled on discuss.ts) with allowedTools including Bash. Manual: 'mini project --apply <<EOF...' updates project.md."
+    },
+    {
+      "title": "COMMAND_DEFS entry + install snapshot",
+      "status": "done",
+      "detail": "install/commands.ts COMMAND_DEFS 'project' (default body -> mini context project); update install-commands.test.ts expected list inserting 'project.md' between 'plan.md' and 'status.md'. install-commands tests pass."
+    },
+    {
+      "title": "docs/interactive/project.md",
+      "status": "done",
+      "detail": "Command docs modeled on init.md - what /mini:project does (enrich the existing project.md), the 4-stage flow, a note on the --apply contract."
+    },
+    {
+      "title": "Green: npm test + npm run build",
+      "status": "done",
+      "detail": "full suite passes (incl. updated snapshots) and the tsc build is clean."
+    }
+  ],
+  "startedAt": "2026-06-07T20:04:47.261Z",
+  "resolvedVerify": [
+    "Try the live /mini:project conversation and judge its quality"
+  ],
+  "completedAt": "2026-06-07T20:29:44.386Z",
+  "autoCommit": {
+    "preSha": "aa572163d2c95dce7c1f72c934e5ca35d945260a",
+    "subject": "Phase 149: mini project session flow"
+  }
+}

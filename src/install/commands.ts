@@ -67,6 +67,10 @@ Briefly relay the command output and the recommended next steps to the user in t
     description: 'mini — break the current phase down into concrete steps',
   },
   {
+    name: 'project',
+    description: 'mini — shape the project vision (approach, non-goals, success)',
+  },
+  {
     name: 'do',
     description: 'mini — implement the current phase and write a report',
     body: `This is the **do** step of the mini workflow, run directly in Claude Code. You implement the current phase and write a report at the end. Change the state in \`.mini/\` only with \`mini ... --apply\` commands, never edit \`.mini/state.json\` by hand.

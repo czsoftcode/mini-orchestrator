@@ -242,6 +242,28 @@ program
   });
 
 program
+  .command('project')
+  .description('Enriches the existing project.md (approach, non-goals, success criteria) — an interactive session, or --apply to save a contract from stdin.')
+  .option('--apply', 'Non-interactively read the project contract from stdin (NAME/WHAT/FOR_WHOM/CONSTRAINTS/APPROACH/NON_GOALS/SUCCESS), parse it and write only project.md (no Claude). For /mini:project.')
+  .action(async (opts: { apply?: boolean }) => {
+    if (opts.apply) {
+      const { parseProjectContract, applyProject } = await import('./commands/project.js');
+      const parsed = parseProjectContract(await readStdin());
+      if (!parsed) {
+        console.error(
+          'Could not read the project contract (it needs at least a NAME: and a WHAT: line, each starting at the beginning of a line).',
+        );
+        process.exit(1);
+      }
+      const r = await applyProject(parsed);
+      if (!r.ok) process.exit(1);
+      return;
+    }
+    const { projectSession } = await import('./commands/project.js');
+    await projectSession();
+  });
+
+program
   .command('verify')
   .description('Opens an interactive Claude Code session for the in-depth UI/UX review of the current phase (or the last closed one) — symmetric to discuss, the terminal counterpart of /mini:verify.')
   .action(async () => {
@@ -405,7 +427,7 @@ program
 
 program
   .command('context <cmd> [args...]')
-  .description('Prints the current session prompt for the given step (next|discuss|plan|do|done|verify) to stdout. Serves the native /mini: slash commands in Claude Code.')
+  .description('Prints the current session prompt for the given step (next|project|discuss|plan|do|done|verify) to stdout. Serves the native /mini: slash commands in Claude Code.')
   .action(async (cmd: string, args: string[]) => {
     const { context } = await import('./commands/context.js');
     await context(cmd, args);

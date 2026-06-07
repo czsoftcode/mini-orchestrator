@@ -43,8 +43,18 @@ async function setupProject(phases: Phase[], currentPhaseId: number | null): Pro
 
 describe('isContextCommand', () => {
   it('knows the cycle commands, decision and verify', () => {
-    expect(CONTEXT_COMMANDS).toEqual(['next', 'discuss', 'plan', 'do', 'done', 'decision', 'verify']);
+    expect(CONTEXT_COMMANDS).toEqual([
+      'next',
+      'project',
+      'discuss',
+      'plan',
+      'do',
+      'done',
+      'decision',
+      'verify',
+    ]);
     expect(isContextCommand('plan')).toBe(true);
+    expect(isContextCommand('project')).toBe(true);
     expect(isContextCommand('decision')).toBe(true);
     expect(isContextCommand('verify')).toBe(true);
     expect(isContextCommand('auto')).toBe(false);

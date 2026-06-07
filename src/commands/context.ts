@@ -7,6 +7,7 @@ import {
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
+  buildProjectSessionPrompt,
 } from '../prompts/sessionContext.js';
 import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { readDiscussNotes } from '../state/discussNotes.js';
@@ -18,7 +19,7 @@ import { log } from '../ui/log.js';
 import { buildVerifyContext, readReportVerify } from './verifyContext.js';
 
 /** Sub-commands for which `mini context` can print a session prompt. */
-export const CONTEXT_COMMANDS = ['next', 'discuss', 'plan', 'do', 'done', 'decision', 'verify'] as const;
+export const CONTEXT_COMMANDS = ['next', 'project', 'discuss', 'plan', 'do', 'done', 'decision', 'verify'] as const;
 export type ContextCommand = (typeof CONTEXT_COMMANDS)[number];
 
 export function isContextCommand(value: string): value is ContextCommand {
@@ -60,6 +61,10 @@ export async function context(cmd: string, extraArgs: string[] = []): Promise<vo
   let prompt: string | null;
   if (cmd === 'next') {
     prompt = await buildNextContext(projectMd, header, cwd, extraArgs);
+  } else if (cmd === 'project') {
+    // `project` enriches project.md and needs no active phase — the top-level
+    // `exists` check above is enough (like `next`).
+    prompt = buildProjectSessionPrompt(projectMd);
   } else if (cmd === 'verify') {
     prompt = await buildVerifyContext(header, cwd);
   } else {
@@ -109,7 +114,7 @@ async function buildNextContext(
 
 /** Shared part for discuss/plan/do/done: they require an existing current phase. */
 async function buildPhaseContext(
-  cmd: Exclude<ContextCommand, 'next'>,
+  cmd: Exclude<ContextCommand, 'next' | 'project' | 'verify'>,
   projectMd: string,
   header: StateHeader,
   cwd: string,

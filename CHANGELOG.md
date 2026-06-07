@@ -8,6 +8,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`/mini:project` (and `mini project`) — shape the project vision.** A new
+  plan-before-code step that runs after `mini init` and **enriches the existing
+  `project.md`** with **Approach**, **Non-goals** and **Success criteria** (the
+  existing name / target user / constraints are kept). In a session Claude runs a
+  short, deliberately critical four-stage interview (frame & remove assumptions →
+  rough plan with trade-offs → non-goals as rules → final check + success
+  criteria) and saves the result through the `mini project --apply` contract
+  (stdin), which writes only `project.md` and never the phase state. `project.md`
+  stays a one-page steering doc — only the main points are written, not a full
+  spec.
 - **README: "Walk through your first phase" walkthrough.** A collapsible
   `<details>` block in Quick start shows the first-five-minutes **slash-command**
   path (`/mini:init` → `/mini:next` → `/mini:plan` → `/mini:do` → `/mini:done`) as

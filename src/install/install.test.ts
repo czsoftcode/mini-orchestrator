@@ -44,7 +44,7 @@ describe('installSlashCommands', () => {
     expect(files).toContain('next.md');
     expect(files).toContain('import-gsd.md');
     expect(files).toContain('decision.md');
-    expect(files.length).toBe(19);
+    expect(files.length).toBe(20);
   });
 
   it('dry-run writes nothing', async () => {

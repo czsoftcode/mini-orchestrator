@@ -1,7 +1,17 @@
+import { workWithClaude } from '../claude/work.js';
+import { buildProjectSessionPrompt } from '../prompts/sessionContext.js';
 import { type ProjectMdFields, renderProjectMd } from '../state/projectMd.js';
-import { exists, writeProject } from '../state/store.js';
+import { exists, readProject, writeProject } from '../state/store.js';
+import { ask } from '../ui/ask.js';
 import { log } from '../ui/log.js';
 import type { StepOutcome } from './types.js';
+
+/**
+ * Tools the bare `mini project` session may use. Unlike `discuss` (Read/Write
+ * only) this includes **Bash**: the agent saves the result by running
+ * `mini project --apply` itself. The prompt names exactly that one command.
+ */
+const PROJECT_ALLOWED_TOOLS = ['Read', 'Grep', 'Glob', 'LS', 'Bash'];
 
 /**
  * Known contract labels for `mini project --apply`, in their `project.md`
@@ -130,5 +140,67 @@ export async function applyProject(
 
   await writeProject(renderProjectMd(fields), cwd);
   log.success('Updated .mini/project.md');
+  return { ok: true };
+}
+
+/**
+ * Bare `mini project` (the terminal counterpart of `/mini:project`): opens an
+ * interactive Claude Code session that enriches the existing `project.md` via the
+ * shared session prompt. Mirrors `discuss.ts`, but the session may run Bash so the
+ * agent can save through `mini project --apply` at the end. Requires an existing
+ * project; never moves the phase state.
+ */
+export async function projectSession(): Promise<StepOutcome> {
+  const cwd = process.cwd();
+
+  if (!(await exists(cwd))) {
+    log.warn('No project in this directory.');
+    log.hint('Run mini init first.');
+    return { ok: false, reason: 'no-project' };
+  }
+
+  const projectMd = await readProject(cwd);
+  const prompt = buildProjectSessionPrompt(projectMd);
+
+  console.log();
+  log.title('This is what I will send to Claude Code as the first message:');
+  console.log();
+  console.log(prompt);
+
+  const { confirm } = await ask<'confirm'>({
+    type: 'confirm',
+    name: 'confirm',
+    message: 'Start a project-shaping session with Claude Code?',
+    initial: true,
+  });
+
+  if (!confirm) {
+    log.dim('Cancelled. project.md did not change.');
+    return { ok: false, reason: 'cancelled' };
+  }
+
+  log.dim('Starting Claude Code (project session)…');
+  console.log();
+
+  let exitCode: number;
+  try {
+    const result = await workWithClaude(prompt, {
+      cwd,
+      allowedTools: PROJECT_ALLOWED_TOOLS,
+    });
+    exitCode = result.exitCode;
+  } catch (err) {
+    log.error(`Failed to start Claude: ${(err as Error).message}`);
+    return { ok: false, reason: 'claude-error' };
+  }
+
+  console.log();
+  if (exitCode === 0) {
+    log.success('Project session finished.');
+  } else {
+    log.warn(`Claude session ended with code ${exitCode}.`);
+  }
+
+  log.hint('Next: mini next (propose the next phase)');
   return { ok: true };
 }

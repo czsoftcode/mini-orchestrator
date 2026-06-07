@@ -4,6 +4,7 @@ import {
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
+  buildProjectSessionPrompt,
   buildVerifySessionPrompt,
 } from './sessionContext.js';
 import type { Phase, ProjectState } from '../state/types.js';
@@ -192,6 +193,40 @@ describe('buildDoneSessionPrompt', () => {
   it('pointer na /mini:decision nevkládá, když report chybí', () => {
     const p = buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
     expect(p).not.toContain('/mini:decision');
+  });
+});
+
+describe('buildProjectSessionPrompt', () => {
+  it('frames it as enriching the existing project and inlines the current project.md', () => {
+    const p = buildProjectSessionPrompt(PROJECT);
+    expect(p).toContain('**project** step');
+    expect(p).toContain('enriches the existing');
+    // The current project.md is inlined as the starting point.
+    expect(p).toContain('# Demo');
+    expect(p).toContain('Něco.');
+    // Do not re-ask for the idea — it is already there.
+    expect(p).toContain('Do not ask the user to describe the idea again');
+  });
+
+  it('runs the four-stage interview and stays critical', () => {
+    const p = buildProjectSessionPrompt(PROJECT);
+    expect(p).toContain('critical, not agreeable');
+    expect(p).toContain('Approach');
+    expect(p).toContain('Non-goals');
+    expect(p).toContain('Success criteria');
+    expect(p).toContain('small batch');
+    // one-page steering doc, not a full spec
+    expect(p).toContain('one-page steering doc');
+  });
+
+  it('gives the heredoc contract template and keeps existing NAME/FOR_WHOM/CONSTRAINTS', () => {
+    const p = buildProjectSessionPrompt(PROJECT);
+    expect(p).toContain('mini project --apply');
+    expect(p).toContain("<<'EOF'");
+    expect(p).toContain('NON_GOALS:');
+    expect(p).toContain('Keep the existing NAME / FOR_WHOM / CONSTRAINTS');
+    // It writes only project.md, never the state.
+    expect(p).toContain('never touches');
   });
 });
 
