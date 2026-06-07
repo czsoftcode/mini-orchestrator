@@ -3,7 +3,7 @@
 exports[`render > konzolový výpis nad fixními vstupy (snapshot) 1`] = `
 "Token report (heuristika délka/4), seřazeno podle reálných tokenů:
   auto         reálný=1345  šablona=1100  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
-  do           reálný=1246  šablona=1226  kontext=20  (vkládaný kontext 20 tok: fáze (název + cíl) 60 %, kroky 40 %)
+  do           reálný=1278  šablona=1258  kontext=20  (vkládaný kontext 20 tok: fáze (název + cíl) 60 %, kroky 40 %)
   plan         reálný=822  šablona=577  kontext=245  (vkládaný kontext 245 tok: diskuzní poznámky 51 %, projekt 41 %)
   next         reálný=816  šablona=623  kontext=193  (vkládaný kontext 193 tok: projekt 52 %, last-memory 39 %)
   done         reálný=784  šablona=702  kontext=82  (vkládaný kontext 82 tok: run report 77 %, fáze (název + cíl) 15 %)
@@ -21,7 +21,7 @@ obsahových bloků (projekt, historie fází, poznámky, …).
 | Příkaz | Reálný | Šablona | Vkládaný kontext |
 | --- | ---: | ---: | ---: |
 | auto | 1345 | 1100 | 245 |
-| do | 1246 | 1226 | 20 |
+| do | 1278 | 1258 | 20 |
 | plan | 822 | 577 | 245 |
 | next | 816 | 623 | 193 |
 | done | 784 | 702 | 82 |

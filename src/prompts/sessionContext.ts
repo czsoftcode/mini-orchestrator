@@ -1,6 +1,7 @@
 import { phaseStem } from '../state/store.js';
 import type { Phase, PhaseStatus, ProjectState, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
+import { projectRefBlock } from './projectRef.js';
 
 /**
  * Session prompty pro nativní `/mini:` slash commandy v Claude Code.
@@ -126,9 +127,11 @@ export function buildPlanSessionPrompt(
   projectMd: string,
   phase: Phase,
   discussNotes?: string | null,
+  useProjectRef = false,
 ): string {
   const notes = discussNotes?.trim();
   const notesBlock = notes ? `\n# Phase notes (from discussion)\n${notes}\n` : '';
+  const projectBlock = useProjectRef ? projectRefBlock() : projectMd.trim();
 
   let stepsBlock = '';
   if (phase.steps?.length) {
@@ -140,7 +143,7 @@ export function buildPlanSessionPrompt(
 This is the **plan** step of the mini workflow — break the current phase down into concrete steps.
 
 # Project
-${projectMd.trim()}
+${projectBlock}
 
 # Phase to break down
 **Phase ${phase.id}: ${phase.title}**

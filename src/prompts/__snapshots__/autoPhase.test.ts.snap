@@ -160,7 +160,7 @@ exports[`buildAutoPhasePrompt > projekt reference mód: místo inline textu proj
 An **auto session** is in progress — you are to implement the whole phase in one pass.
 
 # Project
-The project is described in \`.mini/project.md\`. If you already read it in this session (typically during \`/mini:plan\` or at the start of \`auto\`), **do not read it again** — you have it in context. Otherwise read it now via the Read tool.
+The project is described in \`.mini/project.md\`. If you already **have it in context** from earlier in this session, **do not read it again**. If you are unsure — a long session where it may have scrolled out of context (compaction), or a new session after a crash — read \`.mini/project.md\` (whole, once) via the Read tool. **Read it only when you don't have it.**
 
 # Current phase
 **Phase 41: Projekt reference**

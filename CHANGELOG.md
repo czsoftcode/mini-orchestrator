@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-06-07
+
 ### Added
 
 - **`/mini:project` (and `mini project`) — shape the project vision.** A new
@@ -33,6 +35,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **`/mini:plan` and `/mini:discuss` reference `project.md` instead of inlining
+  it.** In a running session these slash commands no longer paste the whole
+  `project.md` into the prompt every time; they reference it with a read-once
+  instruction ("read it only when you don't have it in context"), matching how
+  `/mini:do` already worked. Saves tokens per invocation, especially with a richer
+  `project.md`. Cold paths are unchanged: `mini next` and the interactive terminal
+  `mini plan` / `mini discuss` still inline the full project. The shared wording
+  also covers long sessions (compaction) and a fresh session after a crash.
 - **README: dropped the hidden CI/billing comment and a redundant disclaimer.**
   The commented-out CI badge with its "GitHub account billing issue" note was
   removed from the public source; the npm/node/license badges stay. The

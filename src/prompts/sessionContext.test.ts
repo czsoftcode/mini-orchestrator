@@ -119,6 +119,20 @@ describe('buildPlanSessionPrompt', () => {
     expect(p).toContain('title :: detail');
     expect(p).toContain('8 words');
   });
+
+  it('reference mode (warm): references project.md instead of inlining it', () => {
+    const p = buildPlanSessionPrompt(PROJECT, phase, null, true);
+    expect(p).toContain('.mini/project.md');
+    expect(p).toContain('do not read it again');
+    // The inlined project body must not appear.
+    expect(p).not.toContain('Něco.');
+  });
+
+  it('default inlines the project (no useProjectRef flag)', () => {
+    const p = buildPlanSessionPrompt(PROJECT, phase);
+    expect(p).toContain('Něco.');
+    expect(p).not.toContain('.mini/project.md');
+  });
 });
 
 describe('buildDoneSessionPrompt', () => {

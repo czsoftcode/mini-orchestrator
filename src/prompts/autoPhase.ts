@@ -1,5 +1,6 @@
 import { phaseStem } from '../state/store.js';
 import { PARALLELISM_HINT } from './parallelismHint.js';
+import { projectRefBlock } from './projectRef.js';
 import type { Phase, StepStatus } from '../state/types.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
@@ -66,7 +67,7 @@ export function buildAutoPhasePrompt(ctx: AutoPhaseContext): string {
   // session — projekt je v rámci session neměnný, takže „už ho máš, nenačítej".
   let projectBlock: string;
   if (useProjectRef) {
-    projectBlock = `The project is described in \`.mini/project.md\`. If you already read it in this session (typically during \`/mini:plan\` or at the start of \`auto\`), **do not read it again** — you have it in context. Otherwise read it now via the Read tool.`;
+    projectBlock = projectRefBlock();
   } else {
     projectBlock = projectMd.trim();
   }

@@ -1,0 +1,44 @@
+{
+  "id": 150,
+  "title": "project.md reference mode",
+  "goal": "Extract a shared projectRefBlock() helper in src/prompts/ ('read .mini/project.md only when you don't already have it in context, e.g. after compaction or a crash') and switch the warm slash paths to reference project.md instead of inlining it: add an optional useProjectRef flag to buildPlanSessionPrompt and buildDiscussPhasePrompt (default inline so existing snapshots stay), set it true in context.ts's plan and discuss branches, and rewrite autoPhase.ts's existing inline useProjectRef block for 'do' to reuse the same helper. Cold paths stay inline: next (cold opener), and the interactive terminal mini plan / mini discuss (no flag passed). Covered by snapshot tests (autoPhase.test.ts updated + plan and discuss warm cases: the warm prompt omits the whole project.md but includes the instruction to read it). Last item of the mini project series (Part 2).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Shared projectRefBlock() helper",
+      "status": "done",
+      "detail": "New src/prompts/projectRef.ts with a parameterless projectRefBlock() returning the general reference wording ('read .mini/project.md only when you don't have it', covering compaction/crash). Returns only the body, not the '# Project' heading."
+    },
+    {
+      "title": "autoPhase 'do' uses the shared helper",
+      "status": "done",
+      "detail": "In autoPhase.ts replace the inline ref text (lines 68-69) with a call to projectRefBlock(); keep the useProjectRef field. Update autoPhase.test.ts to the new wording (the old 'typically during /mini:plan' string is gone)."
+    },
+    {
+      "title": "useProjectRef flag in plan & discuss builders",
+      "status": "done",
+      "detail": "buildPlanSessionPrompt(projectMd, phase, discussNotes?, useProjectRef?) (4th param) and buildDiscussPhasePrompt(projectMd, phase, useProjectRef?) (3rd param); default off = inline (snapshots stay), on -> projectRefBlock() instead of ${projectMd}, '# Project' heading kept."
+    },
+    {
+      "title": "context.ts turns warm paths on",
+      "status": "done",
+      "detail": "In context.ts pass useProjectRef: true in the plan and discuss branches. next and the terminal mini plan / mini discuss stay unchanged (cold, inline)."
+    },
+    {
+      "title": "Tests for warm/inline plan & discuss",
+      "status": "done",
+      "detail": "Add two cases each to sessionContext.test.ts and discussPhase.test.ts: warm (flag true) omits the whole project.md but includes the instruction to read .mini/project.md; default (no flag) still inlines."
+    },
+    {
+      "title": "Green: npm test + npm run build",
+      "status": "done",
+      "detail": "Full suite passes (incl. the updated autoPhase snapshot) and the tsc build is clean."
+    }
+  ],
+  "startedAt": "2026-06-07T20:39:29.620Z",
+  "completedAt": "2026-06-07T20:46:52.553Z",
+  "autoCommit": {
+    "preSha": "bf156d5e4752034aea50078cf166f409adaf1d8c",
+    "subject": "Phase 150: project.md reference mode"
+  }
+}

@@ -81,6 +81,25 @@ describe('buildDiscussPhasePrompt', () => {
     expect(out).not.toContain('# Project\n\n');
   });
 
+  it('reference mode (warm): references project.md instead of inlining it', () => {
+    const phase: Phase = { id: 9, title: 'Warm discuss', status: 'proposed' };
+    const out = buildDiscussPhasePrompt(PROJECT_MD, phase, true);
+
+    // The heading stays, but the body is a read-once reference, not inline text.
+    expect(out).toContain('# Project');
+    expect(out).toContain('.mini/project.md');
+    expect(out).toContain('do not read it again');
+    expect(out).not.toContain('Stavím nástroj X pro Y.');
+  });
+
+  it('default (cold) still inlines the project', () => {
+    const phase: Phase = { id: 9, title: 'Cold discuss', status: 'proposed' };
+    const out = buildDiscussPhasePrompt(PROJECT_MD, phase);
+
+    expect(out).toContain('Stavím nástroj X pro Y.');
+    expect(out).not.toContain('.mini/project.md');
+  });
+
   it('instructs Claude to read graph.json index first', () => {
     const phase: Phase = {
       id: 8,

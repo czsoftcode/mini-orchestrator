@@ -131,11 +131,14 @@ async function buildPhaseContext(
   }
 
   if (cmd === 'discuss') {
-    return buildDiscussPhasePrompt(projectMd, phase);
+    // Warm slash path: the project is referenced (read-once), not inlined — the
+    // session usually already has it from `next` earlier in the same chat.
+    return buildDiscussPhasePrompt(projectMd, phase, true);
   }
   if (cmd === 'plan') {
     const discussNotes = await readDiscussNotes(cwd, phase.id);
-    return buildPlanSessionPrompt(projectMd, phase, discussNotes);
+    // Warm slash path: reference the project rather than inlining it (read-once).
+    return buildPlanSessionPrompt(projectMd, phase, discussNotes, true);
   }
   if (cmd === 'decision') {
     return buildDecisionSessionPrompt(phase);

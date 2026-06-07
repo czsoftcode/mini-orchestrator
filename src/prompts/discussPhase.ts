@@ -1,6 +1,7 @@
 import { phaseStem } from '../state/store.js';
 import type { Phase, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
+import { projectRefBlock } from './projectRef.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
   done: 'done',
@@ -9,7 +10,11 @@ const STEP_WORD: Record<StepStatus, string> = {
   skipped: 'skipped',
 };
 
-export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string {
+export function buildDiscussPhasePrompt(
+  projectMd: string,
+  phase: Phase,
+  useProjectRef = false,
+): string {
   let stepsBlock = '';
   if (phase.steps?.length) {
     const lines = (phase.steps as Step[]).map(
@@ -19,12 +24,13 @@ export function buildDiscussPhasePrompt(projectMd: string, phase: Phase): string
   }
 
   const notesPath = `.mini/discuss/${phaseStem(phase.id)}.md`;
+  const projectBlock = useProjectRef ? projectRefBlock() : projectMd.trim();
 
   return `You are part of a tool that helps the user build a project incrementally.
 A **discussion session** about the upcoming phase is in progress — DO NOT implement anything.
 
 # Project
-${projectMd.trim()}
+${projectBlock}
 
 # Phase to discuss
 **Phase ${phase.id}: ${phase.title}**
