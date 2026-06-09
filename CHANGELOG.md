@@ -6,6 +6,17 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-06-09
+
+### Fixed
+
+- **Status line: Fable models get the 1M context window.** `windowForModel()`
+  now recognizes Fable in the model display name, so the usage percentage is
+  computed against 1M instead of 200k. In addition, any model whose id carries
+  the `[1m]` suffix (e.g. `claude-fable-5[1m]`) gets the 1M window regardless
+  of its display name — a future-proof signal for new long-context models
+  without a code change.
+
 ## [1.18.0] - 2026-06-07
 
 ### Added

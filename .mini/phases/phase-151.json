@@ -1,0 +1,37 @@
+{
+  "id": 151,
+  "title": "Fable 1M window in statusline",
+  "goal": "Extend windowForModel() in src/statusline/statusline.ts so the Fable model gets a 1M context window: detect 'fable' in the model name and, as a future-proof fallback, the '[1m]' suffix in the model id; cover both paths plus the unchanged 200k default (e.g. Haiku) with tests in statusline.test.ts.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Fable detection in windowForModel",
+      "status": "done",
+      "detail": "windowForModel() in src/statusline/statusline.ts returns 1M when the model name contains 'fable' (same pattern as sonnet/opus); JSDoc comment updated to mention Fable."
+    },
+    {
+      "title": "Read model.id and detect [1m] suffix",
+      "status": "done",
+      "detail": "StatusInput gains model.id; buildData passes it to windowForModel as an optional second parameter; an id containing '[1m]' returns 1M regardless of the display name — future-proof fallback for new long-context models."
+    },
+    {
+      "title": "Tests: Fable, [1m] suffix, 200k default",
+      "status": "done",
+      "detail": "statusline.test.ts covers: 'Fable 5' → 1M; unknown name with '[1m]' id → 1M; 'Haiku 4.5' and empty input stay 200k; buildData reads model.id from the status JSON."
+    },
+    {
+      "title": "Green: npm test + npm run build",
+      "status": "done",
+      "detail": "Full test suite and typecheck/build pass without errors."
+    }
+  ],
+  "startedAt": "2026-06-09T19:02:26.926Z",
+  "resolvedVerify": [
+    "Statusline shows 1M for a real Fable session"
+  ],
+  "completedAt": "2026-06-09T19:06:37.578Z",
+  "autoCommit": {
+    "preSha": "5fcbea3dbd0e69cc62b9294491f581dd31bd314f",
+    "subject": "Phase 151: Fable 1M window in statusline"
+  }
+}

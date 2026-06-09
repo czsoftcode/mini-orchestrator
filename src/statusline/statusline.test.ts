@@ -22,6 +22,20 @@ describe('windowForModel', () => {
     expect(windowForModel('Haiku 4.5')).toBe(200_000);
   });
 
+  it('gives 1M to Fable regardless of version', () => {
+    expect(windowForModel('Fable 5')).toBe(1_000_000);
+    expect(windowForModel('Fable')).toBe(1_000_000);
+  });
+
+  it('gives 1M to any model whose id carries the [1m] suffix', () => {
+    expect(windowForModel('Some Model', 'claude-some-model-7[1m]')).toBe(1_000_000);
+    expect(windowForModel('Haiku 4.5', 'claude-haiku-4-5[1M]')).toBe(1_000_000);
+  });
+
+  it('ignores an id without the [1m] suffix', () => {
+    expect(windowForModel('Haiku 4.5', 'claude-haiku-4-5-20251001')).toBe(200_000);
+  });
+
   it('falls back to 200k for an unrecognized / version-less name', () => {
     expect(windowForModel('')).toBe(200_000);
     expect(windowForModel('Some Model')).toBe(200_000);
@@ -85,6 +99,14 @@ describe('buildData', () => {
   it('falls back to workspace.current_dir when cwd is missing', () => {
     const data = buildData({ workspace: { current_dir: '/ws/dir' } }, '');
     expect(data.dir).toBe('/ws/dir');
+  });
+
+  it('reads model.id from the status JSON for the [1m] suffix', () => {
+    const data = buildData(
+      { model: { display_name: 'Some Model', id: 'claude-some-model-7[1m]' } },
+      '',
+    );
+    expect(data.windowTokens).toBe(1_000_000);
   });
 
   it('auto-escalates the window to 1M when usage exceeds the base 200k', () => {

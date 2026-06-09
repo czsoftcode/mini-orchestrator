@@ -752,6 +752,11 @@
       "id": 150,
       "title": "project.md reference mode",
       "status": "done"
+    },
+    {
+      "id": 151,
+      "title": "Fable 1M window in statusline",
+      "status": "done"
     }
   ],
   "models": {

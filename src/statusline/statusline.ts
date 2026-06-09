@@ -17,7 +17,7 @@
 export interface StatusInput {
   cwd?: string;
   workspace?: { current_dir?: string };
-  model?: { display_name?: string };
+  model?: { display_name?: string; id?: string };
   transcript_path?: string;
   /** Claude Code session id — used to refresh the upgrade check on a new session. */
   session_id?: string;
@@ -48,12 +48,18 @@ const WINDOW_1M = 1_000_000;
 
 /**
  * Picks the context-window size from the model name. A 1M window applies to all
- * Sonnet 4.x and to Opus from 4.7 onward; everything else (Haiku, older Opus)
- * stays at 200k. The version is parsed out of the display name ("Opus 4.8" →
- * 4.8). Kept in one place because it goes stale as new models ship — the
- * `used > limit` auto-escalation in `extractUsage` is the safety net.
+ * Sonnet 4.x, to Opus from 4.7 onward, to Fable, and to any model whose id
+ * carries the `[1m]` suffix (e.g. "claude-fable-5[1m]") — that suffix is the
+ * future-proof signal and wins regardless of the display name. Everything else
+ * (Haiku, older Opus) stays at 200k. The version is parsed out of the display
+ * name ("Opus 4.8" → 4.8). Kept in one place because it goes stale as new
+ * models ship — the `used > limit` auto-escalation in `extractUsage` is the
+ * safety net.
  */
-export function windowForModel(model: string): number {
+export function windowForModel(model: string, id = ''): number {
+  if (id.toLowerCase().includes('[1m]')) {
+    return WINDOW_1M;
+  }
   const m = model.toLowerCase();
   const match = m.match(/(\d+)\.(\d+)/);
   const version: [number, number] = match
@@ -62,7 +68,10 @@ export function windowForModel(model: string): number {
   const atLeast = (maj: number, min: number): boolean =>
     version[0] > maj || (version[0] === maj && version[1] >= min);
 
-  const oneM = m.includes('sonnet') || (m.includes('opus') && atLeast(4, 7));
+  const oneM =
+    m.includes('sonnet') ||
+    m.includes('fable') ||
+    (m.includes('opus') && atLeast(4, 7));
   return oneM ? WINDOW_1M : WINDOW_200K;
 }
 
@@ -118,7 +127,7 @@ export function buildData(
   const dir = input.cwd ?? input.workspace?.current_dir ?? '';
   const model = input.model?.display_name ?? '';
   const used = extractUsage(transcript);
-  let window = windowForModel(model);
+  let window = windowForModel(model, input.model?.id ?? '');
   if (used > window && window < WINDOW_1M) {
     window = WINDOW_1M;
   }
