@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { ASK_AND_STOP_HINT, VERBATIM_OUTPUT_HINT } from '../prompts/sessionHints.js';
 import { log } from '../ui/log.js';
 
 /**
@@ -43,14 +44,16 @@ Proceed in this order:
    - **what it builds** (1-2 sentences),
    - **who it's for** (the target user),
    - **main constraints** (language/framework/deadline — may be left empty).
+
+   ${ASK_AND_STOP_HINT}
 2. **Save the project.** Run in Bash:
    \`mini init --apply --name "<name>" --what "<what>" --for-whom "<for whom>" --constraints "<constraints>"\`
-   (you can omit \`--name\` and \`--constraints\` when the user left them empty). If the command reports that the project already exists and the user **confirms** overwriting (the old phase history will be lost), repeat the command with \`--force\`. Without confirmation, stop.
+   (you can omit \`--name\` and \`--constraints\` when the user left them empty). If the command reports that the project already exists, ask the user whether to overwrite it (the old phase history will be lost) and end your turn; only after they **confirm** in their next message, repeat the command with \`--force\`. Without confirmation, stop.
 3. **Offer the next steps.** From the command output you can tell whether there is already some code in the directory (brownfield):
    - **there is code** → offer the user \`/mini:map\` (project graph) and after it \`/mini:audit\` (codebase overview into \`.mini/codebase.md\`),
    - **empty directory** → offer \`/mini:next\` (propose the first phase).
 
-Briefly relay the command output and the recommended next steps to the user in the chat.`,
+${VERBATIM_OUTPUT_HINT} Follow it with the recommended next steps.`,
   },
   {
     name: 'next',
@@ -101,14 +104,14 @@ If a step runs into a blocker you can't get around yourself, stop and hand contr
     description: 'mini — overview of the project phases (read-only)',
     body: `This is the **status** step of the mini workflow, run directly in Claude Code.
 
-Run in Bash \`mini status\` and relay its output (an overview of the project phases) to the user in the chat. It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
+Run in Bash \`mini status\` — it prints an overview of the project phases. ${VERBATIM_OUTPUT_HINT} It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
   },
   {
     name: 'doctor',
     description: 'mini — health check of the project setup (read-only)',
     body: `This is the **doctor** step of the mini workflow, run directly in Claude Code.
 
-Run in Bash \`mini doctor\` — it prints a health-check checklist of the project setup (state and schema version, project.md/CHANGELOG.md, installed slash commands, mini version freshness) with a fix hint for anything that isn't ok. Relay the output to the user in the chat and, when something is flagged, mention the suggested fix command. It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
+Run in Bash \`mini doctor\` — it prints a health-check checklist of the project setup (state and schema version, project.md/CHANGELOG.md, installed slash commands, mini version freshness) with a fix hint for anything that isn't ok. ${VERBATIM_OUTPUT_HINT} When something is flagged, also mention the suggested fix command. It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
   },
   {
     name: 'changelog',
@@ -116,7 +119,7 @@ Run in Bash \`mini doctor\` — it prints a health-check checklist of the projec
     argumentHint: '[<version> | --all | --unreleased]',
     body: `This is the **changelog** step of the mini workflow, run directly in Claude Code. It shows the project's \`CHANGELOG.md\` changes.
 
-The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a \`mini changelog\` call and relay its output to the user in the chat:
+The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a \`mini changelog\` call. ${VERBATIM_OUTPUT_HINT} The mapping:
 
 - **Empty \`$ARGUMENTS\`** → run \`mini changelog\` (the latest released version's section).
 - **A version (e.g. \`1.2.0\`)** → run \`mini changelog <version>\` (the section for that version; an unknown version lists the available ones).
@@ -130,14 +133,14 @@ It's a **read-only** step — change no state in \`.mini/\` and save nothing.`,
     description: 'mini — regenerate the project graph (supplementary)',
     body: `This is the **map** step of the mini workflow, run directly in Claude Code.
 
-Run in Bash \`mini map\` — it regenerates the project graph (\`.mini/graph/\` + the index \`.mini/graph.json\`) from the source files. Relay the result (the index path and the number of mapped files) from the output to the user in the chat. It does not change the phase state in \`.mini/state.json\` in any way — the graph is just a derivation from the source files.`,
+Run in Bash \`mini map\` — it regenerates the project graph (\`.mini/graph/\` + the index \`.mini/graph.json\`) from the source files. ${VERBATIM_OUTPUT_HINT} It does not change the phase state in \`.mini/state.json\` in any way — the graph is just a derivation from the source files.`,
   },
   {
     name: 'audit',
     description: 'mini — overview of the existing codebase into .mini/codebase.md (supplementary)',
     body: `This is the **audit** step of the mini workflow, run directly in Claude Code.
 
-Run in Bash \`mini audit\` — it goes through the existing code and creates/updates \`.mini/codebase.md\` (a codebase overview for later sessions). When done, briefly summarize the result to the user in the chat. It does not change the phase state in \`.mini/state.json\` in any way — it is typically run right after \`/mini:init\` in an existing project, optionally after \`/mini:map\`.`,
+Run in Bash \`mini audit\` — it goes through the existing code and creates/updates \`.mini/codebase.md\` (a codebase overview for later sessions). When done, print the command output verbatim in your final message and add where the overview was written. It does not change the phase state in \`.mini/state.json\` in any way — it is typically run right after \`/mini:init\` in an existing project, optionally after \`/mini:map\`.`,
   },
   {
     name: 'auto',
@@ -191,9 +194,9 @@ End the cycle (and briefly summarize what happened) when any of the boundaries o
 
 Proceed in this order:
 
-1. **Preview.** Run in Bash \`mini undo --dry-run\` — it prints what would be reverted (phase/step status changes, and whether an auto-commit would be soft-reset) without changing anything. Relay that summary to the user in the chat.
-2. **Confirm.** Ask the user whether to proceed (it cannot be undone again). **Wait for their answer** — do not apply anything before it.
-3. **Apply.** Only after they confirm, run \`mini undo --yes\` — it reverts the state by one step without a TTY prompt. Relay the result. If the user declines, change nothing.
+1. **Preview.** Run in Bash \`mini undo --dry-run\` — it prints what would be reverted (phase/step status changes, and whether an auto-commit would be soft-reset) without changing anything. ${VERBATIM_OUTPUT_HINT}
+2. **Confirm.** Ask the user whether to proceed (it cannot be undone again). ${ASK_AND_STOP_HINT}
+3. **Apply.** Only after they confirm in their next message, run \`mini undo --yes\` — it reverts the state by one step without a TTY prompt. Print its output verbatim. If the user declines, change nothing.
 
 Never run a bare \`mini undo\` — it would block on an interactive Y/n prompt in this non-interactive Bash. Change the state in \`.mini/\` only via these commands, never edit \`.mini/state.json\` by hand.`,
   },
@@ -212,10 +215,10 @@ The user ran the command with arguments: \`$ARGUMENTS\`. Use only the **non-inte
 
 Proceed:
 
-1. If \`$ARGUMENTS\` already form a complete non-interactive command (e.g. \`do opus\`, \`show\`, \`reset\`, \`sonnet\`), run \`mini model $ARGUMENTS\` and relay the output.
-2. If they are empty, or name only a scope without a model, **do not** run the interactive form — first run \`mini model show\` to display the current state, ask the user in the chat which scope and which model they want, and only then run \`mini model <scope> <model>\`.
+1. If \`$ARGUMENTS\` already form a complete non-interactive command (e.g. \`do opus\`, \`show\`, \`reset\`, \`sonnet\`), run \`mini model $ARGUMENTS\`.
+2. If they are empty, or name only a scope without a model, **do not** run the interactive form — first run \`mini model show\`, print its output verbatim, and ask the user which scope and which model they want. ${ASK_AND_STOP_HINT} Only after they answer, run \`mini model <scope> <model>\`.
 
-Relay the command output to the user in the chat.`,
+${VERBATIM_OUTPUT_HINT}`,
   },
   {
     name: 'upgrade',
@@ -224,9 +227,9 @@ Relay the command output to the user in the chat.`,
 
 Proceed in this order:
 
-1. **Check.** Run in Bash \`mini upgrade --check\` — it reports the current version and the latest one on npm, and whether a newer one is available. It installs nothing. Relay the result to the user in the chat.
-2. **Confirm.** If a newer version is available, ask the user whether to install it now. **Wait for their answer** — do not install anything before it.
-3. **Apply.** Only after they confirm, run \`mini upgrade --yes\` — it installs the latest version non-interactively. Relay the result (and any npm output). If the user declines, or if it is already up to date, change nothing.
+1. **Check.** Run in Bash \`mini upgrade --check\` — it reports the current version and the latest one on npm, and whether a newer one is available. It installs nothing. ${VERBATIM_OUTPUT_HINT}
+2. **Confirm.** If a newer version is available, ask the user whether to install it now. ${ASK_AND_STOP_HINT}
+3. **Apply.** Only after they confirm in their next message, run \`mini upgrade --yes\` — it installs the latest version non-interactively. Print its output (including any npm output) verbatim. If the user declines, or if it is already up to date, change nothing.
 
 Never run a bare \`mini upgrade\` here — it would block on an interactive confirmation prompt in this non-interactive Bash. If \`mini upgrade --check\` reports a local dev build (not a global npm install), don't try to upgrade — relay its hint instead (update via \`git pull && npm run install-local\`).`,
   },
@@ -236,7 +239,7 @@ Never run a bare \`mini upgrade\` here — it would block on an interactive conf
     argumentHint: '[list | add <text> | edit <n> <text> | done <n> | remove <n> | clear | suggest]',
     body: `This is the **todo** step of the mini workflow, run directly in Claude Code. It manages the project's archive of future ideas and changes (\`.mini/todo.md\`); \`/mini:next\` later offers the open items as candidate phase ideas. The archive is a plain markdown checklist — change it only via \`mini todo\`, never by editing \`.mini/todo.md\` by hand mid-session.
 
-The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a non-interactive \`mini todo\` call and relay the output to the user in the chat:
+The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a non-interactive \`mini todo\` call. ${VERBATIM_OUTPUT_HINT} The mapping:
 
 - **\`list\` (or empty \`$ARGUMENTS\`)** → run \`mini todo\` to list the items (numbered, open \`[ ]\` / done \`[x]\`).
 - **\`add <text>\`** → run \`mini todo add "<text>"\` to append a new open idea (quote the text).
@@ -248,7 +251,7 @@ The user ran the command with arguments: \`$ARGUMENTS\`. Map them to a non-inter
   1. Review the project: read \`.mini/project.md\`, skim the phase history (\`mini status\`) and the machine map (\`.mini/graph.json\` + the relevant \`.mini/graph/\` files) to see what's done and what's missing.
   2. Run \`mini todo\` first to see what's already in the archive — **don't duplicate** existing items.
   3. Propose **3-5** small, concrete, verifiable ideas (each a possible 1-3 day phase). Show them briefly to the user.
-  4. Append each new one with \`mini todo add "<text>"\` (one call per idea). Then run \`mini todo\` to relay the updated list.
+  4. Append each new one with \`mini todo add "<text>"\` (one call per idea). Then run \`mini todo\` and print the updated list verbatim in your final message.
 
 The numbers are the 1-based positions from the listing. Except for \`suggest\` (where you do the thinking), it's a self-contained command — it changes no phase state in \`.mini/state.json\`.`,
   },
@@ -260,7 +263,7 @@ The numbers are the 1-based positions from the listing. Except for \`suggest\` (
 Proceed in this order:
 
 1. **Check the source.** Confirm \`.planning/\` exists in the current directory (e.g. \`ls .planning\`). If it is missing, there is no GSD project to import — tell the user and stop.
-2. **Check for an existing project.** If \`.mini/state.json\` already exists, a mini project is already here. Warn the user that importing **overwrites** it (the existing phase history is lost) and **ask them to confirm**. Wait for their answer — only continue with their approval (you then pass \`--force\` in step 5). If no project exists yet, skip this.
+2. **Check for an existing project.** If \`.mini/state.json\` already exists, a mini project is already here. Warn the user that importing **overwrites** it (the existing phase history is lost) and **ask them to confirm**. ${ASK_AND_STOP_HINT} Only continue with their approval (you then pass \`--force\` in step 5). If no project exists yet, skip this.
 3. **Get the extraction prompt.** Run in Bash \`mini import-gsd --prompt\` — it prints the extraction instructions and the strict response contract (\`NAME:\` / \`WHAT:\` / \`FOR_WHOM:\` / \`CONSTRAINTS:\` + a \`PHASES:\` table). No Claude is spawned and no project is required.
 4. **Extract — you do this yourself.** Follow those instructions: read the \`.planning/\` files (Read/Glob/Grep, write nothing) and build the response in EXACTLY that contract — nothing else around it. (You are already a capable session, so no nested \`mini import-gsd\` Claude call is needed.)
 5. **Save.** Pipe your response into \`mini import-gsd --apply\` (append \`--force\` only when overwriting a project the user confirmed). It parses the contract, preserves the phase statuses and writes \`.mini/\`. For example, via a heredoc:
@@ -276,7 +279,7 @@ Proceed in this order:
    2 | doing | …
    EOF
    \`\`\`
-6. **Relay.** Report the result to the user and suggest \`/mini:status\` to review the imported phases (then \`/mini:next\` to continue). It is a one-off setup step — typically run instead of \`/mini:init\` when migrating from GSD.`,
+6. **Relay.** ${VERBATIM_OUTPUT_HINT} Suggest \`/mini:status\` to review the imported phases (then \`/mini:next\` to continue). It is a one-off setup step — typically run instead of \`/mini:init\` when migrating from GSD.`,
   },
 ];
 

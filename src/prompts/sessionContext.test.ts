@@ -7,6 +7,7 @@ import {
   buildProjectSessionPrompt,
   buildVerifySessionPrompt,
 } from './sessionContext.js';
+import { ASK_AND_STOP_HINT } from './sessionHints.js';
 import type { Phase, ProjectState } from '../state/types.js';
 
 const PROJECT = '# Demo\n\n## Co stavím\nNěco.';
@@ -258,6 +259,50 @@ describe('buildDecisionSessionPrompt', () => {
     expect(p).toContain('not** the CHANGELOG');
     // The current phase id is named so the write targets the right phase.
     expect(p).toContain('current phase (7)');
+  });
+});
+
+describe('hardened ask-and-stop hint (Fable 5 prompt hardening)', () => {
+  const phase: Phase = { id: 4, title: 'Fáze', goal: 'cíl', status: 'doing' };
+
+  it('next: both the Ask-first block and the approval gate end the turn', () => {
+    const p = buildNextSessionPrompt(PROJECT, state());
+    expect(p).toContain(ASK_AND_STOP_HINT);
+    // Saving is gated on approval in a later message, not the same turn.
+    expect(p).toContain('Only after they approve');
+  });
+
+  it('plan: showing the steps ends the turn before mini plan --apply', () => {
+    const p = buildPlanSessionPrompt(PROJECT, { ...phase, status: 'proposed' });
+    expect(p).toContain(ASK_AND_STOP_HINT);
+    expect(p).toContain('Only after they approve');
+  });
+
+  it('project: interview batches and the final draft end the turn', () => {
+    const p = buildProjectSessionPrompt(PROJECT);
+    expect(p).toContain(ASK_AND_STOP_HINT);
+    expect(p).toContain('save only after the user approves');
+  });
+
+  it('decision: the ADR draft is approved across turns', () => {
+    const p = buildDecisionSessionPrompt(phase);
+    expect(p).toContain(ASK_AND_STOP_HINT);
+  });
+
+  it('done: both verify branches gate mini done --apply on a later message', () => {
+    const withVerify = buildDoneSessionPrompt({
+      phase,
+      reportExists: true,
+      verify: [{ title: 'check UI' }],
+    });
+    const withoutVerify = buildDoneSessionPrompt({ phase, reportExists: true, verify: [] });
+    expect(withVerify).toContain(ASK_AND_STOP_HINT);
+    expect(withoutVerify).toContain(ASK_AND_STOP_HINT);
+  });
+
+  it('verify: the interactive review asks one at a time and ends the turn', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+    expect(p).toContain(ASK_AND_STOP_HINT);
   });
 });
 

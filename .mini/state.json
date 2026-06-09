@@ -757,6 +757,11 @@
       "id": 151,
       "title": "Fable 1M window in statusline",
       "status": "done"
+    },
+    {
+      "id": 152,
+      "title": "Prompt hardening for Fable 5",
+      "status": "done"
     }
   ],
   "models": {

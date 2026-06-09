@@ -1,0 +1,42 @@
+{
+  "id": 152,
+  "title": "Prompt hardening for Fable 5",
+  "goal": "Skill bodies in src/install/commands.ts and session prompts in src/prompts/sessionContext.ts explicitly require printing command output verbatim in the final message (no summarizing) and ending the turn after asking the user (no --apply in the same turn); covered by updated snapshot tests.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Shared hardened hint constants",
+      "status": "done",
+      "detail": "New module src/prompts/sessionHints.ts exporting VERBATIM_OUTPUT_HINT (print the complete command output verbatim in the final message; the user does not read the Bash tool result) and ASK_AND_STOP_HINT (ask, then end your turn; never run --apply in the same turn as the question); importable from src/prompts and src/install."
+    },
+    {
+      "title": "Harden session prompts in sessionContext.ts",
+      "status": "done",
+      "detail": "next/plan/project/decision/done/verify prompts: every show/ask instruction gets explicit end-the-turn wording and a ban on running mini ... --apply in the same turn as the question, using the shared hints."
+    },
+    {
+      "title": "Harden skill bodies in commands.ts",
+      "status": "done",
+      "detail": "status/doctor/changelog/map/audit/model/todo/init/undo/upgrade/import-gsd bodies: replace soft relay/summarize phrasing with verbatim-output wording; confirmation steps (undo, upgrade, import-gsd, init overwrite) get explicit end-your-turn-and-wait wording."
+    },
+    {
+      "title": "Update snapshot tests",
+      "status": "done",
+      "detail": "Regenerate prompt snapshots (vitest -u) and review diffs: wording changes only, no structural changes to the prompts."
+    },
+    {
+      "title": "Green plus reinstall",
+      "status": "done",
+      "detail": "npm test and npm run build pass; npm run install-local refreshes the hardened .md files into ~/.claude/commands/mini/."
+    }
+  ],
+  "startedAt": "2026-06-09T19:31:06.836Z",
+  "resolvedVerify": [
+    "Fable 5 actually prints overviews and stops on questions in a fresh session"
+  ],
+  "completedAt": "2026-06-09T19:52:27.162Z",
+  "autoCommit": {
+    "preSha": "d5f82bdd1716c1fa9d82a337aac0036929a95e03",
+    "subject": "Phase 152: Prompt hardening for Fable 5"
+  }
+}

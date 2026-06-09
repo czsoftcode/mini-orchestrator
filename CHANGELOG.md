@@ -6,6 +6,24 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- **Prompt hardening for Fable 5 and newer model generations.** Newer models
+  (Opus 4.7/4.8, Fable 5) are tuned to be concise between tool calls and to
+  avoid blocking questions, so they tended to compress mini's overviews into a
+  one-line summary and to save state without waiting for approval. All slash
+  command bodies and session prompts now state the two contracts explicitly,
+  via shared hints in `src/prompts/sessionHints.ts`: (1) command output shown
+  to the user (`status`, `doctor`, `changelog`, `map`, `audit`, `model`,
+  `todo`, `init`, `undo`, `upgrade`, `import-gsd`) must be printed **verbatim
+  in the final message** — the user does not read the Bash tool result; and
+  (2) every question to the user (`next`, `plan`, `project`, `decision`,
+  `done`, `verify`, plus the confirmation steps of `init`, `undo`, `upgrade`,
+  `model`, `import-gsd`) **ends the turn** — no `mini ... --apply` may run in
+  the same turn as the question. `auto` is deliberately untouched (autonomous
+  mode wants brevity). Trade-off: well-behaved models now print long outputs
+  in full and approvals cost one extra turn.
+
 ## [1.19.0] - 2026-06-09
 
 ### Fixed

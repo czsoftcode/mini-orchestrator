@@ -1,6 +1,7 @@
 import { phaseStem } from '../state/store.js';
 import type { Phase, PhaseStatus, ProjectState, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
+import { ASK_AND_STOP_HINT, VERBATIM_OUTPUT_HINT } from './sessionHints.js';
 import { projectRefBlock } from './projectRef.js';
 
 /**
@@ -76,7 +77,7 @@ export function buildNextSessionPrompt(
   // Bez nápadu se nejdřív zeptej — uživatel ho mohl zapomenout zadat.
   const askBlock = hint
     ? ''
-    : `# Ask first\nThe user gave you nothing for the next phase. Before you propose anything, **ask them** whether they have their own idea for the next phase (they may have forgotten to provide it), or whether to leave it up to you. Only then continue based on the answer:\n- if they have their own idea → start from exactly that,\n- if they leave it to you → sketch **2-3** candidate ideas based on the progress so far and the state of the code; propose the most sensible one as the phase, and **offer to stash the rest** into the project's ideas archive with \`mini todo add "<text>"\` (one call per idea, only after the user approves) so they aren't lost.\n\n`;
+    : `# Ask first\nThe user gave you nothing for the next phase. Before you propose anything, **ask them** whether they have their own idea for the next phase (they may have forgotten to provide it), or whether to leave it up to you. ${ASK_AND_STOP_HINT} Only then continue based on the answer:\n- if they have their own idea → start from exactly that,\n- if they leave it to you → sketch **2-3** candidate ideas based on the progress so far and the state of the code; propose the most sensible one as the phase, and **offer to stash the rest** into the project's ideas archive with \`mini todo add "<text>"\` (one call per idea, only after the user approves) so they aren't lost.\n\n`;
 
   // Open items from `.mini/todo.md` — candidate ideas the user collected earlier.
   // Each keeps its 1-based archive position so a phase born from one can be saved
@@ -103,7 +104,7 @@ ${history}
 ${memoryBlock}${todoBlock}${askBlock}${hintBlock}# Your task
 Propose one next phase. It should be small (1-3 days of work), with a clear, verifiable goal — not a roadmap, just one thing that makes sense to do right now. ${GRAPH_USAGE_HINT}
 
-Show the proposal (name, max 5 words + goal in 1 sentence) briefly to the user. After they approve, **save** the phase by calling (Bash):
+Show the proposal (name, max 5 words + goal in 1 sentence) to the user in your final message and ask for approval. ${ASK_AND_STOP_HINT} Only after they approve, **save** the phase by calling (Bash):
 
 \`\`\`
 mini next --apply --title "<name>" --goal "<phase goal>"
@@ -157,7 +158,7 @@ Break the phase down into 3-7 concrete steps. Each step has two parts:
 
 Each step must have a clear, verifiable output (e.g. "API endpoint /tasks returns JSON" — not "build the backend"); if it doesn't fit in the title, put it in the detail. ${GRAPH_USAGE_HINT}
 
-Show the steps briefly to the user. After they approve, **save** them by calling (Bash) — one step per line in the format \`title :: detail\` (the \` :: \` separator is optional; a line without it is just a title):
+Show the full list of steps (titles + details) to the user in your final message and ask for approval. ${ASK_AND_STOP_HINT} Only after they approve, **save** the steps by calling (Bash) — one step per line in the format \`title :: detail\` (the \` :: \` separator is optional; a line without it is just a title):
 
 \`\`\`
 printf '%s\\n' \\
@@ -190,14 +191,14 @@ ${projectMd.trim()}
 """
 
 # Your task
-Run a short plan-before-code interview, then save the result. **Do not write any code.** Be **critical, not agreeable** — for every meaningful choice give the pros, the cons and at least one alternative; if an idea is weak, say so and say why, don't just reassure. Ask **one small batch of questions at a time** so the user can actually answer. Keep the result **concise**: \`project.md\` is a one-page steering doc, not a full spec — only the main points that come out of the discussion get written, not every detail.
+Run a short plan-before-code interview, then save the result. **Do not write any code.** Be **critical, not agreeable** — for every meaningful choice give the pros, the cons and at least one alternative; if an idea is weak, say so and say why, don't just reassure. Ask **one small batch of questions at a time** so the user can actually answer. ${ASK_AND_STOP_HINT} Keep the result **concise**: \`project.md\` is a one-page steering doc, not a full spec — only the main points that come out of the discussion get written, not every detail.
 
 Go through four stages:
 
 1. **Frame & remove your assumptions.** Briefly reflect back what the project is (from the current project.md above), then ask the questions you need to drop your own assumptions — about the users, the core workflow, the data and the screens. Small batches.
 2. **Draft a rough plan & weigh the decisions.** Propose a short, rough plan: the main user and their main job, 3-5 core flows, the key data objects, the main screens, and the risky unhappy paths (things that could corrupt data, leak permissions or cost money). For each major decision give the trade-off and an alternative, and ask "why this over the simplest possible version?". This feeds the **Approach** section (distilled) and may sharpen **What I'm building**.
 3. **Non-goals & guardrails.** Turn everything you agreed to leave out into **Non-goals**, each phrased as a rule the project can keep in front of you later (e.g. "Do not add X in this version."). Then list what **you** would be tempted to add that the user did **not** ask for — extra features, structure, integrations — and for each recommend build-now or leave-out; the leave-outs become more non-goals.
-4. **Final check & success criteria.** Ask: "is there any question that, answered wrong, would send us down the wrong path?" — if there is, ask it now. Then agree the **Success criteria** (how we'll know it's done and good). Finally show the **full draft project.md** for approval, and only then save it.
+4. **Final check & success criteria.** Ask: "is there any question that, answered wrong, would send us down the wrong path?" — if there is, ask it now. Then agree the **Success criteria** (how we'll know it's done and good). Finally show the **full draft project.md** (verbatim, the whole file) for approval — end your turn there and save only after the user approves in a later message.
 
 # Saving (after the user approves)
 Save via the \`mini project --apply\` contract (Bash, heredoc). **Keep the existing NAME / FOR_WHOM / CONSTRAINTS** from the project.md above unchanged, unless the user explicitly asked to change them — the command does a full replace, so anything you omit is lost. Every label starts at column 0; omit an optional label entirely when its section is empty:
@@ -246,7 +247,7 @@ ADR says *why* this path was chosen over another. Don't duplicate the text.
 
 # How to record it
 1. Draft a lean ADR and **show it to the user** in the chat for edits/approval —
-   never write it silently. Structure:
+   never write it silently. ${ASK_AND_STOP_HINT} Structure:
    \`\`\`
    # <short decision title>
 
@@ -310,8 +311,8 @@ Without a report the state can't be moved non-interactively. First run \`/mini:d
       const detail = v.detail ? `\n     ${v.detail}` : '';
       return `  ${i + 1}. ${v.title}${detail}`;
     });
-    verifyBlock = `\n# Items for manual verification\nClaude did not verify these itself — go through them with the user:\n${lines.join('\n')}\n`;
-    applyHint = `Once the user approves the verification, move the state (Bash):
+    verifyBlock = `\n# Items for manual verification\nClaude did not verify these itself — print the full list to the user and go through it with them:\n${lines.join('\n')}\n`;
+    applyHint = `${ASK_AND_STOP_HINT} Only once the user approves the verification, move the state (Bash):
 
 \`\`\`
 mini done --apply --accept-verify
@@ -320,7 +321,7 @@ mini done --apply --accept-verify
 If the user finds a problem, don't close the phase — go back to \`/mini:do\` and fix it.`;
   } else {
     verifyBlock = '\n# Items for manual verification\nClaude listed none — it verified everything itself.\n';
-    applyHint = `Ask the user whether the phase works. After confirmation, move the state (Bash):
+    applyHint = `Ask the user whether the phase works. ${ASK_AND_STOP_HINT} Only after their confirmation, move the state (Bash):
 
 \`\`\`
 mini done --apply
@@ -426,7 +427,7 @@ export function buildVerifySessionPrompt(input: VerifySessionInput): string {
 ${frame}
 
 # Your task
-Take the human through an **in-depth UI/UX review** of this phase. You're not here for machine tests (those belong in \`do\`), but for things only a human can judge: visual appearance, clarity, the smoothness of the UX flow, small details and the overall impression. Proceed interactively — **ask one at a time**, let the human react, and only then continue:
+Take the human through an **in-depth UI/UX review** of this phase. You're not here for machine tests (those belong in \`do\`), but for things only a human can judge: visual appearance, clarity, the smoothness of the UX flow, small details and the overall impression. Proceed interactively — **ask one at a time**, let the human react, and only then continue. ${ASK_AND_STOP_HINT}
 
 1. **Set the scene.** From the phase goal, the steps and the report below, determine what specifically should be reviewed and how the human will see it (which command/screen/output to run). When something needs to be started up (build, dev server, sample input), propose the exact steps.
 2. **Go through the verify items.** Take the items from the report as a skeleton and for each let the human confirm that it looks and behaves correctly. Actively ask about details, not just "does it work?".
