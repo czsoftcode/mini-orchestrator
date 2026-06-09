@@ -762,6 +762,11 @@
       "id": 152,
       "title": "Prompt hardening for Fable 5",
       "status": "done"
+    },
+    {
+      "id": 153,
+      "title": "C/C++ mapper for mini map",
+      "status": "done"
     }
   ],
   "models": {

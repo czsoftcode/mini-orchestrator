@@ -14,7 +14,7 @@ import type { StepOutcome } from './types.js';
  * (one file per source file) + the index `.mini/graph.json`.
  *
  * Detects a mappable project (tsconfig.json/Cargo.toml/composer.json/… or at
- * least one `.ts`/`.tsx`/`.php`/`.rs`/`.py`/`.go`/`.java`/`.cs`/`.kt`/`.kts`/`.swift`/`.rb` file)
+ * least one `.ts`/`.tsx`/`.php`/`.rs`/`.py`/`.go`/`.java`/`.cs`/`.kt`/`.kts`/`.swift`/`.rb`/`.c`/`.h`/`.cpp`/`.hpp`/`.cc`/`.hh` file)
  * and otherwise just hints to the user to run `/graphify` in a Claude session.
  */
 export async function map(files?: string[]): Promise<StepOutcome> {
@@ -35,13 +35,13 @@ export async function map(files?: string[]): Promise<StepOutcome> {
 
   if (!(await hasMappableProject(cwd))) {
     log.warn(
-      'There are no mappable files in the project (.ts, .tsx, .php, .rs, .py, .go, .java, .cs, .kt, .kts, .swift, .rb).',
+      'There are no mappable files in the project (.ts, .tsx, .php, .rs, .py, .go, .java, .cs, .kt, .kts, .swift, .rb, .c, .h, .cpp, .hpp, .cc, .hh).',
     );
     log.hint('For other languages try in a Claude session: /graphify');
     return { ok: false, reason: 'not-mappable' };
   }
 
-  log.dim('Mapping TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby files…');
+  log.dim('Mapping TS/PHP/Rust/Python/Go/Java/C#/Kotlin/Swift/Ruby/C/C++ files…');
   const result = await buildGraph(cwd);
 
   if (result.fileCount === 0) {

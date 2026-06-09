@@ -18,8 +18,8 @@ mini map --hook                # remap the edited file from hook JSON on stdin
 `mini map` builds the project graph into `.mini/graph/` plus the index
 `.mini/graph.json`: for each source file its exports, imports and signatures.
 Later sessions read this map to navigate the code cheaply instead of reading
-whole files. It supports TS, PHP, Rust, Python, Go, Java, C#, Kotlin, Swift and
-Ruby, and respects `.gitignore`. It changes **no** phase state — the graph is a
+whole files. It supports TS, PHP, Rust, Python, Go, Java, C#, Kotlin, Swift,
+Ruby and C/C++, and respects `.gitignore`. It changes **no** phase state — the graph is a
 pure derivation of the sources.
 
 ## Options

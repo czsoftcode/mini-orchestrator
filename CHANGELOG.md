@@ -6,6 +6,24 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-06-09
+
+### Added
+
+- **C/C++ mapper for `mini map`.** The project graph now covers
+  `.c`/`.h`/`.cpp`/`.hpp`/`.cc`/`.hh` files: `#include` imports (local
+  `"util/foo.h"` and system `<vector>` forms stay distinguishable), free
+  functions with parameter/return signatures (definitions and prototypes,
+  multi-line declarations, trailing return types, default values),
+  `class`/`struct` definitions with their public methods, `enum`/`enum class`,
+  `typedef` (incl. `typedef struct {...} Name` and function pointers) and
+  `using` aliases — all with line anchors for targeted reads. Declarations
+  inside `namespace { }` and `extern "C" { }` blocks are mapped too, and
+  `CMakeLists.txt` now counts as a project marker. Same regex trade-offs as
+  the other mappers: preprocessor conditionals are not evaluated and
+  macro-generated declarations are invisible; `static` free functions count as
+  API only in headers.
+
 ### Changed
 
 - **Prompt hardening for Fable 5 and newer model generations.** Newer models

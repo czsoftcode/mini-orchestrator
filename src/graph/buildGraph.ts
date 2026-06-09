@@ -2,6 +2,7 @@ import { access, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs
 import { dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
 import { isGitRepo, runGit } from '../git.js';
 import { mapFile } from './mapper.js';
+import { mapCppFile } from './cppMapper.js';
 import { mapCSharpFile } from './csharpMapper.js';
 import { mapGoFile } from './goMapper.js';
 import { mapJavaFile } from './javaMapper.js';
@@ -67,7 +68,8 @@ type Lang =
   | 'csharp'
   | 'kotlin'
   | 'swift'
-  | 'ruby';
+  | 'ruby'
+  | 'cpp';
 
 /** Jeden záznam v indexu `graph.json`. */
 export interface GraphIndexEntry {
@@ -343,16 +345,19 @@ function mapByLang(content: string, relPath: string, lang: Lang): FileGraph {
       return mapSwiftFile(content, relPath);
     case 'ruby':
       return mapRubyFile(content, relPath);
+    case 'cpp':
+      return mapCppFile(content, relPath);
   }
 }
 
 /**
- * Detekuje, jestli má smysl spouštět vlastní mapper: hledá `tsconfig.json`,
- * `Cargo.toml`, `composer.json`, `pyproject.toml`, `setup.py`, `go.mod`,
- * `pom.xml`, `build.gradle`(`.kts` = i Kotlin), `Package.swift`, `Gemfile`, C#
- * `*.sln`/`*.csproj` nebo alespoň jeden mapovatelný soubor
- * (.ts/.tsx/.php/.rs/.py/.go/.java/.cs/.kt/.kts/.swift/.rb) v projektu (mimo
- * ignorované adresáře).
+ * Detects whether running our own mapper makes sense: looks for
+ * `tsconfig.json`, `Cargo.toml`, `composer.json`, `pyproject.toml`,
+ * `setup.py`, `go.mod`, `pom.xml`, `build.gradle`(`.kts` = Kotlin too),
+ * `Package.swift`, `Gemfile`, `CMakeLists.txt`, C# `*.sln`/`*.csproj`, or at
+ * least one mappable file
+ * (.ts/.tsx/.php/.rs/.py/.go/.java/.cs/.kt/.kts/.swift/.rb/.c/.h/.cpp/.hpp/.cc/.hh)
+ * in the project (outside ignored directories).
  */
 export async function hasMappableProject(cwd: string = process.cwd()): Promise<boolean> {
   if (await fileExists(join(cwd, 'tsconfig.json'))) return true;
@@ -366,7 +371,8 @@ export async function hasMappableProject(cwd: string = process.cwd()): Promise<b
   if (await fileExists(join(cwd, 'build.gradle.kts'))) return true;
   if (await fileExists(join(cwd, 'Package.swift'))) return true;
   if (await fileExists(join(cwd, 'Gemfile'))) return true;
-  // C#: název `*.sln`/`*.csproj` je variabilní → koukneme po příponě v kořeni.
+  if (await fileExists(join(cwd, 'CMakeLists.txt'))) return true;
+  // C#: the `*.sln`/`*.csproj` name varies → look for the extension in the root.
   if (await hasFileWithExt(cwd, ['.sln', '.csproj'])) return true;
   const files = await collectMappableFiles(cwd, {}, /* stopAfter */ 1);
   return files.length > 0;
@@ -512,6 +518,16 @@ function detectLang(name: string): Lang | null {
   if (name.endsWith('.kt') || name.endsWith('.kts')) return 'kotlin';
   if (name.endsWith('.swift')) return 'swift';
   if (name.endsWith('.rb')) return 'ruby';
+  if (
+    name.endsWith('.c') ||
+    name.endsWith('.h') ||
+    name.endsWith('.cpp') ||
+    name.endsWith('.hpp') ||
+    name.endsWith('.cc') ||
+    name.endsWith('.hh')
+  ) {
+    return 'cpp';
+  }
   return null;
 }
 

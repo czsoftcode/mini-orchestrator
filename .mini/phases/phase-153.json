@@ -1,0 +1,34 @@
+{
+  "id": 153,
+  "title": "C/C++ mapper for mini map",
+  "goal": "mini map can map .c/.h/.cpp/.hpp (and .cc/.hh) files - a new cppMapper.ts extracts functions, structs, classes, enums, typedefs and #include imports with line anchors, registered in buildGraph.ts and covered by tests following the pattern of the other mappers.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "cppMapper.ts core extraction",
+      "status": "done",
+      "detail": "New src/graph/cppMapper.ts exporting mapCppFile(content, relPath): FileGraph - extracts #include imports (local \"...\" vs system <...>), free functions with signatures, classes/structs with public methods, enums and typedef/using aliases, each with 1-based line/endLine anchors; comments and preprocessor noise stripped before matching; works for header declarations and source definitions (.h treated as the same cpp language as .c/.cpp)."
+    },
+    {
+      "title": "Register C/C++ in buildGraph and map",
+      "status": "done",
+      "detail": "detectLanguage in buildGraph.ts recognizes .c/.h/.cpp/.hpp/.cc/.hh -> cpp; the language switch dispatches to mapCppFile; hasMappableProject gains a CMakeLists.txt root marker and collectMappableFiles the new extensions; the no-mappable-files message in src/commands/map.ts and its doc comment list the new extensions."
+    },
+    {
+      "title": "Unit tests cppMapper.test.ts",
+      "status": "done",
+      "detail": "Tests following the pattern of the other mapper tests - fixtures covering includes (local vs system), free functions, a class with public/private methods, a struct, an enum, typedef/using, multi-line declarations, and correct line anchors; existing buildGraph.test.ts stays green."
+    },
+    {
+      "title": "Docs + green run",
+      "status": "done",
+      "detail": "docs/non-interactive/map.md language list mentions C/C++ (and README if it lists languages anywhere); npm test and typecheck pass."
+    }
+  ],
+  "startedAt": "2026-06-09T20:03:08.247Z",
+  "completedAt": "2026-06-09T21:00:27.901Z",
+  "autoCommit": {
+    "preSha": "68a16a15008764bf470ec6bfb898082ae8da07e2",
+    "subject": "Phase 153: C/C++ mapper for mini map"
+  }
+}
