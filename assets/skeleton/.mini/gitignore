@@ -1,25 +1,25 @@
-# Undo-záloha stavu — transientní, vzniká při každém zápisu (mini undo si
-# pamatuje jeden krok zpět). Do gitu nepatří; pro velké projekty by navíc
-# zbytečně bobtnala historie.
+# Undo backup of the state — transient, created on every write (mini undo
+# remembers one step back). Not for git; on large projects it would also bloat
+# the history needlessly.
 phases-prev/
 state.prev.json
 
-# Transientní artefakty atomického zápisu grafu (mini map). Vznikají v půli
-# přegenerování a hned se přejmenují/uklidí; do gitu nikdy nepatří. Zůstat by
-# mohly jen po pádu uprostřed zápisu.
+# Transient artifacts of the atomic graph write (mini map). Created mid-regenerate
+# and immediately renamed/cleaned up; never belong in git. They could only linger
+# after a crash mid-write.
 graph.tmp/
 graph.json.tmp
 
-# Programově generované/odvozené výstupy — jdou kdykoli znovu vytvořit ze zdroje
-# pravdy (zdrojáky / .mini/memory/), tak ať nedělají šum v diffu a commitech.
-# Strojová mapa projektu (mini map / done) — derivace zdrojáků.
+# Programmatically generated/derived outputs — they can be regenerated any time from
+# the source of truth (sources / .mini/memory/), so keep them out of diffs and commits.
+# The machine map of the project (mini map / done) — a derivative of the sources.
 graph/
 graph.json
-# Žebříček příkazů podle tokenů — čistý report z měření.
+# Per-command token ranking — a pure measurement report.
 token-report.md
-# Zeštíhlené shrnutí poslední fáze pro `next` — odvozené z .mini/memory/.
+# Slimmed-down summary of the last phase for `next` — derived from .mini/memory/.
 last-memory.md
 
-# Swap/backup soubory editorů (vim apod.) — vznikají při editaci, do gitu nepatří.
+# Editor swap/backup files (vim etc.) — created while editing, not for git.
 *.sw[a-p]
 *~
