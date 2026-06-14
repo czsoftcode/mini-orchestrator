@@ -19,6 +19,7 @@ describe('installCommands', () => {
     await installCommands(cwd);
     const files = (await readdir(join(cwd, COMMANDS_DIR))).sort();
     expect(files).toEqual([
+      'adversarial-project.md',
       'adversarial.md',
       'audit.md',
       'auto.md',
@@ -95,6 +96,23 @@ describe('installCommands', () => {
     expect(md).toContain('mini context verify');
     expect(md).toContain('description:');
     expect(md).toContain('UI/UX');
+  });
+
+  it('the adversarial-project command calls mini context adversarial-project with a range argument-hint and an independence warning', async () => {
+    await installCommands(cwd);
+    const md = await readFile(join(cwd, COMMANDS_DIR, 'adversarial-project.md'), 'utf-8');
+    // forwards the user's range flags straight through to the context subcommand
+    expect(md).toContain('mini context adversarial-project $ARGUMENTS');
+    // argument-hint advertises both range forms (phase numbers / git refs)
+    expect(md).toContain('argument-hint:');
+    expect(md).toContain('--from-phase');
+    expect(md).toContain('--to-phase');
+    expect(md).toContain('--from <ref>');
+    expect(md).toContain('--to <ref>');
+    // carries the same independence warning as /mini:adversarial
+    expect(md).toContain('Independence note');
+    expect(md).toContain('/clear');
+    expect(md).toContain('description:');
   });
 
   it('the audit command calls mini audit, not mini context', async () => {

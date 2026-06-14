@@ -111,6 +111,22 @@ If a step runs into a blocker you can't get around yourself, stop and hand contr
 Run in Bash \`mini context adversarial\` and follow the printed instructions **exactly** — it prints the red-team prompt for the target phase (the independent-reviewer role, the areas to attack, where to look for the diff, and how to record the findings with the status \`adversarial: pass | findings | blocked\`). Change the state in \`.mini/\` only with \`mini ... --apply\` commands; this step only writes findings into the report, it never edits \`.mini/state.json\` by hand.`,
   },
   {
+    name: 'adversarial-project',
+    description: 'mini — independent red-team review of a range of phases',
+    argumentHint: '[--from-phase N --to-phase M | --from <ref> --to <ref>]',
+    body: `This is the **adversarial-project** step of the mini workflow, run directly in Claude Code. An independent reviewer red-teams the code produced across a **range of phases** (not just the current one) — not to confirm it works, but to find what breaks it — and records the findings via \`mini findings add\`. It does **not** move any phase state and never edits code.
+
+> **Independence note — read this first.** Run as a slash command, the review happens **inline in this very session**, so the "reviewer" shares the context and the blind spots of whoever wrote the code under review. That undercuts the whole point. For a genuinely independent review, prefer one of:
+> - run \`mini adversarial-project\` in a **terminal** — it spawns a **fresh** Claude session (clean context), or
+> - \`/clear\` this session first, and only then run \`/mini:adversarial-project\`.
+
+The user ran the command with arguments: \`$ARGUMENTS\`. They select the range of phases to review and are passed straight through to \`mini context adversarial-project\`:
+- **\`--from-phase N --to-phase M\`** — range given by phase numbers, or
+- **\`--from <ref> --to <ref>\`** — range given by git refs (you cannot mix the two forms).
+
+Run in Bash \`mini context adversarial-project $ARGUMENTS\` and follow the printed instructions **exactly** — it prints the red-team prompt for the selected range (the independent-reviewer role, the areas to attack, where to look for the combined diff, and how to record the findings). If the range is invalid the command exits non-zero with a clear message — relay it and stop. Change the state in \`.mini/\` only with \`mini ... --apply\` commands; this step only records findings, it never edits \`.mini/state.json\` by hand.`,
+  },
+  {
     name: 'status',
     description: 'mini — overview of the project phases (read-only)',
     body: `This is the **status** step of the mini workflow, run directly in Claude Code.

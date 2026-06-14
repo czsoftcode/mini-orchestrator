@@ -13,8 +13,14 @@ All notable changes to this project are recorded here. The format is based on
   (`--from-phase`/`--to-phase`) or git refs (`--from`/`--to`). It runs report-only
   with read + read-only-git tools and `mini findings add` (no `Edit`), mirroring
   `mini adversarial`. The first message is built from `.mini/project.md`, the
-  resolved range and the in-range phase list. (The `/mini:adversarial-project`
-  slash command is not wired yet.)
+  resolved range and the in-range phase list.
+
+- **`/mini:adversarial-project` slash command.** `install-commands` now generates
+  the `/mini:adversarial-project` command idempotently. Its body forwards the
+  range flags straight to `mini context adversarial-project $ARGUMENTS`
+  (`--from-phase`/`--to-phase` or `--from`/`--to`) and carries the same
+  independence warning as `/mini:adversarial` (prefer a terminal run or `/clear`
+  first, since an inline review shares the author's context).
 
 - **`mini context adversarial-project` sub-command.** Prints the same red-team
   prompt as the interactive command to stdout, built from the shared range

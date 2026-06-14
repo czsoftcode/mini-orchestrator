@@ -827,6 +827,11 @@
       "id": 165,
       "title": "adversarial-project: context subcommand",
       "status": "done"
+    },
+    {
+      "id": 166,
+      "title": "adversarial-project: slash command",
+      "status": "done"
     }
   ],
   "models": {
