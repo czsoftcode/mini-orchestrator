@@ -12,6 +12,14 @@ function parseMaxTurns(value: string): number {
   return n;
 }
 
+function parsePhaseNumber(value: string): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+    throw new InvalidArgumentError('Must be a phase number (a positive integer, e.g. 12).');
+  }
+  return n;
+}
+
 /**
  * `--push` is a release, so it requires an explicit version level. The default
  * `none` (or `--bump none`) with push makes no sense — there would be nothing to
@@ -292,6 +300,23 @@ program
   .action(async () => {
     const { adversarial } = await import('./commands/adversarial.js');
     await adversarial();
+  });
+
+program
+  .command('adversarial-project')
+  .description('Opens a fresh Claude Code session for an independent red-team review of a *range of phases* — given by phase numbers (--from-phase/--to-phase) or git refs (--from/--to). Report only (records findings via `mini findings add`, never edits code); the terminal counterpart of /mini:adversarial-project.')
+  .option('--from-phase <n>', 'Range start as a phase number (use together with --to-phase).', parsePhaseNumber)
+  .option('--to-phase <n>', 'Range end as a phase number (use together with --from-phase).', parsePhaseNumber)
+  .option('--from <ref>', 'Range start as a git ref (use together with --to; cannot mix with phase flags).')
+  .option('--to <ref>', 'Range end as a git ref (use together with --from; cannot mix with phase flags).')
+  .action(async (opts: { fromPhase?: number; toPhase?: number; from?: string; to?: string }) => {
+    const { adversarialProject } = await import('./commands/adversarialProject.js');
+    await adversarialProject({
+      fromPhase: opts.fromPhase,
+      toPhase: opts.toPhase,
+      from: opts.from,
+      to: opts.to,
+    });
   });
 
 program

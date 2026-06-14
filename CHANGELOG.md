@@ -8,6 +8,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`mini adversarial-project` command.** Opens a fresh Claude Code session for an
+  independent red-team review of a **range of phases**, scoped by phase numbers
+  (`--from-phase`/`--to-phase`) or git refs (`--from`/`--to`). It runs report-only
+  with read + read-only-git tools and `mini findings add` (no `Edit`), mirroring
+  `mini adversarial`. The first message is built from `.mini/project.md`, the
+  resolved range and the in-range phase list. (The `/mini:adversarial-project`
+  slash command is not wired yet.)
+
 - **`project` finding source.** `mini findings add --source project` is now
   accepted and the value survives the findings-store round-trip, alongside
   `adversarial` and `verify`. Groundwork for the upcoming cross-project

@@ -1,0 +1,34 @@
+{
+  "id": 164,
+  "title": "adversarial-project: interactive command",
+  "goal": "Add an interactive 'mini adversarial-project --from-phase/--to-phase' (and --from/--to) command — a fresh workWithClaude session whose first message is built by buildProjectAdversarialContext, run with scoped read-only tools (Read/Grep/Glob/LS, git diff/log/show, mini findings add; NO Edit), wired into cli.ts, mirroring adversarial.ts. Cleanly exits when buildProjectAdversarialContext returns null (range error). Does NOT include the slash-path 'mini context adversarial-project' subcommand (5/7) or the slash command (6/7).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "adversarialProject command (interactive session)",
+      "status": "done",
+      "detail": "New src/commands/adversarialProject.ts exporting adversarialProject(input: RangeInput): Promise<StepOutcome>. Mirrors adversarial.ts: checks exists(cwd); builds the first message via buildProjectAdversarialContext(cwd, input); on null (range error already logged) exits cleanly with { ok:false, reason } and never calls Claude; otherwise prints the prompt, asks for confirmation, runs workWithClaude with the scoped tool set, handles cancel / claude-error / non-zero exit."
+    },
+    {
+      "title": "Scoped read-only tool set (no Edit)",
+      "status": "done",
+      "detail": "Module-level constant identical to adversarial.ts's set — Read, Grep, Glob, LS, Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(mini findings add:*) — reviewer can read + diff + record findings but cannot edit code. Pinned by a test."
+    },
+    {
+      "title": "Wire mini adversarial-project into cli.ts",
+      "status": "done",
+      "detail": "New command with --from-phase <n> / --to-phase <n> (parsed as numbers, validated with Number.isFinite, error+exit on bad value) and --from <ref> / --to <ref> (strings). Assembles a RangeInput and dispatches to adversarialProject. Range semantics (mixing/empty/preSha) left to resolveRange."
+    },
+    {
+      "title": "Unit tests for adversarialProject",
+      "status": "done",
+      "detail": "New adversarialProject.test.ts mocking workWithClaude + ask. Covers: no-project; range-error null prompt -> no session; happy path with valid phase range and scoped tool set pinned (no Edit); user cancels; claude-error when session throws; non-zero exit still returns ok."
+    }
+  ],
+  "startedAt": "2026-06-14T20:53:10.879Z",
+  "completedAt": "2026-06-14T21:04:40.435Z",
+  "autoCommit": {
+    "preSha": "e25a6d43565f9b82b444bf90d18a87bc1c728018",
+    "subject": "Phase 164: adversarial-project: interactive command"
+  }
+}

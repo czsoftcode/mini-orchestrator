@@ -817,6 +817,11 @@
       "id": 163,
       "title": "adversarial-project: context builder",
       "status": "done"
+    },
+    {
+      "id": 164,
+      "title": "adversarial-project: interactive command",
+      "status": "done"
     }
   ],
   "models": {
