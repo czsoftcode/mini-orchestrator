@@ -812,6 +812,11 @@
       "id": 162,
       "title": "Range-resolution helper for adversarial-project",
       "status": "done"
+    },
+    {
+      "id": 163,
+      "title": "adversarial-project: context builder",
+      "status": "done"
     }
   ],
   "models": {

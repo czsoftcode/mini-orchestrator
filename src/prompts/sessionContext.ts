@@ -577,3 +577,132 @@ the *only* thing you write. Fixing what you find and closing the phase are
 separate, human-driven steps (\`do\` / \`done\`), possibly informed by what you found.
 `;
 }
+
+/** A single phase in the review range, reduced to its identity (id + title). */
+export interface AdversarialProjectPhase {
+  id: number;
+  title: string;
+}
+
+export interface AdversarialProjectInput {
+  /** Contents of \`.mini/project.md\` (the project vision) — context for the reviewer. */
+  projectMd: string;
+  /** Resolved range start — a full commit SHA for \`git diff <fromSha>..<toSha>\`. */
+  fromSha: string;
+  /** Resolved range end — a full commit SHA for \`git diff <fromSha>..<toSha>\`. */
+  toSha: string;
+  /**
+   * Phases covered by the range, as id+title only (NOT full reports). Empty when
+   * the range was given as plain git refs and the phases can't be mapped to it —
+   * the prompt then tells the reviewer to lean on the diff alone.
+   */
+  phases: AdversarialProjectPhase[];
+}
+
+/**
+ * Prompt for \`mini adversarial-project\` — an independent red-team review of a
+ * **range of phases** (a slice of git history), not a single phase. Unlike
+ * \`adversarial\` (which scopes to the current/last phase and inlines its run
+ * report), this one is a deliberately **thin index**: it points the reviewer at
+ * the project vision, the resolved range and the explicit \`git diff\` to run, plus
+ * a bare id+title list of the phases in range — it does **not** dump the phase
+ * reports. The reviewer reads the real diff themselves.
+ *
+ * Three behavioural rules are baked in: (1) **dedup first** — run
+ * \`mini findings list\` before recording so the same issue isn't filed twice;
+ * (2) **security is out of scope here** — delegate it to \`/security-review\`;
+ * (3) findings are written via \`mini findings add --source project\`, which owns
+ * the durable \`.mini/findings/\` store — the reviewer never edits a file itself.
+ *
+ * Pure: takes everything it needs as input, does no I/O. The assembler
+ * (\`buildProjectAdversarialContext\`) resolves the range and reads project.md.
+ */
+export function buildProjectAdversarialSessionPrompt(input: AdversarialProjectInput): string {
+  const { projectMd, fromSha, toSha, phases } = input;
+
+  const phaseList =
+    phases.length > 0
+      ? phases.map((p) => `  - ${p.id}. ${p.title}`).join('\n')
+      : '  (the range was given as plain git refs — no phase list; work from the diff)';
+
+  return `You are in a Claude Code session — an **adversarial project review** (a cross-phase red-team).
+
+# What this is
+A red-team review of a **range of phases** at once — a slice of the project's
+history, not a single phase. You review the combined change \`${fromSha}..${toSha}\`.
+
+# Your role — an independent reviewer who did NOT write this code
+Switch into the role of an independent reviewer who did **not** write this code.
+Your job is **not** to confirm that it works — your job is to find what breaks it
+across the whole range: regressions one phase introduced into another, half-done
+refactors, contradictions between phases, drift from the project's stated goals.
+Assume there is a bug in there. Be concrete and skeptical, not reassuring.
+
+# The range under review
+Phases in range (id + title only — read the real code, not these labels):
+${phaseList}
+
+Read the **actual diff** for the whole range — don't guess from the titles:
+
+\`\`\`
+git diff ${fromSha}..${toSha}
+\`\`\`
+
+Use \`git log ${fromSha}..${toSha}\` and \`git show <sha>\` for per-commit history when
+you need it, then read the changed code. ${GRAPH_USAGE_HINT}
+
+# Before you record anything — deduplicate
+Other reviews may already have filed some of these. **First** list what's already
+on record and do **not** re-file an issue that's already there:
+
+\`\`\`
+mini findings list
+\`\`\`
+
+# Go through these, in order
+1. **UNHAPPY PATH** — what happens on empty, corrupt or unexpected input,
+   null/undefined, a timeout, concurrency? Show a concrete input that knocks it over.
+2. **CROSS-PHASE CONSISTENCY** — does a later phase leave an earlier one
+   half-migrated? Are there two ways to do the same thing now? Dead code or a
+   contract one phase changed and another still relies on?
+3. **SILENT ASSUMPTIONS** — where does the code assume a type, a shape of data or a
+   state without checking it? Where can errors cascade silently instead of failing loudly?
+4. **DRIFT FROM THE PROJECT** — does the range pull against the project's stated
+   approach, non-goals or success criteria (see the project block below)?
+5. **TESTS** — do they test failure too, or only the happy path? What is NOT covered?
+
+For every finding give: **where** (file:line), **how it shows up**, and **how
+serious** it is. Don't write a generic "looks good": if you genuinely find
+nothing, list **concretely** what you checked and how.
+
+# Security is out of scope here
+Do **not** attempt a security audit in this review — that is a separate, dedicated
+pass. If you want one, run \`/security-review\`. Note it in the chat; don't file
+security findings from here.
+
+# Record the findings
+Record **each** finding by calling the CLI — it owns the store, the format and the
+origin, so you do not write or edit any file yourself:
+
+\`\`\`
+mini findings add --source project --severity <blocker|should-know|nit> --title "<short headline>" [--where "<file:line>"] [--body "<what breaks and how>"]
+\`\`\`
+
+Run it once per finding; it prints the assigned id and the file under
+\`.mini/findings/\`. If \`mini\` is not on your PATH, say so in the chat instead of
+writing the findings into some file.
+
+When you are done, print a single **status line** to the human — exactly one of:
+\`**adversarial-project: pass**\` (you reviewed it and found nothing worth recording),
+\`**adversarial-project: findings**\` (you recorded findings — say how many) or
+\`**adversarial-project: blocked**\` (you couldn't complete the review — say why).
+
+# Project
+${projectMd.trim()}
+
+# Scope — report only
+You **only report**. Do **not** modify, fix or refactor the source code, and do
+**not** move any phase state: calling \`mini findings add\` is the *only* thing you
+write. Fixing what you find is a separate, human-driven step.
+`;
+}

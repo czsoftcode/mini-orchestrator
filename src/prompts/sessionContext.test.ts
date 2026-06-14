@@ -5,6 +5,7 @@ import {
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
   buildPlanSessionPrompt,
+  buildProjectAdversarialSessionPrompt,
   buildProjectSessionPrompt,
   buildVerifySessionPrompt,
 } from './sessionContext.js';
@@ -503,5 +504,71 @@ describe('buildAdversarialSessionPrompt', () => {
     });
     expect(p).toContain('Parse input');
     expect(p).toContain('Poznámky z implementace.');
+  });
+});
+
+describe('buildProjectAdversarialSessionPrompt', () => {
+  const input = {
+    projectMd: '# Demo\n\n## What I am building\nA thing.',
+    fromSha: 'aaaaaaa',
+    toSha: 'bbbbbbb',
+    phases: [
+      { id: 10, title: 'First phase' },
+      { id: 11, title: 'Second phase' },
+    ],
+  };
+
+  it('frames a cross-phase independent red-team review', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('adversarial project review');
+    expect(p).toContain('range of phases');
+    expect(p).toContain('did **not** write this code');
+    expect(p).toContain('CROSS-PHASE CONSISTENCY');
+  });
+
+  it('embeds the resolved range bounds and the explicit git diff to run', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('aaaaaaa..bbbbbbb');
+    expect(p).toContain('git diff aaaaaaa..bbbbbbb');
+    expect(p).toContain('git log aaaaaaa..bbbbbbb');
+  });
+
+  it('lists the in-range phases as id+title only (no reports)', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('10. First phase');
+    expect(p).toContain('11. Second phase');
+  });
+
+  it('falls back to a diff-only note when no phases map to the range (ref mode)', () => {
+    const p = buildProjectAdversarialSessionPrompt({ ...input, phases: [] });
+    expect(p).toContain('plain git refs');
+    expect(p).toContain('work from the diff');
+  });
+
+  it('tells the reviewer to deduplicate against existing findings first', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('mini findings list');
+    expect(p).toContain('do **not** re-file');
+  });
+
+  it('delegates security to /security-review instead of auditing here', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('Security is out of scope');
+    expect(p).toContain('/security-review');
+  });
+
+  it('records findings via `mini findings add --source project`', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('mini findings add --source project');
+    expect(p).toContain('.mini/findings/');
+    expect(p).toContain('**adversarial-project: pass**');
+    expect(p).toContain('**adversarial-project: findings**');
+  });
+
+  it('is report-only and inlines the project block', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('report only');
+    expect(p).toContain('Do **not** modify');
+    expect(p).toContain('What I am building');
   });
 });

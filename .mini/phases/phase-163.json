@@ -1,0 +1,34 @@
+{
+  "id": 163,
+  "title": "adversarial-project: context builder",
+  "goal": "Add a pure buildProjectAdversarialContext builder + prompt that turns a resolved range (resolveRange) into a thin reviewer index: project.md, the resolved range bounds, a phase id+title list (loadPhase, NOT full reports), an explicit 'git diff <from>..<to>' for the reviewer to run, an independent-reviewer role, dedup-first via 'mini findings list', security delegated to /security-review, and findings written via 'mini findings add --source project' — locked by a snapshot test. No interactive session or CLI subcommand wiring (those are 4/7 and 5/7).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Pure prompt builder buildProjectAdversarialSessionPrompt",
+      "status": "done",
+      "detail": "In src/prompts/sessionContext.ts: new function + AdversarialProjectInput type. Input = projectMd, fromSha, toSha, phase id+title list. Output = independent-reviewer prompt for a multi-phase range with an explicit 'git diff <fromSha>..<toSha>' to run, dedup-first via 'mini findings list', security delegated to /security-review, findings via 'mini findings add --source project'. Pure, no I/O."
+    },
+    {
+      "title": "Resolve in-range phase list (id+title)",
+      "status": "done",
+      "detail": "Helper that derives the phases to review as id+title only via loadPhase (NOT full reports). Phase mode: phases fromPhase..toPhase. Ref mode: phases unknown -> empty/undetermined list, prompt leans on the diff. Unit-tested on both branches."
+    },
+    {
+      "title": "Context assembler buildProjectAdversarialContext(cwd, input)",
+      "status": "done",
+      "detail": "New module in src/commands/: call resolveRange, on error return null and log the reason (mirror buildAdversarialContext); else read project.md via readProject, build the phase list (step 2) and return the prompt from step 1. No CLI dispatch or interactive session wiring (that is 4/7 and 5/7)."
+    },
+    {
+      "title": "Snapshot + unit tests",
+      "status": "done",
+      "detail": "Lock the prompt shape (git diff command present, dedup instruction, --source project, reviewer role) for a representative range, and cover the assembler error/null paths (invalid range -> null + log)."
+    }
+  ],
+  "startedAt": "2026-06-14T20:38:28.166Z",
+  "completedAt": "2026-06-14T20:48:23.113Z",
+  "autoCommit": {
+    "preSha": "efbfb2d9f639f3a4ef53441996929889daa55ec5",
+    "subject": "Phase 163: adversarial-project: context builder"
+  }
+}
