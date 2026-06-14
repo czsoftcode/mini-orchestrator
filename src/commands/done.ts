@@ -12,6 +12,7 @@ import {
   type RunReport,
   type RunReportVerifyItem,
 } from '../state/runReport.js';
+import { resolveFinding } from '../state/findingsStore.js';
 import { exists, load, save } from '../state/store.js';
 import type { Phase, ProjectState, Step } from '../state/types.js';
 import { ask } from '../ui/ask.js';
@@ -210,6 +211,10 @@ export function buildPhaseCommitMessage(phase: Phase): string {
  *    undo`). We don't store the resulting commit's own sha in the state — the
  *    commit will also carry `state.json`, so the record would depend on itself
  *    (see `PhaseAutoCommit`).
+ * 1b. **Resolve linked finding** — when `phase.fromFinding` is set (the phase was
+ *    created to fix an adversarial finding), flip that finding to `resolved`.
+ *    Done here so the rewritten findings file lands in the phase commit; `mini
+ *    undo` reopens it. Tolerant — a missing/already-resolved finding is a no-op.
  * 2. **Memory record** (`writePhaseMemory`) — creates `.mini/memory/phase-XXX.md`
  *    and updates the summary in `.mini/last-memory.md`.
  * 3. **Graph regeneration** (`regenerateGraph`) — updates `.mini/graph/`
@@ -240,6 +245,16 @@ async function finalizePhaseSideEffects(
     if (preSha) {
       const subject = buildPhaseCommitMessage(phase).split('\n')[0] ?? '';
       phase.autoCommit = { preSha, subject };
+    }
+  }
+  // If this phase was created to fix an adversarial finding, close that finding
+  // now. Done before the commit so the rewritten `.mini/findings/...` file is
+  // picked up by `git add -A` below. Tolerant: a missing/already-resolved finding
+  // is a silent no-op (resolveFinding returns false), so finalization never
+  // breaks because the finding vanished or was hand-edited.
+  if (phase.fromFinding) {
+    if (await resolveFinding(cwd, phase.fromFinding)) {
+      log.dim(`Finding ${phase.fromFinding} resolved.`);
     }
   }
   await writePhaseMemory(phase, state, cwd, { hasAutoCommit: phase.autoCommit !== undefined });

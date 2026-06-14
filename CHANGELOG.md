@@ -8,6 +8,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **Completing a fix phase resolves its linked finding.** When a phase created
+  with `--from-finding` closes (`mini done`), mini now flips that adversarial
+  finding from `open` to `resolved` and folds the change into the phase commit;
+  `mini undo` reopens it so the two stay in sync. Tolerant by design — a missing,
+  already-resolved or hand-edited finding never breaks `done`/`undo`. This closes
+  the loop: a finding is born `open` in the review, links to a fix phase, and
+  clears itself once that phase is done.
+
 - **Open adversarial findings surface in `mini next` / `/mini:next`.** When you
   propose the next phase, mini now lists the still-open findings from the red-team
   review (`id · severity · where — title`) as candidate **fix phases**, alongside

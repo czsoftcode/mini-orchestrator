@@ -271,6 +271,56 @@ export async function findFindingById(cwd: string, id: string): Promise<Finding 
 }
 
 /**
+ * Flips one finding's status in place. Derives the origin phase from the id,
+ * reads only that phase's file (a targeted read, like {@link findFindingById}),
+ * rewrites the single matching entry and re-serializes the file. Returns `true`
+ * when the file was actually rewritten, `false` on a no-op.
+ *
+ * Deliberately tolerant — it never throws on the unhappy paths a `done`/`undo`
+ * caller must survive: a malformed id, a missing file, an id not present, or a
+ * status that already matches the target all return `false` and leave disk
+ * untouched. Only the one entry's status token changes; the rest of the file
+ * (other entries, the header comment, `**Reviewed-at:**`/body) round-trips
+ * through {@link parseFindings} → {@link serializeFindings}.
+ */
+async function setFindingStatus(
+  cwd: string,
+  id: string,
+  status: FindingStatus,
+): Promise<boolean> {
+  const phaseId = phaseIdFromFindingId(id);
+  if (phaseId === null) return false;
+  const findings = await readPhaseFindings(cwd, phaseId);
+  const target = findings.find((f) => f.id === id);
+  if (!target || target.status === status) return false;
+  target.status = status;
+  try {
+    await writeFile(findingsPath(cwd, phaseId), serializeFindings(findings), 'utf8');
+  } catch {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Marks a finding as `resolved` (e.g. when the fix phase linked to it closes).
+ * No-op when the finding is missing, malformed or already resolved. Returns
+ * whether the file changed. See {@link setFindingStatus}.
+ */
+export function resolveFinding(cwd: string, id: string): Promise<boolean> {
+  return setFindingStatus(cwd, id, 'resolved');
+}
+
+/**
+ * Reopens a finding back to `open` (e.g. when `mini undo` reverts the phase that
+ * resolved it). No-op when the finding is missing, malformed or already open.
+ * Returns whether the file changed. See {@link setFindingStatus}.
+ */
+export function reopenFinding(cwd: string, id: string): Promise<boolean> {
+  return setFindingStatus(cwd, id, 'open');
+}
+
+/**
  * Appends a finding to a phase's file and returns its assigned id and the path.
  *
  * The id is sequential **within the phase file**: `addFinding` reads the existing

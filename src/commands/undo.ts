@@ -1,4 +1,5 @@
 import { headParentSha, isCleanWorkingTree, isGitRepo, softResetTo } from '../git.js';
+import { reopenFinding } from '../state/findingsStore.js';
 import { exists, hasPrev, load, loadPrev, restorePrev } from '../state/store.js';
 import type { PhaseAutoCommit, ProjectState } from '../state/types.js';
 import { ask } from '../ui/ask.js';
@@ -83,6 +84,17 @@ export async function undo({ dryRun = false, yes = false }: UndoOptions = {}): P
 
   await restorePrev(cwd);
 
+  // A phase reverting from `done` to a non-done status undoes its finalization,
+  // which (in finalizePhaseSideEffects) had resolved the phase's linked finding.
+  // The findings store lives outside state.json, so restorePrev does not touch
+  // it — reopen the finding explicitly to keep the two consistent. Tolerant: a
+  // missing/already-open finding is a no-op.
+  for (const id of findingsToReopen(current, prev)) {
+    if (await reopenFinding(cwd, id)) {
+      log.dim(`Finding ${id} reopened.`);
+    }
+  }
+
   if (decision.kind === 'match') {
     const r = await softResetTo(cwd, decision.autoCommit.preSha);
     if (r.ok) {
@@ -125,6 +137,25 @@ function findRevertedAutoCommit(
     }
   }
   return null;
+}
+
+/**
+ * Finding ids whose phase reverts from `done` (current) to a non-done status in
+ * `prev`. Those are the findings a `done` finalization had resolved and undo must
+ * reopen. Only phases present in BOTH states count — a phase missing in `prev`
+ * (e.g. undo of a `next` that added a phase) never resolved a finding, so its
+ * `fromFinding` must not be reopened.
+ */
+function findingsToReopen(current: ProjectState, prev: ProjectState): string[] {
+  const ids: string[] = [];
+  for (const cp of current.phases) {
+    if (cp.status !== 'done' || !cp.fromFinding) continue;
+    const pp = prev.phases.find((x) => x.id === cp.id);
+    if (pp && pp.status !== 'done') {
+      ids.push(cp.fromFinding);
+    }
+  }
+  return ids;
 }
 
 async function classifyRevert(

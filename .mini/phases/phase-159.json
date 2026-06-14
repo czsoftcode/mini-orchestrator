@@ -1,0 +1,34 @@
+{
+  "id": 159,
+  "title": "Resolve linked finding on done",
+  "goal": "Add a resolveFinding(cwd, id) mutation to the findings store and have mini done --apply flip a completed phase's linked finding (Phase.fromFinding) to resolved, tolerating an already-resolved or missing finding; mini undo reopens it to stay consistent. A manual resolve command and re-review semantics are out of scope (settled in discuss).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "resolveFinding/reopenFinding in findings store",
+      "status": "done",
+      "detail": "src/state/findingsStore.ts: private setFindingStatus(cwd,id,status) derives origin phase from id, reads only that file, flips one entry status, re-serializes; exported resolveFinding/reopenFinding return whether changed. Unit tests for unhappy paths (malformed id, missing file, unknown id, already-target status -> silent no-op, no throw) and happy (open<->resolved keeps reviewedAt/body)."
+    },
+    {
+      "title": "done resolves linked finding before commit",
+      "status": "done",
+      "detail": "src/commands/done.ts: in shared finalizePhaseSideEffects call resolveFinding(cwd, phase.fromFinding) before commitPhaseWork, only when fromFinding set, so rewritten findings file lands in the phase commit. Test: phase with fromFinding flips finding to resolved; phase without is unchanged; missing finding does not break done."
+    },
+    {
+      "title": "undo reopens linked finding",
+      "status": "done",
+      "detail": "src/commands/undo.ts: after restorePrev, for phases that are done in current and exist in prev as non-done and have fromFinding, call reopenFinding. Skip phases absent in prev. Test: undo over done->planned reopens; undo over an added phase leaves finding untouched; reopen of already-open is a no-op."
+    },
+    {
+      "title": "Build and full test suite green",
+      "status": "done",
+      "detail": "npm run build and npm test pass; verifies integration of steps 1-3 and no regression."
+    }
+  ],
+  "startedAt": "2026-06-14T15:45:55.142Z",
+  "completedAt": "2026-06-14T15:52:06.289Z",
+  "autoCommit": {
+    "preSha": "4769025f16bfe40dbb5bd9839feba5d7acae7a40",
+    "subject": "Phase 159: Resolve linked finding on done"
+  }
+}

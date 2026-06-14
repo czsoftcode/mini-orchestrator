@@ -792,6 +792,11 @@
       "id": 158,
       "title": "Link phase to finding",
       "status": "done"
+    },
+    {
+      "id": 159,
+      "title": "Resolve linked finding on done",
+      "status": "done"
     }
   ],
   "models": {

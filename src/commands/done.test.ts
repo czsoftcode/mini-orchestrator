@@ -10,6 +10,7 @@ import { ask } from '../ui/ask.js';
 import { isInteractive } from '../ui/interactive.js';
 import { commitAll, hasChanges, headSha, isGitRepo, push } from '../git.js';
 import { writePhaseMemory } from './writeMemory.js';
+import { addFinding, findFindingById } from '../state/findingsStore.js';
 
 // We replace `ask` with `vi.fn` so we can switch the implementation in tests —
 // mostly it should throw (auto mode must not touch it), but the fallback tests
@@ -1576,6 +1577,89 @@ steps:
     expect(loaded.currentPhaseId).toBe(22);
   });
 
+});
+
+describe('resolve linked finding on done', () => {
+  let cwd: string;
+  let prevCwd: string;
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-done-finding-'));
+    process.chdir(cwd);
+    askMock.mockReset();
+    askMock.mockImplementation(async () => {
+      throw new Error('ask() must not be called in auto mode');
+    });
+    isGitRepoMock.mockReset();
+    isGitRepoMock.mockResolvedValue(false);
+    hasChangesMock.mockReset();
+    hasChangesMock.mockResolvedValue(false);
+    commitAllMock.mockReset();
+    commitAllMock.mockResolvedValue({ ok: true, stdout: '', stderr: '' });
+    headShaMock.mockReset();
+    headShaMock.mockResolvedValue(null);
+    writePhaseMemoryMock.mockReset();
+    writePhaseMemoryMock.mockResolvedValue();
+  });
+
+  afterEach(async () => {
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  async function setupFixPhase(fromFinding: string | undefined): Promise<void> {
+    const phase: Phase = {
+      id: 200,
+      title: 'Fix the finding',
+      status: 'doing',
+      steps: [{ title: 'step 1', status: 'doing' }],
+      ...(fromFinding !== undefined ? { fromFinding } : {}),
+    };
+    await save(makeState([phase], 200), cwd);
+    await writeRunReport(
+      cwd,
+      200,
+      `---
+phase: 200
+verdict: done
+steps:
+  - title: "step 1"
+    status: done
+---
+`,
+    );
+  }
+
+  it('flips the linked finding to resolved when the fix phase closes', async () => {
+    const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'orig finding' });
+    await setupFixPhase(id);
+
+    const r = await applyDone(cwd);
+
+    expect(r.ok).toBe(true);
+    expect((await findFindingById(cwd, id))?.status).toBe('resolved');
+  });
+
+  it('leaves findings untouched for a phase without fromFinding', async () => {
+    const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'orig finding' });
+    await setupFixPhase(undefined);
+
+    const r = await applyDone(cwd);
+
+    expect(r.ok).toBe(true);
+    expect((await findFindingById(cwd, id))?.status).toBe('open');
+  });
+
+  it('does not break done when the linked finding is missing', async () => {
+    await setupFixPhase('999-1');
+
+    const r = await applyDone(cwd);
+
+    expect(r.ok).toBe(true);
+    const loaded = await load(cwd);
+    expect(loaded.phases.find((p) => p.id === 200)?.status).toBe('done');
+  });
 });
 
 describe('CHANGELOG stamp on release', () => {

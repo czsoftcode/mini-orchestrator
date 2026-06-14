@@ -31,6 +31,7 @@ vi.mock('../git.js', () => ({
 }));
 
 const { undo } = await import('./undo.js');
+const { addFinding, resolveFinding, findFindingById } = await import('../state/findingsStore.js');
 
 const askMock = vi.mocked(ask);
 const isGitRepoMock = vi.mocked(isGitRepo);
@@ -264,6 +265,47 @@ describe('undo()', () => {
     const state = await load(cwd);
     expect(state.currentPhaseId).toBe(null);
     expect(state.phases[0]?.status).toBe('done');
+  });
+
+  it('reopens the linked finding when a phase reverts from done to non-done', async () => {
+    const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'orig' });
+    await resolveFinding(cwd, id);
+    // prev: the fix phase is still planned (un-done); current: it is done.
+    await save(makeState([{ id: 200, title: 'Fix', status: 'planned', fromFinding: id }], 200), cwd);
+    await save(makeState([{ id: 200, title: 'Fix', status: 'done', fromFinding: id }], null), cwd);
+
+    await undo({ yes: true });
+
+    expect((await findFindingById(cwd, id))?.status).toBe('open');
+  });
+
+  it('does not reopen the finding when the phase stays done in prev', async () => {
+    const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'orig' });
+    await resolveFinding(cwd, id);
+    // The reverted change is unrelated; the fix phase is done in BOTH states.
+    await save(
+      makeState([{ id: 200, title: 'Fix', status: 'done', fromFinding: id }], 200),
+      cwd,
+    );
+    await save(
+      makeState([{ id: 200, title: 'Fix', status: 'done', fromFinding: id }], null),
+      cwd,
+    );
+
+    await undo({ yes: true });
+
+    expect((await findFindingById(cwd, id))?.status).toBe('resolved');
+  });
+
+  it('does not reopen a finding for a phase absent in prev', async () => {
+    const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'orig' });
+    await resolveFinding(cwd, id);
+    await save(makeState([], null), cwd);
+    await save(makeState([{ id: 200, title: 'Fix', status: 'done', fromFinding: id }], null), cwd);
+
+    await undo({ yes: true });
+
+    expect((await findFindingById(cwd, id))?.status).toBe('resolved');
   });
 
   it('--yes skips the confirm and applies (soft reset runs without asking)', async () => {

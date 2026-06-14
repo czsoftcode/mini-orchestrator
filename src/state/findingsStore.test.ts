@@ -12,6 +12,8 @@ import {
   listFindings,
   parseFindings,
   readPhaseFindings,
+  reopenFinding,
+  resolveFinding,
   serializeFindings,
 } from './findingsStore.js';
 
@@ -318,5 +320,84 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
     expect(await findFindingById(cwd, 'bogus')).toBeNull();
     expect(await findFindingById(cwd, '155')).toBeNull();
     expect(await findFindingById(cwd, '')).toBeNull();
+  });
+});
+
+describe('resolveFinding / reopenFinding — status flip', () => {
+  let cwd: string;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'mini-findings-'));
+  });
+
+  afterEach(async () => {
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('resolveFinding flips open → resolved and reports the change', async () => {
+    await addFinding(cwd, 155, { severity: 'blocker', title: 'first' });
+    expect(await resolveFinding(cwd, '155-1')).toBe(true);
+    expect((await findFindingById(cwd, '155-1'))?.status).toBe('resolved');
+  });
+
+  it('reopenFinding flips resolved → open and reports the change', async () => {
+    await addFinding(cwd, 155, { severity: 'blocker', title: 'first' });
+    await resolveFinding(cwd, '155-1');
+    expect(await reopenFinding(cwd, '155-1')).toBe(true);
+    expect((await findFindingById(cwd, '155-1'))?.status).toBe('open');
+  });
+
+  it('preserves where / reviewedAt / body and other entries when flipping', async () => {
+    const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
+    await addFinding(cwd, 155, {
+      severity: 'should-know',
+      title: 'first',
+      where: 'src/x.ts:9',
+      reviewedAt: sha,
+      body: 'what breaks',
+    });
+    await addFinding(cwd, 155, { severity: 'nit', title: 'second' });
+
+    expect(await resolveFinding(cwd, '155-1')).toBe(true);
+
+    const stored = await readPhaseFindings(cwd, 155);
+    expect(stored).toEqual([
+      {
+        id: '155-1',
+        phaseId: 155,
+        severity: 'should-know',
+        status: 'resolved',
+        where: 'src/x.ts:9',
+        reviewedAt: sha,
+        title: 'first',
+        body: 'what breaks',
+      },
+      { id: '155-2', phaseId: 155, severity: 'nit', status: 'open', title: 'second' },
+    ]);
+  });
+
+  it('is a no-op when the status already matches the target', async () => {
+    await addFinding(cwd, 155, { severity: 'nit', title: 'first' });
+    // already open
+    expect(await reopenFinding(cwd, '155-1')).toBe(false);
+    await resolveFinding(cwd, '155-1');
+    // already resolved
+    expect(await resolveFinding(cwd, '155-1')).toBe(false);
+  });
+
+  it('is a no-op (no throw) for an id not present in an existing file', async () => {
+    await addFinding(cwd, 155, { severity: 'nit', title: 'only one' });
+    expect(await resolveFinding(cwd, '155-9')).toBe(false);
+  });
+
+  it('is a no-op (no throw) for a missing phase file', async () => {
+    expect(await resolveFinding(cwd, '999-1')).toBe(false);
+    expect(await reopenFinding(cwd, '999-1')).toBe(false);
+  });
+
+  it('is a no-op (no throw) for a malformed id shape', async () => {
+    expect(await resolveFinding(cwd, 'bogus')).toBe(false);
+    expect(await resolveFinding(cwd, '155')).toBe(false);
+    expect(await reopenFinding(cwd, '')).toBe(false);
   });
 });
