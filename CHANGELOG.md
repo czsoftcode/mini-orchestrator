@@ -16,6 +16,13 @@ All notable changes to this project are recorded here. The format is based on
   resolved range and the in-range phase list. (The `/mini:adversarial-project`
   slash command is not wired yet.)
 
+- **`mini context adversarial-project` sub-command.** Prints the same red-team
+  prompt as the interactive command to stdout, built from the shared range
+  builder, and takes the same range flags (`--from-phase`/`--to-phase` and
+  `--from`/`--to`). On an invalid or missing range it writes nothing to stdout,
+  reports the reason on stderr and exits non-zero. This is the prompt source the
+  upcoming `/mini:adversarial-project` slash command will call.
+
 - **`project` finding source.** `mini findings add --source project` is now
   accepted and the value survives the findings-store round-trip, alongside
   `adversarial` and `verify`. Groundwork for the upcoming cross-project

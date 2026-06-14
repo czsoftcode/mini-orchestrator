@@ -822,6 +822,11 @@
       "id": 164,
       "title": "adversarial-project: interactive command",
       "status": "done"
+    },
+    {
+      "id": 165,
+      "title": "adversarial-project: context subcommand",
+      "status": "done"
     }
   ],
   "models": {

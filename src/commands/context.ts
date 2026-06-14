@@ -19,10 +19,12 @@ import { readTodos } from '../state/todoStore.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
 import { buildAdversarialContext } from './adversarialContext.js';
+import { buildProjectAdversarialContext } from './adversarialProjectContext.js';
 import { buildVerifyContext, readReportVerify } from './verifyContext.js';
+import type { RangeInput } from '../range.js';
 
 /** Sub-commands for which `mini context` can print a session prompt. */
-export const CONTEXT_COMMANDS = ['next', 'project', 'discuss', 'plan', 'do', 'done', 'decision', 'verify', 'adversarial'] as const;
+export const CONTEXT_COMMANDS = ['next', 'project', 'discuss', 'plan', 'do', 'done', 'decision', 'verify', 'adversarial', 'adversarial-project'] as const;
 export type ContextCommand = (typeof CONTEXT_COMMANDS)[number];
 
 export function isContextCommand(value: string): value is ContextCommand {
@@ -40,7 +42,11 @@ export function isContextCommand(value: string): value is ContextCommand {
  * piped onward cleanly. Errors and hints go through `log` (stderr/stdout by
  * type) and set a non-zero exit code.
  */
-export async function context(cmd: string, extraArgs: string[] = []): Promise<void> {
+export async function context(
+  cmd: string,
+  extraArgs: string[] = [],
+  range: RangeInput = {},
+): Promise<void> {
   const cwd = process.cwd();
 
   if (!isContextCommand(cmd)) {
@@ -72,6 +78,13 @@ export async function context(cmd: string, extraArgs: string[] = []): Promise<vo
     prompt = await buildVerifyContext(header, cwd);
   } else if (cmd === 'adversarial') {
     prompt = await buildAdversarialContext(header, cwd);
+  } else if (cmd === 'adversarial-project') {
+    // Shared with the interactive `mini adversarial-project`: the builder
+    // resolves the range and, on a range error, logs the reason to stderr and
+    // returns null — which the `prompt === null` path below turns into a clean
+    // non-zero exit with nothing on stdout (so the slash command never feeds an
+    // empty prompt to Claude).
+    prompt = await buildProjectAdversarialContext(cwd, range);
   } else {
     prompt = await buildPhaseContext(cmd, projectMd, header, cwd);
   }
@@ -132,7 +145,7 @@ async function buildNextContext(
 
 /** Shared part for discuss/plan/do/done: they require an existing current phase. */
 async function buildPhaseContext(
-  cmd: Exclude<ContextCommand, 'next' | 'project' | 'verify' | 'adversarial'>,
+  cmd: Exclude<ContextCommand, 'next' | 'project' | 'verify' | 'adversarial' | 'adversarial-project'>,
   projectMd: string,
   header: StateHeader,
   cwd: string,

@@ -1,0 +1,39 @@
+{
+  "id": 165,
+  "title": "adversarial-project: context subcommand",
+  "goal": "Add a 'mini context adversarial-project' subcommand that prints the same initial prompt via the shared buildProjectAdversarialContext builder (from phase 163) and accepts the same range flags (--from-phase/--to-phase and --from/--to) as the interactive command, so the future /mini:adversarial-project slash command has something to call. Exits cleanly with a non-zero code and a clear message when the builder returns null (invalid range).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Register adversarial-project as a context command",
+      "status": "done",
+      "detail": "Add 'adversarial-project' to CONTEXT_COMMANDS in context.ts so isContextCommand accepts it and mini context lists it; update the command's description string accordingly."
+    },
+    {
+      "title": "Thread RangeInput through context()",
+      "status": "done",
+      "detail": "Extend context(cmd, extraArgs, range?) to take an optional RangeInput; add an else-if (cmd === 'adversarial-project') branch that calls the shared buildProjectAdversarialContext(cwd, range ?? {}). The existing prompt === null -> exitCode 1 path covers the invalid-range case (builder logs the reason to stderr; only the prompt goes to stdout)."
+    },
+    {
+      "title": "Wire range flags onto the context command in cli.ts",
+      "status": "done",
+      "detail": "Add --from-phase/--to-phase (via parsePhaseNumber) and --from/--to options to the context command; in the action build a RangeInput from the opts and pass it as the third arg to context(). Update the command description to mention the range flags apply to adversarial-project."
+    },
+    {
+      "title": "Unit tests for the context subcommand",
+      "status": "done",
+      "detail": "Cover: valid --from-phase/--to-phase prints the same prompt as buildProjectAdversarialContext (stdout only); invalid/empty range -> empty stdout + non-zero process.exitCode + reason on stderr; mixing phase and ref flags is rejected by the builder. Mirror existing adversarial-project / context tests."
+    },
+    {
+      "title": "Update docs + mini --help surface",
+      "status": "done",
+      "detail": "Note mini context adversarial-project in docs/ where the other context subcommands / adversarial-project are documented, so the slash-path command (6/7) has a documented contract. CHANGELOG via /mini:done."
+    }
+  ],
+  "startedAt": "2026-06-14T21:10:02.451Z",
+  "completedAt": "2026-06-14T21:21:47.328Z",
+  "autoCommit": {
+    "preSha": "84476f6a5abf86b9b6bb49a1e678a642e45358b3",
+    "subject": "Phase 165: adversarial-project: context subcommand"
+  }
+}

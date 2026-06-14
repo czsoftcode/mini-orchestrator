@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { execFile } from 'node:child_process';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { context, isContextCommand, CONTEXT_COMMANDS } from './context.js';
 import { save } from '../state/store.js';
 import { writeProject } from '../state/store.js';
@@ -43,7 +45,7 @@ async function setupProject(phases: Phase[], currentPhaseId: number | null): Pro
 }
 
 describe('isContextCommand', () => {
-  it('knows the cycle commands, decision, verify and adversarial', () => {
+  it('knows the cycle commands, decision, verify and the adversarial pair', () => {
     expect(CONTEXT_COMMANDS).toEqual([
       'next',
       'project',
@@ -54,12 +56,14 @@ describe('isContextCommand', () => {
       'decision',
       'verify',
       'adversarial',
+      'adversarial-project',
     ]);
     expect(isContextCommand('plan')).toBe(true);
     expect(isContextCommand('project')).toBe(true);
     expect(isContextCommand('decision')).toBe(true);
     expect(isContextCommand('verify')).toBe(true);
     expect(isContextCommand('adversarial')).toBe(true);
+    expect(isContextCommand('adversarial-project')).toBe(true);
     expect(isContextCommand('auto')).toBe(false);
   });
 });
@@ -420,5 +424,79 @@ describe('context', () => {
     // The old report-write machinery (and its warnings) is gone.
     expect(out).not.toContain('unparseable');
     expect(out).not.toContain("won't disturb the parser");
+  });
+});
+
+const execFileAsync = promisify(execFile);
+
+describe('context adversarial-project', () => {
+  // The range builder needs a real git repo (it resolves SHAs) and at least one
+  // phase carrying an autoCommit.preSha, so these tests build their own fixture
+  // rather than reuse setupProject. console.error is silenced so the range-error
+  // path doesn't bleed into the test log; its stdout (the prompt) is still
+  // captured through the process.stdout.write spy.
+  async function initRepo(dir: string): Promise<void> {
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: dir });
+    await execFileAsync('git', ['config', 'user.email', 'mini-test@example.com'], { cwd: dir });
+    await execFileAsync('git', ['config', 'user.name', 'Mini Test'], { cwd: dir });
+    await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: dir });
+  }
+
+  async function commit(dir: string, name: string): Promise<string> {
+    await writeFile(join(dir, name), `${name}\n`);
+    await execFileAsync('git', ['add', '-A'], { cwd: dir });
+    await execFileAsync('git', ['commit', '-m', name], { cwd: dir });
+    const { stdout } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: dir });
+    return stdout.trim();
+  }
+
+  let errSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    errSpy.mockRestore();
+  });
+
+  it('valid --from-phase/--to-phase prints the same prompt as the builder', async () => {
+    await initRepo(cwd);
+    const pre1 = await commit(cwd, 'a.txt'); // state before phase 1
+    await commit(cwd, 'b.txt'); // phase 1's work
+    await setupProject(
+      [{ id: 1, title: 'First phase', goal: 'g', status: 'done', autoCommit: { preSha: pre1, subject: 'Phase 1' } }],
+      null,
+    );
+
+    const { buildProjectAdversarialContext } = await import('./adversarialProjectContext.js');
+    const expected = await buildProjectAdversarialContext(cwd, { fromPhase: 1, toPhase: 1 });
+
+    await context('adversarial-project', [], { fromPhase: 1, toPhase: 1 });
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('adversarial project review');
+    expect(out).toContain('1. First phase');
+    // Stdout carries exactly the builder's prompt, newline-normalized the way
+    // context() emits it (a trailing newline is ensured, not doubled).
+    const normalized = expected?.endsWith('\n') ? expected : `${expected}\n`;
+    expect(out).toBe(normalized);
+  });
+
+  it('no range flags → exit code 1, no prompt on stdout, reason on stderr', async () => {
+    await initRepo(cwd);
+    await setupProject([{ id: 1, title: 'First phase', goal: 'g', status: 'done' }], null);
+    await context('adversarial-project', [], {});
+    expect(process.exitCode).toBe(1);
+    expect(out).toBe('');
+    expect(errSpy).toHaveBeenCalled();
+  });
+
+  it('mixing phase and ref flags → rejected, exit code 1, nothing on stdout', async () => {
+    await initRepo(cwd);
+    await commit(cwd, 'a.txt');
+    await setupProject([{ id: 1, title: 'First phase', goal: 'g', status: 'done' }], null);
+    await context('adversarial-project', [], { fromPhase: 1, to: 'HEAD' });
+    expect(process.exitCode).toBe(1);
+    expect(out).toBe('');
+    expect(errSpy).toHaveBeenCalled();
   });
 });

@@ -533,11 +533,26 @@ program
 
 program
   .command('context <cmd> [args...]')
-  .description('Prints the current session prompt for the given step (next|project|discuss|plan|do|done|decision|verify|adversarial) to stdout. Serves the native /mini: slash commands in Claude Code.')
-  .action(async (cmd: string, args: string[]) => {
-    const { context } = await import('./commands/context.js');
-    await context(cmd, args);
-  });
+  .description('Prints the current session prompt for the given step (next|project|discuss|plan|do|done|decision|verify|adversarial|adversarial-project) to stdout. Serves the native /mini: slash commands in Claude Code. The range flags (--from-phase/--to-phase, --from/--to) apply only to the adversarial-project sub-command.')
+  .option('--from-phase <n>', 'adversarial-project range start as a phase number (use together with --to-phase).', parsePhaseNumber)
+  .option('--to-phase <n>', 'adversarial-project range end as a phase number (use together with --from-phase).', parsePhaseNumber)
+  .option('--from <ref>', 'adversarial-project range start as a git ref (use together with --to; cannot mix with phase flags).')
+  .option('--to <ref>', 'adversarial-project range end as a git ref (use together with --from; cannot mix with phase flags).')
+  .action(
+    async (
+      cmd: string,
+      args: string[],
+      opts: { fromPhase?: number; toPhase?: number; from?: string; to?: string },
+    ) => {
+      const { context } = await import('./commands/context.js');
+      await context(cmd, args, {
+        fromPhase: opts.fromPhase,
+        toPhase: opts.toPhase,
+        from: opts.from,
+        to: opts.to,
+      });
+    },
+  );
 
 program
   .command('update')
