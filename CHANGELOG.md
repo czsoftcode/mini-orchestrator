@@ -8,21 +8,31 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`mini findings` — a durable store for adversarial review findings.** Findings
+  now live in their own `.mini/findings/phase-{id}.md` files, versioned with the
+  code (like `.mini/decisions/` and `.mini/memory/`) — no longer buried in the run
+  report of a phase nobody reopens once it closes. Each carries a severity, an
+  `open`/`resolved` status and an optional location. `mini findings add` records
+  one (mini owns the id, format and origin phase, so the reviewer never edits a
+  file), and `mini findings list [--all]` shows the open findings across all
+  phases. Surfacing them in `next`/`plan`/`do` and a `resolve` command are planned
+  follow-ups.
+
 - **`mini adversarial` — an independent red-team review step.** A new command and
   `/mini:adversarial` slash command run a reviewer that switches into the role of
   someone who did *not* write the code and hunts for what breaks it (unhappy path,
   silent assumptions, premature complexity, gaps in tests), reading the real
   `git diff` of the phase. It targets the current phase (or the last closed one),
-  writes its findings with a status (`adversarial: pass | findings | blocked`) into
-  the phase run report, and never moves the phase state — closing stays a human
-  decision in `done`. The terminal command spawns a fresh Claude session (clean
-  context = a genuinely independent reviewer) with read-only git access only
-  (`Read`/`Edit`/`Grep`/`Glob`/`LS` + scoped `git diff`/`log`/`show`); the inline
-  slash command is honest that it shares the current session's context and points
-  to the terminal command or `/clear` for real independence. When the run report
-  is missing or unparseable, the step fails loud (findings into the chat + a
-  pointer to `/mini:do`) instead of writing them into a file later steps would
-  silently drop.
+  records each finding via `mini findings add` (and prints a
+  `adversarial: pass | findings | blocked` status line for the human), and never
+  moves the phase state — closing stays a human decision in `done`. The terminal
+  command spawns a fresh Claude session (clean context = a genuinely independent
+  reviewer) that is **report-only**: it gets read + search tools and read-only git
+  (`Read`/`Grep`/`Glob`/`LS` + scoped `git diff`/`log`/`show`) but **no `Edit`**,
+  so it cannot modify the code it reviews — its single write is the scoped
+  `mini findings add`. The inline slash command is honest that it shares the
+  current session's context and points to the terminal command or `/clear` for
+  real independence.
 
 ## [1.20.0] - 2026-06-09
 

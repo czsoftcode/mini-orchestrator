@@ -305,7 +305,7 @@ describe('context', () => {
     expect(out).toContain('Phase 2: Last done');
     expect(out).toContain('already closed');
     // No report on disk → soft fallback, the prompt says so and steers by the diff.
-    expect(out).toContain('There is no usable report for this phase yet');
+    expect(out).toContain('no usable implementation report');
   });
 
   it('adversarial passes the report free text in as reviewer context', async () => {
@@ -324,23 +324,26 @@ describe('context', () => {
     );
     await context('adversarial');
     expect(out).toContain('implemented the thing');
-    expect(out).toContain('## Adversarial findings');
+    // Findings are recorded into the store via the CLI, not into the run report.
+    expect(out).toContain('mini findings add');
+    expect(out).not.toContain('## Adversarial findings');
   });
 
-  it('adversarial with a corrupt report does not tell the reviewer to append into it', async () => {
+  it('adversarial with a corrupt report falls back to the git diff (no report-write branching)', async () => {
     await setupProject(
       [{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }],
       1,
     );
     await ensureRunDir(cwd);
-    // A report file with no YAML front matter → parseRunReport/summarize flags it
-    // unparseable. The prompt must fail loud, not Edit-append into a dead file.
+    // A report file with no YAML front matter is unparseable → no usable body.
+    // Findings go to the store regardless, so the prompt just leans on the diff.
     await writeFile(runReportPath(cwd, 1), 'just some prose, no YAML header\n', 'utf-8');
     await context('adversarial');
     expect(process.exitCode).toBeUndefined();
-    expect(out).toContain('unparseable');
-    expect(out).toContain('/mini:do');
-    // It must NOT claim the section can be safely appended below a YAML header.
+    expect(out).toContain('no usable implementation report');
+    expect(out).toContain('mini findings add');
+    // The old report-write machinery (and its warnings) is gone.
+    expect(out).not.toContain('unparseable');
     expect(out).not.toContain("won't disturb the parser");
   });
 });

@@ -772,6 +772,11 @@
       "id": 154,
       "title": "mini adversarial review command",
       "status": "done"
+    },
+    {
+      "id": 155,
+      "title": "Adversarial findings store",
+      "status": "done"
     }
   ],
   "models": {

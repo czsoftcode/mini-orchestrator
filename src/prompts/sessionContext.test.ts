@@ -399,7 +399,7 @@ describe('buildAdversarialSessionPrompt', () => {
   };
 
   it('rámuje to jako nezávislý red-team review a vyjmenuje 4 oblasti', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false });
     expect(p).toContain('**adversarial** step');
     expect(p).toContain('did **not** write this code');
     expect(p).toContain('find what breaks it');
@@ -410,70 +410,59 @@ describe('buildAdversarialSessionPrompt', () => {
   });
 
   it('navede recenzenta na skutečný git diff', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false });
     expect(p).toContain('git diff');
   });
 
-  it('zapisuje nálezy se statusem do reportu, ale stav fáze neposouvá', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
-    expect(p).toContain('## Adversarial findings');
-    expect(p).toContain('.mini/run/phase-005.md');
+  it('nálezy zapisuje voláním `mini findings add` do store, ne do reportu', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false });
+    expect(p).toContain('mini findings add');
+    expect(p).toContain('--severity');
+    expect(p).toContain('.mini/findings/');
+    // The old run-report write path is gone — no section, no Edit into the report.
+    expect(p).not.toContain('## Adversarial findings');
+    expect(p).not.toContain('.mini/run/phase-005.md');
+    // Status line goes to the human as a chat summary.
     expect(p).toContain('**adversarial: pass**');
     expect(p).toContain('**adversarial: findings**');
     expect(p).toContain('**adversarial: blocked**');
-    expect(p).toContain('do **not** move the phase state');
+  });
+
+  it('je report-only: nemodifikuje kód ani neposouvá stav fáze', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false });
+    expect(p).toContain('report only');
+    expect(p).toContain('Do **not** modify');
+    expect(p).toContain('move the phase state');
   });
 
   it('běží jedním průchodem — neptá se uživatele krok po kroku (na rozdíl od verify)', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false });
     expect(p).not.toContain(ASK_AND_STOP_HINT);
   });
 
-  it('u validního reportu navede ho doplnit (Edit), ne založit', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
-    expect(p).toContain('Edit');
-    expect(p).toContain("won't disturb the parser");
-  });
-
-  it('když report chybí, jede měkce a NEzakládá rozbitý report — nálezy do chatu + /mini:do', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'missing' });
-    expect(p).toContain('There is no usable report for this phase yet');
-    // Must not silently fabricate a YAML-less report that parseRunReport rejects.
-    expect(p).toContain('Do not fabricate one');
-    expect(p).toContain('/mini:do');
-    // The status line still applies (now to the chat summary, not a report section).
-    expect(p).toContain('**adversarial: findings**');
-  });
-
-  it('když report existuje, ale je nečitelný, NEpřipisuje do něj — selže nahlas do chatu', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'corrupt' });
-    // The corrupt report must not get an Edit-append that the parser would keep rejecting.
-    expect(p).toContain('unparseable');
-    expect(p).toContain('silently dropped');
-    expect(p).toContain('/mini:do');
-    expect(p).toContain('the existing one is unparseable');
-    // It still carries the status-line instruction for the chat summary.
-    expect(p).toContain('**adversarial: blocked**');
-  });
-
-  it('u uzavřené fáze rámuje zpětný red-team a píše nálezy i do paměti', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: true, reportStatus: 'valid' });
+  it('u uzavřené fáze rámuje zpětný red-team, store je stejný (žádný zápis do paměti)', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: true });
     expect(p).toContain('already closed');
     expect(p).toContain('retrospective red-team review');
-    expect(p).toContain('.mini/memory/phase-005.md');
+    // No separate memory-write branch any more — everything goes through the store.
+    expect(p).not.toContain('.mini/memory/phase-005.md');
+    expect(p).toContain('mini findings add');
   });
 
-  it('u rozdělané fáze do paměti nepíše a rámuje kontrolu před done', () => {
-    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
-    expect(p).not.toContain('.mini/memory/phase-005.md');
+  it('u rozdělané fáze rámuje kontrolu před done', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false });
     expect(p).toContain('not yet closed');
+  });
+
+  it('bez reportu jede měkce na git diff', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false });
+    expect(p).toContain('no usable implementation report');
   });
 
   it('vykreslí kroky fáze a vloží volný text reportu, když je', () => {
     const p = buildAdversarialSessionPrompt({
       phase,
       phaseDone: false,
-      reportStatus: 'valid',
       reportBody: 'Poznámky z implementace.',
     });
     expect(p).toContain('Parse input');

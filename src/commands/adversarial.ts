@@ -5,20 +5,24 @@ import { log } from '../ui/log.js';
 import { buildAdversarialPrompt } from './adversarialContext.js';
 import type { StepOutcome } from './types.js';
 
-// Adversarial is an independent red-team review. Claude reads the changed code
-// and writes the findings into the run report — so it needs read + edit, plus the
-// search tools to locate things, plus read-only git to see the actual diff of
-// what the phase changed. Bash is scoped to git inspection only (no full shell):
-// the diff is the point, a broad Bash grant is not.
+// Adversarial is an independent red-team review that **only reports** — it must
+// not modify the code it reviews. So it gets read + search tools and read-only
+// git to see the actual diff, but **no `Edit`**: findings are recorded by calling
+// `mini findings add`, which is the one write it can make (scoped Bash). With no
+// `Edit` in the set the reviewer literally cannot touch a source file. (The
+// `/mini:adversarial` slash path runs in the user's own session and can't be
+// scoped this way — there, report-only rests on the prompt instruction alone.)
+// Caveat: how strictly Claude Code enforces scoped `Bash(... :*)` patterns is not
+// independently verified here; dropping `Edit` is the load-bearing guarantee.
 const ADVERSARIAL_ALLOWED_TOOLS = [
   'Read',
-  'Edit',
   'Grep',
   'Glob',
   'LS',
   'Bash(git diff:*)',
   'Bash(git log:*)',
   'Bash(git show:*)',
+  'Bash(mini findings add:*)',
 ];
 
 /**

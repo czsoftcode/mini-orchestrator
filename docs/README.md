@@ -58,6 +58,7 @@ Each page links to its sibling variant and to related commands.
 | Revert the last state change | [`/mini:undo`](interactive/undo.md) | [`mini undo`](non-interactive/undo.md) |
 | View or set the Claude model | [`/mini:model`](interactive/model.md) | [`mini model`](non-interactive/model.md) |
 | Archive of future ideas | [`/mini:todo`](interactive/todo.md) | [`mini todo`](non-interactive/todo.md) |
+| Adversarial review findings | — | [`mini findings`](non-interactive/findings.md) |
 | Show the CHANGELOG | [`/mini:changelog`](interactive/changelog.md) | [`mini changelog`](non-interactive/changelog.md) |
 | Health check of the setup | [`/mini:doctor`](interactive/doctor.md) | [`mini doctor`](non-interactive/doctor.md) |
 | Update mini itself | [`/mini:upgrade`](interactive/upgrade.md) | [`mini upgrade`](non-interactive/upgrade.md) |

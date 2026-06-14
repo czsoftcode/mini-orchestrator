@@ -1,0 +1,47 @@
+{
+  "id": 155,
+  "title": "Adversarial findings store",
+  "goal": "Add a dedicated .mini/findings/ store and a 'mini findings add' command that mini owns (path + format, with an origin phase and an open/resolved status), then point the adversarial prompt at it: the reviewer records each finding by calling 'mini findings add' instead of editing the old phase's run report, and is explicitly instructed to only report — never modify or fix source code. Consuming the store in next/plan/do is a follow-up phase.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Findings store module + tests",
+      "status": "done",
+      "detail": "src/state/findingsStore.ts: FINDINGS_DIR (.mini/findings/), findingsPath via phaseStem, Finding type (id, severity blocker|should-know|nit, status open|resolved, where?, title/body). Parse/serialize a per-phase file with MULTIPLE entries; each entry header line '## <id> · <severity> · <status>' (status flippable on one line by a later resolve) + body. addFinding computes the next sequential id (155-1, 155-2), appends, returns {id, path}. listFindings({includeResolved}) scans the dir. Covered by findingsStore.test.ts: round-trip, id assignment, missing dir → empty, malformed entries ignored."
+    },
+    {
+      "title": "mini findings add command",
+      "status": "done",
+      "detail": "src/commands/findings.ts findingsAdd: mini infers the origin phase (current, else last done — same selection as buildAdversarialContext), calls addFinding, prints a confirmation (assigned id + path) so a failed call is visible not silent. Args: --severity (validated against the three values), --title, optional --where file:line, --body. Guards: no project / no phase → error. Wire into cli.ts + completion. Covered by a test."
+    },
+    {
+      "title": "mini findings list command",
+      "status": "done",
+      "detail": "Read-only: default = open findings across ALL phases (origin id + id + severity + where + title); --all includes resolved. Empty/missing store → 'no open findings', never errors. Wire into cli.ts + help + completion. Covered by a test."
+    },
+    {
+      "title": "Rewire adversarial prompt to store",
+      "status": "done",
+      "detail": "Simplify buildAdversarialSessionPrompt (sessionContext.ts) and buildAdversarialContext (adversarialContext.ts): remove the valid/corrupt/missing report-write branching and the memoryWrite block; KEEP reading reportBody as reviewer context. Prompt now instructs: record each finding via 'mini findings add ...', report only — never edit or fix source code. Update the prompt snapshot."
+    },
+    {
+      "title": "Tighten adversarial tool scope",
+      "status": "done",
+      "detail": "adversarial.ts ADVERSARIAL_ALLOWED_TOOLS: drop Edit, add Bash(mini findings add:*). Update adversarial.test.ts to assert the new set (Edit gone, findings grant present) reaches workWithClaude."
+    },
+    {
+      "title": "Findings versioned + command docs",
+      "status": "done",
+      "detail": "Ensure the skeleton .gitignore does NOT exclude .mini/findings/ (unlike .mini/run/). Add mini findings to docs/ (per-command docs precedent). No /mini:findings slash command (out of scope)."
+    }
+  ],
+  "startedAt": "2026-06-14T13:07:13.018Z",
+  "resolvedVerify": [
+    "A real `mini adversarial` session records findings via `mini findings add`"
+  ],
+  "completedAt": "2026-06-14T13:39:47.037Z",
+  "autoCommit": {
+    "preSha": "df187f1dd0bb7a4e79e1b326d0624cd9b68047e5",
+    "subject": "Phase 155: Adversarial findings store"
+  }
+}

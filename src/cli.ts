@@ -273,7 +273,7 @@ program
 
 program
   .command('adversarial')
-  .description('Opens a fresh Claude Code session for an independent red-team review of the current phase (or the last closed one) — finds what breaks the code and writes findings into the run report; the terminal counterpart of /mini:adversarial.')
+  .description('Opens a fresh Claude Code session for an independent red-team review of the current phase (or the last closed one) — finds what breaks the code and records findings into the .mini/findings/ store via `mini findings add` (report only, never edits code); the terminal counterpart of /mini:adversarial.')
   .action(async () => {
     const { adversarial } = await import('./commands/adversarial.js');
     await adversarial();
@@ -327,6 +327,50 @@ program
     const { todo } = await import('./commands/todo.js');
     await todo(action, args ?? []);
   });
+
+program
+  .command('findings [action]')
+  .description(
+    'Adversarial findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--where <w>] [--body <b>]" records a finding about the phase under review (the review step calls this instead of editing the run report); "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
+  )
+  .addOption(
+    new Option(
+      '--severity <level>',
+      'Finding severity (for add): blocker | should-know | nit.',
+    ).choices(['blocker', 'should-know', 'nit']),
+  )
+  .option('--title <text>', 'Short headline of the finding (for add).')
+  .option('--where <loc>', 'Optional location file:line (for add).')
+  .option('--body <text>', 'Optional longer body — what breaks and how (for add).')
+  .option('--all', 'For list: include resolved findings, not just the open ones.')
+  .action(
+    async (
+      action: string | undefined,
+      opts: { severity?: string; title?: string; where?: string; body?: string; all?: boolean },
+    ) => {
+      switch ((action ?? 'list').toLowerCase()) {
+        case 'add': {
+          const { findingsAdd } = await import('./commands/findings.js');
+          const r = await findingsAdd({
+            severity: opts.severity,
+            title: opts.title,
+            where: opts.where,
+            body: opts.body,
+          });
+          if (!r.ok) process.exit(1);
+          return;
+        }
+        case 'list': {
+          const { findingsList } = await import('./commands/findings.js');
+          await findingsList({ all: opts.all });
+          return;
+        }
+        default:
+          console.error(`Unknown action "${action}". Use: add | list.`);
+          process.exit(1);
+      }
+    },
+  );
 
 program
   .command('changelog [version]')

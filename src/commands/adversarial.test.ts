@@ -92,7 +92,7 @@ describe('adversarial command', () => {
     expect(workWithClaudeMock).not.toHaveBeenCalled();
   });
 
-  it('opens a session for the current phase with the read-only-git tool set', async () => {
+  it('opens a session for the current phase with a report-only tool set (no Edit)', async () => {
     await writeProject('# Project', cwd);
     await save(stateWithCurrentPhase(), cwd);
 
@@ -102,18 +102,20 @@ describe('adversarial command', () => {
     expect(workWithClaudeMock).toHaveBeenCalledTimes(1);
     const [prompt, opts] = workWithClaudeMock.mock.calls[0]! as [string, { allowedTools?: string[] }];
     expect(prompt).toContain('Current phase');
-    // The novel, risky part of this command: the scoped read-only git Bash grant.
-    // A typo in any token would let a broader (or no) Bash through — pin it exactly.
+    // Report-only enforcement: Edit is gone (the reviewer cannot modify code), and
+    // the only write it can make is the scoped `mini findings add`. A typo in any
+    // token would either let a broader Bash through or break recording — pin it.
     expect(opts.allowedTools).toEqual([
       'Read',
-      'Edit',
       'Grep',
       'Glob',
       'LS',
       'Bash(git diff:*)',
       'Bash(git log:*)',
       'Bash(git show:*)',
+      'Bash(mini findings add:*)',
     ]);
+    expect(opts.allowedTools).not.toContain('Edit');
   });
 
   it('falls back to the last closed phase when none is current', async () => {

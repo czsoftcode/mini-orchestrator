@@ -10,17 +10,14 @@ import { log } from '../ui/log.js';
  * red-team step is meant to run between `do` and `done`, but it stays useful as a
  * retrospective review of an already closed phase (same selection as `verify`).
  *
- * The run report is optional here (soft fallback, unlike `done`). We resolve it
- * to a three-state status, because *where the findings go* depends on it:
- * - `valid` — a parseable report exists: append the findings as a section, pass
- *   its free text in as context for the reviewer;
- * - `corrupt` — a report file exists but its YAML header is unparseable;
- * - `missing` — no report file at all.
- * For `corrupt`/`missing` the prompt must NOT have the reviewer write findings
- * into that file: `parseRunReport` would keep rejecting it and the findings would
- * be silently dropped from every later `done`/`verify`. We use the tolerant
- * `readRunReportSummary` (null = missing, `unparseable` = corrupt) so the
- * structural check doesn't depend on the steps matching the current state.
+ * The run report is optional here (soft fallback, unlike `done`) and only serves
+ * as **context** for the reviewer (what the phase did). Findings no longer go
+ * into the report — they go to the `.mini/findings/` store via `mini findings
+ * add` — so the report's parse status no longer decides where anything is
+ * written. We just pass its free text along when it parses; a missing or corrupt
+ * report leaves the reviewer to work from the `git diff`. The tolerant
+ * `readRunReportSummary` (null = missing, `unparseable` = corrupt) lets us read
+ * the body without the steps having to match the current state.
  *
  * Returns the prompt, or `null` (and logs the reason) when there is no phase to
  * review. Shared by `mini context adversarial` (prints to stdout) and
@@ -47,19 +44,12 @@ export async function buildAdversarialContext(
   }
 
   const phaseDone = phase.status === 'done';
+  // Optional context only: a parseable report contributes its free text; a
+  // missing or corrupt one just leaves the reviewer to work from the git diff.
   const summary = await readRunReportSummary(cwd, phase.id);
-  let reportStatus: 'valid' | 'corrupt' | 'missing';
-  let reportBody: string | undefined;
-  if (summary === null) {
-    reportStatus = 'missing';
-  } else if (summary.unparseable) {
-    reportStatus = 'corrupt';
-  } else {
-    reportStatus = 'valid';
-    reportBody = summary.body;
-  }
+  const reportBody = summary && !summary.unparseable ? summary.body : undefined;
 
-  return buildAdversarialSessionPrompt({ phase, phaseDone, reportBody, reportStatus });
+  return buildAdversarialSessionPrompt({ phase, phaseDone, reportBody });
 }
 
 /**
