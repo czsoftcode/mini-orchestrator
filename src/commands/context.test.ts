@@ -42,7 +42,7 @@ async function setupProject(phases: Phase[], currentPhaseId: number | null): Pro
 }
 
 describe('isContextCommand', () => {
-  it('knows the cycle commands, decision and verify', () => {
+  it('knows the cycle commands, decision, verify and adversarial', () => {
     expect(CONTEXT_COMMANDS).toEqual([
       'next',
       'project',
@@ -52,11 +52,13 @@ describe('isContextCommand', () => {
       'done',
       'decision',
       'verify',
+      'adversarial',
     ]);
     expect(isContextCommand('plan')).toBe(true);
     expect(isContextCommand('project')).toBe(true);
     expect(isContextCommand('decision')).toBe(true);
     expect(isContextCommand('verify')).toBe(true);
+    expect(isContextCommand('adversarial')).toBe(true);
     expect(isContextCommand('auto')).toBe(false);
   });
 });
@@ -269,5 +271,76 @@ describe('context', () => {
     );
     await context('verify');
     expect(out).toContain('check the UI');
+  });
+
+  it('adversarial without a current or closed phase → exit code 1', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'proposed' }], null);
+    await context('adversarial');
+    expect(process.exitCode).toBe(1);
+    expect(out).toBe('');
+  });
+
+  it('adversarial with a current phase prints the red-team prompt', async () => {
+    await setupProject(
+      [{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }],
+      1,
+    );
+    await context('adversarial');
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('**adversarial** step');
+    expect(out).toContain('Phase 1: Phase A');
+    expect(out).toContain('not yet closed');
+  });
+
+  it('adversarial without a current phase takes the last closed one (soft, no report)', async () => {
+    await setupProject(
+      [
+        { id: 1, title: 'Old', goal: 'goal', status: 'done' },
+        { id: 2, title: 'Last done', goal: 'goal', status: 'done' },
+      ],
+      null,
+    );
+    await context('adversarial');
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('Phase 2: Last done');
+    expect(out).toContain('already closed');
+    // No report on disk → soft fallback, the prompt says so and steers by the diff.
+    expect(out).toContain('There is no usable report for this phase yet');
+  });
+
+  it('adversarial passes the report free text in as reviewer context', async () => {
+    await setupProject(
+      [{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }],
+      1,
+    );
+    await ensureRunDir(cwd);
+    await writeFile(
+      runReportPath(cwd, 1),
+      [
+        '---', 'phase: 1', 'verdict: done', 'steps:', '  - title: "step 1"', '    status: done',
+        '---', '', 'implemented the thing',
+      ].join('\n'),
+      'utf-8',
+    );
+    await context('adversarial');
+    expect(out).toContain('implemented the thing');
+    expect(out).toContain('## Adversarial findings');
+  });
+
+  it('adversarial with a corrupt report does not tell the reviewer to append into it', async () => {
+    await setupProject(
+      [{ id: 1, title: 'Phase A', goal: 'goal', status: 'doing', steps: [{ title: 'step 1', status: 'doing' }] }],
+      1,
+    );
+    await ensureRunDir(cwd);
+    // A report file with no YAML front matter → parseRunReport/summarize flags it
+    // unparseable. The prompt must fail loud, not Edit-append into a dead file.
+    await writeFile(runReportPath(cwd, 1), 'just some prose, no YAML header\n', 'utf-8');
+    await context('adversarial');
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('unparseable');
+    expect(out).toContain('/mini:do');
+    // It must NOT claim the section can be safely appended below a YAML header.
+    expect(out).not.toContain("won't disturb the parser");
   });
 });

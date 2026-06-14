@@ -78,7 +78,7 @@ export async function installSlashCommands(options: InstallOptions = {}): Promis
     `Done — ${total} commands in ${target.displayDir}/ (${result.created} new, ${result.updated} changed).`,
   );
   log.hint(
-    'Use them in Claude Code: /mini:init, /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:auto, /mini:status, /mini:map, /mini:audit, /mini:upgrade',
+    'Use them in Claude Code: /mini:init, /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:verify, /mini:adversarial, /mini:done, /mini:auto, /mini:status, /mini:map, /mini:audit, /mini:upgrade',
   );
 
   return { ...result, target };

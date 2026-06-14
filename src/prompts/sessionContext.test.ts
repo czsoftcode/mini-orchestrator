@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildAdversarialSessionPrompt,
   buildDecisionSessionPrompt,
   buildDoneSessionPrompt,
   buildNextSessionPrompt,
@@ -385,5 +386,97 @@ describe('buildVerifySessionPrompt', () => {
       reportExists: true,
     });
     expect(p).toContain('Poznámky pro člověka.');
+  });
+});
+
+describe('buildAdversarialSessionPrompt', () => {
+  const phase: Phase = {
+    id: 5,
+    title: 'New parser',
+    goal: 'cíl',
+    status: 'doing',
+    steps: [{ title: 'Parse input', status: 'done', detail: 'tolerant parser' }],
+  };
+
+  it('rámuje to jako nezávislý red-team review a vyjmenuje 4 oblasti', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    expect(p).toContain('**adversarial** step');
+    expect(p).toContain('did **not** write this code');
+    expect(p).toContain('find what breaks it');
+    expect(p).toContain('UNHAPPY PATH');
+    expect(p).toContain('SILENT ASSUMPTIONS');
+    expect(p).toContain('PREMATURE COMPLEXITY');
+    expect(p).toContain('TESTS');
+  });
+
+  it('navede recenzenta na skutečný git diff', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    expect(p).toContain('git diff');
+  });
+
+  it('zapisuje nálezy se statusem do reportu, ale stav fáze neposouvá', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    expect(p).toContain('## Adversarial findings');
+    expect(p).toContain('.mini/run/phase-005.md');
+    expect(p).toContain('**adversarial: pass**');
+    expect(p).toContain('**adversarial: findings**');
+    expect(p).toContain('**adversarial: blocked**');
+    expect(p).toContain('do **not** move the phase state');
+  });
+
+  it('běží jedním průchodem — neptá se uživatele krok po kroku (na rozdíl od verify)', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    expect(p).not.toContain(ASK_AND_STOP_HINT);
+  });
+
+  it('u validního reportu navede ho doplnit (Edit), ne založit', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    expect(p).toContain('Edit');
+    expect(p).toContain("won't disturb the parser");
+  });
+
+  it('když report chybí, jede měkce a NEzakládá rozbitý report — nálezy do chatu + /mini:do', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'missing' });
+    expect(p).toContain('There is no usable report for this phase yet');
+    // Must not silently fabricate a YAML-less report that parseRunReport rejects.
+    expect(p).toContain('Do not fabricate one');
+    expect(p).toContain('/mini:do');
+    // The status line still applies (now to the chat summary, not a report section).
+    expect(p).toContain('**adversarial: findings**');
+  });
+
+  it('když report existuje, ale je nečitelný, NEpřipisuje do něj — selže nahlas do chatu', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'corrupt' });
+    // The corrupt report must not get an Edit-append that the parser would keep rejecting.
+    expect(p).toContain('unparseable');
+    expect(p).toContain('silently dropped');
+    expect(p).toContain('/mini:do');
+    expect(p).toContain('the existing one is unparseable');
+    // It still carries the status-line instruction for the chat summary.
+    expect(p).toContain('**adversarial: blocked**');
+  });
+
+  it('u uzavřené fáze rámuje zpětný red-team a píše nálezy i do paměti', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: true, reportStatus: 'valid' });
+    expect(p).toContain('already closed');
+    expect(p).toContain('retrospective red-team review');
+    expect(p).toContain('.mini/memory/phase-005.md');
+  });
+
+  it('u rozdělané fáze do paměti nepíše a rámuje kontrolu před done', () => {
+    const p = buildAdversarialSessionPrompt({ phase, phaseDone: false, reportStatus: 'valid' });
+    expect(p).not.toContain('.mini/memory/phase-005.md');
+    expect(p).toContain('not yet closed');
+  });
+
+  it('vykreslí kroky fáze a vloží volný text reportu, když je', () => {
+    const p = buildAdversarialSessionPrompt({
+      phase,
+      phaseDone: false,
+      reportStatus: 'valid',
+      reportBody: 'Poznámky z implementace.',
+    });
+    expect(p).toContain('Parse input');
+    expect(p).toContain('Poznámky z implementace.');
   });
 });

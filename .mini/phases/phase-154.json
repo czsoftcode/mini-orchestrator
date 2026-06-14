@@ -1,0 +1,37 @@
+{
+  "id": 154,
+  "title": "mini adversarial review command",
+  "goal": "Add a 'mini adversarial' CLI command, its 'mini context adversarial' prompt builder and a '/mini:adversarial' slash command that run an independent red-team review of the current (or last closed) phase and write findings with a status into the phase run report, mirroring how verify is built; auto heuristic, --adversarial flag and a dedicated model scope come in a follow-up phase.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Adversarial prompt builder + context wiring",
+      "status": "done",
+      "detail": "buildAdversarialSessionPrompt in sessionContext.ts (independent-reviewer role; 4 areas: unhappy path / silent assumptions / premature complexity / tests; instruct it to look at git diff; write findings into a '## Adversarial findings' report-body section with status adversarial: pass|findings|blocked; soft fallback when no report). New adversarialContext.ts (buildAdversarialContext + buildAdversarialPrompt; target = current phase else last done, mirroring verifyContext.ts). Wire into context.ts: add 'adversarial' to CONTEXT_COMMANDS + dispatch and the mini context description. Verifiable: 'mini context adversarial' prints the prompt."
+    },
+    {
+      "title": "mini adversarial interactive CLI command",
+      "status": "done",
+      "detail": "New adversarial.ts modeled on verify.ts (project check, build prompt, preview, confirm, workWithClaude with allowedTools Read,Edit,Grep,Glob,LS plus scoped read-only git Bash(git diff:*),Bash(git log:*),Bash(git show:*)). Register .command('adversarial') in cli.ts. Verifiable: 'mini adversarial' errors cleanly with no project/phase, otherwise opens a session."
+    },
+    {
+      "title": "/mini:adversarial slash command",
+      "status": "done",
+      "detail": "New COMMAND_DEFS entry in install/commands.ts with a custom body that runs 'mini context adversarial' and explicitly warns the inline variant shares the author's context -> for an independent review run 'mini adversarial' in a terminal or '/clear' first. Add the command to the install hint line. Verifiable: 'mini install-commands' generates .claude/commands/mini/adversarial.md idempotently."
+    },
+    {
+      "title": "Tests: prompt snapshot + wiring",
+      "status": "done",
+      "detail": "Snapshot test for buildAdversarialSessionPrompt (report exists vs. not) following src/prompts/__snapshots__/; test that context.ts routes 'adversarial' and that COMMAND_DEFS contains the adversarial entry. Verifiable: npm test green."
+    }
+  ],
+  "startedAt": "2026-06-14T11:24:31.166Z",
+  "resolvedVerify": [
+    "Run an actual mini adversarial session and confirm the scoped git Bash really restricts to read-only git"
+  ],
+  "completedAt": "2026-06-14T12:34:50.623Z",
+  "autoCommit": {
+    "preSha": "8ca5a99dc3a6ddf9e16546285cfd21f5be02d96c",
+    "subject": "Phase 154: mini adversarial review command"
+  }
+}

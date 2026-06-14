@@ -272,6 +272,14 @@ program
   });
 
 program
+  .command('adversarial')
+  .description('Opens a fresh Claude Code session for an independent red-team review of the current phase (or the last closed one) — finds what breaks the code and writes findings into the run report; the terminal counterpart of /mini:adversarial.')
+  .action(async () => {
+    const { adversarial } = await import('./commands/adversarial.js');
+    await adversarial();
+  });
+
+program
   .command('undo')
   .description('Reverts the last state change by one step.')
   .option('--dry-run', 'Preview only — print what would be reverted and exit, without prompting or changing anything. For /mini:undo.')
@@ -427,7 +435,7 @@ program
 
 program
   .command('context <cmd> [args...]')
-  .description('Prints the current session prompt for the given step (next|project|discuss|plan|do|done|verify) to stdout. Serves the native /mini: slash commands in Claude Code.')
+  .description('Prints the current session prompt for the given step (next|project|discuss|plan|do|done|decision|verify|adversarial) to stdout. Serves the native /mini: slash commands in Claude Code.')
   .action(async (cmd: string, args: string[]) => {
     const { context } = await import('./commands/context.js');
     await context(cmd, args);

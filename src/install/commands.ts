@@ -100,6 +100,17 @@ If a step runs into a blocker you can't get around yourself, stop and hand contr
     description: 'mini — in-depth UI/UX review of the phase by a human',
   },
   {
+    name: 'adversarial',
+    description: 'mini — independent red-team review of the current phase',
+    body: `This is the **adversarial** step of the mini workflow, run directly in Claude Code. An independent reviewer red-teams the code the current phase produced (or, when none is current, the last closed phase) — not to confirm it works, but to find what breaks it — and writes the findings into the phase run report with a status. It does **not** move the phase state (closing the phase stays a human decision in \`done\`).
+
+> **Independence note — read this first.** Run as a slash command, the review happens **inline in this very session**, so the "reviewer" shares the context and the blind spots of whoever just wrote the code. That undercuts the whole point. For a genuinely independent review, prefer one of:
+> - run \`mini adversarial\` in a **terminal** — it spawns a **fresh** Claude session (clean context), or
+> - \`/clear\` this session first, and only then run \`/mini:adversarial\`.
+
+Run in Bash \`mini context adversarial\` and follow the printed instructions **exactly** — it prints the red-team prompt for the target phase (the independent-reviewer role, the areas to attack, where to look for the diff, and how to record the findings with the status \`adversarial: pass | findings | blocked\`). Change the state in \`.mini/\` only with \`mini ... --apply\` commands; this step only writes findings into the report, it never edits \`.mini/state.json\` by hand.`,
+  },
+  {
     name: 'status',
     description: 'mini — overview of the project phases (read-only)',
     body: `This is the **status** step of the mini workflow, run directly in Claude Code.

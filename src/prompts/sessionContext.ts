@@ -441,3 +441,119 @@ ${bodyBlock}${verifyBlock}${stepsBlock}
 The only thing you write here are the **findings** (into the run report, and for a closed phase also into the memory) — you **do not move** the phase state in \`.mini/state.json\`, that's the job of \`done\`.
 `;
 }
+
+export interface AdversarialSessionInput {
+  phase: Phase;
+  /**
+   * Is the phase already closed (status \`done\`)? Switches the opening frame: a
+   * closed phase gets a retrospective red-team, an open one a check between \`do\`
+   * and \`done\`.
+   */
+  phaseDone: boolean;
+  /** Free text from the run report (what the phase did) — context for the reviewer. Only set when the report is parseable. */
+  reportBody?: string;
+  /**
+   * State of the run report \`.mini/run/phase-{id}.md\`, which decides where the
+   * findings go: \`valid\` = append a section to it; \`corrupt\`/\`missing\` = do NOT
+   * write findings into a file the parser would reject (they'd be silently dropped
+   * from later \`done\`/\`verify\`) — fail loud into the chat instead.
+   */
+  reportStatus: 'valid' | 'corrupt' | 'missing';
+}
+
+/**
+ * Prompt for \`/mini:adversarial\` — an independent red-team review of the code the
+ * phase produced. Unlike \`verify\` (a human-led UI/UX review), here the **model
+ * itself** switches into the role of a reviewer who did not write the code and
+ * hunts for what breaks it (unhappy path, silent assumptions, premature
+ * complexity, gaps in tests). It runs in a single pass (it does not ask the user
+ * step by step like verify). Findings + a status go into the run report as an
+ * \`## Adversarial findings\` section below the YAML header (the parser is
+ * untouched; the body reaches the memory through the report). The phase state is
+ * **not** moved.
+ */
+export function buildAdversarialSessionPrompt(input: AdversarialSessionInput): string {
+  const { phase, phaseDone, reportBody, reportStatus } = input;
+  const reportRel = `.mini/run/${phaseStem(phase.id)}.md`;
+  const memoryRel = `.mini/memory/${phaseStem(phase.id)}.md`;
+
+  const frame = phaseDone
+    ? `**Phase ${phase.id}: ${phase.title}** is already closed — this is a **retrospective red-team review** of the code it produced.`
+    : `**Phase ${phase.id}: ${phase.title}** is implemented but not yet closed — red-team the code it produced **before \`done\` closes it**.`;
+
+  // Three cases so we never contradict ourselves: report with text -> inline it;
+  // a parseable report with no free text -> nothing extra (steps + diff lead);
+  // no usable report (missing or corrupt) -> soft fallback on the git diff.
+  const bodyBlock = reportBody?.trim()
+    ? `\n# Implementation report\n${reportBody.trim()}\n`
+    : reportStatus === 'valid'
+      ? ''
+      : `\n# Implementation report\nThere is no usable report for this phase${reportStatus === 'corrupt' ? ' (the existing one is unparseable)' : ' yet'} — work from the \`git diff\` and the phase goal/steps below, and note that in your findings.\n`;
+
+  const stepsBlock =
+    phase.steps && phase.steps.length > 0
+      ? `\n# Phase steps\n${phase.steps
+          .map((s: Step) => `  - ${s.title}${s.detail ? `\n    ${s.detail}` : ''}`)
+          .join('\n')}\n`
+      : '';
+
+  // Where to record the findings, by report status. valid -> a section in the body
+  // (below the YAML), so the parser stays intact and `mini done` builds the memory
+  // from the body. missing/corrupt -> do NOT write into that file: a body without a
+  // valid YAML header is rejected by `parseRunReport` and the findings would be
+  // silently dropped on the next `done`/`verify`. Fail loud instead: findings into
+  // the chat + point at `/mini:do`, which writes a proper report.
+  let reportWrite: string;
+  if (reportStatus === 'valid') {
+    reportWrite = `via \`Read\` + \`Edit\` add an \`## Adversarial findings\` section at the end of \`${reportRel}\`. This section is **below** the report's YAML header, so it won't disturb the parser or \`mini done\``;
+  } else if (reportStatus === 'corrupt') {
+    reportWrite = `the report \`${reportRel}\` exists but is **unparseable** (a broken YAML header) — do **not** append to it: \`mini done\` / \`verify\` would keep rejecting it and your findings would be silently dropped. Present the findings **here in the chat** and tell the user to regenerate the report via \`/mini:do\` before they can be persisted into the workflow`;
+  } else {
+    reportWrite = `there is no report \`${reportRel}\` to write into — this phase has no \`do\` report yet. **Do not fabricate one**: a hand-written file without the report's YAML header is rejected by \`mini done\` and your findings would be silently dropped. Instead, present the findings **here in the chat** and tell the user to run \`/mini:do\` (which writes a proper report) if they want them persisted into the workflow`;
+  }
+  const memoryWrite = phaseDone
+    ? `\n   The phase is **already closed**, so the memory \`${memoryRel}\` is finished and \`mini done\` won't pull the report into it retroactively — add the same findings to the end of the memory file too (an \`## Adversarial findings\` section). Note: the file may have a numeric suffix (\`-2\` etc.) when the phase went through \`done\` multiple times — edit the most recent one.`
+    : '';
+
+  return `You are in a Claude Code session — the **adversarial** step of the mini workflow.
+${frame}
+
+# Your role — an independent reviewer who did NOT write this code
+Switch into the role of an independent reviewer who did **not** write this code.
+Your job is **not** to confirm that it works — your job is to find what breaks it.
+Assume there is a bug in there. Be concrete and skeptical, not reassuring.
+
+# Look at what actually changed
+Don't guess from the report — read the **real diff**: run \`git diff\` (and
+\`git log\` / \`git show\` if you need history) to see exactly what this phase
+touched, then read the changed code. ${GRAPH_USAGE_HINT}
+
+# Go through these, in order
+1. **UNHAPPY PATH** — what happens on empty, corrupt or unexpected input,
+   null/undefined, a timeout, concurrency? Show a concrete input that knocks it over.
+2. **SILENT ASSUMPTIONS** — where does the code assume a type, a shape of data or a
+   state without checking it? Where can errors cascade silently instead of failing loudly?
+3. **PREMATURE COMPLEXITY** — is there a layer or abstraction solving a problem that
+   doesn't exist yet? What could be simplified without losing function?
+4. **TESTS** — if there are any, do they test failure too, or only the happy path?
+   What is NOT covered?
+
+For every finding give: **where** (file:line), **how it shows up**, and **how
+serious** it is — tag it \`[blocker]\`, \`[should-know]\` or \`[nit]\`. Don't write a
+generic "looks good": if you genuinely find nothing, list **concretely** what you
+checked and how.
+
+# Record the findings
+${reportWrite}. Lead with a single **status line** — exactly one of:
+\`**adversarial: pass**\` (you reviewed it and found nothing worth fixing),
+\`**adversarial: findings**\` (you found things to fix) or
+\`**adversarial: blocked**\` (you couldn't complete the review — say why). Follow it
+with the findings as bullets (severity tag, file:line, what breaks and how).${memoryWrite}
+${bodyBlock}${stepsBlock}
+# Scope
+The only thing you write here are the **findings** (into the run report, and for a
+closed phase also into the memory). You do **not** move the phase state in
+\`.mini/state.json\` — closing the phase stays a human decision in \`done\`, possibly
+informed by what you found here.
+`;
+}

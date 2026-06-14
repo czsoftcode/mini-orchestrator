@@ -31,3 +31,20 @@ describe('hardened command bodies (Fable 5 prompt hardening)', () => {
     }
   });
 });
+
+describe('adversarial slash command', () => {
+  it('is registered in COMMAND_DEFS', () => {
+    expect(COMMAND_DEFS.some((d) => d.name === 'adversarial')).toBe(true);
+  });
+
+  it('runs mini context adversarial and warns the inline review shares context', () => {
+    const md = bodyOf('adversarial');
+    expect(md).toContain('mini context adversarial');
+    // The independence caveat must be explicit, with both escape hatches.
+    expect(md).toContain('inline in this very session');
+    expect(md).toContain('mini adversarial');
+    expect(md).toContain('/clear');
+    // It writes findings, it does not move state.
+    expect(md).toContain('does **not** move the phase state');
+  });
+});

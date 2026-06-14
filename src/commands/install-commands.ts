@@ -38,7 +38,7 @@ export async function installCommands(
     `Done — ${total} commands in ${COMMANDS_DIR}/ (${result.created} new, ${result.updated} changed).`,
   );
   log.hint(
-    'Use them in Claude Code: /mini:init, /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:done, /mini:auto, /mini:status, /mini:map, /mini:audit, /mini:undo, /mini:model',
+    'Use them in Claude Code: /mini:init, /mini:next, /mini:discuss, /mini:plan, /mini:do, /mini:verify, /mini:adversarial, /mini:done, /mini:auto, /mini:status, /mini:map, /mini:audit, /mini:undo, /mini:model',
   );
 
   return result;

@@ -19,6 +19,7 @@ describe('installCommands', () => {
     await installCommands(cwd);
     const files = (await readdir(join(cwd, COMMANDS_DIR))).sort();
     expect(files).toEqual([
+      'adversarial.md',
       'audit.md',
       'auto.md',
       'changelog.md',

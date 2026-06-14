@@ -767,6 +767,11 @@
       "id": 153,
       "title": "C/C++ mapper for mini map",
       "status": "done"
+    },
+    {
+      "id": 154,
+      "title": "mini adversarial review command",
+      "status": "done"
     }
   ],
   "models": {

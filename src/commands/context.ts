@@ -16,10 +16,11 @@ import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
 import { readTodos } from '../state/todoStore.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
+import { buildAdversarialContext } from './adversarialContext.js';
 import { buildVerifyContext, readReportVerify } from './verifyContext.js';
 
 /** Sub-commands for which `mini context` can print a session prompt. */
-export const CONTEXT_COMMANDS = ['next', 'project', 'discuss', 'plan', 'do', 'done', 'decision', 'verify'] as const;
+export const CONTEXT_COMMANDS = ['next', 'project', 'discuss', 'plan', 'do', 'done', 'decision', 'verify', 'adversarial'] as const;
 export type ContextCommand = (typeof CONTEXT_COMMANDS)[number];
 
 export function isContextCommand(value: string): value is ContextCommand {
@@ -67,6 +68,8 @@ export async function context(cmd: string, extraArgs: string[] = []): Promise<vo
     prompt = buildProjectSessionPrompt(projectMd);
   } else if (cmd === 'verify') {
     prompt = await buildVerifyContext(header, cwd);
+  } else if (cmd === 'adversarial') {
+    prompt = await buildAdversarialContext(header, cwd);
   } else {
     prompt = await buildPhaseContext(cmd, projectMd, header, cwd);
   }
@@ -114,7 +117,7 @@ async function buildNextContext(
 
 /** Shared part for discuss/plan/do/done: they require an existing current phase. */
 async function buildPhaseContext(
-  cmd: Exclude<ContextCommand, 'next' | 'project' | 'verify'>,
+  cmd: Exclude<ContextCommand, 'next' | 'project' | 'verify' | 'adversarial'>,
   projectMd: string,
   header: StateHeader,
   cwd: string,

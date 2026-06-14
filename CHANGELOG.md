@@ -6,6 +6,24 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **`mini adversarial` — an independent red-team review step.** A new command and
+  `/mini:adversarial` slash command run a reviewer that switches into the role of
+  someone who did *not* write the code and hunts for what breaks it (unhappy path,
+  silent assumptions, premature complexity, gaps in tests), reading the real
+  `git diff` of the phase. It targets the current phase (or the last closed one),
+  writes its findings with a status (`adversarial: pass | findings | blocked`) into
+  the phase run report, and never moves the phase state — closing stays a human
+  decision in `done`. The terminal command spawns a fresh Claude session (clean
+  context = a genuinely independent reviewer) with read-only git access only
+  (`Read`/`Edit`/`Grep`/`Glob`/`LS` + scoped `git diff`/`log`/`show`); the inline
+  slash command is honest that it shares the current session's context and points
+  to the terminal command or `/clear` for real independence. When the run report
+  is missing or unparseable, the step fails loud (findings into the chat + a
+  pointer to `/mini:do`) instead of writing them into a file later steps would
+  silently drop.
+
 ## [1.20.0] - 2026-06-09
 
 ### Added
