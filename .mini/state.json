@@ -777,6 +777,11 @@
       "id": 155,
       "title": "Adversarial findings store",
       "status": "done"
+    },
+    {
+      "id": 156,
+      "title": "Stamp reviewed-at SHA on findings",
+      "status": "done"
     }
   ],
   "models": {

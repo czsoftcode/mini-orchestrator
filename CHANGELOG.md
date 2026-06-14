@@ -18,6 +18,15 @@ All notable changes to this project are recorded here. The format is based on
   phases. Surfacing them in `next`/`plan`/`do` and a `resolve` command are planned
   follow-ups.
 
+- **Findings now record the baseline commit they were reviewed against.** When
+  `mini findings add` runs inside a git repo it stamps the finding with the
+  current `HEAD` SHA (shown shortened as `@1a2b3c4` in `mini findings list`).
+  Because a review runs between `do` and `done` while the phase work is still
+  uncommitted, this is the phase's *parent* commit — the code state the review
+  started from — recorded honestly as a baseline, not the reviewed commit. It lets
+  a later consumer judge whether a finding may be stale after the code moved on.
+  Additive: findings recorded before this, or outside git, simply have no SHA.
+
 - **`mini adversarial` — an independent red-team review step.** A new command and
   `/mini:adversarial` slash command run a reviewer that switches into the role of
   someone who did *not* write the code and hunts for what breaks it (unhappy path,

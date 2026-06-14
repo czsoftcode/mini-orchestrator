@@ -55,6 +55,54 @@ describe('parse ↔ serialize round-trip', () => {
     expect(parseFindings(serializeFindings(findings))).toEqual(findings);
   });
 
+  it('round-trips a finding with a reviewedAt SHA', () => {
+    const findings: Finding[] = [
+      {
+        id: '156-1',
+        phaseId: 156,
+        severity: 'blocker',
+        status: 'open',
+        where: 'src/foo.ts:42',
+        reviewedAt: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+        title: 'Reviewed against a known baseline',
+        body: 'Body after the metadata lines.',
+      },
+    ];
+    expect(parseFindings(serializeFindings(findings))).toEqual(findings);
+  });
+
+  it('round-trips a finding with reviewedAt but no where', () => {
+    const findings: Finding[] = [
+      {
+        id: '156-2',
+        phaseId: 156,
+        severity: 'nit',
+        status: 'open',
+        reviewedAt: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+        title: 'No location, only a baseline',
+      },
+    ];
+    expect(parseFindings(serializeFindings(findings))).toEqual(findings);
+  });
+
+  it('parses an old file with no **Reviewed-at:** line identically (additive)', () => {
+    // A pre-156 file: header + where + title + body, no reviewed-at metadata.
+    const md =
+      '# Adversarial findings\n\n## 9-1 · should-know · open\n' +
+      '**Where:** src/a.ts:3\nA title\n\nA body.\n';
+    expect(parseFindings(md)).toEqual([
+      {
+        id: '9-1',
+        phaseId: 9,
+        severity: 'should-know',
+        status: 'open',
+        where: 'src/a.ts:3',
+        title: 'A title',
+        body: 'A body.',
+      },
+    ]);
+  });
+
   it('preserves origin phase and index order across several entries', () => {
     const md = serializeFindings([
       { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', title: 'A' },
@@ -126,6 +174,30 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
         body: 'detail',
       },
     ]);
+  });
+
+  it('persists a reviewedAt SHA passed to addFinding', async () => {
+    const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
+    await addFinding(cwd, 156, { severity: 'should-know', title: 'has a baseline', reviewedAt: sha });
+    const stored = await readPhaseFindings(cwd, 156);
+    expect(stored).toEqual([
+      {
+        id: '156-1',
+        phaseId: 156,
+        severity: 'should-know',
+        status: 'open',
+        reviewedAt: sha,
+        title: 'has a baseline',
+      },
+    ]);
+  });
+
+  it('omits reviewedAt when none is passed (additive)', async () => {
+    await addFinding(cwd, 156, { severity: 'nit', title: 'no baseline' });
+    const stored = await readPhaseFindings(cwd, 156);
+    expect(stored[0]).not.toHaveProperty('reviewedAt');
+    const raw = await readFile(findingsPath(cwd, 156), 'utf8');
+    expect(raw).not.toContain('Reviewed-at');
   });
 
   it('keeps ids independent per phase file', async () => {

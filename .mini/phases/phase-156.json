@@ -1,0 +1,34 @@
+{
+  "id": 156,
+  "title": "Stamp reviewed-at SHA on findings",
+  "goal": "Record the HEAD SHA at review time as an optional reviewedAt metadata field on each finding (stamped in addFinding via headSha, surfaced in mini findings list), additive so existing findings files still parse.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "reviewedAt in findings store + tests",
+      "status": "done",
+      "detail": "Extend Finding and NewFinding with optional reviewedAt. serializeFindings emits **Reviewed-at:** <sha> right after **Where:** only when present. parseEntryBody reads it additively (absent line -> undefined). addFinding copies input.reviewedAt (trimmed). Tests: round-trip with SHA, minimal finding without SHA serializes/parses unchanged (no empty line), old file without **Reviewed-at:** parses identically."
+    },
+    {
+      "title": "Stamp baseline SHA in findings add command + tests",
+      "status": "done",
+      "detail": "In findingsAdd after validation: isGitRepo(cwd) first, then headSha(cwd); when non-null set input.reviewedAt. Outside git / no HEAD -> omit field, no error. Tests: non-git temp dir -> field absent (existing behaviour); git-init temp dir with a commit -> finding.reviewedAt === HEAD sha."
+    },
+    {
+      "title": "Show short reviewed-at SHA in findings list + test",
+      "status": "done",
+      "detail": "renderFinding appends the short SHA (7-12 chars) when present, e.g. @<short>. Test: a finding with reviewedAt shows the short hash; without it nothing is added."
+    },
+    {
+      "title": "Document reviewedAt in findings command docs",
+      "status": "done",
+      "detail": "Briefly document the field in docs/ (findings): it is the baseline commit the review was built on, not the reviewed code's commit; omitted outside git."
+    }
+  ],
+  "startedAt": "2026-06-14T14:05:27.120Z",
+  "completedAt": "2026-06-14T14:15:10.604Z",
+  "autoCommit": {
+    "preSha": "2f7bf7b6801f9b34b0f21469fe1daca15b536038",
+    "subject": "Phase 156: Stamp reviewed-at SHA on findings"
+  }
+}

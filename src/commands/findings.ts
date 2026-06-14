@@ -7,6 +7,7 @@ import {
   isFindingSeverity,
   listFindings,
 } from '../state/findingsStore.js';
+import { headSha, isGitRepo } from '../git.js';
 import { exists, loadHeader } from '../state/store.js';
 import type { StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
@@ -80,12 +81,29 @@ export async function findingsAdd(opts: FindingsAddOptions): Promise<StepOutcome
     return { ok: false, reason: 'no-phase' };
   }
 
-  const input: { severity: FindingSeverity; title: string; where?: string; body?: string } = {
+  const input: {
+    severity: FindingSeverity;
+    title: string;
+    where?: string;
+    reviewedAt?: string;
+    body?: string;
+  } = {
     severity,
     title,
   };
   if (opts.where?.trim()) input.where = opts.where.trim();
   if (opts.body?.trim()) input.body = opts.body.trim();
+
+  // Stamp the baseline commit the review was performed against. The review runs
+  // between `do` and `done`, so HEAD is the phase's parent commit (the reviewed
+  // code is still uncommitted) — recorded honestly as "what the review started
+  // from", not the reviewed commit. Check `isGitRepo` first: `headSha` is only
+  // meaningful inside a repo, and outside git (or a fresh repo with no HEAD) the
+  // field is simply omitted, never an error.
+  if (await isGitRepo(cwd)) {
+    const sha = await headSha(cwd);
+    if (sha) input.reviewedAt = sha;
+  }
 
   const { id } = await addFinding(cwd, phaseId, input);
   const rel = findingsPath('', phaseId).replace(/^[/\\]/, '');
@@ -124,11 +142,14 @@ export async function findingsList(opts: FindingsListOptions): Promise<StepOutco
   return { ok: true };
 }
 
-/** One line per finding: `id [severity] (status) where — title`. */
+/** One line per finding: `id [severity] (status) where @sha — title`. */
 function renderFinding(f: Finding, showStatus: boolean): string {
   const parts = [f.id, `[${f.severity}]`];
   if (showStatus) parts.push(`(${f.status})`);
   if (f.where) parts.push(f.where);
+  // Short baseline SHA, so a reader can tell which code state the review started
+  // from without the full 40-char hash cluttering the line.
+  if (f.reviewedAt) parts.push(`@${f.reviewedAt.slice(0, 7)}`);
   parts.push(`— ${f.title}`);
   return `  ${parts.join(' ')}`;
 }

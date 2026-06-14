@@ -29,10 +29,14 @@ import { phaseStem } from './store.js';
  * ```
  * ## 155-1 · should-know · open
  * **Where:** src/foo.ts:42
+ * **Reviewed-at:** 1a2b3c4d…
  * Short title of the finding.
  *
  * Optional longer body (what breaks and how).
  * ```
+ *
+ * The `**Reviewed-at:**` line is optional (older files predate it; reviews
+ * outside a git repo omit it) — the parser treats its absence as `undefined`.
  *
  * This phase only **writes** (`addFinding`) and **lists** (`listFindings`).
  * Flipping a status (`resolve`), a `doctor` orphan-check and consumption in
@@ -56,6 +60,14 @@ export interface Finding {
   status: FindingStatus;
   /** Optional location (`file:line`). */
   where?: string;
+  /**
+   * Optional baseline commit the review was performed against — the full HEAD SHA
+   * at review time. Because a review runs between `do` and `done` (the phase work
+   * is still uncommitted), this is the phase's **parent** commit, **not** the
+   * commit of the reviewed code. A later consumer treats it as "the code state the
+   * review started from", not "the reviewed commit". Absent outside a git repo.
+   */
+  reviewedAt?: string;
   /** Short headline of the finding (required). */
   title: string;
   /** Optional longer body — what breaks and how. */
@@ -67,6 +79,8 @@ export interface NewFinding {
   severity: FindingSeverity;
   title: string;
   where?: string;
+  /** Baseline commit SHA at review time (see {@link Finding.reviewedAt}); omitted outside git. */
+  reviewedAt?: string;
   body?: string;
 }
 
@@ -83,6 +97,8 @@ const HEADER = [
 const ENTRY_RE = /^##\s+(\S+)\s+·\s+(blocker|should-know|nit)\s+·\s+(open|resolved)\s*$/;
 /** Matches the optional `**Where:** …` line directly under the header. */
 const WHERE_RE = /^\*\*Where:\*\*\s+(.*)$/;
+/** Matches the optional `**Reviewed-at:** …` metadata line (after `**Where:**`). */
+const REVIEWED_AT_RE = /^\*\*Reviewed-at:\*\*\s+(.*)$/;
 /** Is the severity one of the three accepted values? */
 export function isFindingSeverity(value: string): value is FindingSeverity {
   return (FINDING_SEVERITIES as readonly string[]).includes(value);
@@ -138,6 +154,7 @@ export function parseFindings(md: string): Finding[] {
           title: parsed.title,
         };
         if (parsed.where) finding.where = parsed.where;
+        if (parsed.reviewedAt) finding.reviewedAt = parsed.reviewedAt;
         if (parsed.body) finding.body = parsed.body;
         out.push(finding);
       }
@@ -163,27 +180,55 @@ export function parseFindings(md: string): Finding[] {
   return out;
 }
 
-/** Splits an entry's body lines into an optional `where`, a required title and an optional body. */
-function parseEntryBody(lines: string[]): { where?: string; title?: string; body?: string } {
+/**
+ * Splits an entry's body lines into optional `where` / `reviewedAt` metadata, a
+ * required title and an optional body. The metadata lines (when present) sit
+ * directly under the header in `**Where:**`, `**Reviewed-at:**` order; either may
+ * be absent, so the parser round-trips both old files (no `**Reviewed-at:**`) and
+ * findings recorded outside a git repo.
+ */
+function parseEntryBody(lines: string[]): {
+  where?: string;
+  reviewedAt?: string;
+  title?: string;
+  body?: string;
+} {
   let i = 0;
+  const skipBlank = (): void => {
+    while (i < lines.length && (lines[i] as string).trim() === '') i++;
+  };
   // Skip leading blank lines between the header and the first content.
-  while (i < lines.length && (lines[i] as string).trim() === '') i++;
+  skipBlank();
 
   let where: string | undefined;
   const w = i < lines.length ? WHERE_RE.exec((lines[i] as string).trim()) : null;
   if (w) {
     where = (w[1] as string).trim();
     i++;
-    while (i < lines.length && (lines[i] as string).trim() === '') i++;
+    skipBlank();
   }
 
-  if (i >= lines.length) return where ? { where } : {};
+  let reviewedAt: string | undefined;
+  const r = i < lines.length ? REVIEWED_AT_RE.exec((lines[i] as string).trim()) : null;
+  if (r) {
+    reviewedAt = (r[1] as string).trim();
+    i++;
+    skipBlank();
+  }
+
+  const meta: { where?: string; reviewedAt?: string } = {};
+  if (where) meta.where = where;
+  if (reviewedAt) meta.reviewedAt = reviewedAt;
+
+  if (i >= lines.length) return meta;
   const title = (lines[i] as string).trim();
   i++;
 
   const body = lines.slice(i).join('\n').trim();
-  const result: { where?: string; title?: string; body?: string } = { title };
-  if (where) result.where = where;
+  const result: { where?: string; reviewedAt?: string; title?: string; body?: string } = {
+    ...meta,
+    title,
+  };
   if (body) result.body = body;
   return result;
 }
@@ -193,6 +238,7 @@ export function serializeFindings(findings: Finding[]): string {
   const blocks = findings.map((f) => {
     const out = [`## ${f.id} · ${f.severity} · ${f.status}`];
     if (f.where?.trim()) out.push(`**Where:** ${f.where.trim()}`);
+    if (f.reviewedAt?.trim()) out.push(`**Reviewed-at:** ${f.reviewedAt.trim()}`);
     out.push(f.title.trim());
     if (f.body?.trim()) out.push('', f.body.trim());
     return out.join('\n');
@@ -237,6 +283,7 @@ export async function addFinding(
     title: input.title.replace(/\s*\n\s*/g, ' ').trim(),
   };
   if (input.where?.trim()) finding.where = input.where.trim();
+  if (input.reviewedAt?.trim()) finding.reviewedAt = input.reviewedAt.trim();
   if (input.body?.trim()) finding.body = input.body.trim();
 
   const path = findingsPath(cwd, phaseId);

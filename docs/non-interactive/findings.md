@@ -42,13 +42,16 @@ holding one or more entries:
 ```
 ## 155-1 · should-know · open
 **Where:** src/foo.ts:42
+**Reviewed-at:** 1a2b3c4…
 Null cascades silently on empty input.
 
 The parser returns undefined and the caller crashes two layers up.
 ```
 
 The `## <id> · <severity> · <status>` header line is the machine-readable
-contract — don't hand-edit it.
+contract — don't hand-edit it. The optional `**Where:**` and `**Reviewed-at:**`
+lines sit directly under it; both may be absent (older files predate
+`**Reviewed-at:**`, and reviews outside git omit it).
 
 ## Options
 
@@ -69,7 +72,7 @@ $ mini findings add --severity should-know --title "Null cascades" \
 
 $ mini findings list
 Open findings
-  155-1 [should-know] src/parser.ts:42 — Null cascades
+  155-1 [should-know] src/parser.ts:42 @1a2b3c4 — Null cascades
 ```
 
 ## Notes
@@ -79,6 +82,14 @@ Open findings
   `.mini/.gitignore` (unlike the generated `.mini/run/` reports).
 - Ids are sequential within a phase file (`155-1`, `155-2`, …). `add` continues
   after the highest existing index.
+- **`reviewed-at` is a baseline, not the reviewed commit.** When `add` runs inside
+  a git repo it stamps the finding with the current `HEAD` SHA (shown shortened as
+  `@1a2b3c4` in `list`). Because a review runs **between `do` and `done`** — while
+  the phase work is still uncommitted — that `HEAD` is the phase's **parent**
+  commit: the code state the review *started from*, not the commit of the reviewed
+  code (which only exists after `done`). Outside a git repo (or a fresh repo with
+  no commit) the field is simply omitted. It lets a later consumer judge whether a
+  finding may be stale after the code moved on.
 - Flipping a finding to `resolved`, a `doctor` orphan-check and surfacing open
   findings inside `next`/`plan`/`do` are planned follow-ups; today the store only
   records and lists.

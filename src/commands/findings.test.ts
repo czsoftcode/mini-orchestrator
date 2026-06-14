@@ -1,11 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
+import { headSha } from '../git.js';
 import { save, writeProject } from '../state/store.js';
 import { readPhaseFindings } from '../state/findingsStore.js';
 import type { ProjectState } from '../state/types.js';
 import { findingsAdd, findingsList } from './findings.js';
+
+const execFileAsync = promisify(execFile);
+
+/** A git repo with one commit, so `headSha` returns a stable, known value. */
+async function initRepoWithCommit(cwd: string): Promise<string> {
+  await execFileAsync('git', ['init', '-b', 'main'], { cwd });
+  await execFileAsync('git', ['config', 'user.email', 'mini-test@example.com'], { cwd });
+  await execFileAsync('git', ['config', 'user.name', 'Mini Test'], { cwd });
+  await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd });
+  await writeFile(join(cwd, 'seed.txt'), 'seed', 'utf8');
+  await execFileAsync('git', ['add', '-A'], { cwd });
+  await execFileAsync('git', ['commit', '-m', 'seed'], { cwd });
+  const sha = await headSha(cwd);
+  if (!sha) throw new Error('expected a HEAD sha after the seed commit');
+  return sha;
+}
 
 function stateWithCurrentPhase(): ProjectState {
   return {
@@ -101,6 +120,26 @@ describe('mini findings', () => {
       expect(output()).toContain('phase-005.md');
     });
 
+    it('omits reviewedAt outside a git repo (existing behaviour preserved)', async () => {
+      // The temp dir is not a git repo, so `isGitRepo` is false and no SHA is stamped.
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      await findingsAdd({ severity: 'nit', title: 'no git here' });
+      const stored = await readPhaseFindings(cwd, 5);
+      expect(stored[0]).not.toHaveProperty('reviewedAt');
+    });
+
+    it('stamps reviewedAt with the HEAD SHA inside a git repo', async () => {
+      const sha = await initRepoWithCommit(cwd);
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      await findingsAdd({ severity: 'should-know', title: 'reviewed against HEAD' });
+      const stored = await readPhaseFindings(cwd, 5);
+      expect(stored[0]?.reviewedAt).toBe(sha);
+    });
+
     it('attaches the finding to the last closed phase when none is current', async () => {
       await writeProject('# Project', cwd);
       await save(stateWithLastDone(), cwd);
@@ -148,6 +187,23 @@ describe('mini findings', () => {
       expect(out).toContain('[blocker]');
       expect(out).toContain('first');
       expect(out).toContain('second');
+      // No git repo here, so nothing was stamped — no `@sha` marker on the line.
+      expect(out).not.toContain('@');
+    });
+
+    it('shows the short reviewed-at SHA when a finding carries one', async () => {
+      const sha = await initRepoWithCommit(cwd);
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      await findingsAdd({ severity: 'nit', title: 'reviewed' });
+      logSpy.mockClear();
+
+      const r = await findingsList({});
+      expect(r.ok).toBe(true);
+      const out = output();
+      expect(out).toContain(`@${sha.slice(0, 7)}`);
+      // The full 40-char hash must not clutter the line.
+      expect(out).not.toContain(sha);
     });
   });
 });
