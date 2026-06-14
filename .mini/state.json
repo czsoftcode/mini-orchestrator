@@ -832,6 +832,11 @@
       "id": 166,
       "title": "adversarial-project: slash command",
       "status": "done"
+    },
+    {
+      "id": 167,
+      "title": "Range start fallback to genesis",
+      "status": "done"
     }
   ],
   "models": {

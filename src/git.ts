@@ -108,6 +108,28 @@ export async function headParentSha(cwd: string): Promise<string | null> {
 }
 
 /**
+ * The repository's empty-tree object id — the tree of a tree with no entries,
+ * usable as the "before" side of a `git diff` to show everything as added (the
+ * state before the very first commit). The value is fixed per hash algorithm,
+ * so we read the repo's object format and return the matching well-known id
+ * rather than blindly assuming SHA-1 — a SHA-256 repo has a different empty
+ * tree. Returns `null` when git can't be queried or reports an unknown format.
+ */
+export async function emptyTreeSha(cwd: string): Promise<string | null> {
+  const r = await runGit(['rev-parse', '--show-object-format'], cwd);
+  if (!r.ok) return null;
+  const format = r.stdout.trim();
+  switch (format) {
+    case 'sha1':
+      return '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+    case 'sha256':
+      return '6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321';
+    default:
+      return null;
+  }
+}
+
+/**
  * První řádek (subject) HEAD commit message. Slouží jako lidsky čitelný popis
  * commitu v UI undo.
  */

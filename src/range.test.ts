@@ -4,6 +4,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { emptyTreeSha } from './git.js';
 import { resolveRange } from './range.js';
 import { savePhase } from './state/store.js';
 import type { Phase } from './state/types.js';
@@ -114,12 +115,27 @@ describe('resolveRange', () => {
       if (!r.ok) expect(r.error).toMatch(/Phase 99 not found/);
     });
 
-    it('hard-fails when the start phase has no recorded preSha', async () => {
-      await commit(cwd, 'a');
-      await savePhaseWith(cwd, 5); // no preSha
+    it('hard-fails when a non-first start phase has no recorded preSha', async () => {
+      const c1 = await commit(cwd, 'a');
+      await commit(cwd, 'b');
+      await savePhaseWith(cwd, 4, c1); // a lower phase exists → 5 is not the first
+      await savePhaseWith(cwd, 5); // no preSha, and not the project's first phase
       const r = await resolveRange(cwd, { fromPhase: 5, toPhase: 5 });
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error).toMatch(/Phase 5 has no recorded pre-commit SHA/);
+    });
+
+    it('uses the empty tree as fromSha when the first phase has no preSha (genesis)', async () => {
+      await commit(cwd, 'a');
+      const c2 = await commit(cwd, 'b');
+      await savePhaseWith(cwd, 1); // project's first phase, NO preSha
+      await savePhaseWith(cwd, 2, c2); // preSha(2) becomes toSha for range [1..1]
+      const r = await resolveRange(cwd, { fromPhase: 1, toPhase: 1 });
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.fromSha).toBe(await emptyTreeSha(cwd));
+        expect(r.toSha).toBe(c2);
+      }
     });
 
     it('hard-fails when phase M+1 exists but has no recorded preSha', async () => {

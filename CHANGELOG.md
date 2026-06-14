@@ -34,6 +34,16 @@ All notable changes to this project are recorded here. The format is based on
   `adversarial` and `verify`. Groundwork for the upcoming cross-project
   `adversarial-project` review; no command emits it yet.
 
+### Fixed
+
+- **`adversarial-project` range starting at the first phase.** A phase-number
+  range whose start is the project's first phase no longer fails with "no
+  recorded pre-commit SHA". When that phase has nothing committed before it, the
+  range start now falls back to the git empty-tree object, so the review diffs
+  from project genesis. Other phases with a missing pre-commit SHA still report a
+  clear error. (The range *end* for very early phases remains a separate
+  limitation.)
+
 ## [1.21.0] - 2026-06-14
 
 ### Added

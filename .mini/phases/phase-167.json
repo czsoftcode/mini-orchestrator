@@ -1,0 +1,34 @@
+{
+  "id": 167,
+  "title": "Range start fallback to genesis",
+  "goal": "In resolvePhaseRange (src/range.ts), handle the range start when the start phase has no autoCommit.preSha: when fromPhase is the project's first phase (no phase fromPhase-1 exists), set fromSha to the git empty-tree object (computed from the repo, not hardcoded) so the range diffs from project genesis; for any other phase whose preSha is missing, keep the clear error. Cover both the genesis-fallback and the still-erroring cases with unit tests.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add emptyTreeSha helper to git.ts",
+      "status": "done",
+      "detail": "New emptyTreeSha(cwd) returns the repo's empty-tree object id derived from its object format (git rev-parse --show-object-format -> sha1/sha256 -> the matching well-known empty-tree id), not one blind constant. Returns null when git can't be queried."
+    },
+    {
+      "title": "Genesis fallback in resolvePhaseRange",
+      "status": "done",
+      "detail": "When from.autoCommit.preSha is missing, detect whether fromPhase is the project's first phase (lowest existing phase id); if so set fromSha to emptyTreeSha (diff from genesis), otherwise keep the existing clear error. Guard the null empty-tree case with an error, not a crash."
+    },
+    {
+      "title": "Update doc comments for the new start semantics",
+      "status": "done",
+      "detail": "Refresh the JSDoc on resolveRange/resolvePhaseRange to describe the genesis fallback for the first phase (it currently only documents preSha(N))."
+    },
+    {
+      "title": "Tests: genesis fallback + still-erroring middle phase",
+      "status": "done",
+      "detail": "In range.test.ts add a test where the first phase has no preSha -> fromSha == empty tree and toSha resolves from a later phase; adjust the existing no-preSha test so the start phase is NOT the project's first (add a lower phase) so it still errors. Full npm test green."
+    }
+  ],
+  "startedAt": "2026-06-14T21:51:00.657Z",
+  "completedAt": "2026-06-14T22:12:17.709Z",
+  "autoCommit": {
+    "preSha": "e69efefc1bdb235603a5eda7b87b080f6523fa2a",
+    "subject": "Phase 167: Range start fallback to genesis"
+  }
+}

@@ -1,5 +1,5 @@
-import { headSha, runGit } from './git.js';
-import { loadPhase } from './state/store.js';
+import { emptyTreeSha, headSha, runGit } from './git.js';
+import { firstPhaseId, loadPhase } from './state/store.js';
 
 /**
  * Inputs for a range resolution. Either the phase pair
@@ -37,14 +37,18 @@ function present(v: string | undefined): v is string {
  *   `autoCommit.preSha` of phase N (HEAD just before that phase's commit);
  *   `toSha` is the `preSha` of phase M+1, or current HEAD when M is the last
  *   phase. So `fromSha..toSha` spans phases N..M inclusive — assuming no
- *   commits landed between the phases that mini didn't record.
+ *   commits landed between the phases that mini didn't record. When N is the
+ *   project's **first** phase and has no recorded `preSha` (nothing was ever
+ *   committed before it), `fromSha` falls back to the git empty-tree object so
+ *   the range diffs from project genesis instead of failing.
  * - **Ref mode** (`from`/`to`): plain git refs, each verified to point at a
  *   commit via `git rev-parse --verify`.
  *
  * Hard-fails (returns `{ ok: false }`) on: mixing phase and ref flags, a
- * missing or inverted bound, a phase that doesn't exist or has no recorded
- * `preSha`, an invalid ref, or an empty range (both bounds resolve to the same
- * commit). Never throws.
+ * missing or inverted bound, a phase that doesn't exist, a non-first phase with
+ * no recorded `preSha`, an invalid ref, or an empty range (both bounds resolve
+ * to the same commit). Never throws. (A first phase without `preSha` does not
+ * fail — see the genesis fallback above.)
  */
 export async function resolveRange(cwd: string, input: RangeInput): Promise<RangeResult> {
   const hasPhase = input.fromPhase != null || input.toPhase != null;
@@ -94,12 +98,28 @@ async function resolvePhaseRange(
   if (from === null) {
     return { ok: false, error: `Phase ${fromPhase} not found.` };
   }
-  const fromSha = from.autoCommit?.preSha;
+  let fromSha = from.autoCommit?.preSha;
   if (!fromSha) {
-    return {
-      ok: false,
-      error: `Phase ${fromPhase} has no recorded pre-commit SHA (autoCommit.preSha); cannot resolve range start.`,
-    };
+    // No recorded pre-commit SHA. If this is the project's very first phase,
+    // there is genuinely nothing committed before it — diff from the empty tree
+    // (project genesis) instead of failing. For any later phase a missing preSha
+    // is a real gap we can't pin down, so keep the clear error.
+    const firstId = await firstPhaseId(cwd);
+    if (firstId !== null && fromPhase === firstId) {
+      const empty = await emptyTreeSha(cwd);
+      if (!empty) {
+        return {
+          ok: false,
+          error: `Phase ${fromPhase} has no recorded pre-commit SHA and the git empty-tree id is unavailable; cannot resolve range start.`,
+        };
+      }
+      fromSha = empty;
+    } else {
+      return {
+        ok: false,
+        error: `Phase ${fromPhase} has no recorded pre-commit SHA (autoCommit.preSha); cannot resolve range start.`,
+      };
+    }
   }
 
   // toSha = preSha of phase M+1 (= state right after phase M committed). When

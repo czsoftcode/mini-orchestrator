@@ -223,6 +223,30 @@ export async function loadPhase(cwd: string, id: number): Promise<Phase | null> 
   return readPhaseFile(phasesDir(cwd), id);
 }
 
+/**
+ * Lowest phase id present in `.mini/phases/`, or `null` when there are no phase
+ * files. Derived from the file names (`phase-<id>.json`), independent of the
+ * `state.json` header — callers that only wrote phase files (and tests) still
+ * get a correct answer. Used to tell whether a given phase is the project's
+ * very first one (which has nothing committed before it).
+ */
+export async function firstPhaseId(cwd: string = process.cwd()): Promise<number | null> {
+  let files: string[];
+  try {
+    files = await readdir(phasesDir(cwd));
+  } catch {
+    return null;
+  }
+  let min: number | null = null;
+  for (const f of files) {
+    const m = /^phase-(\d+)\.json$/.exec(f);
+    if (!m) continue;
+    const id = Number(m[1]);
+    if (min === null || id < min) min = id;
+  }
+  return min;
+}
+
 export async function savePhase(phase: Phase, cwd: string = process.cwd()): Promise<void> {
   await mkdir(phasesDir(cwd), { recursive: true });
   await writeJsonAtomic(phasePath(cwd, phase.id), phase);
