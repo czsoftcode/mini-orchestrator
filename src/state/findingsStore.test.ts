@@ -40,6 +40,7 @@ describe('isFindingSource', () => {
   it('accepts the known sources and rejects anything else', () => {
     expect(isFindingSource('adversarial')).toBe(true);
     expect(isFindingSource('verify')).toBe(true);
+    expect(isFindingSource('project')).toBe(true);
     expect(isFindingSource('audit')).toBe(false);
     expect(isFindingSource('')).toBe(false);
   });
@@ -90,6 +91,26 @@ describe('parse ↔ serialize round-trip', () => {
       },
     ];
     expect(parseFindings(serializeFindings(findings))).toEqual(findings);
+  });
+
+  it('round-trips a project-sourced finding', () => {
+    const findings: Finding[] = [
+      {
+        id: '161-1',
+        phaseId: 161,
+        severity: 'blocker',
+        status: 'open',
+        source: 'project',
+        where: 'src/state/store.ts:42',
+        title: 'Regression across the reviewed range',
+        body: 'Phase 158 changed the shape phase 154 still assumes.',
+      },
+    ];
+    const md = serializeFindings(findings);
+    // The widened union must survive parse → serialize untouched, and the
+    // **Source:** line must carry the literal value (not get downgraded).
+    expect(md).toContain('**Source:** project');
+    expect(parseFindings(md)).toEqual(findings);
   });
 
   it('round-trips a finding with a reviewedAt SHA', () => {

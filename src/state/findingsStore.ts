@@ -53,12 +53,12 @@ export const FINDINGS_DIR = join('.mini', 'findings');
 export type FindingSeverity = 'blocker' | 'should-know' | 'nit';
 export type FindingStatus = 'open' | 'resolved';
 /** Which review step recorded the finding. */
-export type FindingSource = 'adversarial' | 'verify';
+export type FindingSource = 'adversarial' | 'verify' | 'project';
 
 /** The three severities a finding may carry — the same vocabulary the prompt uses. */
 export const FINDING_SEVERITIES: readonly FindingSeverity[] = ['blocker', 'should-know', 'nit'];
 /** The review steps that may record a finding. */
-export const FINDING_SOURCES: readonly FindingSource[] = ['adversarial', 'verify'];
+export const FINDING_SOURCES: readonly FindingSource[] = ['adversarial', 'verify', 'project'];
 /** The default source for entries with no `**Source:**` line / no `--source` flag. */
 export const DEFAULT_FINDING_SOURCE: FindingSource = 'adversarial';
 

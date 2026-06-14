@@ -802,6 +802,11 @@
       "id": 160,
       "title": "Verify findings to durable store",
       "status": "done"
+    },
+    {
+      "id": 161,
+      "title": "project source in findings store",
+      "status": "done"
     }
   ],
   "models": {

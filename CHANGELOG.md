@@ -6,6 +6,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **`project` finding source.** `mini findings add --source project` is now
+  accepted and the value survives the findings-store round-trip, alongside
+  `adversarial` and `verify`. Groundwork for the upcoming cross-project
+  `adversarial-project` review; no command emits it yet.
+
 ## [1.21.0] - 2026-06-14
 
 ### Added

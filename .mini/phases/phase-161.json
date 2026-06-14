@@ -1,0 +1,34 @@
+{
+  "id": 161,
+  "title": "project source in findings store",
+  "goal": "Add 'project' to FINDING_SOURCES in findingsStore.ts so 'mini findings add --source project' is accepted and the value survives the parse -> serialize round-trip; extend findingsStore.test.ts to cover it. Additive only, no behaviour change for adversarial/verify, and existing findings without a Source line still parse as adversarial.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add project to FindingSource type and array",
+      "status": "done",
+      "detail": "Extend the FindingSource union (line 56) and the FINDING_SOURCES array (line 61) in findingsStore.ts with 'project'. isFindingSource('project') returns true, DEFAULT_FINDING_SOURCE stays adversarial. Build green."
+    },
+    {
+      "title": "Round-trip test for source: project",
+      "status": "done",
+      "detail": "In findingsStore.test.ts add a case that serializes a finding with source 'project' and parses it back, asserting the **Source:** project line survives intact."
+    },
+    {
+      "title": "Regression guard: defaults and existing sources unchanged",
+      "status": "done",
+      "detail": "Assert that a finding with no **Source:** line still parses as adversarial, and that adversarial/verify round-trips are unaffected — no behaviour change for existing sources."
+    },
+    {
+      "title": "Full test suite + typecheck green",
+      "status": "done",
+      "detail": "Run the whole suite and tsc; confirm no snapshot or type regression from the widened union."
+    }
+  ],
+  "startedAt": "2026-06-14T20:04:29.788Z",
+  "completedAt": "2026-06-14T20:13:27.748Z",
+  "autoCommit": {
+    "preSha": "caad80b3a188492ee8772e179667c4294218b05e",
+    "subject": "Phase 161: project source in findings store"
+  }
+}
