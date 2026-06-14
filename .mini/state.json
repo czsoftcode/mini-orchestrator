@@ -782,6 +782,11 @@
       "id": 156,
       "title": "Stamp reviewed-at SHA on findings",
       "status": "done"
+    },
+    {
+      "id": 157,
+      "title": "Surface open findings in next",
+      "status": "done"
     }
   ],
   "models": {

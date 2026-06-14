@@ -6,6 +6,7 @@ import { context, isContextCommand, CONTEXT_COMMANDS } from './context.js';
 import { save } from '../state/store.js';
 import { writeProject } from '../state/store.js';
 import { writeTodos } from '../state/todoStore.js';
+import { addFinding } from '../state/findingsStore.js';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import type { Phase, ProjectState } from '../state/types.js';
 
@@ -106,6 +107,25 @@ describe('context', () => {
     expect(out).toContain('- [2] add CSV export');
     expect(out).not.toContain('already shipped');
     expect(out).toContain('--from-todo');
+  });
+
+  it('next surfaces open adversarial findings as candidate fix phases', async () => {
+    await setupProject([], null);
+    await addFinding(cwd, 155, {
+      severity: 'blocker',
+      where: 'src/foo.ts:42',
+      title: 'unchecked null deref',
+    });
+    await context('next');
+    expect(out).toContain('Open adversarial findings');
+    expect(out).toContain('155-1');
+    expect(out).toContain('unchecked null deref');
+  });
+
+  it('next without a findings dir omits the findings block', async () => {
+    await setupProject([], null);
+    await context('next');
+    expect(out).not.toContain('Open adversarial findings');
   });
 
   it('plan without a current phase → exit code 1', async () => {

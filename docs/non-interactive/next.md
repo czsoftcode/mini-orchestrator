@@ -50,6 +50,10 @@ $ mini next --apply \
   yet. Each is shown with its archive number; when a phase is born from one,
   `--from-todo <n>` ticks that item off as the phase is saved, so the backlog
   doesn't drift out of sync.
+- Open [adversarial findings](findings.md) are offered the same way, as candidate
+  **fix phases** (`id · severity · where — title`). There is no `--from-finding`
+  equivalent: a finding has no auto-tick and stays listed until it is resolved by
+  hand, so name the finding a phase addresses in the goal.
 
 ## Related
 

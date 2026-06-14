@@ -11,8 +11,15 @@
 
 `/mini:next` proposes **one** next phase — small and verifiable (1–3 days) — and,
 after you approve, saves it as the current phase. You can pass your own idea as
-an argument; otherwise Claude looks at the progress so far and the
-[todo](todo.md) backlog and sketches candidates.
+an argument; otherwise Claude looks at the progress so far, the
+[todo](todo.md) backlog and any open [adversarial findings](../non-interactive/findings.md)
+and sketches candidates.
+
+Open findings from the red-team review ([`/mini:adversarial`](../non-interactive/findings.md))
+surface as candidate **fix phases** — Claude lists each one (`id · severity ·
+where — title`) and may propose a phase that addresses it. Unlike todo items there
+is no auto-tick: there is no `--from-finding` flag, so a finding stays listed
+until it is resolved by hand.
 
 ## In a session
 

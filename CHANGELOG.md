@@ -8,6 +8,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **Open adversarial findings surface in `mini next` / `/mini:next`.** When you
+  propose the next phase, mini now lists the still-open findings from the red-team
+  review (`id · severity · where — title`) as candidate **fix phases**, alongside
+  the todo backlog. There is no auto-tick (no `--from-finding`): a finding stays
+  listed until it is resolved by hand, and the prompt says so. Consumption in
+  `plan`/`do` remains a follow-up.
+
 - **`mini findings` — a durable store for adversarial review findings.** Findings
   now live in their own `.mini/findings/phase-{id}.md` files, versioned with the
   code (like `.mini/decisions/` and `.mini/memory/`) — no longer buried in the run

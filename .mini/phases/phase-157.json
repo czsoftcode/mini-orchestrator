@@ -1,0 +1,32 @@
+{
+  "id": 157,
+  "title": "Surface open findings in next",
+  "goal": "mini context next (and /mini:next) loads open adversarial findings via listFindings and injects them into the prompt as a block of candidates for the next phase, so a proposer can promote an open finding into a fix phase.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Render open-findings block in next prompt",
+      "status": "done",
+      "detail": "Add openFindings to NextSessionOptions in sessionContext.ts; new '# Open adversarial findings' block listing each open finding (id · severity · where + title) with advisory text that the proposer may promote one into a fix phase; block omitted when empty. Covered by sessionContext.test.ts (present with findings, absent without)."
+    },
+    {
+      "title": "Wire next context to load open findings",
+      "status": "done",
+      "detail": "buildNextContext in context.ts calls listFindings(cwd) and passes results into buildNextSessionPrompt. Covered by context.test.ts: a written findings file makes mini context next output contain the finding id+title; no findings dir leaves the block absent."
+    },
+    {
+      "title": "Document findings in next docs",
+      "status": "done",
+      "detail": "Update docs/ for the next command (and a note in findings docs) that open adversarial findings now surface as candidates in /mini:next; English per CLAUDE.md."
+    }
+  ],
+  "startedAt": "2026-06-14T14:21:32.656Z",
+  "resolvedVerify": [
+    "Remove the temporary .mini/findings/ directory before done"
+  ],
+  "completedAt": "2026-06-14T14:31:28.221Z",
+  "autoCommit": {
+    "preSha": "68c5422578b3b56a5270358937712ca8fb23a8e7",
+    "subject": "Phase 157: Surface open findings in next"
+  }
+}

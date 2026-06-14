@@ -12,6 +12,7 @@ import {
 import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { readDiscussNotes } from '../state/discussNotes.js';
 import { runReportExists } from '../state/runReport.js';
+import { listFindings } from '../state/findingsStore.js';
 import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
 import { readTodos } from '../state/todoStore.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
@@ -108,10 +109,22 @@ async function buildNextContext(
     .map((t, i) => ({ index: i + 1, text: t.text, done: t.done }))
     .filter((t) => !t.done)
     .map(({ index, text }) => ({ index, text }));
+  // Open adversarial findings across all phases — candidate fix phases. Defaults
+  // to open-only; a missing findings dir yields an empty list (no block).
+  const openFindings = (await listFindings(cwd)).map((f) => {
+    const out: { id: string; severity: string; where?: string; title: string } = {
+      id: f.id,
+      severity: f.severity,
+      title: f.title,
+    };
+    if (f.where) out.where = f.where;
+    return out;
+  });
   return buildNextSessionPrompt(projectMd, stateFromHeader(header), {
     userHint,
     lastMemoryMd,
     openTodos,
+    openFindings,
   });
 }
 

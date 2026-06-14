@@ -80,6 +80,26 @@ describe('buildNextSessionPrompt', () => {
     expect(p).not.toContain('Ideas in the backlog');
   });
 
+  it('surfaces open adversarial findings as candidate fix phases', () => {
+    const p = buildNextSessionPrompt(PROJECT, state(), {
+      openFindings: [
+        { id: '155-1', severity: 'blocker', where: 'src/foo.ts:42', title: 'unchecked null' },
+        { id: '156-2', severity: 'nit', title: 'rename helper' },
+      ],
+    });
+    expect(p).toContain('Open adversarial findings');
+    expect(p).toContain('155-1 · blocker · src/foo.ts:42 — unchecked null');
+    expect(p).toContain('156-2 · nit — rename helper');
+    // The prompt warns there is no auto-tick (unlike --from-todo).
+    expect(p).toContain('no auto-tick');
+    expect(p).toContain('resolved by hand');
+  });
+
+  it('omits the findings block when there are no open findings', () => {
+    const p = buildNextSessionPrompt(PROJECT, state(), { openFindings: [] });
+    expect(p).not.toContain('Open adversarial findings');
+  });
+
   it('without a hint, offers to stash extra ideas into the todo archive', () => {
     const p = buildNextSessionPrompt(PROJECT, state());
     expect(p).toContain('mini todo add');

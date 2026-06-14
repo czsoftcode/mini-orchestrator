@@ -39,12 +39,25 @@ export interface OpenTodo {
   text: string;
 }
 
+/** A single open adversarial finding, surfaced as a candidate for the next phase. */
+export interface OpenFinding {
+  /** Stable finding id (`{phaseId}-{n}`, e.g. `155-1`). */
+  id: string;
+  severity: string;
+  /** Optional location (`file:line`). */
+  where?: string;
+  /** Short headline of the finding. */
+  title: string;
+}
+
 export interface NextSessionOptions {
   userHint?: string;
   /** Obsah `.mini/last-memory.md`, pokud existuje. */
   lastMemoryMd?: string;
   /** Open items from the `.mini/todo.md` archive, offered as candidate ideas. */
   openTodos?: OpenTodo[];
+  /** Open adversarial findings, offered as candidate fix phases. */
+  openFindings?: OpenFinding[];
 }
 
 /**
@@ -94,6 +107,22 @@ export function buildNextSessionPrompt(
           )}\nIf one of them fits as the next step, propose it. When you save such a phase, add \`--from-todo <n>\` (the bracketed number) to \`mini next --apply\` so the source item is ticked off automatically.\n\n`
       : '';
 
+  // Open adversarial findings — what the red-team flagged on earlier phases and
+  // nobody has closed yet. Any of these can become the next (fix) phase. Unlike
+  // todos there is no auto-tick: there is no `--from-finding`, so a finding stays
+  // listed until it is resolved by hand — say so plainly to avoid confusion.
+  const openFindings = (options.openFindings ?? [])
+    .map((f) => ({ id: f.id.trim(), severity: f.severity.trim(), where: f.where?.trim(), title: f.title.trim() }))
+    .filter((f) => f.id && f.title);
+  const findingsBlock =
+    openFindings.length > 0
+      ? `# Open adversarial findings\nThe red-team review (\`/mini:adversarial\`) left these findings open — any could become the next (fix) phase:\n${openFindings
+          .map((f) => `- ${f.id} · ${f.severity}${f.where ? ` · ${f.where}` : ''} — ${f.title}`)
+          .join(
+            '\n',
+          )}\nIf one warrants the next phase, propose a fix phase for it. There is no auto-tick (no \`--from-finding\`); the finding stays listed until it is resolved by hand, so mention which finding the phase addresses in the goal.\n\n`
+      : '';
+
   return `You are in a Claude Code session helping the user build a project in small phases.
 This is the **next** step of the mini workflow — propose ONE next phase.
 
@@ -101,7 +130,7 @@ This is the **next** step of the mini workflow — propose ONE next phase.
 ${projectMd.trim()}
 
 ${history}
-${memoryBlock}${todoBlock}${askBlock}${hintBlock}# Your task
+${memoryBlock}${todoBlock}${findingsBlock}${askBlock}${hintBlock}# Your task
 Propose one next phase. It should be small (1-3 days of work), with a clear, verifiable goal — not a roadmap, just one thing that makes sense to do right now. ${GRAPH_USAGE_HINT}
 
 Show the proposal (name, max 5 words + goal in 1 sentence) to the user in your final message and ask for approval. ${ASK_AND_STOP_HINT} Only after they approve, **save** the phase by calling (Bash):
