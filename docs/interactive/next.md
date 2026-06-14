@@ -17,9 +17,11 @@ and sketches candidates.
 
 Open findings from the red-team review ([`/mini:adversarial`](../non-interactive/findings.md))
 surface as candidate **fix phases** — Claude lists each one (`id · severity ·
-where — title`) and may propose a phase that addresses it. Unlike todo items there
-is no auto-tick: there is no `--from-finding` flag, so a finding stays listed
-until it is resolved by hand.
+where — title`) and may propose a phase that addresses it. When it does, it saves
+the phase with `--from-finding <id>`, which records the link so
+[`/mini:discuss`](discuss.md) / [`/mini:plan`](plan.md) can read the finding's
+full detail later. Unlike `--from-todo`, this does not tick the source off — the
+finding stays open until the fix is done and verified.
 
 ## In a session
 

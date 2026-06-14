@@ -6,6 +6,7 @@ import {
   FINDINGS_DIR,
   type Finding,
   addFinding,
+  findFindingById,
   findingsPath,
   isFindingSeverity,
   listFindings,
@@ -279,5 +280,43 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
     const raw = await readFile(findingsPath(cwd, 10), 'utf8');
     expect(raw).toContain('# Adversarial findings');
     expect(raw).toContain('## 10-1 · nit · open');
+  });
+
+  it('findFindingById returns the finding for an existing id (open or resolved)', async () => {
+    await addFinding(cwd, 155, { severity: 'blocker', title: 'first', where: 'src/x.ts:1' });
+    // Resolve a second one by rewriting the file, to prove resolved ids are included.
+    await writeFile(
+      findingsPath(cwd, 155),
+      serializeFindings([
+        { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', where: 'src/x.ts:1', title: 'first' },
+        { id: '155-2', phaseId: 155, severity: 'nit', status: 'resolved', title: 'second' },
+      ]),
+      'utf8',
+    );
+
+    expect(await findFindingById(cwd, '155-1')).toEqual({
+      id: '155-1',
+      phaseId: 155,
+      severity: 'blocker',
+      status: 'open',
+      where: 'src/x.ts:1',
+      title: 'first',
+    });
+    expect((await findFindingById(cwd, '155-2'))?.status).toBe('resolved');
+  });
+
+  it('findFindingById returns null for a non-existent id whose file exists', async () => {
+    await addFinding(cwd, 155, { severity: 'nit', title: 'only one' });
+    expect(await findFindingById(cwd, '155-9')).toBeNull();
+  });
+
+  it('findFindingById returns null for a missing phase file', async () => {
+    expect(await findFindingById(cwd, '999-1')).toBeNull();
+  });
+
+  it('findFindingById returns null for a malformed id shape (never throws)', async () => {
+    expect(await findFindingById(cwd, 'bogus')).toBeNull();
+    expect(await findFindingById(cwd, '155')).toBeNull();
+    expect(await findFindingById(cwd, '')).toBeNull();
   });
 });

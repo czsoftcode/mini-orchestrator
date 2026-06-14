@@ -7,6 +7,7 @@ import { applyPlanSteps, parseStepsFromStdin } from './plan.js';
 import { applyDoStart } from './do.js';
 import { applyDone } from './done.js';
 import { load, save } from '../state/store.js';
+import { addFinding } from '../state/findingsStore.js';
 import { readTodos, writeTodos } from '../state/todoStore.js';
 import { ensureRunDir, runReportPath } from '../state/runReport.js';
 import type { Phase, ProjectState } from '../state/types.js';
@@ -156,6 +157,28 @@ describe('applyNewPhase', () => {
     const state = await load(cwd);
     expect(state.phases).toHaveLength(1);
     expect(await readTodos(cwd)).toEqual([{ text: 'only idea', done: false }]);
+  });
+
+  it('--from-finding stores the link and leaves the finding open', async () => {
+    await save(makeState([], null), cwd);
+    const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'a bug' });
+
+    const r = await applyNewPhase('Fix it', 'goal', { cwd, fromFinding: id });
+
+    expect(r.ok).toBe(true);
+    const state = await load(cwd);
+    expect(state.phases).toHaveLength(1);
+    expect(state.phases[0]!.fromFinding).toBe(id);
+  });
+
+  it('an unknown --from-finding fails the save and adds no phase', async () => {
+    await save(makeState([], null), cwd);
+
+    const r = await applyNewPhase('Fix it', 'goal', { cwd, fromFinding: '999-9' });
+
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('no-finding');
+    expect((await load(cwd)).phases).toHaveLength(0);
   });
 });
 

@@ -12,6 +12,7 @@ command proposes a phase in the session (using your idea or the
 mini next                                          # interactive: Claude proposes a phase
 mini next --apply --title "…" --goal "…"           # non-interactively save a phase
 mini next --apply --title "…" --goal "…" --from-todo 3   # …and tick off backlog item 3
+mini next --apply --title "…" --goal "…" --from-finding 155-1   # …record which finding it fixes
 ```
 
 ## Description
@@ -30,6 +31,7 @@ current phase in `proposed` state.
 | `--title <title>` | Title of the new phase. **Required with `--apply`.** |
 | `--goal <goal>` | Goal of the new phase (one clear, verifiable sentence). **Required with `--apply`.** |
 | `--from-todo <n>` | After saving, tick off [todo](todo.md) item number `n` — the backlog item the phase came from. A bad reference (out of range / already done) only warns; the phase is still saved. Use with `--apply`. |
+| `--from-finding <id>` | Record on the phase which open [adversarial finding](findings.md) it fixes (id like `155-1`). This does **not** close the finding (it stays open until the fix is done and verified); it lets [`mini discuss`](discuss.md) / [`mini plan`](plan.md) read the finding's full detail. Unlike `--from-todo`, an unknown id **fails the save** and writes no phase. Use with `--apply`. |
 
 ## Examples
 
@@ -51,9 +53,11 @@ $ mini next --apply \
   `--from-todo <n>` ticks that item off as the phase is saved, so the backlog
   doesn't drift out of sync.
 - Open [adversarial findings](findings.md) are offered the same way, as candidate
-  **fix phases** (`id · severity · where — title`). There is no `--from-finding`
-  equivalent: a finding has no auto-tick and stays listed until it is resolved by
-  hand, so name the finding a phase addresses in the goal.
+  **fix phases** (`id · severity · where — title`). When a phase is born from one,
+  `--from-finding <id>` records the link as the phase is saved, so
+  [`mini discuss`](discuss.md) / [`mini plan`](plan.md) can pull in the finding's
+  full detail in a later session. Unlike `--from-todo`, this does not tick the
+  source off — the finding stays open until the fix is done and verified.
 
 ## Related
 

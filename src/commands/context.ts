@@ -9,10 +9,11 @@ import {
   buildPlanSessionPrompt,
   buildProjectSessionPrompt,
 } from '../prompts/sessionContext.js';
+import type { LinkedFindingInput } from '../prompts/linkedFinding.js';
 import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { readDiscussNotes } from '../state/discussNotes.js';
 import { runReportExists } from '../state/runReport.js';
-import { listFindings } from '../state/findingsStore.js';
+import { findFindingById, listFindings } from '../state/findingsStore.js';
 import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
 import { readTodos } from '../state/todoStore.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
@@ -149,12 +150,14 @@ async function buildPhaseContext(
   if (cmd === 'discuss') {
     // Warm slash path: the project is referenced (read-once), not inlined — the
     // session usually already has it from `next` earlier in the same chat.
-    return buildDiscussPhasePrompt(projectMd, phase, true);
+    const linkedFinding = await loadLinkedFinding(cwd, phase);
+    return buildDiscussPhasePrompt(projectMd, phase, true, linkedFinding);
   }
   if (cmd === 'plan') {
     const discussNotes = await readDiscussNotes(cwd, phase.id);
+    const linkedFinding = await loadLinkedFinding(cwd, phase);
     // Warm slash path: reference the project rather than inlining it (read-once).
-    return buildPlanSessionPrompt(projectMd, phase, discussNotes, true);
+    return buildPlanSessionPrompt(projectMd, phase, discussNotes, true, linkedFinding);
   }
   if (cmd === 'decision') {
     return buildDecisionSessionPrompt(phase);
@@ -181,6 +184,30 @@ async function buildPhaseContext(
   }
   // done
   return buildDoneContext(phase, cwd);
+}
+
+/**
+ * Loads the adversarial finding a phase is linked to (`--from-finding`), for the
+ * `discuss`/`plan` prompts. No link → `undefined` (no block). A link whose
+ * finding can no longer be found (resolved, file removed) → a soft-note marker
+ * the renderer turns into a graceful "could not be found" note, never a crash or
+ * a misleading "no phase" message.
+ */
+async function loadLinkedFinding(
+  cwd: string,
+  phase: Phase,
+): Promise<LinkedFindingInput | undefined> {
+  if (!phase.fromFinding) return undefined;
+  const finding = await findFindingById(cwd, phase.fromFinding);
+  if (!finding) return { id: phase.fromFinding, missing: true };
+  const out: LinkedFindingInput = {
+    id: finding.id,
+    severity: finding.severity,
+    title: finding.title,
+  };
+  if (finding.where) out.where = finding.where;
+  if (finding.body) out.body = finding.body;
+  return out;
 }
 
 async function buildDoneContext(phase: Phase, cwd: string): Promise<string> {

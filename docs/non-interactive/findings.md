@@ -90,13 +90,15 @@ Open findings
   code (which only exists after `done`). Outside a git repo (or a fresh repo with
   no commit) the field is simply omitted. It lets a later consumer judge whether a
   finding may be stale after the code moved on.
-- Open findings now surface in [`mini next`](next.md) / [`/mini:next`](../interactive/next.md)
-  as candidate **fix phases** (`id · severity · where — title`). There is no
-  auto-tick — no `--from-finding` — so a finding stays listed until it is resolved
-  by hand.
-- Flipping a finding to `resolved`, a `doctor` orphan-check and surfacing open
-  findings inside `plan`/`do` are planned follow-ups; today the store only records,
-  lists and feeds `next`.
+- Open findings surface in [`mini next`](next.md) / [`/mini:next`](../interactive/next.md)
+  as candidate **fix phases** (`id · severity · where — title`). A phase born from
+  one is saved with `--from-finding <id>`, which records the link without closing
+  the finding (it stays open until the fix is done and verified). That link lets
+  [`mini discuss`](discuss.md) and [`mini plan`](plan.md) read the finding's full
+  detail in any later session.
+- Flipping a finding to `resolved` and a `doctor` orphan-check are planned
+  follow-ups; today the store records, lists, feeds `next`, and feeds the linked
+  finding into `discuss`/`plan`.
 
 ## Related
 

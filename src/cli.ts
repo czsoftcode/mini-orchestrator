@@ -120,19 +120,34 @@ program
     '--from-todo <n>',
     'Tick off backlog item number <n> (mini todo) after saving the phase (with --apply).',
   )
-  .action(async (opts: { apply?: boolean; title?: string; goal?: string; fromTodo?: string }) => {
-    if (opts.apply) {
-      const title = requireOption(opts.title, '--title');
-      const goal = requireOption(opts.goal, '--goal');
-      const fromTodo = opts.fromTodo !== undefined ? Number(opts.fromTodo) : undefined;
-      const { applyNewPhase } = await import('./commands/next.js');
-      const r = await applyNewPhase(title, goal, fromTodo !== undefined ? { fromTodo } : {});
-      if (!r.ok) process.exit(1);
-      return;
-    }
-    const { next } = await import('./commands/next.js');
-    await next();
-  });
+  .option(
+    '--from-finding <id>',
+    'Record that the phase fixes adversarial finding <id> (e.g. 155-1); the finding stays open (with --apply).',
+  )
+  .action(
+    async (opts: {
+      apply?: boolean;
+      title?: string;
+      goal?: string;
+      fromTodo?: string;
+      fromFinding?: string;
+    }) => {
+      if (opts.apply) {
+        const title = requireOption(opts.title, '--title');
+        const goal = requireOption(opts.goal, '--goal');
+        const fromTodo = opts.fromTodo !== undefined ? Number(opts.fromTodo) : undefined;
+        const { applyNewPhase } = await import('./commands/next.js');
+        const r = await applyNewPhase(title, goal, {
+          ...(fromTodo !== undefined ? { fromTodo } : {}),
+          ...(opts.fromFinding !== undefined ? { fromFinding: opts.fromFinding } : {}),
+        });
+        if (!r.ok) process.exit(1);
+        return;
+      }
+      const { next } = await import('./commands/next.js');
+      await next();
+    },
+  );
 
 program
   .command('plan')

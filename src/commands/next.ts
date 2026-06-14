@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { askClaude } from '../claude/ask.js';
 import { buildNextPhasePrompt } from '../prompts/nextPhase.js';
 import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
+import { findFindingById } from '../state/findingsStore.js';
 import { resolveModel } from '../state/models.js';
 import { exists, load, readProject, save } from '../state/store.js';
 import { markTodoDone } from '../state/todoStore.js';
@@ -183,7 +184,7 @@ export async function next(opts: AutoOptions = {}): Promise<StepOutcome> {
 export async function applyNewPhase(
   title: string,
   goal: string,
-  opts: { fromTodo?: number; cwd?: string } = {},
+  opts: { fromTodo?: number; fromFinding?: string; cwd?: string } = {},
 ): Promise<StepOutcome> {
   const cwd = opts.cwd ?? process.cwd();
   if (!(await exists(cwd))) {
@@ -191,8 +192,27 @@ export async function applyNewPhase(
     log.hint('Start with: mini init');
     return { ok: false, reason: 'no-project' };
   }
+  // A --from-finding link must point at a real finding — validate before saving,
+  // so a typo'd id fails loudly instead of writing a dangling reference. Unlike
+  // --from-todo (a best-effort tick after the save), the link IS the phase's
+  // value, so a bad one aborts and writes no phase.
+  if (opts.fromFinding !== undefined) {
+    const finding = await findFindingById(cwd, opts.fromFinding);
+    if (!finding) {
+      log.error(`No adversarial finding "${opts.fromFinding}" found.`);
+      log.hint('Check the id (e.g. 155-1) against .mini/findings/, or omit --from-finding.');
+      return { ok: false, reason: 'no-finding' };
+    }
+  }
   const state = await load(cwd);
-  const outcome = await commitPhase(state, cwd, title, goal, { auto: true });
+  const outcome = await commitPhase(
+    state,
+    cwd,
+    title,
+    goal,
+    { auto: true },
+    opts.fromFinding !== undefined ? { fromFinding: opts.fromFinding } : {},
+  );
   if (outcome.ok && opts.fromTodo !== undefined) {
     await tickSourceTodo(opts.fromTodo, cwd);
   }
@@ -253,6 +273,7 @@ async function commitPhase(
   title: string,
   goal: string,
   opts: AutoOptions,
+  extra: { fromFinding?: string } = {},
 ): Promise<StepOutcome> {
   // `Math.floor` on the maximum drops the fractional part of fix sub-phases
   // (21.1), otherwise a new top-level phase would get a fractional ID (22.1) and
@@ -263,6 +284,7 @@ async function commitPhase(
     title,
     goal,
     status: 'proposed',
+    ...(extra.fromFinding ? { fromFinding: extra.fromFinding } : {}),
   };
 
   state.phases.push(newPhase);

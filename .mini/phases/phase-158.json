@@ -1,0 +1,44 @@
+{
+  "id": 158,
+  "title": "Link phase to finding",
+  "goal": "Add a --from-finding <id> flag to mini next --apply that durably records on the phase which open adversarial finding it addresses (single id; the finding stays open, unlike --from-todo which ticks its source). The next prompt instructs the proposer to pass it when a phase is born from an open finding. discuss and plan then read the linked finding's full entry from .mini/findings/ and inject its detail (title, body, where, severity) into their prompts; a missing/resolved finding degrades to a soft note instead of failing. do is unchanged.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add findFindingById lookup helper",
+      "status": "done",
+      "detail": "findingsStore.ts: exported findFindingById(cwd, id) -> Finding | null. Derives the origin phase from the id ({originId}-{n}), reads via readPhaseFindings, finds by id; includes resolved; a missing file or malformed id returns null (never throws). Test covers a non-existent id and a malformed id shape."
+    },
+    {
+      "title": "Add fromFinding field and --from-finding flag",
+      "status": "done",
+      "detail": "types.ts: Phase.fromFinding?: string. cli.ts: --from-finding <id> option on mini next --apply, passed into applyNewPhase. next.ts: applyNewPhase validates via findFindingById before saving — unknown id fails with a clear error and saves no phase (unlike --from-todo which only warns); a valid id makes commitPhase write fromFinding. Tests in apply.test.ts: valid id stores the link; unknown id errors and adds no phase."
+    },
+    {
+      "title": "Point the next prompt at --from-finding",
+      "status": "done",
+      "detail": "sessionContext.ts: in the Open adversarial findings block, replace the current no-auto-tick / mention-in-goal wording with an instruction to pass --from-finding <id> so the phase durably records which finding it fixes; add it to the save-command docs too. Update sessionContext.test.ts to assert --from-finding appears."
+    },
+    {
+      "title": "Render the linked finding for discuss and plan",
+      "status": "done",
+      "detail": "Shared renderer in sessionContext.ts formatting a finding's full detail (id · severity · where, title, body) into a block. buildDiscussPhasePrompt and buildPlanSessionPrompt take an optional linkedFinding and render the block only when present. Test asserts the block is present/absent accordingly."
+    },
+    {
+      "title": "Wire context.ts to load the linked finding",
+      "status": "done",
+      "detail": "context.ts buildPhaseContext: for discuss and plan, when the phase has fromFinding, load it via findFindingById and pass it to the builder. A missing/resolved finding passes a soft note (finding <id> not found or already resolved), never crashing or printing a misleading no-phase message. Test in context.test.ts covers the missing-finding case."
+    },
+    {
+      "title": "Document --from-finding",
+      "status": "done",
+      "detail": "docs/ (the mini next page) documents the --from-finding <id> option: what it does, that it does not close the finding, and that it feeds the detail into discuss/plan. CHANGELOG is handled later by /mini:done."
+    }
+  ],
+  "startedAt": "2026-06-14T15:17:08.700Z",
+  "completedAt": "2026-06-14T15:31:37.086Z",
+  "autoCommit": {
+    "preSha": "fb6f0aab530df6b55da7a9ed6a114def6095c724",
+    "subject": "Phase 158: Link phase to finding"
+  }
+}

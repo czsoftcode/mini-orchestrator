@@ -787,6 +787,11 @@
       "id": 157,
       "title": "Surface open findings in next",
       "status": "done"
+    },
+    {
+      "id": 158,
+      "title": "Link phase to finding",
+      "status": "done"
     }
   ],
   "models": {

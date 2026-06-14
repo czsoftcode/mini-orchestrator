@@ -149,6 +149,53 @@ describe('context', () => {
     expect(out).toContain('.mini/discuss/phase-001.md');
   });
 
+  it('plan with a linked finding injects its full detail', async () => {
+    const { id } = await addFinding(cwd, 1, {
+      severity: 'blocker',
+      title: 'unchecked null',
+      where: 'src/foo.ts:42',
+      body: 'crashes on empty input',
+    });
+    await setupProject(
+      [{ id: 2, title: 'Fix it', goal: 'fix', status: 'proposed', fromFinding: id }],
+      2,
+    );
+    await context('plan');
+    expect(out).toContain('# Linked adversarial finding');
+    expect(out).toContain(`**${id} · blocker · src/foo.ts:42** — unchecked null`);
+    expect(out).toContain('crashes on empty input');
+  });
+
+  it('discuss with a linked finding injects its full detail', async () => {
+    const { id } = await addFinding(cwd, 1, { severity: 'nit', title: 'rename helper' });
+    await setupProject(
+      [{ id: 2, title: 'Fix it', goal: 'fix', status: 'proposed', fromFinding: id }],
+      2,
+    );
+    await context('discuss');
+    expect(out).toContain('# Linked adversarial finding');
+    expect(out).toContain(`**${id} · nit** — rename helper`);
+  });
+
+  it('plan with a fromFinding pointing at a missing finding degrades to a soft note', async () => {
+    await setupProject(
+      [{ id: 2, title: 'Fix it', goal: 'fix', status: 'proposed', fromFinding: '999-9' }],
+      2,
+    );
+    await context('plan');
+    // No crash, no misleading "no phase" — just a graceful note plus the normal prompt.
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('mini plan --apply');
+    expect(out).toContain('# Linked adversarial finding');
+    expect(out).toContain('could not be found');
+  });
+
+  it('plan without a linked finding omits the block', async () => {
+    await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'proposed' }], 1);
+    await context('plan');
+    expect(out).not.toContain('Linked adversarial finding');
+  });
+
   it('do prints the auto prompt with the instruction to write a report', async () => {
     await setupProject([{ id: 1, title: 'Phase A', goal: 'goal', status: 'planned', steps: [{ title: 's', status: 'todo' }] }], 1);
     await context('do');

@@ -115,4 +115,22 @@ describe('buildDiscussPhasePrompt', () => {
     // graph se vkládá ne přímo do promptu — Claude si ho přečte sám
     expect(out).toContain('Stavím nástroj X pro Y.');
   });
+
+  it('renders the linked finding block when one is passed', () => {
+    const phase: Phase = { id: 9, title: 'Fix discuss', goal: 'fix it', status: 'proposed' };
+    const out = buildDiscussPhasePrompt(PROJECT_MD, phase, false, {
+      id: '155-1',
+      severity: 'blocker',
+      title: 'unchecked null',
+      body: 'crashes on empty input',
+    });
+    expect(out).toContain('# Linked adversarial finding');
+    expect(out).toContain('**155-1 · blocker** — unchecked null');
+    expect(out).toContain('crashes on empty input');
+  });
+
+  it('omits the linked finding block when none is passed', () => {
+    const phase: Phase = { id: 9, title: 'Plain discuss', goal: 'x', status: 'proposed' };
+    expect(buildDiscussPhasePrompt(PROJECT_MD, phase)).not.toContain('Linked adversarial finding');
+  });
 });

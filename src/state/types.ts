@@ -48,6 +48,14 @@ export interface Phase {
   completedAt?: string;
   autoCommit?: PhaseAutoCommit;
   /**
+   * Id of the adversarial finding this phase was created to fix
+   * (`{originPhaseId}-{n}`, e.g. `155-1`), set via `mini next --apply
+   * --from-finding`. A durable link so `discuss`/`plan` can read the finding's
+   * full detail from disk in a fresh session. Recording it does **not** resolve
+   * the finding — it stays `open` until the fix is done and verified.
+   */
+  fromFinding?: string;
+  /**
    * Doslovné názvy bodů k ručnímu ověření (`verify` z reportu), které člověk
    * při verifikaci už vyřešil jako `pass`/`skip`. Slouží k tomu, aby opakovaný
    * `mini done` nad neměnícím se reportem znovu nenabízel už odbavené body —

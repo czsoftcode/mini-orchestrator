@@ -1,6 +1,7 @@
 import { phaseStem } from '../state/store.js';
 import type { Phase, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
+import { type LinkedFindingInput, renderLinkedFindingBlock } from './linkedFinding.js';
 import { projectRefBlock } from './projectRef.js';
 
 const STEP_WORD: Record<StepStatus, string> = {
@@ -14,6 +15,7 @@ export function buildDiscussPhasePrompt(
   projectMd: string,
   phase: Phase,
   useProjectRef = false,
+  linkedFinding?: LinkedFindingInput,
 ): string {
   let stepsBlock = '';
   if (phase.steps?.length) {
@@ -25,6 +27,7 @@ export function buildDiscussPhasePrompt(
 
   const notesPath = `.mini/discuss/${phaseStem(phase.id)}.md`;
   const projectBlock = useProjectRef ? projectRefBlock() : projectMd.trim();
+  const findingBlock = linkedFinding ? `\n${renderLinkedFindingBlock(linkedFinding)}` : '';
 
   return `You are part of a tool that helps the user build a project incrementally.
 A **discussion session** about the upcoming phase is in progress — DO NOT implement anything.
@@ -35,7 +38,7 @@ ${projectBlock}
 # Phase to discuss
 **Phase ${phase.id}: ${phase.title}**
 Goal: ${phase.goal ?? '(not set)'}
-${stepsBlock}
+${stepsBlock}${findingBlock}
 # Your task
 Discuss the intent of this phase with the user. Your goals are to:
 - understand what exactly the phase should solve and why

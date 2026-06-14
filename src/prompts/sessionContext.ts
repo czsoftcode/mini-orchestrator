@@ -1,6 +1,7 @@
 import { phaseStem } from '../state/store.js';
 import type { Phase, PhaseStatus, ProjectState, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
+import { type LinkedFindingInput, renderLinkedFindingBlock } from './linkedFinding.js';
 import { ASK_AND_STOP_HINT, VERBATIM_OUTPUT_HINT } from './sessionHints.js';
 import { projectRefBlock } from './projectRef.js';
 
@@ -108,9 +109,10 @@ export function buildNextSessionPrompt(
       : '';
 
   // Open adversarial findings — what the red-team flagged on earlier phases and
-  // nobody has closed yet. Any of these can become the next (fix) phase. Unlike
-  // todos there is no auto-tick: there is no `--from-finding`, so a finding stays
-  // listed until it is resolved by hand — say so plainly to avoid confusion.
+  // nobody has closed yet. Any of these can become the next (fix) phase. Saving
+  // with `--from-finding <id>` records the link on the phase (so `discuss`/`plan`
+  // can pull in the finding's full detail) but does NOT resolve the finding — it
+  // stays open until the fix is done and verified. Say so plainly.
   const openFindings = (options.openFindings ?? [])
     .map((f) => ({ id: f.id.trim(), severity: f.severity.trim(), where: f.where?.trim(), title: f.title.trim() }))
     .filter((f) => f.id && f.title);
@@ -120,7 +122,7 @@ export function buildNextSessionPrompt(
           .map((f) => `- ${f.id} · ${f.severity}${f.where ? ` · ${f.where}` : ''} — ${f.title}`)
           .join(
             '\n',
-          )}\nIf one warrants the next phase, propose a fix phase for it. There is no auto-tick (no \`--from-finding\`); the finding stays listed until it is resolved by hand, so mention which finding the phase addresses in the goal.\n\n`
+          )}\nIf one warrants the next phase, propose a fix phase for it and save it with \`--from-finding <id>\` (the finding's id, e.g. \`155-1\`) so the phase durably records which finding it fixes — \`discuss\`/\`plan\` then read that finding's full detail. This does **not** close the finding (no auto-resolve); it stays listed until the fix is done and verified.\n\n`
       : '';
 
   return `You are in a Claude Code session helping the user build a project in small phases.
@@ -139,7 +141,7 @@ Show the proposal (name, max 5 words + goal in 1 sentence) to the user in your f
 mini next --apply --title "<name>" --goal "<phase goal>"
 \`\`\`
 
-If the phase comes from a backlog item above, append \`--from-todo <n>\` (its bracketed number) so that item is ticked off in the archive automatically.
+If the phase comes from a backlog item above, append \`--from-todo <n>\` (its bracketed number) so that item is ticked off in the archive automatically. If it fixes an open adversarial finding above, append \`--from-finding <id>\` (the finding's id) so the phase records the link for \`discuss\`/\`plan\` (this does not close the finding).
 
 Change the phase state only with this command — never edit \`.mini/state.json\` by hand.
 
@@ -158,10 +160,12 @@ export function buildPlanSessionPrompt(
   phase: Phase,
   discussNotes?: string | null,
   useProjectRef = false,
+  linkedFinding?: LinkedFindingInput,
 ): string {
   const notes = discussNotes?.trim();
   const notesBlock = notes ? `\n# Phase notes (from discussion)\n${notes}\n` : '';
   const projectBlock = useProjectRef ? projectRefBlock() : projectMd.trim();
+  const findingBlock = linkedFinding ? `\n${renderLinkedFindingBlock(linkedFinding)}` : '';
 
   let stepsBlock = '';
   if (phase.steps?.length) {
@@ -178,7 +182,7 @@ ${projectBlock}
 # Phase to break down
 **Phase ${phase.id}: ${phase.title}**
 Goal: ${phase.goal ?? '(not set)'}
-${stepsBlock}${notesBlock}
+${stepsBlock}${notesBlock}${findingBlock}
 # Your task
 Break the phase down into 3-7 concrete steps. Each step has two parts:
 

@@ -257,6 +257,20 @@ export async function readPhaseFindings(cwd: string, phaseId: number): Promise<F
 }
 
 /**
+ * Looks up a single finding by its id (`{originPhaseId}-{n}`). Derives the origin
+ * phase from the id prefix and reads only that phase's file — a targeted read, not
+ * a full directory scan. Includes resolved findings (the caller decides whether the
+ * status matters). Returns `null` for a malformed id, a missing file or an id that
+ * is not present — never throws.
+ */
+export async function findFindingById(cwd: string, id: string): Promise<Finding | null> {
+  const phaseId = phaseIdFromFindingId(id);
+  if (phaseId === null) return null;
+  const findings = await readPhaseFindings(cwd, phaseId);
+  return findings.find((f) => f.id === id) ?? null;
+}
+
+/**
  * Appends a finding to a phase's file and returns its assigned id and the path.
  *
  * The id is sequential **within the phase file**: `addFinding` reads the existing

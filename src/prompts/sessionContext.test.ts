@@ -90,9 +90,10 @@ describe('buildNextSessionPrompt', () => {
     expect(p).toContain('Open adversarial findings');
     expect(p).toContain('155-1 · blocker · src/foo.ts:42 — unchecked null');
     expect(p).toContain('156-2 · nit — rename helper');
-    // The prompt warns there is no auto-tick (unlike --from-todo).
-    expect(p).toContain('no auto-tick');
-    expect(p).toContain('resolved by hand');
+    // The prompt points Claude at --from-finding to record the link durably,
+    // while making clear it does not resolve the finding.
+    expect(p).toContain('--from-finding');
+    expect(p).toContain('does not close the finding');
   });
 
   it('omits the findings block when there are no open findings', () => {
@@ -154,6 +155,23 @@ describe('buildPlanSessionPrompt', () => {
     const p = buildPlanSessionPrompt(PROJECT, phase);
     expect(p).toContain('Něco.');
     expect(p).not.toContain('.mini/project.md');
+  });
+
+  it('renders the linked finding block when one is passed', () => {
+    const p = buildPlanSessionPrompt(PROJECT, phase, null, false, {
+      id: '155-1',
+      severity: 'blocker',
+      title: 'unchecked null',
+      body: 'crashes on empty input',
+    });
+    expect(p).toContain('# Linked adversarial finding');
+    expect(p).toContain('**155-1 · blocker** — unchecked null');
+    expect(p).toContain('crashes on empty input');
+  });
+
+  it('omits the linked finding block when none is passed', () => {
+    const p = buildPlanSessionPrompt(PROJECT, phase);
+    expect(p).not.toContain('Linked adversarial finding');
   });
 });
 
