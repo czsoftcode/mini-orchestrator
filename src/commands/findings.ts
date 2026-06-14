@@ -1,10 +1,13 @@
 import {
   type Finding,
   type FindingSeverity,
+  type FindingSource,
   FINDING_SEVERITIES,
+  FINDING_SOURCES,
   addFinding,
   findingsPath,
   isFindingSeverity,
+  isFindingSource,
   listFindings,
 } from '../state/findingsStore.js';
 import { headSha, isGitRepo } from '../git.js';
@@ -18,9 +21,10 @@ import type { StepOutcome } from './types.js';
  * (`.mini/findings/`). Non-interactive and TTY-free, so it works the same from a
  * terminal and from the Claude Code session that runs a review:
  *
- * - `mini findings add --severity <s> --title <t> [--where <w>] [--body <b>]`
- *   records one finding about the phase under review (the reviewer calls this
- *   instead of editing the run report),
+ * - `mini findings add --severity <s> --title <t> [--source <src>] [--where <w>]
+ *   [--body <b>]` records one finding about the phase under review (the reviewer
+ *   calls this instead of editing the run report); `--source` (`adversarial` |
+ *   `verify`) tags which review step found it and defaults to `adversarial`,
  * - `mini findings list [--all]` prints the open findings across all phases
  *   (`--all` includes resolved ones).
  *
@@ -39,6 +43,7 @@ function reviewPhaseId(header: StateHeader): number | null {
 
 export interface FindingsAddOptions {
   severity?: string;
+  source?: string;
   title?: string;
   where?: string;
   body?: string;
@@ -67,6 +72,19 @@ export async function findingsAdd(opts: FindingsAddOptions): Promise<StepOutcome
     return { ok: false, reason: 'bad-severity' };
   }
 
+  // `--source` is optional; validate it only when given, and default to
+  // `adversarial` (the store's original sole writer) when absent — so the
+  // unchanged adversarial prompt and old files stay correct.
+  const sourceRaw = opts.source?.trim();
+  let source: FindingSource | undefined;
+  if (sourceRaw) {
+    if (!isFindingSource(sourceRaw)) {
+      log.error(`--source must be one of: ${FINDING_SOURCES.join(' | ')} (got "${sourceRaw}").`);
+      return { ok: false, reason: 'bad-source' };
+    }
+    source = sourceRaw;
+  }
+
   const title = opts.title?.trim();
   if (!title) {
     log.error('--title is required (a short headline of the finding).');
@@ -83,6 +101,7 @@ export async function findingsAdd(opts: FindingsAddOptions): Promise<StepOutcome
 
   const input: {
     severity: FindingSeverity;
+    source?: FindingSource;
     title: string;
     where?: string;
     reviewedAt?: string;
@@ -91,6 +110,7 @@ export async function findingsAdd(opts: FindingsAddOptions): Promise<StepOutcome
     severity,
     title,
   };
+  if (source) input.source = source;
   if (opts.where?.trim()) input.where = opts.where.trim();
   if (opts.body?.trim()) input.body = opts.body.trim();
 
@@ -142,9 +162,9 @@ export async function findingsList(opts: FindingsListOptions): Promise<StepOutco
   return { ok: true };
 }
 
-/** One line per finding: `id [severity] (status) where @sha — title`. */
+/** One line per finding: `id [severity] <source> (status) where @sha — title`. */
 function renderFinding(f: Finding, showStatus: boolean): string {
-  const parts = [f.id, `[${f.severity}]`];
+  const parts = [f.id, `[${f.severity}]`, f.source];
   if (showStatus) parts.push(`(${f.status})`);
   if (f.where) parts.push(f.where);
   // Short baseline SHA, so a reader can tell which code state the review started

@@ -1,18 +1,19 @@
 # `mini findings`
 
-> The durable store of **adversarial review findings** (`.mini/findings/`).
-> Decoupled from the run report, versioned with the code, so a finding survives
-> the phase it was found in and can feed later work.
+> The durable store of **review findings** (`.mini/findings/`) — from both the
+> adversarial red-team and the human verify review. Decoupled from the run
+> report, versioned with the code, so a finding survives the phase it was found
+> in and can feed later work.
 
 > **Console-only.** There is **no** `/mini:findings` slash variant. `add` is
-> normally called by the [adversarial review](../adversarial-task.md) step
-> itself; `list` is for you, in a terminal.
+> normally called by the [adversarial review](../adversarial-task.md) and
+> [verify](verify.md) steps themselves; `list` is for you, in a terminal.
 
 ## Synopsis
 
 ```bash
 mini findings add --severity <blocker|should-know|nit> --title "<headline>" \
-  [--where "<file:line>"] [--body "<what breaks and how>"]
+  [--source <adversarial|verify>] [--where "<file:line>"] [--body "<what breaks and how>"]
 
 mini findings list            # open findings across all phases
 mini findings list --all      # include resolved ones too
@@ -20,21 +21,23 @@ mini findings list --all      # include resolved ones too
 
 ## Description
 
-The adversarial review step used to write its findings with an editor straight
-into the **run report of the phase under review**. Once that phase closed, nobody
-opened the report again — the finding was buried. `mini findings` fixes that: each
-finding goes into its own durable file under `.mini/findings/`, carries an
-`open`/`resolved` status, and is listed across phases so later phases can pick up
-what is still open.
+The review steps used to write their findings with an editor straight into the
+**run report of the phase under review**. Once that phase closed, nobody opened
+the report again — the finding was buried, and a corrupt or missing report
+dropped it silently. `mini findings` fixes that: each finding goes into its own
+durable file under `.mini/findings/`, carries an `open`/`resolved` status and a
+`source` tag, and is listed across phases so later phases can pick up what is
+still open.
 
 - **`add`** records one finding **about the phase under review** — mini infers the
-  origin phase (the current one, else the last closed one); you never pass it. It
-  prints the assigned id and the file path, so a failed call is visible rather
-  than silently swallowed. This is the *only* write the adversarial reviewer makes
-  — it reports, it does not edit code.
-- **`list`** prints the open findings across all phases (id, severity, location,
-  title). `--all` includes resolved ones. An empty or missing store prints a
-  friendly note and never errors.
+  origin phase (the current one, else the last closed one); you never pass it.
+  `--source` tags which review step found it (`adversarial` | `verify`, default
+  `adversarial`). It prints the assigned id and the file path, so a failed call is
+  visible rather than silently swallowed. This is the *only* write a reviewer
+  makes — it reports, it does not edit code.
+- **`list`** prints the open findings across all phases (id, severity, source,
+  location, title). `--all` includes resolved ones. An empty or missing store
+  prints a friendly note and never errors.
 
 Findings live in `.mini/findings/phase-{id}.md`, one file per origin phase, each
 holding one or more entries:
@@ -43,21 +46,24 @@ holding one or more entries:
 ## 155-1 · should-know · open
 **Where:** src/foo.ts:42
 **Reviewed-at:** 1a2b3c4…
+**Source:** adversarial
 Null cascades silently on empty input.
 
 The parser returns undefined and the caller crashes two layers up.
 ```
 
 The `## <id> · <severity> · <status>` header line is the machine-readable
-contract — don't hand-edit it. The optional `**Where:**` and `**Reviewed-at:**`
-lines sit directly under it; both may be absent (older files predate
-`**Reviewed-at:**`, and reviews outside git omit it).
+contract — don't hand-edit it. The optional `**Where:**`, `**Reviewed-at:**` and
+`**Source:**` lines sit directly under it; each may be absent (older files predate
+`**Reviewed-at:**`/`**Source:**`, and reviews outside git omit the SHA). A missing
+`**Source:**` defaults to `adversarial`.
 
 ## Options
 
 | Flag | For | Description |
 | --- | --- | --- |
 | `--severity <level>` | `add` | `blocker` \| `should-know` \| `nit` (required). |
+| `--source <step>` | `add` | `adversarial` \| `verify` — which review found it. Defaults to `adversarial`. |
 | `--title <text>` | `add` | Short headline of the finding (required). |
 | `--where <loc>` | `add` | Optional location, `file:line`. |
 | `--body <text>` | `add` | Optional longer body — what breaks and how. |
@@ -72,7 +78,7 @@ $ mini findings add --severity should-know --title "Null cascades" \
 
 $ mini findings list
 Open findings
-  155-1 [should-know] src/parser.ts:42 @1a2b3c4 — Null cascades
+  155-1 [should-know] adversarial src/parser.ts:42 @1a2b3c4 — Null cascades
 ```
 
 ## Notes
@@ -91,7 +97,7 @@ Open findings
   no commit) the field is simply omitted. It lets a later consumer judge whether a
   finding may be stale after the code moved on.
 - Open findings surface in [`mini next`](next.md) / [`/mini:next`](../interactive/next.md)
-  as candidate **fix phases** (`id · severity · where — title`). A phase born from
+  as candidate **fix phases** (`id · severity · source · where — title`). A phase born from
   one is saved with `--from-finding <id>`, which records the link without closing
   the finding (it stays open until the fix is done and verified). That link lets
   [`mini discuss`](discuss.md) and [`mini plan`](plan.md) read the finding's full

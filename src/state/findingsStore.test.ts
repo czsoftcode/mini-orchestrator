@@ -9,6 +9,7 @@ import {
   findFindingById,
   findingsPath,
   isFindingSeverity,
+  isFindingSource,
   listFindings,
   parseFindings,
   readPhaseFindings,
@@ -35,6 +36,15 @@ describe('isFindingSeverity', () => {
   });
 });
 
+describe('isFindingSource', () => {
+  it('accepts the known sources and rejects anything else', () => {
+    expect(isFindingSource('adversarial')).toBe(true);
+    expect(isFindingSource('verify')).toBe(true);
+    expect(isFindingSource('audit')).toBe(false);
+    expect(isFindingSource('')).toBe(false);
+  });
+});
+
 describe('parse ↔ serialize round-trip', () => {
   it('round-trips a finding with where + title + body', () => {
     const findings: Finding[] = [
@@ -43,6 +53,7 @@ describe('parse ↔ serialize round-trip', () => {
         phaseId: 155,
         severity: 'should-know',
         status: 'open',
+        source: 'adversarial',
         where: 'src/foo.ts:42',
         title: 'Null cascades silently',
         body: 'When input is empty the parser returns undefined and the caller crashes later.',
@@ -53,7 +64,30 @@ describe('parse ↔ serialize round-trip', () => {
 
   it('round-trips a minimal finding (no where, no body)', () => {
     const findings: Finding[] = [
-      { id: '12-1', phaseId: 12, severity: 'nit', status: 'resolved', title: 'Typo in hint' },
+      {
+        id: '12-1',
+        phaseId: 12,
+        severity: 'nit',
+        status: 'resolved',
+        source: 'adversarial',
+        title: 'Typo in hint',
+      },
+    ];
+    expect(parseFindings(serializeFindings(findings))).toEqual(findings);
+  });
+
+  it('round-trips a verify-sourced finding', () => {
+    const findings: Finding[] = [
+      {
+        id: '160-1',
+        phaseId: 160,
+        severity: 'should-know',
+        status: 'open',
+        source: 'verify',
+        where: 'CLI output',
+        title: 'Error message is unclear',
+        body: 'The hint points to the wrong command.',
+      },
     ];
     expect(parseFindings(serializeFindings(findings))).toEqual(findings);
   });
@@ -65,6 +99,7 @@ describe('parse ↔ serialize round-trip', () => {
         phaseId: 156,
         severity: 'blocker',
         status: 'open',
+        source: 'adversarial',
         where: 'src/foo.ts:42',
         reviewedAt: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
         title: 'Reviewed against a known baseline',
@@ -81,6 +116,7 @@ describe('parse ↔ serialize round-trip', () => {
         phaseId: 156,
         severity: 'nit',
         status: 'open',
+        source: 'adversarial',
         reviewedAt: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
         title: 'No location, only a baseline',
       },
@@ -99,6 +135,7 @@ describe('parse ↔ serialize round-trip', () => {
         phaseId: 9,
         severity: 'should-know',
         status: 'open',
+        source: 'adversarial',
         where: 'src/a.ts:3',
         title: 'A title',
         body: 'A body.',
@@ -106,20 +143,37 @@ describe('parse ↔ serialize round-trip', () => {
     ]);
   });
 
+  it('defaults source to adversarial for an old file with no **Source:** line', () => {
+    // A pre-160 file: no source metadata anywhere.
+    const md = '# Adversarial findings\n\n## 9-1 · nit · open\nA title\n';
+    expect(parseFindings(md)[0]?.source).toBe('adversarial');
+  });
+
+  it('ignores an unknown **Source:** value and falls back to the default', () => {
+    const md = '## 9-1 · nit · open\n**Source:** audit\nA title\n';
+    const parsed = parseFindings(md);
+    // The unknown source line is consumed (not mistaken for the title) and the
+    // source falls back to the default.
+    expect(parsed).toEqual([
+      { id: '9-1', phaseId: 9, severity: 'nit', status: 'open', source: 'adversarial', title: 'A title' },
+    ]);
+  });
+
   it('preserves origin phase and index order across several entries', () => {
     const md = serializeFindings([
-      { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', title: 'A' },
-      { id: '155-2', phaseId: 155, severity: 'nit', status: 'resolved', title: 'B' },
+      { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', source: 'adversarial', title: 'A' },
+      { id: '155-2', phaseId: 155, severity: 'nit', status: 'resolved', source: 'verify', title: 'B' },
     ]);
     const parsed = parseFindings(md);
     expect(parsed.map((f) => f.id)).toEqual(['155-1', '155-2']);
     expect(parsed.map((f) => f.phaseId)).toEqual([155, 155]);
+    expect(parsed.map((f) => f.source)).toEqual(['adversarial', 'verify']);
   });
 
   it('strips a leading BOM and normalizes CRLF', () => {
     const md = '﻿# Adversarial findings\r\n\r\n## 9-1 · nit · open\r\nA title\r\n';
     expect(parseFindings(md)).toEqual([
-      { id: '9-1', phaseId: 9, severity: 'nit', status: 'open', title: 'A title' },
+      { id: '9-1', phaseId: 9, severity: 'nit', status: 'open', source: 'adversarial', title: 'A title' },
     ]);
   });
 });
@@ -166,17 +220,31 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
 
     const stored = await readPhaseFindings(cwd, 155);
     expect(stored).toEqual([
-      { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', title: 'First' },
+      { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', source: 'adversarial', title: 'First' },
       {
         id: '155-2',
         phaseId: 155,
         severity: 'nit',
         status: 'open',
+        source: 'adversarial',
         where: 'src/x.ts:9',
         title: 'Second',
         body: 'detail',
       },
     ]);
+  });
+
+  it('defaults source to adversarial when none is passed', async () => {
+    await addFinding(cwd, 155, { severity: 'blocker', title: 'no source flag' });
+    expect((await readPhaseFindings(cwd, 155))[0]?.source).toBe('adversarial');
+  });
+
+  it('persists an explicit verify source passed to addFinding', async () => {
+    await addFinding(cwd, 160, { severity: 'nit', title: 'from verify', source: 'verify' });
+    const stored = await readPhaseFindings(cwd, 160);
+    expect(stored[0]?.source).toBe('verify');
+    const raw = await readFile(findingsPath(cwd, 160), 'utf8');
+    expect(raw).toContain('**Source:** verify');
   });
 
   it('persists a reviewedAt SHA passed to addFinding', async () => {
@@ -189,6 +257,7 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
         phaseId: 156,
         severity: 'should-know',
         status: 'open',
+        source: 'adversarial',
         reviewedAt: sha,
         title: 'has a baseline',
       },
@@ -215,7 +284,7 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
     await writeFile(
       findingsPath(cwd, 155),
       serializeFindings([
-        { id: '155-2', phaseId: 155, severity: 'nit', status: 'open', title: 'kept' },
+        { id: '155-2', phaseId: 155, severity: 'nit', status: 'open', source: 'adversarial', title: 'kept' },
       ]),
       'utf8',
     );
@@ -258,8 +327,8 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
     await writeFile(
       findingsPath(cwd, 10),
       serializeFindings([
-        { id: '10-1', phaseId: 10, severity: 'nit', status: 'open', title: 'open one' },
-        { id: '10-2', phaseId: 10, severity: 'nit', status: 'resolved', title: 'resolved one' },
+        { id: '10-1', phaseId: 10, severity: 'nit', status: 'open', source: 'adversarial', title: 'open one' },
+        { id: '10-2', phaseId: 10, severity: 'nit', status: 'resolved', source: 'adversarial', title: 'resolved one' },
       ]),
       'utf8',
     );
@@ -280,7 +349,7 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
   it('writes a human-readable header comment into the file', async () => {
     await addFinding(cwd, 10, { severity: 'nit', title: 'x' });
     const raw = await readFile(findingsPath(cwd, 10), 'utf8');
-    expect(raw).toContain('# Adversarial findings');
+    expect(raw).toContain('# Review findings');
     expect(raw).toContain('## 10-1 · nit · open');
   });
 
@@ -290,8 +359,8 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
     await writeFile(
       findingsPath(cwd, 155),
       serializeFindings([
-        { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', where: 'src/x.ts:1', title: 'first' },
-        { id: '155-2', phaseId: 155, severity: 'nit', status: 'resolved', title: 'second' },
+        { id: '155-1', phaseId: 155, severity: 'blocker', status: 'open', source: 'adversarial', where: 'src/x.ts:1', title: 'first' },
+        { id: '155-2', phaseId: 155, severity: 'nit', status: 'resolved', source: 'adversarial', title: 'second' },
       ]),
       'utf8',
     );
@@ -301,6 +370,7 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
       phaseId: 155,
       severity: 'blocker',
       status: 'open',
+      source: 'adversarial',
       where: 'src/x.ts:1',
       title: 'first',
     });
@@ -367,12 +437,13 @@ describe('resolveFinding / reopenFinding — status flip', () => {
         phaseId: 155,
         severity: 'should-know',
         status: 'resolved',
+        source: 'adversarial',
         where: 'src/x.ts:9',
         reviewedAt: sha,
         title: 'first',
         body: 'what breaks',
       },
-      { id: '155-2', phaseId: 155, severity: 'nit', status: 'open', title: 'second' },
+      { id: '155-2', phaseId: 155, severity: 'nit', status: 'open', source: 'adversarial', title: 'second' },
     ]);
   });
 

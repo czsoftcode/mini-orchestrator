@@ -6,7 +6,26 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-06-14
+
 ### Added
+
+- **Verify findings go to the durable findings store.** `mini verify` /
+  `/mini:verify` now records each finding by calling `mini findings add --source
+  verify` into `.mini/findings/`, instead of appending a `## Verify findings`
+  section into the run report. Like adversarial findings, they survive a corrupt
+  or missing report and a closed phase, and surface later in `mini next` as
+  candidate fix phases. `mini findings add` gained a `--source <adversarial|
+  verify>` flag (default `adversarial`) and each stored finding carries a
+  `source` tag; `mini findings list` shows it.
+
+### Changed
+
+- **The findings store now holds both review kinds.** `.mini/findings/` is shared
+  by the adversarial red-team and the verify review; its header reads `# Review
+  findings` and `mini next` lists open findings from both, tagged by source
+  (`id · severity · source · where — title`). Older finding files with no
+  `**Source:**` line are read as `adversarial` (backward compatible).
 
 - **Completing a fix phase resolves its linked finding.** When a phase created
   with `--from-finding` closes (`mini done`), mini now flips that adversarial

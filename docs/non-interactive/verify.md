@@ -19,7 +19,9 @@ mini verify
 UI/UX review of the phase: appearance, CLI/screen output, UX flow, clarity —
 things that can only be judged by a person, not mechanically. It targets the
 current phase, or the last closed one when no phase is open. The findings are
-written into the phase report so they reach the project memory.
+recorded into the durable [findings store](findings.md) (`.mini/findings/`) via
+`mini findings add --source verify`, so they survive a corrupt or missing report
+and a closed phase, and surface later in [`mini next`](next.md).
 
 It takes no flags — the phase and context come from `.mini/`.
 
@@ -28,7 +30,7 @@ It takes no flags — the phase and context come from `.mini/`.
 ```bash
 $ mini verify
 # Opens an interactive Claude Code session that reviews the phase's UI/UX,
-# asking one thing at a time. Findings land in the phase report.
+# asking one thing at a time. Findings are recorded via `mini findings add`.
 ```
 
 ## Notes
@@ -36,8 +38,8 @@ $ mini verify
 - Verify is **human-driven**. The autonomous loop ([`mini auto`](auto.md)) never
   bypasses it — it stops and lets you review.
 - If the review finds problems, the phase is **not** closed: go back to
-  [`mini do`](do.md), fix them within the same phase, update the report, and
-  only then run [`mini done`](done.md).
+  [`mini do`](do.md), fix them within the same phase, and only then run
+  [`mini done`](done.md).
 - Use it for UI/UX phases; a purely internal phase (refactor, parser, build)
   usually has nothing for a human to look at.
 

@@ -80,16 +80,16 @@ describe('buildNextSessionPrompt', () => {
     expect(p).not.toContain('Ideas in the backlog');
   });
 
-  it('surfaces open adversarial findings as candidate fix phases', () => {
+  it('surfaces open review findings (tagged by source) as candidate fix phases', () => {
     const p = buildNextSessionPrompt(PROJECT, state(), {
       openFindings: [
-        { id: '155-1', severity: 'blocker', where: 'src/foo.ts:42', title: 'unchecked null' },
-        { id: '156-2', severity: 'nit', title: 'rename helper' },
+        { id: '155-1', severity: 'blocker', source: 'adversarial', where: 'src/foo.ts:42', title: 'unchecked null' },
+        { id: '156-2', severity: 'nit', source: 'verify', title: 'rename helper' },
       ],
     });
-    expect(p).toContain('Open adversarial findings');
-    expect(p).toContain('155-1 · blocker · src/foo.ts:42 — unchecked null');
-    expect(p).toContain('156-2 · nit — rename helper');
+    expect(p).toContain('Open review findings');
+    expect(p).toContain('155-1 · blocker · adversarial · src/foo.ts:42 — unchecked null');
+    expect(p).toContain('156-2 · nit · verify — rename helper');
     // The prompt points Claude at --from-finding to record the link durably,
     // while making clear it does not resolve the finding.
     expect(p).toContain('--from-finding');
@@ -98,7 +98,7 @@ describe('buildNextSessionPrompt', () => {
 
   it('omits the findings block when there are no open findings', () => {
     const p = buildNextSessionPrompt(PROJECT, state(), { openFindings: [] });
-    expect(p).not.toContain('Open adversarial findings');
+    expect(p).not.toContain('Open review findings');
   });
 
   it('without a hint, offers to stash extra ideas into the todo archive', () => {
@@ -340,7 +340,7 @@ describe('hardened ask-and-stop hint (Fable 5 prompt hardening)', () => {
   });
 
   it('verify: the interactive review asks one at a time and ends the turn', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
     expect(p).toContain(ASK_AND_STOP_HINT);
   });
 });
@@ -354,76 +354,74 @@ describe('buildVerifySessionPrompt', () => {
     steps: [{ title: 'Tlačítko Uložit', status: 'done', detail: 'modrá barva' }],
   };
 
-  it('vykreslí krok verify a hloubkovou UI/UX kontrolu', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+  it('renders the verify step and the in-depth UI/UX review', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
     expect(p).toContain('**verify** step');
     expect(p).toContain('in-depth UI/UX review');
   });
 
-  it('zapisuje nálezy do reportu, ale stav fáze neposouvá', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
-    expect(p).toContain('## Verify findings');
-    expect(p).toContain('.mini/run/phase-005.md');
+  it('records findings via mini findings add --source verify, not into the report', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    expect(p).toContain('mini findings add --source verify');
+    expect(p).toContain('--severity');
+    expect(p).toContain('.mini/findings/');
     expect(p).toContain('do not move');
-    // už to není čistě read-only krok
+    // The old run-report write path is gone — no section, no Edit into the report.
+    expect(p).not.toContain('## Verify findings');
+    expect(p).not.toContain('.mini/run/phase-005.md');
+    // It is no longer a purely read-only step.
     expect(p).not.toContain('do not write anything and change no state');
   });
 
-  it('když report chybí, navede ho založit', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: false });
-    expect(p).toContain('does not exist yet');
-    expect(p).toContain('## Verify findings');
-  });
-
-  it('u uzavřené fáze zapisuje nálezy i do paměti', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [], reportExists: true });
-    expect(p).toContain('.mini/memory/phase-005.md');
+  it('routes findings to the durable store even for a closed phase (no memory write)', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [] });
+    expect(p).toContain('mini findings add --source verify');
     expect(p).toContain('already closed');
-  });
-
-  it('u rozdělané fáze do paměti nepíše', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+    // Findings live in the durable store now, not appended into the memory file.
     expect(p).not.toContain('.mini/memory/phase-005.md');
   });
 
-  it('u rozdělané fáze rámuje kontrolu před done', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+  it('does not write into the memory for an open phase', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
+    expect(p).not.toContain('.mini/memory/phase-005.md');
+  });
+
+  it('frames the review as happening before done for an open phase', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
     expect(p).toContain('not yet closed');
     expect(p).toContain('/mini:done');
   });
 
-  it('u uzavřené fáze rámuje zpětnou kontrolu', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [], reportExists: true });
+  it('frames a retrospective review for a closed phase', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: true, verify: [] });
     expect(p).toContain('is already closed');
     expect(p).toContain('retrospective in-depth review');
   });
 
-  it('vypíše verify body z reportu', () => {
+  it('lists the verify items from the report', () => {
     const p = buildVerifySessionPrompt({
       phase,
       phaseDone: true,
-      verify: [{ title: 'zkontroluj barvu', detail: 'má být modrá' }],
-      reportExists: true,
+      verify: [{ title: 'check the color', detail: 'should be blue' }],
     });
-    expect(p).toContain('zkontroluj barvu');
-    expect(p).toContain('má být modrá');
+    expect(p).toContain('check the color');
+    expect(p).toContain('should be blue');
   });
 
-  it('bez verify bodů vede kontrolu podle cíle a kroků', () => {
-    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [], reportExists: true });
+  it('guides the review by the goal and steps when there are no verify items', () => {
+    const p = buildVerifySessionPrompt({ phase, phaseDone: false, verify: [] });
     expect(p).toContain('no explicit verify items');
     expect(p).toContain('Tlačítko Uložit');
   });
 
-  it('vloží volný text reportu, když je', () => {
+  it('inlines the free text from the report when present', () => {
     const p = buildVerifySessionPrompt({
       phase,
       phaseDone: true,
       verify: [],
-      reportBody: 'Poznámky pro člověka.',
-      reportExists: true,
+      reportBody: 'Notes for the human.',
     });
-    expect(p).toContain('Poznámky pro člověka.');
+    expect(p).toContain('Notes for the human.');
   });
 });
 

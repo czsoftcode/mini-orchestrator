@@ -346,13 +346,19 @@ program
 program
   .command('findings [action]')
   .description(
-    'Adversarial findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--where <w>] [--body <b>]" records a finding about the phase under review (the review step calls this instead of editing the run report); "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
+    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify (default adversarial). "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
   )
   .addOption(
     new Option(
       '--severity <level>',
       'Finding severity (for add): blocker | should-know | nit.',
     ).choices(['blocker', 'should-know', 'nit']),
+  )
+  .addOption(
+    new Option(
+      '--source <step>',
+      'Which review step found it (for add): adversarial | verify. Defaults to adversarial.',
+    ).choices(['adversarial', 'verify']),
   )
   .option('--title <text>', 'Short headline of the finding (for add).')
   .option('--where <loc>', 'Optional location file:line (for add).')
@@ -361,13 +367,21 @@ program
   .action(
     async (
       action: string | undefined,
-      opts: { severity?: string; title?: string; where?: string; body?: string; all?: boolean },
+      opts: {
+        severity?: string;
+        source?: string;
+        title?: string;
+        where?: string;
+        body?: string;
+        all?: boolean;
+      },
     ) => {
       switch ((action ?? 'list').toLowerCase()) {
         case 'add': {
           const { findingsAdd } = await import('./commands/findings.js');
           const r = await findingsAdd({
             severity: opts.severity,
+            source: opts.source,
             title: opts.title,
             where: opts.where,
             body: opts.body,

@@ -5,7 +5,7 @@
 > phase ideas. You can also edit this checklist by hand.
 - [ ] Decision records: consistency — mini doctor orphan-check (decision file with no matching phase, same pattern as stale run reports) and mini undo removes/restores the decision file.
 - [ ] adversarial project
-- [ ] Adversarial/verify: apply the three-state report handling (valid/corrupt/missing) to mini:verify too — verify still tells the reviewer to append findings into an unparseable/missing report, so they get silently dropped on the next done. Mirror adversarialContext.ts.
+- [x] Adversarial/verify: apply the three-state report handling (valid/corrupt/missing) to mini:verify too — verify still tells the reviewer to append findings into an unparseable/missing report, so they get silently dropped on the next done. Mirror adversarialContext.ts.
 - [ ] Adversarial re-run dedupe: strip existing '## Adversarial findings'/'## Verify findings' sections from the report body before embedding it as '# Implementation report', so repeated adversarial runs don't stack duplicated/recursive findings and the reviewer doesn't read prior verdicts as the implementation log.
 - [ ] store.ts loadPhase/readPhaseFile swallows every error (ENOENT and malformed JSON alike) -> when currentPhaseId is set but the phase file is corrupt, verify/adversarial print a misleading 'no phase' message and steer to /mini:next. Distinguish missing from corrupt and report the real problem.
 - [x] čtení adversarial v next/plan/do

@@ -110,12 +110,13 @@ async function buildNextContext(
     .map((t, i) => ({ index: i + 1, text: t.text, done: t.done }))
     .filter((t) => !t.done)
     .map(({ index, text }) => ({ index, text }));
-  // Open adversarial findings across all phases — candidate fix phases. Defaults
-  // to open-only; a missing findings dir yields an empty list (no block).
+  // Open review findings (adversarial + verify) across all phases — candidate fix
+  // phases. Defaults to open-only; a missing findings dir yields an empty list.
   const openFindings = (await listFindings(cwd)).map((f) => {
-    const out: { id: string; severity: string; where?: string; title: string } = {
+    const out: { id: string; severity: string; source: string; where?: string; title: string } = {
       id: f.id,
       severity: f.severity,
+      source: f.source,
       title: f.title,
     };
     if (f.where) out.where = f.where;

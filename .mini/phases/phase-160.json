@@ -1,0 +1,42 @@
+{
+  "id": 160,
+  "title": "Verify findings to durable store",
+  "goal": "Route mini:verify findings to the .mini/findings/ store via mini findings add and make verifyContext treat the run report as optional, three-state-tolerant context (valid/corrupt/missing), so verify findings are no longer silently dropped when the report is unparseable or absent.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "source field in findings store model",
+      "status": "done",
+      "detail": "Add FindingSource = verify|adversarial, FINDING_SOURCES, isFindingSource and Finding.source / NewFinding.source (default adversarial) to findingsStore.ts. parseFindings reads an optional **Source:** metadata line (missing -> adversarial); serializeFindings emits it alongside **Where:**/**Reviewed-at:**; relabel header # Adversarial findings -> source-agnostic (# Review findings) + comment naming both sources. ENTRY_RE untouched. Covered by findingsStore.test: source round-trip, default-adversarial on missing line, old-header file parses unchanged."
+    },
+    {
+      "title": "--source flag on mini findings add",
+      "status": "done",
+      "detail": "findings.ts accepts --source <verify|adversarial>, validates via isFindingSource (reject unknown like --severity), defaults to adversarial when absent, threads into addFinding. Covered by findings.test: explicit --source verify, invalid rejected, default when omitted."
+    },
+    {
+      "title": "Route verify prompt + context to the store",
+      "status": "done",
+      "detail": "buildVerifySessionPrompt replaces the ## Verify findings report-write and closed-phase memory-write branches with one 'mini findings add --source verify --severity .. --title .. [--where] [--body]' call per finding, plus the adversarial PATH caveat. Keep verify-items skeleton from the report as optional context; drop now-unused reportExists/memory wiring from prompt/verifyContext.ts as needed. Verify snapshot in sessionContext.test updated."
+    },
+    {
+      "title": "Surface verify findings source in next",
+      "status": "done",
+      "detail": "listFindings returns verify-sourced findings too; tag each surfaced line in the next prompt with its source ([verify]/[adversarial]) and rename the 'Open adversarial findings' comment/label (context.ts, sessionContext.ts) to be source-agnostic. Snapshot/test for the next block updated."
+    },
+    {
+      "title": "Build green + full test suite green",
+      "status": "done",
+      "detail": "npm run build and the full test suite pass, including any adversarial snapshot that round-trips the relabeled store header."
+    }
+  ],
+  "startedAt": "2026-06-14T18:14:58.538Z",
+  "resolvedVerify": [
+    "Run /mini:verify end-to-end and confirm findings land in .mini/findings/"
+  ],
+  "completedAt": "2026-06-14T18:53:32.088Z",
+  "autoCommit": {
+    "preSha": "fa39151ab46bba530fb7c2f4fd31f955233e2b0c",
+    "subject": "Phase 160: Verify findings to durable store"
+  }
+}

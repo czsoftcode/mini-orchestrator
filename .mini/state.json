@@ -797,6 +797,11 @@
       "id": 159,
       "title": "Resolve linked finding on done",
       "status": "done"
+    },
+    {
+      "id": 160,
+      "title": "Verify findings to durable store",
+      "status": "done"
     }
   ],
   "models": {

@@ -110,6 +110,7 @@ describe('mini findings', () => {
           phaseId: 5,
           severity: 'should-know',
           status: 'open',
+          source: 'adversarial',
           where: 'src/a.ts:9',
           title: 'Null cascades',
           body: 'detail',
@@ -118,6 +119,33 @@ describe('mini findings', () => {
       // The confirmation must surface the assigned id, so a silent failure is visible.
       expect(output()).toContain('5-1');
       expect(output()).toContain('phase-005.md');
+    });
+
+    it('defaults source to adversarial when --source is omitted', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      await findingsAdd({ severity: 'nit', title: 'no source' });
+      expect((await readPhaseFindings(cwd, 5))[0]?.source).toBe('adversarial');
+    });
+
+    it('records an explicit verify source', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      const r = await findingsAdd({ severity: 'should-know', title: 'ux issue', source: 'verify' });
+      expect(r.ok).toBe(true);
+      expect((await readPhaseFindings(cwd, 5))[0]?.source).toBe('verify');
+    });
+
+    it('rejects an invalid source', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      expect(await findingsAdd({ severity: 'nit', title: 'x', source: 'audit' })).toEqual({
+        ok: false,
+        reason: 'bad-source',
+      });
     });
 
     it('omits reviewedAt outside a git repo (existing behaviour preserved)', async () => {

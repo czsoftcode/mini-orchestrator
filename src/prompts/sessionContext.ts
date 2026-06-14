@@ -40,11 +40,13 @@ export interface OpenTodo {
   text: string;
 }
 
-/** A single open adversarial finding, surfaced as a candidate for the next phase. */
+/** A single open review finding, surfaced as a candidate for the next phase. */
 export interface OpenFinding {
   /** Stable finding id (`{phaseId}-{n}`, e.g. `155-1`). */
   id: string;
   severity: string;
+  /** Which review step found it (`adversarial` | `verify`). */
+  source: string;
   /** Optional location (`file:line`). */
   where?: string;
   /** Short headline of the finding. */
@@ -57,7 +59,7 @@ export interface NextSessionOptions {
   lastMemoryMd?: string;
   /** Open items from the `.mini/todo.md` archive, offered as candidate ideas. */
   openTodos?: OpenTodo[];
-  /** Open adversarial findings, offered as candidate fix phases. */
+  /** Open review findings (adversarial + verify), offered as candidate fix phases. */
   openFindings?: OpenFinding[];
 }
 
@@ -108,18 +110,28 @@ export function buildNextSessionPrompt(
           )}\nIf one of them fits as the next step, propose it. When you save such a phase, add \`--from-todo <n>\` (the bracketed number) to \`mini next --apply\` so the source item is ticked off automatically.\n\n`
       : '';
 
-  // Open adversarial findings — what the red-team flagged on earlier phases and
-  // nobody has closed yet. Any of these can become the next (fix) phase. Saving
-  // with `--from-finding <id>` records the link on the phase (so `discuss`/`plan`
-  // can pull in the finding's full detail) but does NOT resolve the finding — it
-  // stays open until the fix is done and verified. Say so plainly.
+  // Open review findings — what the adversarial red-team (`/mini:adversarial`) or
+  // the human UI/UX review (`/mini:verify`) flagged on earlier phases and nobody
+  // has closed yet. Each line is tagged with its source. Any of these can become
+  // the next (fix) phase. Saving with `--from-finding <id>` records the link on
+  // the phase (so `discuss`/`plan` can pull in the finding's full detail) but does
+  // NOT resolve the finding — it stays open until the fix is done and verified.
   const openFindings = (options.openFindings ?? [])
-    .map((f) => ({ id: f.id.trim(), severity: f.severity.trim(), where: f.where?.trim(), title: f.title.trim() }))
+    .map((f) => ({
+      id: f.id.trim(),
+      severity: f.severity.trim(),
+      source: f.source.trim(),
+      where: f.where?.trim(),
+      title: f.title.trim(),
+    }))
     .filter((f) => f.id && f.title);
   const findingsBlock =
     openFindings.length > 0
-      ? `# Open adversarial findings\nThe red-team review (\`/mini:adversarial\`) left these findings open — any could become the next (fix) phase:\n${openFindings
-          .map((f) => `- ${f.id} · ${f.severity}${f.where ? ` · ${f.where}` : ''} — ${f.title}`)
+      ? `# Open review findings\nThe review steps (\`/mini:adversarial\`, \`/mini:verify\`) left these findings open — any could become the next (fix) phase:\n${openFindings
+          .map(
+            (f) =>
+              `- ${f.id} · ${f.severity} · ${f.source}${f.where ? ` · ${f.where}` : ''} — ${f.title}`,
+          )
           .join(
             '\n',
           )}\nIf one warrants the next phase, propose a fix phase for it and save it with \`--from-finding <id>\` (the finding's id, e.g. \`155-1\`) so the phase durably records which finding it fixes — \`discuss\`/\`plan\` then read that finding's full detail. This does **not** close the finding (no auto-resolve); it stays listed until the fix is done and verified.\n\n`
@@ -141,7 +153,7 @@ Show the proposal (name, max 5 words + goal in 1 sentence) to the user in your f
 mini next --apply --title "<name>" --goal "<phase goal>"
 \`\`\`
 
-If the phase comes from a backlog item above, append \`--from-todo <n>\` (its bracketed number) so that item is ticked off in the archive automatically. If it fixes an open adversarial finding above, append \`--from-finding <id>\` (the finding's id) so the phase records the link for \`discuss\`/\`plan\` (this does not close the finding).
+If the phase comes from a backlog item above, append \`--from-todo <n>\` (its bracketed number) so that item is ticked off in the archive automatically. If it fixes an open review finding above, append \`--from-finding <id>\` (the finding's id) so the phase records the link for \`discuss\`/\`plan\` (this does not close the finding).
 
 Change the phase state only with this command — never edit \`.mini/state.json\` by hand.
 
@@ -396,29 +408,29 @@ After closing, write that the next step is \`/mini:next\` (propose the next phas
 export interface VerifySessionInput {
   phase: Phase;
   /**
-   * Je fáze už uzavřená (status `done`)? Mění úvodní rámec promptu: u uzavřené
-   * fáze jde o zpětnou hloubkovou kontrolu, u rozdělané o kontrolu před `done`.
+   * Is the phase already closed (status `done`)? Switches the opening frame: a
+   * closed phase gets a retrospective in-depth review, an open one a check before
+   * `done`.
    */
   phaseDone: boolean;
-  /** Body k ručnímu ověření z run reportu — kostra hloubkové kontroly. */
+  /** Items to verify manually, drawn from the run report — the skeleton of the review. */
   verify: { title: string; detail?: string }[];
-  /** Volný text reportu (poznámky pro člověka), pokud existuje. */
+  /** Free text from the run report (notes for the human), when it parses. */
   reportBody?: string;
-  /** Existuje run report `.mini/run/phase-{id}.md`? Řídí, kam zapsat nálezy. */
-  reportExists: boolean;
 }
 
 /**
- * Prompt pro `/mini:verify` — interaktivní hloubková UI/UX kontrola fáze
- * člověkem. Na rozdíl od `done` (kde verifikace proběhne mimochodem) tady Claude
- * člověka **aktivně vede** kontrolou: projde verify body z reportu, doplní širší
- * UX procházku a posbírá nálezy. Nálezy zapíše do run reportu (a tím i do paměti,
- * kterou `mini done` z reportu skládá); stav fáze ale **neposouvá** — to je `done`.
+ * Prompt for `/mini:verify` — an interactive in-depth UI/UX review of the phase
+ * led by a human. Unlike `done` (where verification happens in passing), here
+ * Claude **actively guides** the human through the review: it walks the verify
+ * items from the report, adds a broader UX pass and collects findings. Findings
+ * are recorded via `mini findings add --source verify` into the durable
+ * `.mini/findings/` store (the same store the adversarial step uses), so they
+ * survive a corrupt/missing report and a closed phase and feed later phases via
+ * `mini next`. The phase state is **not** moved — that is `done`'s job.
  */
 export function buildVerifySessionPrompt(input: VerifySessionInput): string {
-  const { phase, phaseDone, verify, reportBody, reportExists } = input;
-  const reportRel = `.mini/run/${phaseStem(phase.id)}.md`;
-  const memoryRel = `.mini/memory/${phaseStem(phase.id)}.md`;
+  const { phase, phaseDone, verify, reportBody } = input;
 
   const frame = phaseDone
     ? `**Phase ${phase.id}: ${phase.title}** is already closed — this is a **retrospective in-depth review** of its UI/UX by a human.`
@@ -446,16 +458,6 @@ export function buildVerifySessionPrompt(input: VerifySessionInput): string {
           .join('\n')}\n`
       : '';
 
-  // Kam zapsat nálezy. Hlavní cíl je run report — `mini done` z něj skládá
-  // paměť, takže přes report se nálezy dostanou i tam. U rozdělané fáze stačí
-  // report. U už uzavřené fáze je paměť hotová, proto nálezy přidej i do ní.
-  const reportWrite = reportExists
-    ? `via \`Read\` + \`Edit\` add a \`## Verify findings\` section at the end of \`${reportRel}\` (date + bullets: what is OK, what should be fixed and how). This section is **below** the report's YAML header, so it won't disturb the parser or \`mini done\``
-    : `the report \`${reportRel}\` does not exist yet — create it via \`Write\` with at least a \`## Verify findings\` section (date + bullets), so the findings don't stay only in the chat`;
-  const memoryWrite = phaseDone
-    ? `\n   The phase is **already closed**, so the memory \`${memoryRel}\` is finished and \`mini done\` won't pull the report into it retroactively — add the same findings to the end of the memory file too (a \`## Verify findings\` section). Note: the file may have a numeric suffix (\`-2\` etc.) when the phase went through \`done\` multiple times — edit the most recent one.`
-    : '';
-
   return `You are in a Claude Code session — the **verify** step of the mini workflow.
 ${frame}
 
@@ -465,13 +467,19 @@ Take the human through an **in-depth UI/UX review** of this phase. You're not he
 1. **Set the scene.** From the phase goal, the steps and the report below, determine what specifically should be reviewed and how the human will see it (which command/screen/output to run). When something needs to be started up (build, dev server, sample input), propose the exact steps.
 2. **Go through the verify items.** Take the items from the report as a skeleton and for each let the human confirm that it looks and behaves correctly. Actively ask about details, not just "does it work?".
 3. **Broaden the review.** Add a wider UX walkthrough beyond the verify items: edge states, error messages, consistency with the surroundings, accessibility/readability, small inaccuracies. Suggest concrete things to try.
-4. **Collect and record the findings.** Summarize what is OK and what isn't. For each problem, capture what should be fixed. Then **record** the findings: ${reportWrite}.${memoryWrite}
+4. **Collect and record the findings.** Summarize what is OK and what isn't. For each problem, **record** it by calling the CLI — it owns the durable findings store, the format and the origin phase, so you do not write or edit any file yourself:
+
+\`\`\`
+mini findings add --source verify --severity <blocker|should-know|nit> --title "<short headline>" [--where "<file:line or screen>"] [--body "<what's wrong and how to fix>"]
+\`\`\`
+
+   Run it once per finding; it prints the assigned id and the file under \`.mini/findings/\`. These findings are **durable and feed later phases** — they show up in \`mini next\`, unlike the old run report where a closed or corrupt report buried them. If \`mini\` is not on your PATH, say so in the chat instead of writing the findings into some file.
 ${bodyBlock}${verifyBlock}${stepsBlock}
 # After the review
-- If everything is fine → say so (the findings in the report confirm it) and recommend continuing to \`/mini:done\` (closing the phase), if it isn't closed yet.
-- If the human finds problems → summarize them as concrete tasks (they're already recorded in the report) and recommend going back to \`/mini:do\` to fix them (don't close the phase).
+- If everything is fine → say so (record nothing) and recommend continuing to \`/mini:done\` (closing the phase), if it isn't closed yet.
+- If the human finds problems → summarize them as concrete tasks (already recorded via \`mini findings add\`) and recommend going back to \`/mini:do\` to fix them (don't close the phase).
 
-The only thing you write here are the **findings** (into the run report, and for a closed phase also into the memory) — you **do not move** the phase state in \`.mini/state.json\`, that's the job of \`done\`.
+The only thing you record here are the **findings** (via \`mini findings add --source verify\`) — you **do not move** the phase state in \`.mini/state.json\`, that's the job of \`done\`.
 `;
 }
 

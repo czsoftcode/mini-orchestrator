@@ -109,23 +109,31 @@ describe('context', () => {
     expect(out).toContain('--from-todo');
   });
 
-  it('next surfaces open adversarial findings as candidate fix phases', async () => {
+  it('next surfaces open review findings (tagged by source) as candidate fix phases', async () => {
     await setupProject([], null);
     await addFinding(cwd, 155, {
       severity: 'blocker',
       where: 'src/foo.ts:42',
       title: 'unchecked null deref',
     });
+    await addFinding(cwd, 155, {
+      severity: 'should-know',
+      source: 'verify',
+      title: 'confusing error message',
+    });
     await context('next');
-    expect(out).toContain('Open adversarial findings');
+    expect(out).toContain('Open review findings');
     expect(out).toContain('155-1');
+    expect(out).toContain('· adversarial');
     expect(out).toContain('unchecked null deref');
+    expect(out).toContain('· verify');
+    expect(out).toContain('confusing error message');
   });
 
   it('next without a findings dir omits the findings block', async () => {
     await setupProject([], null);
     await context('next');
-    expect(out).not.toContain('Open adversarial findings');
+    expect(out).not.toContain('Open review findings');
   });
 
   it('plan without a current phase → exit code 1', async () => {

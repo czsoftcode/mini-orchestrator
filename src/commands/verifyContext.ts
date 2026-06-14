@@ -68,12 +68,17 @@ export async function buildVerifyContext(header: StateHeader, cwd: string): Prom
   }
 
   const phaseDone = phase.status === 'done';
-  const reportExists = await runReportExists(cwd, phase.id);
-  const { verify, body } = reportExists
+  // The report is optional context only: it supplies the verify-items skeleton
+  // and free text when it parses. Findings no longer go into it — they go to the
+  // durable `.mini/findings/` store via `mini findings add` — so its parse/exist
+  // status no longer decides where anything is written. Guard the read on
+  // existence because `readReportVerify` only tolerates parse errors, not a
+  // missing file (ENOENT would rethrow).
+  const { verify, body } = (await runReportExists(cwd, phase.id))
     ? await readReportVerify(phase, cwd)
     : { verify: [], body: undefined };
 
-  return buildVerifySessionPrompt({ phase, phaseDone, verify, reportBody: body, reportExists });
+  return buildVerifySessionPrompt({ phase, phaseDone, verify, reportBody: body });
 }
 
 /**

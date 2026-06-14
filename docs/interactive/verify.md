@@ -10,14 +10,19 @@ started from a terminal.
 `/mini:verify` walks you through a human review of the phase's **UI/UX** —
 appearance, CLI/screen output, UX flow, clarity — the things that can't be
 judged mechanically. It targets the current phase, or the last closed one. The
-findings are written into the phase report, so they reach the project memory.
+findings are recorded into the durable
+[findings store](../non-interactive/findings.md) (`.mini/findings/`) via
+`mini findings add --source verify`, so they survive a
+corrupt or missing report and a closed phase, and surface later in
+[`/mini:next`](next.md).
 
 ## In a session
 
-1. Claude leaves the `do` report in place and runs `mini context verify`.
+1. Claude reads the `do` report (when present) for context and runs
+   `mini context verify`.
 2. It takes you through the review **one item at a time**, asking for your
    judgment.
-3. It records the findings into the report.
+3. It records each finding by calling `mini findings add --source verify`.
 
 ## Example
 
@@ -25,15 +30,14 @@ findings are written into the phase report, so they reach the project memory.
 You:    /mini:verify
 Claude: Does the paged response read clearly — page, limit, total, items? …
 You:    total should be named "totalCount" for consistency
-Claude: Noted as a finding. (Fix it via /mini:do before closing.)
+Claude: Recorded as finding 12-1. (Fix it via /mini:do before closing.)
 ```
 
 ## Notes
 
 - Verify is **human-driven**; the autonomous loop never skips it.
 - If problems are found, the phase is **not** closed — fix them via
-  [`/mini:do`](do.md) within the same phase, update the report, then
-  [`/mini:done`](done.md).
+  [`/mini:do`](do.md) within the same phase, then [`/mini:done`](done.md).
 
 ## Related
 

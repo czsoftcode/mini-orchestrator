@@ -3,13 +3,15 @@ import { dirname, join } from 'node:path';
 import { phaseStem } from './store.js';
 
 /**
- * Durable store for **adversarial review findings**, decoupled from the phase's
- * run report.
+ * Durable store for **review findings**, decoupled from the phase's run report.
+ * Two review steps feed it — the adversarial red-team (`mini adversarial`) and
+ * the human-led UI/UX review (`mini verify`) — each entry carries a `source`
+ * tag so the origin stays distinguishable.
  *
- * The red-team step (`mini adversarial` / `/mini:adversarial`) used to write its
- * findings with `Edit` straight into the run report of the phase under review
- * (`.mini/run/phase-{id}.md`). Once that phase closed, nobody opened the report
- * again — the finding was buried and could not feed later work. This store fixes
+ * Both steps used to write findings with `Edit` straight into the run report of
+ * the phase under review (`.mini/run/phase-{id}.md`). Once that phase closed,
+ * nobody opened the report again — the finding was buried and could not feed
+ * later work; a corrupt or missing report dropped it silently. This store fixes
  * that: findings live in their own `.mini/findings/` directory, are versioned
  * with the code (durable across sessions, like `.mini/decisions/` and
  * `.mini/memory/`), and carry an explicit `open`/`resolved` status so later
@@ -30,6 +32,7 @@ import { phaseStem } from './store.js';
  * ## 155-1 · should-know · open
  * **Where:** src/foo.ts:42
  * **Reviewed-at:** 1a2b3c4d…
+ * **Source:** adversarial
  * Short title of the finding.
  *
  * Optional longer body (what breaks and how).
@@ -37,6 +40,9 @@ import { phaseStem } from './store.js';
  *
  * The `**Reviewed-at:**` line is optional (older files predate it; reviews
  * outside a git repo omit it) — the parser treats its absence as `undefined`.
+ * The `**Source:**` line is likewise optional: files written before the verify
+ * step joined the store have none, so the parser defaults its absence to
+ * `adversarial` (the only writer at the time).
  *
  * This phase only **writes** (`addFinding`) and **lists** (`listFindings`).
  * Flipping a status (`resolve`), a `doctor` orphan-check and consumption in
@@ -46,9 +52,15 @@ export const FINDINGS_DIR = join('.mini', 'findings');
 
 export type FindingSeverity = 'blocker' | 'should-know' | 'nit';
 export type FindingStatus = 'open' | 'resolved';
+/** Which review step recorded the finding. */
+export type FindingSource = 'adversarial' | 'verify';
 
 /** The three severities a finding may carry — the same vocabulary the prompt uses. */
 export const FINDING_SEVERITIES: readonly FindingSeverity[] = ['blocker', 'should-know', 'nit'];
+/** The review steps that may record a finding. */
+export const FINDING_SOURCES: readonly FindingSource[] = ['adversarial', 'verify'];
+/** The default source for entries with no `**Source:**` line / no `--source` flag. */
+export const DEFAULT_FINDING_SOURCE: FindingSource = 'adversarial';
 
 /** A single recorded finding. */
 export interface Finding {
@@ -58,6 +70,8 @@ export interface Finding {
   phaseId: number;
   severity: FindingSeverity;
   status: FindingStatus;
+  /** Which review step recorded it; defaults to `adversarial` for older files with no `**Source:**` line. */
+  source: FindingSource;
   /** Optional location (`file:line`). */
   where?: string;
   /**
@@ -77,6 +91,8 @@ export interface Finding {
 /** Input to {@link addFinding} — everything except the id/status, which mini owns. */
 export interface NewFinding {
   severity: FindingSeverity;
+  /** Which review step is recording this; defaults to `adversarial` when omitted. */
+  source?: FindingSource;
   title: string;
   where?: string;
   /** Baseline commit SHA at review time (see {@link Finding.reviewedAt}); omitted outside git. */
@@ -85,10 +101,11 @@ export interface NewFinding {
 }
 
 const HEADER = [
-  '# Adversarial findings',
+  '# Review findings',
   '',
-  '> Recorded by `mini findings add` (the adversarial review step). Each entry is',
-  '> `## <id> · <severity> · <status>`; do not hand-edit those header lines.',
+  '> Recorded by `mini findings add` (the adversarial and verify review steps).',
+  '> Each entry is `## <id> · <severity> · <status>`; do not hand-edit those header',
+  '> lines.',
   '',
   '',
 ].join('\n');
@@ -99,9 +116,15 @@ const ENTRY_RE = /^##\s+(\S+)\s+·\s+(blocker|should-know|nit)\s+·\s+(open|reso
 const WHERE_RE = /^\*\*Where:\*\*\s+(.*)$/;
 /** Matches the optional `**Reviewed-at:** …` metadata line (after `**Where:**`). */
 const REVIEWED_AT_RE = /^\*\*Reviewed-at:\*\*\s+(.*)$/;
+/** Matches the optional `**Source:** …` metadata line (after `**Reviewed-at:**`). */
+const SOURCE_RE = /^\*\*Source:\*\*\s+(.*)$/;
 /** Is the severity one of the three accepted values? */
 export function isFindingSeverity(value: string): value is FindingSeverity {
   return (FINDING_SEVERITIES as readonly string[]).includes(value);
+}
+/** Is the source one of the accepted review steps? */
+export function isFindingSource(value: string): value is FindingSource {
+  return (FINDING_SOURCES as readonly string[]).includes(value);
 }
 
 /** Path to a phase's findings file (`.mini/findings/phase-{id}.md`). */
@@ -151,6 +174,7 @@ export function parseFindings(md: string): Finding[] {
           phaseId,
           severity: header.severity,
           status: header.status,
+          source: parsed.source ?? DEFAULT_FINDING_SOURCE,
           title: parsed.title,
         };
         if (parsed.where) finding.where = parsed.where;
@@ -181,15 +205,18 @@ export function parseFindings(md: string): Finding[] {
 }
 
 /**
- * Splits an entry's body lines into optional `where` / `reviewedAt` metadata, a
- * required title and an optional body. The metadata lines (when present) sit
- * directly under the header in `**Where:**`, `**Reviewed-at:**` order; either may
- * be absent, so the parser round-trips both old files (no `**Reviewed-at:**`) and
- * findings recorded outside a git repo.
+ * Splits an entry's body lines into optional `where` / `reviewedAt` / `source`
+ * metadata, a required title and an optional body. The metadata lines (when
+ * present) sit directly under the header in `**Where:**`, `**Reviewed-at:**`,
+ * `**Source:**` order; each may be absent, so the parser round-trips old files
+ * (no `**Reviewed-at:**` / no `**Source:**`) and findings recorded outside a git
+ * repo. A `**Source:**` value that is not a known source is ignored (left
+ * `undefined`, so the caller falls back to the default).
  */
 function parseEntryBody(lines: string[]): {
   where?: string;
   reviewedAt?: string;
+  source?: FindingSource;
   title?: string;
   body?: string;
 } {
@@ -216,16 +243,32 @@ function parseEntryBody(lines: string[]): {
     skipBlank();
   }
 
-  const meta: { where?: string; reviewedAt?: string } = {};
+  let source: FindingSource | undefined;
+  const s = i < lines.length ? SOURCE_RE.exec((lines[i] as string).trim()) : null;
+  if (s) {
+    const value = (s[1] as string).trim();
+    if (isFindingSource(value)) source = value;
+    i++;
+    skipBlank();
+  }
+
+  const meta: { where?: string; reviewedAt?: string; source?: FindingSource } = {};
   if (where) meta.where = where;
   if (reviewedAt) meta.reviewedAt = reviewedAt;
+  if (source) meta.source = source;
 
   if (i >= lines.length) return meta;
   const title = (lines[i] as string).trim();
   i++;
 
   const body = lines.slice(i).join('\n').trim();
-  const result: { where?: string; reviewedAt?: string; title?: string; body?: string } = {
+  const result: {
+    where?: string;
+    reviewedAt?: string;
+    source?: FindingSource;
+    title?: string;
+    body?: string;
+  } = {
     ...meta,
     title,
   };
@@ -239,6 +282,7 @@ export function serializeFindings(findings: Finding[]): string {
     const out = [`## ${f.id} · ${f.severity} · ${f.status}`];
     if (f.where?.trim()) out.push(`**Where:** ${f.where.trim()}`);
     if (f.reviewedAt?.trim()) out.push(`**Reviewed-at:** ${f.reviewedAt.trim()}`);
+    out.push(`**Source:** ${f.source}`);
     out.push(f.title.trim());
     if (f.body?.trim()) out.push('', f.body.trim());
     return out.join('\n');
@@ -342,6 +386,7 @@ export async function addFinding(
     phaseId,
     severity: input.severity,
     status: 'open',
+    source: input.source ?? DEFAULT_FINDING_SOURCE,
     // Title is a single line by contract — collapse any newlines so it can never
     // smuggle a second `## id · severity · status` header line into the file.
     title: input.title.replace(/\s*\n\s*/g, ' ').trim(),
