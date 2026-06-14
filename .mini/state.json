@@ -807,6 +807,11 @@
       "id": 161,
       "title": "project source in findings store",
       "status": "done"
+    },
+    {
+      "id": 162,
+      "title": "Range-resolution helper for adversarial-project",
+      "status": "done"
     }
   ],
   "models": {

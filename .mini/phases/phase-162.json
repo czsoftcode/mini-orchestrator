@@ -1,0 +1,44 @@
+{
+  "id": 162,
+  "title": "Range-resolution helper for adversarial-project",
+  "goal": "Add a pure helper that resolves --from-phase N / --to-phase M into {fromSha, toSha} from stored autoCommit.preSha via loadPhase (fromSha = preSha of N; toSha = preSha of M+1, else HEAD when M is last), with plain git-ref passthrough for --from/--to, and hard-fails on missing preSha, invalid ref, empty range, or mixing phase+ref — unit-tested on every failure path. No git-subject derivation.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Module + resolveRange signature",
+      "status": "done",
+      "detail": "New src/range.ts exporting resolveRange(cwd, input) where input = { fromPhase?, toPhase?, from?, to? } and result is the union { ok: true, fromSha, toSha } | { ok: false, error }. No throw. Stub returns a not-implemented error so it typechecks."
+    },
+    {
+      "title": "Reject mixed phase+ref and incomplete bounds",
+      "status": "done",
+      "detail": "Pure input validation before any git/loadPhase: error if a phase flag is combined with a ref flag in one run; error if a side is missing (need both a from-bound and a to-bound). Covered by unit tests."
+    },
+    {
+      "title": "Resolve phase bounds via loadPhase + preSha",
+      "status": "done",
+      "detail": "fromSha = preSha of phase N; toSha = preSha of phase M+1 via loadPhase, else headSha when M+1 is absent (M is last). Hard-fail when phase N (or an existing M+1) has no autoCommit.preSha, or phase N not found."
+    },
+    {
+      "title": "Resolve git-ref bounds via rev-parse",
+      "status": "done",
+      "detail": "Passthrough --from/--to as plain refs; validate each with git rev-parse --verify <ref>^{commit} via runGit; error on invalid/unknown ref; return the resolved SHAs."
+    },
+    {
+      "title": "Reject empty range",
+      "status": "done",
+      "detail": "After both bounds resolve, error when fromSha === toSha (empty diff range), regardless of phase vs ref mode."
+    },
+    {
+      "title": "Unit tests: every failure path + happy paths",
+      "status": "done",
+      "detail": "New src/range.test.ts covering happy phase-range, M-is-last to HEAD, ref passthrough, and each failure: mixed phase+ref, missing bound, phase-not-found, missing preSha, invalid ref, empty range. Full test suite + typecheck green."
+    }
+  ],
+  "startedAt": "2026-06-14T20:20:11.299Z",
+  "completedAt": "2026-06-14T20:32:12.709Z",
+  "autoCommit": {
+    "preSha": "9bfc580995c21a3ebb332ba6533b053d710b053b",
+    "subject": "Phase 162: Range-resolution helper for adversarial-project"
+  }
+}
