@@ -837,6 +837,11 @@
       "id": 167,
       "title": "Range start fallback to genesis",
       "status": "done"
+    },
+    {
+      "id": 168,
+      "title": "Document adversarial-project command",
+      "status": "done"
     }
   ],
   "models": {

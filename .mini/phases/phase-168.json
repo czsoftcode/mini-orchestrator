@@ -1,0 +1,47 @@
+{
+  "id": 168,
+  "title": "Document adversarial-project command",
+  "goal": "Add user-facing docs for adversarial-project — a docs/ page plus a README pointer, a 'mini --help' entry, and make 'mini doctor' recognize/count the command — keeping it manual-only (no auto/heuristic wiring).",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Non-interactive page: mini adversarial",
+      "status": "done",
+      "detail": "Create docs/non-interactive/adversarial.md following the verify.md template (Synopsis, Description, Example, Notes, Related); link to the interactive sibling and to findings/do/done."
+    },
+    {
+      "title": "Non-interactive page: mini adversarial-project",
+      "status": "done",
+      "detail": "Create docs/non-interactive/adversarial-project.md; document the actual range flags (--from-phase/--to-phase, --from/--to, genesis fallback) verified against the CLI, no invented options; cross-link sibling + findings."
+    },
+    {
+      "title": "Interactive pages: both slash commands",
+      "status": "done",
+      "detail": "Create docs/interactive/adversarial.md and docs/interactive/adversarial-project.md per the interactive verify.md template; cross-link the CLI variants and related commands."
+    },
+    {
+      "title": "Add review commands to docs/README.md",
+      "status": "done",
+      "detail": "Add rows/section for adversarial + adversarial-project (both variants) in the command-reference tables, near the existing mini findings row."
+    },
+    {
+      "title": "Redirect findings.md adversarial link",
+      "status": "done",
+      "detail": "In docs/non-interactive/findings.md change the adversarial-review link from ../adversarial-task.md (Czech spec) to the new non-interactive/adversarial.md reference page."
+    },
+    {
+      "title": "Verify no code touched + links resolve",
+      "status": "done",
+      "detail": "Confirm mini --help, COMMAND_DEFS and doctor are unchanged (already done); check all new/edited docs links point to existing files; run typecheck/tests to confirm nothing broke."
+    }
+  ],
+  "startedAt": "2026-06-14T23:00:09.292Z",
+  "resolvedVerify": [
+    "Read the four new doc pages for tone/accuracy"
+  ],
+  "completedAt": "2026-06-14T23:06:20.056Z",
+  "autoCommit": {
+    "preSha": "1041bc425e08c2e9b3ddd038daec60d92c1e9239",
+    "subject": "Phase 168: Document adversarial-project command"
+  }
+}

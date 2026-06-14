@@ -8,6 +8,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **Docs for the adversarial review commands.** Added reference pages for both
+  `mini adversarial` / `/mini:adversarial` and `mini adversarial-project` /
+  `/mini:adversarial-project` under `docs/interactive/` and
+  `docs/non-interactive/`, including the full range rules (phase vs. git-ref
+  forms, mutual exclusion, genesis fallback). `docs/README.md` gained a **Review**
+  section grouping these commands with `mini findings`.
+
 - **`mini adversarial-project` command.** Opens a fresh Claude Code session for an
   independent red-team review of a **range of phases**, scoped by phase numbers
   (`--from-phase`/`--to-phase`) or git refs (`--from`/`--to`). It runs report-only

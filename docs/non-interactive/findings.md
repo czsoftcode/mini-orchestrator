@@ -6,7 +6,7 @@
 > in and can feed later work.
 
 > **Console-only.** There is **no** `/mini:findings` slash variant. `add` is
-> normally called by the [adversarial review](../adversarial-task.md) and
+> normally called by the [adversarial review](adversarial.md) and
 > [verify](verify.md) steps themselves; `list` is for you, in a terminal.
 
 ## Synopsis
