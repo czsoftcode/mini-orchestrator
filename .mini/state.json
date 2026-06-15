@@ -867,6 +867,11 @@
       "id": 173,
       "title": "Document agent-trust boundary in docs",
       "status": "done"
+    },
+    {
+      "id": 174,
+      "title": "Guard path traversal in graph rebuild",
+      "status": "done"
     }
   ],
   "models": {

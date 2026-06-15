@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  assertGraphPathInside,
   buildGraph,
   GRAPH_DIR,
   GRAPH_INDEX,
@@ -429,5 +430,24 @@ describe('updateGraphFile (inkrementální update)', () => {
     expect(res.status).toBe('fell-back');
     const index = await readIndex(root);
     expect(index.files.map((f) => f.path)).toEqual(['src/a.ts']);
+  });
+});
+
+describe('assertGraphPathInside', () => {
+  it('throws on out-of-tree paths (defense against a broken collector)', () => {
+    // leading `..`, escaping after normalization, absolute (posix + drive-less)
+    for (const bad of ['..', '../evil', 'a/../../evil', '/etc/passwd', '']) {
+      expect(() => assertGraphPathInside(bad), bad).toThrow(/out-of-tree path/);
+    }
+  });
+
+  it('accepts normal repo-relative paths', () => {
+    for (const ok of ['src/a/b.ts', 'a.ts', 'src/sub/c.tsx', 'a/../b.ts']) {
+      expect(() => assertGraphPathInside(ok), ok).not.toThrow();
+    }
+  });
+
+  it('names the offending path in the error message', () => {
+    expect(() => assertGraphPathInside('../evil')).toThrow('"../evil"');
   });
 });

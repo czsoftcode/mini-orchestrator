@@ -144,6 +144,35 @@ export async function buildGraph(
  * atomický per-cesta). Plný rebuild při každém volání znamená, že stačí
  * adresář celý nahradit — žádné osiřelé soubory po smazaných zdrojácích.
  */
+/**
+ * Guard for the full-rebuild write site. `file.path` is a repo-relative path
+ * (forward slashes) and the graph node lands at `GRAPH_DIR/<file.path>.md`, so
+ * the path must stay inside `GRAPH_DIR`. Today `collectFiles` only yields
+ * `git ls-files` / `walk` paths under `cwd`, so this never trips — but a future
+ * change to the collector must not be able to silently write outside
+ * `.mini/graph/` (path traversal).
+ *
+ * Mirrors the `'..'`/absolute check in `updateGraphFile` (the incremental path),
+ * but **throws** instead of skipping: in a full rebuild an out-of-tree path means
+ * a broken collector, which should fail loudly rather than be quietly dropped.
+ */
+export function assertGraphPathInside(path: string): void {
+  const normalized = posix.normalize(path);
+  if (
+    path === '' ||
+    isAbsolute(path) ||
+    posix.isAbsolute(path) ||
+    normalized === '..' ||
+    normalized.startsWith(`..${posix.sep}`)
+  ) {
+    throw new Error(
+      `buildGraph: refusing to write graph node for out-of-tree path ${JSON.stringify(
+        path,
+      )} — collector yielded a path that escapes ${GRAPH_DIR}`,
+    );
+  }
+}
+
 async function writeGraphLayout(cwd: string, graphs: FileGraph[]): Promise<void> {
   const miniDir = join(cwd, '.mini');
   await mkdir(miniDir, { recursive: true });
@@ -159,6 +188,7 @@ async function writeGraphLayout(cwd: string, graphs: FileGraph[]): Promise<void>
 
   const entries: GraphIndexEntry[] = [];
   for (const file of graphs) {
+    assertGraphPathInside(file.path);
     const graphFileRel = posix.join(GRAPH_DIR, `${file.path}.md`);
     const graphFileAbs = join(cwd, graphFileRel);
     const tmpFileAbs = join(tmpDirAbs, `${file.path}.md`);

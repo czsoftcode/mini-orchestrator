@@ -1,0 +1,34 @@
+{
+  "id": 174,
+  "title": "Guard path traversal in graph rebuild",
+  "goal": "Add the '..'/absolute-path guard at the full graph-rebuild write site in buildGraph.ts (matching the incremental path at line 221), throwing on an out-of-tree path so a broken collector fails loudly instead of writing outside .mini/graph/; cover it with a test that feeds a collector an out-of-tree path.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Extract path-guard helper",
+      "status": "done",
+      "detail": "New exported pure helper in buildGraph.ts (e.g. assertGraphPathInside(path)) that throws a clear Error naming the offending path when path is absolute, empty, or normalizes to a '..'-escaping path; mirrors the incremental check at buildGraph.ts:221."
+    },
+    {
+      "title": "Apply guard in rebuild write loop",
+      "status": "done",
+      "detail": "Call the helper for each file.path at the top of the for loop in writeGraphLayout (before building tmpFileAbs), so an out-of-tree path throws instead of writing outside .mini/graph/."
+    },
+    {
+      "title": "Test: out-of-tree path is rejected",
+      "status": "done",
+      "detail": "Add buildGraph.test.ts cases feeding the helper (and/or the collector via includeFile) an out-of-tree path (../evil, absolute) -> expect throw; a normal nested path (src/a/b.ts) -> no throw. Covers the guard, not just the happy path."
+    },
+    {
+      "title": "Verify build, typecheck and existing tests pass",
+      "status": "done",
+      "detail": "Run typecheck + full test suite; confirm the existing buildGraph snapshot/rebuild tests are unaffected."
+    }
+  ],
+  "startedAt": "2026-06-15T09:25:13.547Z",
+  "completedAt": "2026-06-15T09:29:47.448Z",
+  "autoCommit": {
+    "preSha": "cd8715fabd78c7fd0ae1cf2878bb1165be8d7f06",
+    "subject": "Phase 174: Guard path traversal in graph rebuild"
+  }
+}

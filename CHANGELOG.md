@@ -18,6 +18,16 @@ All notable changes to this project are recorded here. The format is based on
   section linking to it, and the warning is cross-linked from `docs/README.md` and
   the [`mini auto`](docs/non-interactive/auto.md) notes.
 
+### Security
+
+- **Path-traversal guard at the graph write site (defense-in-depth, SEC-4).** The
+  full graph rebuild now asserts each collected source path stays inside
+  `.mini/graph/` before writing its node, throwing on an absolute or `..`-escaping
+  path. Unreachable today (the collector only yields repo-relative `git ls-files`
+  paths), it blocks a future collector regression from silently writing graph
+  nodes outside the project tree — matching the check the incremental update path
+  already had.
+
 ## [1.22.0] - 2026-06-15
 
 ### Added
