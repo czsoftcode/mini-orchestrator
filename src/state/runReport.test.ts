@@ -768,4 +768,47 @@ describe('stripFindingsSections', () => {
     expect(out).not.toContain('gone');
     expect(out).toContain('## Keep');
   });
+
+  it('keeps a findings-like heading inside a fenced code block (and prose after it)', () => {
+    // A `do` report documenting the findings format must survive intact: the
+    // heading is example text inside a fence, not a real stale section.
+    const body = [
+      '## What was done',
+      'Example:',
+      '```md',
+      '## Adversarial findings',
+      '- x',
+      '```',
+      'Done notes.',
+    ].join('\n');
+    const out = stripFindingsSections(body);
+    expect(out).toContain('## Adversarial findings');
+    expect(out).toContain('- x');
+    expect(out).toContain('Done notes.');
+  });
+
+  it('removes a stale section that contains a fenced block with a heading line', () => {
+    // The fenced '# Still inside' is literal text, so it must NOT end the stale
+    // section early — the whole section, fence and all, is dropped.
+    const body = [
+      'Lead.',
+      '',
+      '## Adversarial findings',
+      '- 5-1 bug',
+      '```',
+      '# Still inside',
+      '```',
+      'tail of stale section',
+      '',
+      '## Keep',
+      'kept',
+    ].join('\n');
+    const out = stripFindingsSections(body);
+    expect(out).not.toContain('5-1 bug');
+    expect(out).not.toContain('Still inside');
+    expect(out).not.toContain('tail of stale section');
+    expect(out).toContain('Lead.');
+    expect(out).toContain('## Keep');
+    expect(out).toContain('kept');
+  });
 });

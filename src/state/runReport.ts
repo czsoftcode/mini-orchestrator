@@ -101,49 +101,86 @@ export async function runReportExists(cwd: string, phaseId: number): Promise<boo
 }
 
 /**
- * Doslovné nadpisy sekcí, které do reportu vepsaly starší verze workflow (nebo
- * `do`, když findings ještě mířily do reportu). Dnes nálezy žijí v
- * `.mini/findings/`, takže tyhle sekce v těle reportu nemají co dělat — když je
- * tam přesto najdeme, je to historický zbytek, ne implementační log.
+ * Literal section headings written into the report by older workflow versions
+ * (or by `do` back when findings still went into the report). Findings live in
+ * `.mini/findings/` today, so these sections have no business in a report body —
+ * if we still find one, it is a historical leftover, not an implementation log.
  *
- * Match je doslovný na titulek (case-insensitive), žádné fuzzy hádání — jiná
- * `## ` sekce se stejně znějícím, ale jiným textem se nesmí omylem smazat.
+ * The match is a literal, case-insensitive title comparison — no fuzzy guessing,
+ * so another `## ` section with a similar-sounding but different title is never
+ * deleted by accident.
  */
 const STALE_FINDINGS_HEADINGS: readonly string[] = ['adversarial findings', 'verify findings'];
 
 /**
- * Odstraní z volného textu reportu zastaralé sekce nálezů
- * (`## Adversarial findings`, `## Verify findings`) — od jejich nadpisu až po
- * další nadpis úrovně `##` nebo vyšší (`#`), případně do konce textu.
+ * Matches a fenced code-block delimiter line: optional leading whitespace
+ * followed by a run of three or more backticks or tildes. Group 1 is the run
+ * itself, so the caller can compare the closing fence's char and length.
+ */
+const FENCE_LINE = /^[ \t]*(`{3,}|~{3,})/;
+
+/**
+ * Removes stale findings sections (`## Adversarial findings`,
+ * `## Verify findings`) from a report's free text — from their heading up to the
+ * next heading of level `##` or higher (`#`), or to the end of the text.
  *
- * Proč: tělo reportu se vkládá jako `# Implementation report` do promptů
- * `done`/`verify`/`adversarial`. Když v něm zůstanou staré sekce nálezů,
- * recenzent je čte jako součást implementačního logu a opakované review je
- * vrší — rekurzivně a duplicitně. Tahle funkce je čistě defenzivní: na čistém
- * těle (které dnes findings neobsahuje) nedělá nic.
+ * Why: the report body is inlined as `# Implementation report` into the
+ * `done`/`verify`/`adversarial` prompts. If old findings sections survive there,
+ * the reviewer reads them as part of the implementation log and a re-run keeps
+ * re-stacking them — recursively and duplicated. This function is purely
+ * defensive: on a clean body (which has no findings today) it does nothing.
  *
- * Ostatní text i jiné `##` sekce zůstávají beze změny. Vstup normalizujeme
- * (BOM, CRLF), výstup ořízneme o přebytečné okolní prázdné řádky.
+ * Fenced code blocks (```` ``` ````/`~~~`) are honored: headings inside a fence
+ * are ignored, so a report whose impl log shows a literal `## Adversarial
+ * findings` line inside a code example is not truncated, and a stale section that
+ * itself contains a fenced `#` line does not end early and leak its tail. A fence
+ * closes only on a line of the same delimiter char and at least the opening run
+ * length; we do not aim for full CommonMark (indented-by-4 fences, fences nested
+ * in list items) — that does not occur in real reports.
+ *
+ * Other text and other `##` sections stay unchanged. The input is normalized
+ * (BOM, CRLF) and the output is trimmed of surrounding blank lines.
  */
 export function stripFindingsSections(body: string): string {
   const normalized = body.replace(/^﻿/, '').replace(/\r\n/g, '\n');
   const lines = normalized.split('\n');
   const out: string[] = [];
   let skipping = false;
+  // The open fence's delimiter (e.g. '```' or '~~~~'), or null when outside one.
+  let openFence: string | null = null;
 
   for (const line of lines) {
-    const heading = /^(#{1,6})[ \t]+(.*?)[ \t]*$/.exec(line);
-    if (heading) {
-      const level = heading[1]!.length;
-      const title = heading[2]!.toLowerCase();
-      if (level === 2 && STALE_FINDINGS_HEADINGS.includes(title)) {
-        // Začátek zastaralé sekce — od teď přeskakuj až do dalšího nadpisu.
-        skipping = true;
-        continue;
+    const fence = FENCE_LINE.exec(line);
+    if (fence) {
+      const marker = fence[1]!;
+      if (openFence === null) {
+        // Opening a fence: remember its char and length.
+        openFence = marker;
+      } else if (marker[0] === openFence[0] && marker.length >= openFence.length) {
+        // Closing fence: same char, at least as long as the opener.
+        openFence = null;
       }
-      if (skipping && level <= 2) {
-        // Nadpis úrovně ## nebo vyšší (#) ukončuje přeskakovanou sekci.
-        skipping = false;
+      // A fence line is never a heading; keep it (unless we're skipping a stale
+      // section, in which case the !skipping guard below drops it).
+      if (!skipping) out.push(line);
+      continue;
+    }
+
+    // Headings inside a fenced block are literal text, not structure — ignore.
+    if (openFence === null) {
+      const heading = /^(#{1,6})[ \t]+(.*?)[ \t]*$/.exec(line);
+      if (heading) {
+        const level = heading[1]!.length;
+        const title = heading[2]!.toLowerCase();
+        if (level === 2 && STALE_FINDINGS_HEADINGS.includes(title)) {
+          // Start of a stale section — skip from here to the next heading.
+          skipping = true;
+          continue;
+        }
+        if (skipping && level <= 2) {
+          // A heading of level ## or higher (#) ends the skipped section.
+          skipping = false;
+        }
       }
     }
     if (!skipping) out.push(line);

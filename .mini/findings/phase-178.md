@@ -22,7 +22,7 @@ NOTE ON SCOPE: introduced earlier (enum in phase 161, prompt in phase 163, CLI r
 
 All findings in this review were recorded with --source adversarial as a workaround; their true origin is the project (range) review.
 
-## 178-2 · should-know · open
+## 178-2 · should-know · resolved
 **Where:** src/state/runReport.ts:127-148
 **Reviewed-at:** 0c27cc6c5aa7889af8fae83a06f56c28a41b1d64
 **Source:** adversarial

@@ -1,0 +1,35 @@
+{
+  "id": 180,
+  "title": "Fence-aware findings section stripping",
+  "goal": "Teach stripFindingsSections to recognise ```/~~~ fenced code blocks and ignore headings inside them, so reports containing findings-like lines in a code fence are no longer silently truncated, with a test covering the fenced-block case.",
+  "status": "done",
+  "fromFinding": "178-2",
+  "steps": [
+    {
+      "title": "Track fence state in stripFindingsSections",
+      "status": "done",
+      "detail": "In src/state/runReport.ts detect fence lines (^\\s*(```+|~~~+)); remember the opening fence char and length and close only on a same-char line of length >= the opener. Inside a fence, ignore ATX headings (neither start nor end a skip). Fixes both directions of the finding."
+    },
+    {
+      "title": "Translate touched JSDoc/comments to English",
+      "status": "done",
+      "detail": "Translate the function's Czech JSDoc and inline comments (plus new fence-logic comments) to English per the project English rule, since the function is being edited anyway."
+    },
+    {
+      "title": "Add fenced-code-block tests (both directions)",
+      "status": "done",
+      "detail": "In describe('stripFindingsSections') add: (a) a '## Adversarial findings' line inside a ```md block is kept, including prose after the closing fence; (b) a real stale findings section that contains a fenced block with a ##/# line is removed entirely with nothing leaking."
+    },
+    {
+      "title": "Verify build, typecheck and tests pass",
+      "status": "done",
+      "detail": "npm run typecheck + npm run build + full test suite green."
+    }
+  ],
+  "startedAt": "2026-06-15T11:42:12.194Z",
+  "completedAt": "2026-06-15T11:48:11.433Z",
+  "autoCommit": {
+    "preSha": "33278be565d4b777ef7622a5656c8a5e51058fec",
+    "subject": "Phase 180: Fence-aware findings section stripping"
+  }
+}

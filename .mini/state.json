@@ -897,6 +897,11 @@
       "id": 179,
       "title": "Allow project finding source in CLI",
       "status": "done"
+    },
+    {
+      "id": 180,
+      "title": "Fence-aware findings section stripping",
+      "status": "done"
     }
   ],
   "models": {

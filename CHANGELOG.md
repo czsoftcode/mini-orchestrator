@@ -71,6 +71,15 @@ All notable changes to this project are recorded here. The format is based on
   the whole project-range review was unrecordable and reviewers had to mislabel
   findings as `adversarial`. The `--source` choices now derive from
   `FINDING_SOURCES`, so the CLI can no longer drift from the data model.
+- **Stale-findings stripping no longer truncates reports with code fences
+  (finding 178-2).** The cleanup that removes leftover `## Adversarial findings` /
+  `## Verify findings` sections before a report is inlined into the
+  `done`/`verify`/`adversarial` prompts scanned headings without noticing
+  ```` ``` ````/`~~~` code blocks. A report whose impl log showed such a heading
+  *inside* a fenced example was silently cut off from that line onward; conversely
+  a real stale section containing a fenced heading line ended early and leaked its
+  tail. Fenced blocks are now honored — headings inside a fence are treated as
+  literal text.
 
 ## [1.22.0] - 2026-06-15
 
