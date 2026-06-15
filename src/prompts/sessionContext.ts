@@ -706,3 +706,178 @@ You **only report**. Do **not** modify, fix or refactor the source code, and do
 write. Fixing what you find is a separate, human-driven step.
 `;
 }
+
+export interface SecurityReviewInput {
+  /** Contents of \`.mini/project.md\` — context the threat model leans on. */
+  projectMd: string;
+  /** Resolved range start — a full commit SHA for \`git diff <fromSha>..<toSha>\`. */
+  fromSha: string;
+  /** Resolved range end — a full commit SHA for \`git diff <fromSha>..<toSha>\`. */
+  toSha: string;
+  /**
+   * Phases covered by the range, id+title only (NOT full reports). Empty when the
+   * range came as plain git refs that can't be mapped to phases — the prompt then
+   * leans on the diff alone. Reuses the adversarial-project phase shape.
+   */
+  phases: AdversarialProjectPhase[];
+  /**
+   * Where the reviewer must write the durable report, e.g.
+   * \`.mini/security/range-10-11.md\`. Computed by the caller (the future CLI),
+   * NOT derived here — the builder only interpolates it into the prompt.
+   */
+  outputPath: string;
+}
+
+/**
+ * Prompt for the mini-native **security review** of a **range of phases**. A
+ * deliberately separate pass from the correctness red-team (\`adversarial\` /
+ * \`adversarial-project\`): same thin-index shape (project vision, resolved range,
+ * the explicit \`git diff\` to run, a bare id+title phase list) but a security lens
+ * — process execution, filesystem, untrusted \`.mini/\` parsing, prompt-injection,
+ * dependency surface — with a project-specific threat model baked in.
+ *
+ * Two contracts differ from adversarial-project: (1) the reviewer **writes the
+ * report file itself** (a durable Markdown report at \`outputPath\`), it does NOT
+ * call \`mini findings add\` — security stays a separate output by design;
+ * (2) OWASP/CWE categories are used only as a checklist vocabulary. Written in our
+ * own words (MIT-clean) — not derived from any external security-audit prompt.
+ *
+ * Pure: takes everything as input, does no I/O. The assembler
+ * (\`buildSecurityReviewContext\`) resolves the range and reads project.md.
+ */
+export function buildSecurityReviewSessionPrompt(input: SecurityReviewInput): string {
+  const { projectMd, fromSha, toSha, phases, outputPath } = input;
+
+  const phaseList =
+    phases.length > 0
+      ? phases.map((p) => `  - ${p.id}. ${p.title}`).join('\n')
+      : '  (the range was given as plain git refs — no phase list; work from the diff)';
+
+  return `You are in a Claude Code session — a **security review** of a slice of this project's history.
+
+# What this is
+An independent security pass over the combined change \`${fromSha}..${toSha}\` — a
+range of phases reviewed through a **security lens only**, not for correctness.
+This is a separate, dedicated pass: the correctness red-team runs elsewhere
+(\`mini adversarial\` / \`mini adversarial-project\`).
+
+# Your role — an independent security reviewer
+Switch into the role of a security reviewer who did **not** write this code. Your
+job is to find where a malicious input, a hostile argument or a poisoned
+repository could make this code do something it shouldn't. Assume the worst-case
+input. A finding is only useful if you can name the **file**, the **line** and the
+concrete **path** by which an attacker reaches it.
+
+# Threat model — what is actually attackable here
+\`mini\` is a **local developer CLI**. Keep the realistic attack surface in mind so
+the review isn't spent on threats that don't apply:
+- There is **no network listener, no authentication, no session, no secret
+  storage** — \`mini\` relies on the developer's existing Claude auth. So most
+  classic web / authz / session categories simply do not apply.
+- The meaningful **untrusted input** is: (a) the contents of a **git-shared
+  \`.mini/\`** directory from a cloned or pulled repo — \`project.md\`, phase
+  titles/goals, discuss and run reports — which \`mini\` assembles into prompts and,
+  in \`auto\` / \`acceptEdits\` mode, feeds to a Claude session that can edit files
+  and run tools; and (b) the **CLI arguments and working-tree files** the tool
+  reads.
+- So the categories that matter most here are **command / argument injection**
+  into spawned processes (git, claude), **path traversal / arbitrary file write
+  or read** out of the repo, **unsafe parsing** of untrusted \`.mini/\` content,
+  **prompt-injection / agent-trust** via shared \`.mini/\`, and the **dependency
+  surface**. Use OWASP / CWE categories as a checklist, but report only what is
+  **reachable in THIS code** — not generic textbook risk.
+
+# The range under review
+Phases in range (id + title only — read the real code, not these labels):
+${phaseList}
+
+Read the **actual diff** for the whole range — don't guess from the titles:
+
+\`\`\`
+git diff ${fromSha}..${toSha}
+\`\`\`
+
+Use \`git log ${fromSha}..${toSha}\` and \`git show <sha>\` for per-commit history
+when you need it, then read the changed code. ${GRAPH_USAGE_HINT}
+
+# Go through these, in order
+1. **PROCESS EXECUTION** — every spawned command (git, claude, shell). Is any
+   argument or env value built from untrusted \`.mini/\` content or working-tree
+   data and not passed as a separate argv element? Look for shell interpolation,
+   \`shell: true\`, unquoted expansion.
+2. **FILESYSTEM** — every read/write path. Can untrusted input steer a write or
+   read outside the repo (\`..\`, absolute paths, symlinks)? Is any path joined
+   from data the attacker controls?
+3. **UNTRUSTED PARSING** — JSON / markdown / state parsed from \`.mini/\`. What
+   happens on malformed, oversized or hostile input — crash, silent corruption,
+   or worse?
+4. **PROMPT INJECTION / AGENT TRUST** — where does shared \`.mini/\` content flow
+   into a Claude prompt that then runs with tool access? Note where the human
+   checkpoint is the only thing between a poisoned repo and an action.
+5. **DEPENDENCY SURFACE** — new or risky third-party packages introduced in the
+   range; anything that runs at install time or widens the attack surface.
+
+For every finding give: **where** (file:line), **how it is reached** (the concrete
+path from untrusted input to the sink), and **how serious** it is. If a category
+is clean, say so **concretely** — what you checked and why it is safe — don't
+write a generic "looks fine".
+
+# Record the review — you write the report yourself
+Unlike the other reviews, here you **write the report file directly** (you do NOT
+file into the findings store — security is a separate output). Write a durable
+Markdown report to:
+
+\`\`\`
+${outputPath}
+\`\`\`
+
+Use **exactly** this structure (it mirrors the existing \`.mini/security/\` reports
+so they stay consistent and comparable):
+
+\`\`\`
+# Security review — <range>
+
+- **Range:** \`git diff ${fromSha}..${toSha}\`
+- **Reviewed at:** <current HEAD / version>
+- **Method:** <what you focused on; say plainly if it was the security sinks and
+  not an exhaustive line-by-line audit>
+- **Threat model:** <one short paragraph — the attack surface above as it applies
+  to THIS range>
+
+## Verdict
+<one or two sentences: clean, or N findings at what severity>
+
+## Findings
+### SEC-1 · <blocker|should-know|nit> · <short headline>
+**Where:** <file:line>
+
+<what is reachable and how; the concrete attacker path; a suggested direction —
+but do NOT change the code>
+
+(repeat SEC-2, SEC-3, … — omit this section entirely if there are no findings)
+
+## Checked and clean
+<the sinks / categories you checked and found safe, one line of why each — so a
+later reviewer knows what was already covered>
+\`\`\`
+
+Severities match the rest of \`mini\`: **blocker** (exploitable / data loss),
+**should-know** (a real weakness, conditions apply), **nit** (informational /
+defense-in-depth). Number findings \`SEC-1\`, \`SEC-2\`, … within this report.
+
+When the report is written, print a single **status line** to the human — exactly
+one of: \`**security-review: pass**\` (reviewed, nothing worth recording),
+\`**security-review: findings**\` (you wrote findings — say how many) or
+\`**security-review: blocked**\` (couldn't complete — say why). State the path of
+the report you wrote.
+
+# Project
+${projectMd.trim()}
+
+# Scope — review and report only
+You **only review and write the one report file** at the path above. Do **not** modify,
+fix or refactor the source code, and do **not** move any phase state. Writing
+\`${outputPath}\` is the *only* file you create. Fixing what you find is a separate,
+human-driven step.
+`;
+}

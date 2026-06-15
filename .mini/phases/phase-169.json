@@ -1,0 +1,39 @@
+{
+  "id": 169,
+  "title": "Security review context builder",
+  "goal": "Build a range-scoped security-review context/prompt builder (reusing resolveRange; handles both a single last phase and a range) with our own MIT-clean prompt informed only by OWASP/CWE categories and its own separate output target; no CLI dispatch, no slash command, no auto-chaining onto adversarial yet. On an empty/unresolvable range or ref mode that does not map to phase boundaries it returns null (mirroring buildProjectAdversarialContext), never throws.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Security prompt builder in sessionContext",
+      "status": "done",
+      "detail": "Add SecurityReviewInput (projectMd, fromSha, toSha, phases as AdversarialProjectPhase, outputPath) + pure buildSecurityReviewSessionPrompt(input) in src/prompts/sessionContext.ts. No I/O. Prompt bakes our own threat model (local CLI, untrusted git-shared .mini/, no network/auth/secrets) + OWASP/CWE lens, MIT-clean (do NOT copy Anthropic/Apache), instructs reviewer to write .mini/security/<range>.md with SEC-N severity structure (blocker|should-know|nit) and Range/Threat model/Verdict/Findings/Checked-and-clean sections; reviewer reads the real git diff fromSha..toSha; scope report-only."
+    },
+    {
+      "title": "Snapshot test for the security prompt",
+      "status": "done",
+      "detail": "In src/prompts/sessionContext.test.ts snapshot buildSecurityReviewSessionPrompt for phase-mode (with phases) and ref-mode (empty phases -> diff fallback). Assert key wording: threat model, OWASP/CWE, output path .mini/security/, severity vocabulary."
+    },
+    {
+      "title": "Context assembler buildSecurityReviewContext",
+      "status": "done",
+      "detail": "New src/commands/securityReviewContext.ts: (cwd, input: RangeInput, outputPath: string) calls resolveRange, reads project.md tolerantly (readProjectSafe pattern), reuses resolveRangePhases from adversarialProjectContext.ts, returns the prompt string or null (logs reason) on range failure. outputPath is a parameter (not derived here); no file writing, no CLI dispatch, no filename logic."
+    },
+    {
+      "title": "Unhappy-path test for the assembler",
+      "status": "done",
+      "detail": "New src/commands/securityReviewContext.test.ts (harness like adversarialProjectContext.test.ts): empty/inverted range and missing preSha -> null; ref mode with no phase mapping -> prompt with empty phase list (diff fallback); missing project.md -> degrades, never throws."
+    },
+    {
+      "title": "Typecheck + green test suite",
+      "status": "done",
+      "detail": "Run typecheck + full test suite, generate snapshots. Verify FindingSource/findingsStore untouched and no CLI/slash/doctor/auto-chain code added."
+    }
+  ],
+  "startedAt": "2026-06-15T06:39:54.853Z",
+  "completedAt": "2026-06-15T06:50:08.959Z",
+  "autoCommit": {
+    "preSha": "7f86faba4b60f4b05bdb30addea63e8ac6a9e773",
+    "subject": "Phase 169: Security review context builder"
+  }
+}

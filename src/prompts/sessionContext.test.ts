@@ -7,6 +7,7 @@ import {
   buildPlanSessionPrompt,
   buildProjectAdversarialSessionPrompt,
   buildProjectSessionPrompt,
+  buildSecurityReviewSessionPrompt,
   buildVerifySessionPrompt,
 } from './sessionContext.js';
 import { ASK_AND_STOP_HINT } from './sessionHints.js';
@@ -568,6 +569,91 @@ describe('buildProjectAdversarialSessionPrompt', () => {
   it('is report-only and inlines the project block', () => {
     const p = buildProjectAdversarialSessionPrompt(input);
     expect(p).toContain('report only');
+    expect(p).toContain('Do **not** modify');
+    expect(p).toContain('What I am building');
+  });
+});
+
+describe('buildSecurityReviewSessionPrompt', () => {
+  const input = {
+    projectMd: '# Demo\n\n## What I am building\nA thing.',
+    fromSha: 'aaaaaaa',
+    toSha: 'bbbbbbb',
+    phases: [
+      { id: 10, title: 'First phase' },
+      { id: 11, title: 'Second phase' },
+    ],
+    outputPath: '.mini/security/range-10-11.md',
+  };
+
+  it('frames a security-only pass, separate from the correctness red-team', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('security review');
+    expect(p).toContain('security lens only');
+    expect(p).toContain('did **not** write this code');
+    expect(p).toContain('mini adversarial-project');
+  });
+
+  it('bakes in the project threat model (local CLI, untrusted .mini/)', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('Threat model');
+    expect(p).toContain('local developer CLI');
+    expect(p).toContain('no network listener');
+    expect(p).toContain('git-shared');
+  });
+
+  it('uses OWASP/CWE only as a checklist of reachable categories', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('OWASP / CWE');
+    expect(p).toContain('reachable in THIS code');
+    expect(p).toContain('PROCESS EXECUTION');
+    expect(p).toContain('PROMPT INJECTION');
+  });
+
+  it('embeds the resolved range bounds and the explicit git diff to run', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('aaaaaaa..bbbbbbb');
+    expect(p).toContain('git diff aaaaaaa..bbbbbbb');
+    expect(p).toContain('git log aaaaaaa..bbbbbbb');
+  });
+
+  it('lists the in-range phases as id+title only (no reports)', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('10. First phase');
+    expect(p).toContain('11. Second phase');
+  });
+
+  it('falls back to a diff-only note when no phases map to the range (ref mode)', () => {
+    const p = buildSecurityReviewSessionPrompt({ ...input, phases: [] });
+    expect(p).toContain('plain git refs');
+    expect(p).toContain('work from the diff');
+  });
+
+  it('tells the reviewer to write the report file directly, not mini findings', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('.mini/security/range-10-11.md');
+    expect(p).toContain('write the report file directly');
+    expect(p).not.toContain('mini findings add');
+  });
+
+  it('pins the report structure and the SEC-N severity vocabulary', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('# Security review —');
+    expect(p).toContain('### SEC-1 · <blocker|should-know|nit>');
+    expect(p).toContain('## Verdict');
+    expect(p).toContain('## Checked and clean');
+  });
+
+  it('asks for a single security-review status line', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('**security-review: pass**');
+    expect(p).toContain('**security-review: findings**');
+    expect(p).toContain('**security-review: blocked**');
+  });
+
+  it('is review/report-only and inlines the project block', () => {
+    const p = buildSecurityReviewSessionPrompt(input);
+    expect(p).toContain('review and report only');
     expect(p).toContain('Do **not** modify');
     expect(p).toContain('What I am building');
   });
