@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  CorruptPhaseError,
   exists,
   hasPrev,
   load,
@@ -209,6 +210,72 @@ describe('layout verze 2 (fáze po souborech)', () => {
     await writeFile(statePath(cwd), JSON.stringify(legacy), 'utf-8');
 
     await expect(load(cwd)).rejects.toThrow(/mini migrate/);
+  });
+});
+
+describe('corrupt vs. missing phase file', () => {
+  const detailedPhase: Phase = {
+    id: 1,
+    title: 'P1',
+    status: 'doing',
+    goal: 'do something',
+    steps: [{ title: 'step A', status: 'done' }],
+    humanNotes: 'note',
+  };
+
+  // A phase file with git merge-conflict markers — invalid JSON but present.
+  const conflictMarkers = [
+    '<<<<<<< HEAD',
+    '{ "id": 1, "title": "ours", "status": "doing" }',
+    '=======',
+    '{ "id": 1, "title": "theirs", "status": "doing" }',
+    '>>>>>>> branch',
+  ].join('\n');
+
+  it('loadPhase throws CorruptPhaseError (with the path) on invalid JSON', async () => {
+    const state: ProjectState = { ...newState(), currentPhaseId: 1, phases: [detailedPhase] };
+    await save(state, cwd);
+
+    const filePath = join(phasesDir(cwd), phaseFileName(1));
+    await writeFile(filePath, conflictMarkers, 'utf-8');
+
+    await expect(loadPhase(cwd, 1)).rejects.toThrow(CorruptPhaseError);
+    await expect(loadPhase(cwd, 1)).rejects.toThrow(filePath);
+  });
+
+  it('loadFullState throws instead of degrading a corrupt phase to its header', async () => {
+    const state: ProjectState = { ...newState(), currentPhaseId: 1, phases: [detailedPhase] };
+    await save(state, cwd);
+    await writeFile(join(phasesDir(cwd), phaseFileName(1)), conflictMarkers, 'utf-8');
+
+    await expect(loadFullState(cwd)).rejects.toThrow(CorruptPhaseError);
+  });
+
+  it('a missing phase file is still a benign null, not an error', async () => {
+    const state: ProjectState = { ...newState(), currentPhaseId: 1, phases: [detailedPhase] };
+    await save(state, cwd);
+    await rm(join(phasesDir(cwd), phaseFileName(1)), { force: true });
+
+    expect(await loadPhase(cwd, 1)).toBeNull();
+  });
+
+  it('167-1 regression: a failed load throws before any degraded state is saved', async () => {
+    const state: ProjectState = { ...newState(), currentPhaseId: 1, phases: [detailedPhase] };
+    await save(state, cwd);
+    const filePath = join(phasesDir(cwd), phaseFileName(1));
+    await writeFile(filePath, conflictMarkers, 'utf-8');
+
+    // A realistic load -> mutate -> save flow must abort at the load: it never
+    // gets a degraded {id,title,status} phase to write back over the file.
+    await expect(
+      (async () => {
+        const loaded = await loadFullState(cwd);
+        await save(loaded, cwd); // unreachable — load throws first
+      })(),
+    ).rejects.toThrow(CorruptPhaseError);
+
+    // The corrupt file is untouched: detail was never silently overwritten.
+    expect(await readFile(filePath, 'utf-8')).toBe(conflictMarkers);
   });
 });
 

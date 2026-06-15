@@ -30,6 +30,15 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Fixed
 
+- **Corrupt phase file no longer silently loses its detail (blocker 167-1).** The
+  phase-detail loader used to treat an unreadable `.mini/phases/phase-NNN.json`
+  (truncated, half-written, or left with git merge-conflict markers) exactly like
+  a missing one — it degraded to the bare header summary, dropping
+  goal/steps/notes, and the next save made the loss permanent. Reads now
+  distinguish the two: a missing file stays a benign result, but corrupt JSON or
+  any other read error throws a clear `CorruptPhaseError` naming the file, so
+  `verify`/`adversarial`/`load` report the real problem instead of a misleading
+  "no phase, run `/mini:next`".
 - **`adversarial-project` dedup step is now permitted.** The reviewer prompt tells
   the agent to run `mini findings list` first so the same issue isn't filed twice,
   but `mini findings list` was missing from the command's allowed tools — in a

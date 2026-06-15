@@ -1,0 +1,40 @@
+{
+  "id": 176,
+  "title": "Distinguish missing from corrupt phase",
+  "goal": "readPhaseFile distinguishes ENOENT (returns null) from malformed JSON or read errors (throws a clear error naming the path and reason), so loadPhase, assembleState and verify/adversarial report the real problem instead of a misleading 'no phase', and corrupt phase detail is never silently overwritten on the next save.",
+  "status": "done",
+  "fromFinding": "167-1",
+  "steps": [
+    {
+      "title": "Add CorruptPhaseError type",
+      "status": "done",
+      "detail": "New error class in src/state/store.ts carrying the file path and original cause; readable message like 'Corrupt phase file <path>: <reason>'. Exported so tests/CLI can react to it."
+    },
+    {
+      "title": "readPhaseFile distinguishes ENOENT from corrupt",
+      "status": "done",
+      "detail": "In readPhaseFile (store.ts:178-185): err.code === 'ENOENT' returns null (missing); any other read error or JSON.parse failure throws CorruptPhaseError with path and cause. No blanket catch returning null."
+    },
+    {
+      "title": "Propagate through loaders, no silent fallback",
+      "status": "done",
+      "detail": "Ensure the error bubbles through loadPhase, assembleState (the ?? {id,title,status} fallback stays only for null/missing, not for throw), loadFullState and loadPrev, so corrupt detail never degrades to header and a later save never overwrites it. Audit loadPhase callers (verify/adversarial/security/context/range) so no try/catch swallows it or turns it back into a misleading 'no phase' — that message may only fire for a genuinely missing phase."
+    },
+    {
+      "title": "Tests: corrupt vs missing",
+      "status": "done",
+      "detail": "In src/state/store.test.ts: (a) corrupt phase-<id>.json (e.g. git conflict markers) makes loadPhase and loadFullState throw CorruptPhaseError with the right path; (b) missing file still returns null; (c) 167-1 regression: a degraded state is never written back after a failed load (load throws before mutate/save)."
+    },
+    {
+      "title": "Verify build, typecheck and tests pass",
+      "status": "done",
+      "detail": "npm run build, typecheck and the full test suite green."
+    }
+  ],
+  "startedAt": "2026-06-15T09:52:17.860Z",
+  "completedAt": "2026-06-15T10:10:48.106Z",
+  "autoCommit": {
+    "preSha": "2030006368d0726930e406f8ed64f26e891b8710",
+    "subject": "Phase 176: Distinguish missing from corrupt phase"
+  }
+}

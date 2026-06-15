@@ -29,6 +29,25 @@ export class LegacyStateError extends Error {
   }
 }
 
+/**
+ * A phase-detail file exists on disk but cannot be read as valid JSON —
+ * truncated, half-written, or left with git merge-conflict markers (the project
+ * resolves `.mini` conflicts via git, so this is a realistic state). The loader
+ * throws this instead of silently degrading to the bare header summary, which
+ * would drop goal/steps/humanNotes/autoCommit and — on the next save — make the
+ * loss permanent. Distinct from a missing file, which stays a benign `null`.
+ */
+export class CorruptPhaseError extends Error {
+  constructor(
+    public readonly filePath: string,
+    public override readonly cause: unknown,
+  ) {
+    const reason = cause instanceof Error ? cause.message : String(cause);
+    super(`Corrupt phase file ${filePath}: ${reason}`);
+    this.name = 'CorruptPhaseError';
+  }
+}
+
 function dir(cwd: string): string {
   return join(cwd, STATE_DIR);
 }
@@ -174,13 +193,25 @@ function toHeader(state: ProjectState): StateHeader {
   return header;
 }
 
-/** Načte jeden soubor fáze z daného adresáře; chybějící/nevalidní → `null`. */
+/**
+ * Read a single phase file from the given directory. A missing file (ENOENT) is
+ * a benign `null`; any other read failure or a JSON parse error means the file
+ * is present but unreadable, so we throw `CorruptPhaseError` rather than treat
+ * corruption as absence (which would silently drop the phase detail).
+ */
 async function readPhaseFile(dirPath: string, id: number): Promise<Phase | null> {
+  const filePath = join(dirPath, phaseFileName(id));
+  let raw: string;
   try {
-    const raw = await readFile(join(dirPath, phaseFileName(id)), 'utf-8');
+    raw = await readFile(filePath, 'utf-8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw new CorruptPhaseError(filePath, err);
+  }
+  try {
     return JSON.parse(raw) as Phase;
-  } catch {
-    return null;
+  } catch (err) {
+    throw new CorruptPhaseError(filePath, err);
   }
 }
 

@@ -4,7 +4,7 @@
 > Each entry is `## <id> · <severity> · <status>`; do not hand-edit those header
 > lines.
 
-## 167-1 · blocker · open
+## 167-1 · blocker · resolved
 **Where:** src/state/store.ts:178-194,346
 **Reviewed-at:** e69efefc1bdb235603a5eda7b87b080f6523fa2a
 **Source:** adversarial

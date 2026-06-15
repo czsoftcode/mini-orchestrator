@@ -877,6 +877,11 @@
       "id": 175,
       "title": "Allow findings list in adversarial-project",
       "status": "done"
+    },
+    {
+      "id": 176,
+      "title": "Distinguish missing from corrupt phase",
+      "status": "done"
     }
   ],
   "models": {
