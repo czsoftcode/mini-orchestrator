@@ -857,6 +857,11 @@
       "id": 171,
       "title": "/mini:security slash command",
       "status": "done"
+    },
+    {
+      "id": 172,
+      "title": "Document the security command",
+      "status": "done"
     }
   ],
   "models": {

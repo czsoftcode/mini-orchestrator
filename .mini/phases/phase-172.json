@@ -1,0 +1,37 @@
+{
+  "id": 172,
+  "title": "Document the security command",
+  "goal": "Write docs/interactive/security.md and docs/non-interactive/security.md mirroring the adversarial-project docs (range rules, no-flags = last completed phase, the .mini/security/<range>.md report output, and the inline-not-scoped caveat), and add a Security review row to the Review table in docs/README.md.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "CLI page docs/non-interactive/security.md",
+      "status": "done",
+      "detail": "Write the reference page mirroring non-interactive/adversarial-project.md: synopsis (no-flags + phase/ref forms), range table, no-flags = last completed phase (preSha->HEAD, genesis fallback), report written to .mini/security/<range>.md with the naming scheme (phase-<id>, range-<A>-<B>, range-<short>-<short>), scoped tool set (read + read-only git + Write(.mini/security/**), no Edit, no findings write). Verifiable: file exists, links resolve."
+    },
+    {
+      "title": "Slash page docs/interactive/security.md",
+      "status": "done",
+      "detail": "Write the page mirroring interactive/adversarial-project.md: what it does, In-a-session steps passing $ARGUMENTS to mini context security, an example. Explicitly add the caveat that an inline run does NOT enforce the scoped tool set (unlike the terminal mini security) -> prefer a terminal run or /clear. Verifiable: file exists, links to the CLI variant and back resolve."
+    },
+    {
+      "title": "Security review row in docs/README.md",
+      "status": "done",
+      "detail": "Add a 'Security review of a phase or range' row linking interactive/security.md and non-interactive/security.md to the Review-section table, next to the adversarial rows. Verifiable: the row is in the table and both links point to the newly created files."
+    },
+    {
+      "title": "Accuracy + link verification",
+      "status": "done",
+      "detail": "Check both pages against the real behavior (phase-mode needs the next phase's preSha; inline != scoped) and confirm every relative link points to an existing file (grep targets). Verifiable: no link points to a missing file, caveats match the code."
+    }
+  ],
+  "startedAt": "2026-06-15T08:41:00.187Z",
+  "resolvedVerify": [
+    "Read the two new docs pages for tone/clarity"
+  ],
+  "completedAt": "2026-06-15T08:51:46.857Z",
+  "autoCommit": {
+    "preSha": "0a89dd00043e3cd5accbd9ab2dfc6db705e7c5b8",
+    "subject": "Phase 172: Document the security command"
+  }
+}

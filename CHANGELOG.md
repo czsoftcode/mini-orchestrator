@@ -6,7 +6,17 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-06-15
+
 ### Added
+
+- **Docs for the security review command.** Added reference pages for both
+  [`mini security`](docs/non-interactive/security.md) /
+  [`/mini:security`](docs/interactive/security.md) under `docs/`, covering the
+  range rules (no flags = last completed phase, phase vs. git-ref forms, the
+  phase-mode range-end caveat, genesis fallback), the report-path scheme, the
+  scoped tool set, and the inline-is-not-scoped warning. `docs/README.md` gained a
+  **Security review** row in the Review table.
 
 - **`/mini:security` slash command.** `install-commands` now generates the
   `/mini:security` command idempotently. Its body forwards the range flags

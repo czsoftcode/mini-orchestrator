@@ -52,13 +52,15 @@ Each page links to its sibling variant and to related commands.
 
 ## Review
 
-Independent red-team review — finds what breaks the code (report only, never
-edits code, never moves the phase state). Findings land in the durable store.
+Independent review — finds what breaks the code (report only, never edits code,
+never moves the phase state). Correctness findings land in the durable store; the
+security pass writes its own Markdown report instead.
 
 | Command | Interactive | Non-interactive |
 | --- | --- | --- |
 | Red-team a single phase | [`/mini:adversarial`](interactive/adversarial.md) | [`mini adversarial`](non-interactive/adversarial.md) |
 | Red-team a range of phases | [`/mini:adversarial-project`](interactive/adversarial-project.md) | [`mini adversarial-project`](non-interactive/adversarial-project.md) |
+| Security review of a phase or range | [`/mini:security`](interactive/security.md) | [`mini security`](non-interactive/security.md) |
 | Review findings store | — | [`mini findings`](non-interactive/findings.md) |
 
 ## State & control

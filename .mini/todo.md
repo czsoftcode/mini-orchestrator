@@ -21,4 +21,4 @@
 - [x] Security review: standalone CLI command (single last phase + range like adversarial/adversarial-project), wiring the phase-169 context builder into workWithClaude with scoped read-only tools; writes durable output to .mini/security/<range>.md.
 - [ ] Security review: auto-chain — run the security pass automatically after adversarial/adversarial-project completes, as a separate second pass with its own prompt and its own .mini/security/ output (do NOT blend into the adversarial prompt, do NOT file into mini findings).
 - [x] Security review: idempotent /mini:security slash command (mirror /mini:adversarial(-project)) + ADVERSARIAL_PROJECT_ALLOWED_TOOLS-style scoped tool list.
-- [ ] Security review: docs page in docs/ + README pointer + 'mini --help'/COMMAND_DEFS entry + 'mini doctor' recognises/counts the command (follow the adversarial-project docs pattern).
+- [x] Security review: docs page in docs/ + README pointer + 'mini --help'/COMMAND_DEFS entry + 'mini doctor' recognises/counts the command (follow the adversarial-project docs pattern).
