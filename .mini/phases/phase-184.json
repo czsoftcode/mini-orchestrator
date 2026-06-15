@@ -1,0 +1,44 @@
+{
+  "id": 184,
+  "title": "Record review range on findings",
+  "goal": "Add an optional universal '--range <from>-<to>' flag to 'mini findings add' that stores a '**Range:**' metadata line on the finding (parsed/serialized order-independently to keep the store robust), and update the adversarial-project prompt to pass the resolved range so range reviews record their full scope, not just the inferred origin phase.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add range field + Range serialization",
+      "status": "done",
+      "detail": "Add optional range?: string to Finding and NewFinding; emit a **Range:** line in serializeFindings in canonical order Where -> Reviewed-at -> Source -> Range; add RANGE_RE."
+    },
+    {
+      "title": "Make metadata parsing order-independent",
+      "status": "done",
+      "detail": "Rewrite parseEntryBody to read leading metadata lines (Where/Reviewed-at/Source/Range) regardless of order — loop while a line matches any metadata regex and that field is unset; first non-metadata line is the title. Adds Range and removes the position-locked fragility (findings 160-2/160-3)."
+    },
+    {
+      "title": "Thread range through addFinding",
+      "status": "done",
+      "detail": "addFinding writes finding.range when input.range?.trim() is non-empty, otherwise omits it — no behavior change for single-phase findings."
+    },
+    {
+      "title": "Wire --range into CLI + findings add",
+      "status": "done",
+      "detail": "Add --range \"<from>-<to>\" to mini findings add (cli.ts), pass it through findingsAdd into addFinding; optional and universal (any source); show range in mini findings list (renderFinding) when present."
+    },
+    {
+      "title": "Update adversarial-project prompt to pass range",
+      "status": "done",
+      "detail": "In buildProjectAdversarialSessionPrompt compute a range label from phases (first-last id, e.g. 172-178) and instruct the reviewer in 'Record the findings' to add --range \"<label>\"; omit --range when phases is empty (plain git refs)."
+    },
+    {
+      "title": "Tests",
+      "status": "done",
+      "detail": "findingsStore.test.ts — round-trip with range, order-independent parse, range omitted when absent, back-compat for old files without Range; findings command test with --range; update the adversarial-project prompt snapshot."
+    }
+  ],
+  "startedAt": "2026-06-15T18:26:05.545Z",
+  "completedAt": "2026-06-15T18:40:39.121Z",
+  "autoCommit": {
+    "preSha": "0a80ddb2dac667d433b69cb8f722ca244e170475",
+    "subject": "Phase 184: Record review range on findings"
+  }
+}

@@ -621,6 +621,28 @@ describe('buildProjectAdversarialSessionPrompt', () => {
     expect(p).toContain('**adversarial-project: findings**');
   });
 
+  it('tells the reviewer to stamp the reviewed phase range on every finding', () => {
+    // The range is the first..last phase id in the list (10..11 here).
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('mini findings add --source project --range "10-11"');
+    expect(p).toContain('on **every** finding');
+  });
+
+  it('collapses the range label to a single id when the range is one phase', () => {
+    const p = buildProjectAdversarialSessionPrompt({
+      ...input,
+      phases: [{ id: 10, title: 'Only phase' }],
+    });
+    expect(p).toContain('--range "10"');
+  });
+
+  it('omits the --range flag in ref mode (no phases map to the range)', () => {
+    const p = buildProjectAdversarialSessionPrompt({ ...input, phases: [] });
+    // No concrete `--range "<label>"` flag is offered, only the instruction to omit it.
+    expect(p).not.toContain('--range "');
+    expect(p).toContain('omit `--range`');
+  });
+
   it('is report-only and inlines the project block', () => {
     const p = buildProjectAdversarialSessionPrompt(input);
     expect(p).toContain('report only');

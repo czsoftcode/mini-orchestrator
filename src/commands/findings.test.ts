@@ -156,6 +156,28 @@ describe('mini findings', () => {
       expect((await readPhaseFindings(cwd, 5))[0]?.source).toBe('project');
     });
 
+    it('records a reviewed range passed via --range', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      const r = await findingsAdd({
+        severity: 'should-know',
+        title: 'cross-range regression',
+        source: 'project',
+        range: '1-5',
+      });
+      expect(r.ok).toBe(true);
+      expect((await readPhaseFindings(cwd, 5))[0]?.range).toBe('1-5');
+    });
+
+    it('omits range when --range is not passed (single-phase review)', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      await findingsAdd({ severity: 'nit', title: 'no range' });
+      expect((await readPhaseFindings(cwd, 5))[0]).not.toHaveProperty('range');
+    });
+
     it('rejects an invalid source', async () => {
       await writeProject('# Project', cwd);
       await save(stateWithCurrentPhase(), cwd);
@@ -235,6 +257,17 @@ describe('mini findings', () => {
       expect(out).toContain('second');
       // No git repo here, so nothing was stamped — no `@sha` marker on the line.
       expect(out).not.toContain('@');
+    });
+
+    it('shows the reviewed range in braces when a finding carries one', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      await findingsAdd({ severity: 'nit', title: 'range one', source: 'project', range: '1-5' });
+      logSpy.mockClear();
+
+      const r = await findingsList({});
+      expect(r.ok).toBe(true);
+      expect(output()).toContain('{1-5}');
     });
 
     it('shows the short reviewed-at SHA when a finding carries one', async () => {

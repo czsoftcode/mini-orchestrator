@@ -197,6 +197,86 @@ describe('parse ↔ serialize round-trip', () => {
       { id: '9-1', phaseId: 9, severity: 'nit', status: 'open', source: 'adversarial', title: 'A title' },
     ]);
   });
+
+  it('round-trips a project finding with a reviewed range', () => {
+    const findings: Finding[] = [
+      {
+        id: '178-1',
+        phaseId: 178,
+        severity: 'should-know',
+        status: 'open',
+        source: 'project',
+        where: 'src/cli.ts:403',
+        reviewedAt: '0c27cc6c5aa7889af8fae83a06f56c28a41b1d64',
+        range: '172-178',
+        title: 'Regression spanning the range',
+        body: 'Phase 175 broke what 172 set up.',
+      },
+    ];
+    const md = serializeFindings(findings);
+    // The Range line sits after Source in the canonical order, before the title.
+    expect(md).toMatch(/\*\*Source:\*\* project\n\*\*Range:\*\* 172-178\nRegression/);
+    expect(parseFindings(md)).toEqual(findings);
+  });
+
+  it('omits the **Range:** line entirely when there is no range (additive)', () => {
+    const md = serializeFindings([
+      { id: '9-1', phaseId: 9, severity: 'nit', status: 'open', source: 'adversarial', title: 'No range' },
+    ]);
+    expect(md).not.toContain('Range');
+    expect(parseFindings(md)[0]).not.toHaveProperty('range');
+  });
+
+  it('parses an old file with no **Range:** line identically (back-compat)', () => {
+    const md =
+      '# Review findings\n\n## 9-1 · should-know · open\n' +
+      '**Where:** src/a.ts:3\n**Source:** project\nA title\n\nA body.\n';
+    expect(parseFindings(md)).toEqual([
+      {
+        id: '9-1',
+        phaseId: 9,
+        severity: 'should-know',
+        status: 'open',
+        source: 'project',
+        where: 'src/a.ts:3',
+        title: 'A title',
+        body: 'A body.',
+      },
+    ]);
+  });
+
+  it('parses metadata regardless of order — a reordered Source/Range/Where block', () => {
+    // Hand-edited file with the metadata lines in a non-canonical order. The old
+    // position-locked parser swallowed the title here; the order-independent
+    // parser must recover every field and keep the real title.
+    const md =
+      '## 5-1 · blocker · open\n' +
+      '**Range:** 5-7\n**Source:** project\n**Reviewed-at:** deadbeef\n**Where:** src/x.ts:9\n' +
+      'The actual title\n\nThe body.\n';
+    expect(parseFindings(md)).toEqual([
+      {
+        id: '5-1',
+        phaseId: 5,
+        severity: 'blocker',
+        status: 'open',
+        source: 'project',
+        where: 'src/x.ts:9',
+        reviewedAt: 'deadbeef',
+        range: '5-7',
+        title: 'The actual title',
+        body: 'The body.',
+      },
+    ]);
+  });
+
+  it('treats a repeated metadata line as the title (each field consumed once)', () => {
+    // A second **Range:** line is not metadata anymore — the first content line
+    // becomes the title, so a stray duplicate cannot silently eat the headline.
+    const md = '## 5-1 · nit · open\n**Range:** 5-7\n**Range:** 8-9\nReal title\n';
+    const parsed = parseFindings(md);
+    expect(parsed[0]?.range).toBe('5-7');
+    expect(parsed[0]?.title).toBe('**Range:** 8-9');
+  });
 });
 
 describe('parseFindings — malformed input', () => {
@@ -291,6 +371,33 @@ describe('addFinding / readPhaseFindings / listFindings — disk', () => {
     expect(stored[0]).not.toHaveProperty('reviewedAt');
     const raw = await readFile(findingsPath(cwd, 156), 'utf8');
     expect(raw).not.toContain('Reviewed-at');
+  });
+
+  it('persists a reviewed range passed to addFinding', async () => {
+    await addFinding(cwd, 178, {
+      severity: 'should-know',
+      title: 'range finding',
+      source: 'project',
+      range: '172-178',
+    });
+    const stored = await readPhaseFindings(cwd, 178);
+    expect(stored[0]?.range).toBe('172-178');
+    const raw = await readFile(findingsPath(cwd, 178), 'utf8');
+    expect(raw).toContain('**Range:** 172-178');
+  });
+
+  it('omits range when none is passed (additive)', async () => {
+    await addFinding(cwd, 156, { severity: 'nit', title: 'no range' });
+    const stored = await readPhaseFindings(cwd, 156);
+    expect(stored[0]).not.toHaveProperty('range');
+    const raw = await readFile(findingsPath(cwd, 156), 'utf8');
+    expect(raw).not.toContain('Range');
+  });
+
+  it('collapses newlines in the range so it stays a single metadata line', async () => {
+    await addFinding(cwd, 7, { severity: 'nit', title: 'x', range: '5-\n7' });
+    const stored = await readPhaseFindings(cwd, 7);
+    expect(stored[0]?.range).toBe('5- 7');
   });
 
   it('keeps ids independent per phase file', async () => {

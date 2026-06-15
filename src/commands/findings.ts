@@ -46,6 +46,8 @@ export interface FindingsAddOptions {
   source?: string;
   title?: string;
   where?: string;
+  /** Phase range the review covered, e.g. `172-178` — recorded by a range review. */
+  range?: string;
   body?: string;
 }
 
@@ -105,6 +107,7 @@ export async function findingsAdd(opts: FindingsAddOptions): Promise<StepOutcome
     title: string;
     where?: string;
     reviewedAt?: string;
+    range?: string;
     body?: string;
   } = {
     severity,
@@ -112,6 +115,7 @@ export async function findingsAdd(opts: FindingsAddOptions): Promise<StepOutcome
   };
   if (source) input.source = source;
   if (opts.where?.trim()) input.where = opts.where.trim();
+  if (opts.range?.trim()) input.range = opts.range.trim();
   if (opts.body?.trim()) input.body = opts.body.trim();
 
   // Stamp the baseline commit the review was performed against. The review runs
@@ -162,7 +166,7 @@ export async function findingsList(opts: FindingsListOptions): Promise<StepOutco
   return { ok: true };
 }
 
-/** One line per finding: `id [severity] <source> (status) where @sha — title`. */
+/** One line per finding: `id [severity] <source> (status) where @sha {range} — title`. */
 function renderFinding(f: Finding, showStatus: boolean): string {
   const parts = [f.id, `[${f.severity}]`, f.source];
   if (showStatus) parts.push(`(${f.status})`);
@@ -170,6 +174,8 @@ function renderFinding(f: Finding, showStatus: boolean): string {
   // Short baseline SHA, so a reader can tell which code state the review started
   // from without the full 40-char hash cluttering the line.
   if (f.reviewedAt) parts.push(`@${f.reviewedAt.slice(0, 7)}`);
+  // The reviewed range (range reviews only), so the scope is visible at a glance.
+  if (f.range) parts.push(`{${f.range}}`);
   parts.push(`— ${f.title}`);
   return `  ${parts.join(' ')}`;
 }

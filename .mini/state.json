@@ -917,6 +917,11 @@
       "id": 183,
       "title": "Bump CI actions to v5",
       "status": "done"
+    },
+    {
+      "id": 184,
+      "title": "Record review range on findings",
+      "status": "done"
     }
   ],
   "models": {

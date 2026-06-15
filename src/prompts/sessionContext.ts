@@ -589,6 +589,15 @@ export interface AdversarialProjectPhase {
   title: string;
 }
 
+/**
+ * A human label for the reviewed phase range: \`first-last\`, or just \`first\`
+ * when both ends are the same phase (a one-phase range). Used to fill the
+ * \`mini findings add --range\` flag so range-review findings record their scope.
+ */
+function rangeLabelFrom(first: number, last: number): string {
+  return first === last ? `${first}` : `${first}-${last}`;
+}
+
 export interface AdversarialProjectInput {
   /** Contents of \`.mini/project.md\` (the project vision) — context for the reviewer. */
   projectMd: string;
@@ -629,6 +638,13 @@ export function buildProjectAdversarialSessionPrompt(input: AdversarialProjectIn
     phases.length > 0
       ? phases.map((p) => `  - ${p.id}. ${p.title}`).join('\n')
       : '  (the range was given as plain git refs — no phase list; work from the diff)';
+
+  // The phase range as a human label (`first-last`, or a single id when the range
+  // is one phase). Empty in ref mode (no phases mapped) — then the prompt omits
+  // the `--range` flag entirely and the reviewer files findings without it.
+  const rangeLabel =
+    phases.length > 0 ? rangeLabelFrom((phases[0] as AdversarialProjectPhase).id, (phases[phases.length - 1] as AdversarialProjectPhase).id) : '';
+  const rangeFlag = rangeLabel ? ` --range "${rangeLabel}"` : '';
 
   return `You are in a Claude Code session — an **adversarial project review** (a cross-phase red-team).
 
@@ -690,8 +706,14 @@ Record **each** finding by calling the CLI — it owns the store, the format and
 origin, so you do not write or edit any file yourself:
 
 \`\`\`
-mini findings add --source project --severity <blocker|should-know|nit> --title "<short headline>" [--where "<file:line>"] [--body "<what breaks and how>"]
+mini findings add --source project${rangeFlag} --severity <blocker|should-know|nit> --title "<short headline>" [--where "<file:line>"] [--body "<what breaks and how>"]
 \`\`\`
+
+${
+  rangeLabel
+    ? `Keep \`--range "${rangeLabel}"\` on **every** finding: it records the whole phase range this review covered, so a later reader sees the scope you inspected — not just the single origin phase the finding is filed under.`
+    : 'This range was given as plain git refs (no phase numbers), so omit `--range` — there is no phase range to record.'
+}
 
 Run it once per finding; it prints the assigned id and the file under
 \`.mini/findings/\`. If \`mini\` is not on your PATH, say so in the chat instead of

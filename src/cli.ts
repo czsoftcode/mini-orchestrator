@@ -392,7 +392,7 @@ program
 program
   .command('findings [action]')
   .description(
-    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify | project (default adversarial). "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
+    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--range <from-to>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify | project (default adversarial); --range records the phase range a range review covered. "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
   )
   .addOption(
     new Option(
@@ -408,6 +408,10 @@ program
   )
   .option('--title <text>', 'Short headline of the finding (for add).')
   .option('--where <loc>', 'Optional location file:line (for add).')
+  .option(
+    '--range <from-to>',
+    'Optional phase range the review covered, e.g. "172-178" (for add) — set by a range review so the finding records its full scope, not just its origin phase.',
+  )
   .option('--body <text>', 'Optional longer body — what breaks and how (for add).')
   .option('--all', 'For list: include resolved findings, not just the open ones.')
   .action(
@@ -418,6 +422,7 @@ program
         source?: string;
         title?: string;
         where?: string;
+        range?: string;
         body?: string;
         all?: boolean;
       },
@@ -430,6 +435,7 @@ program
             source: opts.source,
             title: opts.title,
             where: opts.where,
+            range: opts.range,
             body: opts.body,
           });
           if (!r.ok) process.exit(1);

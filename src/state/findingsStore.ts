@@ -82,6 +82,13 @@ export interface Finding {
    * review started from", not "the reviewed commit". Absent outside a git repo.
    */
   reviewedAt?: string;
+  /**
+   * Optional phase range the review covered (e.g. `172-178`). Set by a range
+   * review (`adversarial-project`) so a later reader knows the whole scope that
+   * was inspected, not just the finding's inferred origin phase. Single-phase
+   * reviews omit it.
+   */
+  range?: string;
   /** Short headline of the finding (required). */
   title: string;
   /** Optional longer body — what breaks and how. */
@@ -97,6 +104,8 @@ export interface NewFinding {
   where?: string;
   /** Baseline commit SHA at review time (see {@link Finding.reviewedAt}); omitted outside git. */
   reviewedAt?: string;
+  /** Phase range the review covered (see {@link Finding.range}); omitted for single-phase reviews. */
+  range?: string;
   body?: string;
 }
 
@@ -118,6 +127,8 @@ const WHERE_RE = /^\*\*Where:\*\*\s+(.*)$/;
 const REVIEWED_AT_RE = /^\*\*Reviewed-at:\*\*\s+(.*)$/;
 /** Matches the optional `**Source:** …` metadata line (after `**Reviewed-at:**`). */
 const SOURCE_RE = /^\*\*Source:\*\*\s+(.*)$/;
+/** Matches the optional `**Range:** …` metadata line (the reviewed phase range). */
+const RANGE_RE = /^\*\*Range:\*\*\s+(.*)$/;
 /** Is the severity one of the three accepted values? */
 export function isFindingSeverity(value: string): value is FindingSeverity {
   return (FINDING_SEVERITIES as readonly string[]).includes(value);
@@ -179,6 +190,7 @@ export function parseFindings(md: string): Finding[] {
         };
         if (parsed.where) finding.where = parsed.where;
         if (parsed.reviewedAt) finding.reviewedAt = parsed.reviewedAt;
+        if (parsed.range) finding.range = parsed.range;
         if (parsed.body) finding.body = parsed.body;
         out.push(finding);
       }
@@ -205,18 +217,26 @@ export function parseFindings(md: string): Finding[] {
 }
 
 /**
- * Splits an entry's body lines into optional `where` / `reviewedAt` / `source`
- * metadata, a required title and an optional body. The metadata lines (when
- * present) sit directly under the header in `**Where:**`, `**Reviewed-at:**`,
- * `**Source:**` order; each may be absent, so the parser round-trips old files
- * (no `**Reviewed-at:**` / no `**Source:**`) and findings recorded outside a git
- * repo. A `**Source:**` value that is not a known source is ignored (left
- * `undefined`, so the caller falls back to the default).
+ * Splits an entry's body lines into optional `where` / `reviewedAt` / `source` /
+ * `range` metadata, a required title and an optional body. The metadata lines
+ * (when present) sit directly under the header; each may be absent, so the parser
+ * round-trips old files (no `**Reviewed-at:**` / `**Source:**` / `**Range:**`)
+ * and findings recorded outside a git repo.
+ *
+ * Parsing is **order-independent**: it consumes any leading `**Where:**` /
+ * `**Reviewed-at:**` / `**Source:**` / `**Range:**` line in any order, each at
+ * most once, until the first non-metadata line — which becomes the title. This
+ * deliberately drops the old position-locked scan (a reordered or hand-edited
+ * metadata line used to be swallowed into the title); the machine serializer
+ * still emits a canonical order, so round-trips are unaffected. A `**Source:**`
+ * value that is not a known source is ignored (left `undefined`, so the caller
+ * falls back to the default).
  */
 function parseEntryBody(lines: string[]): {
   where?: string;
   reviewedAt?: string;
   source?: FindingSource;
+  range?: string;
   title?: string;
   body?: string;
 } {
@@ -228,34 +248,51 @@ function parseEntryBody(lines: string[]): {
   skipBlank();
 
   let where: string | undefined;
-  const w = i < lines.length ? WHERE_RE.exec((lines[i] as string).trim()) : null;
-  if (w) {
-    where = (w[1] as string).trim();
-    i++;
-    skipBlank();
-  }
-
   let reviewedAt: string | undefined;
-  const r = i < lines.length ? REVIEWED_AT_RE.exec((lines[i] as string).trim()) : null;
-  if (r) {
-    reviewedAt = (r[1] as string).trim();
-    i++;
-    skipBlank();
-  }
-
   let source: FindingSource | undefined;
-  const s = i < lines.length ? SOURCE_RE.exec((lines[i] as string).trim()) : null;
-  if (s) {
-    const value = (s[1] as string).trim();
-    if (isFindingSource(value)) source = value;
-    i++;
-    skipBlank();
+  let range: string | undefined;
+
+  // Consume the metadata block: any of the four lines, in any order, each only
+  // the first time it appears. Stops at the first line that is not metadata (or
+  // a metadata line whose field is already set) — that line is the title.
+  for (; i < lines.length; i++) {
+    const line = (lines[i] as string).trim();
+    if (line === '') continue;
+
+    const w = WHERE_RE.exec(line);
+    if (w && where === undefined) {
+      where = (w[1] as string).trim();
+      continue;
+    }
+    const r = REVIEWED_AT_RE.exec(line);
+    if (r && reviewedAt === undefined) {
+      reviewedAt = (r[1] as string).trim();
+      continue;
+    }
+    const s = SOURCE_RE.exec(line);
+    if (s && source === undefined) {
+      const value = (s[1] as string).trim();
+      if (isFindingSource(value)) source = value;
+      continue;
+    }
+    const g = RANGE_RE.exec(line);
+    if (g && range === undefined) {
+      range = (g[1] as string).trim();
+      continue;
+    }
+    break;
   }
 
-  const meta: { where?: string; reviewedAt?: string; source?: FindingSource } = {};
+  const meta: {
+    where?: string;
+    reviewedAt?: string;
+    source?: FindingSource;
+    range?: string;
+  } = {};
   if (where) meta.where = where;
   if (reviewedAt) meta.reviewedAt = reviewedAt;
   if (source) meta.source = source;
+  if (range) meta.range = range;
 
   if (i >= lines.length) return meta;
   const title = (lines[i] as string).trim();
@@ -266,6 +303,7 @@ function parseEntryBody(lines: string[]): {
     where?: string;
     reviewedAt?: string;
     source?: FindingSource;
+    range?: string;
     title?: string;
     body?: string;
   } = {
@@ -283,6 +321,7 @@ export function serializeFindings(findings: Finding[]): string {
     if (f.where?.trim()) out.push(`**Where:** ${f.where.trim()}`);
     if (f.reviewedAt?.trim()) out.push(`**Reviewed-at:** ${f.reviewedAt.trim()}`);
     out.push(`**Source:** ${f.source}`);
+    if (f.range?.trim()) out.push(`**Range:** ${f.range.trim()}`);
     out.push(f.title.trim());
     if (f.body?.trim()) out.push('', f.body.trim());
     return out.join('\n');
@@ -393,6 +432,8 @@ export async function addFinding(
   };
   if (input.where?.trim()) finding.where = input.where.trim();
   if (input.reviewedAt?.trim()) finding.reviewedAt = input.reviewedAt.trim();
+  // Collapse newlines: range is a single inline metadata value, like the title.
+  if (input.range?.trim()) finding.range = input.range.replace(/\s*\n\s*/g, ' ').trim();
   if (input.body?.trim()) finding.body = input.body.trim();
 
   const path = findingsPath(cwd, phaseId);
