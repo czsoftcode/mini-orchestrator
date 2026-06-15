@@ -1,3 +1,4 @@
+import { stripFindingsSections } from '../state/runReport.js';
 import { phaseStem } from '../state/store.js';
 import type { Phase, PhaseStatus, ProjectState, Step, StepStatus } from '../state/types.js';
 import { GRAPH_USAGE_HINT } from './graphHint.js';
@@ -345,9 +346,10 @@ Without a report the state can't be moved non-interactively. First run \`/mini:d
 `;
   }
 
-  const bodyBlock = reportBody?.trim()
-    ? `\n# Implementation report\n${reportBody.trim()}\n`
-    : '';
+  // Strip stale `## Adversarial findings` / `## Verify findings` sections left in
+  // older reports so repeated reviews don't read prior verdicts as the impl log.
+  const cleanBody = reportBody ? stripFindingsSections(reportBody) : '';
+  const bodyBlock = cleanBody ? `\n# Implementation report\n${cleanBody}\n` : '';
 
   let verifyBlock: string;
   let applyHint: string;
@@ -436,9 +438,10 @@ export function buildVerifySessionPrompt(input: VerifySessionInput): string {
     ? `**Phase ${phase.id}: ${phase.title}** is already closed — this is a **retrospective in-depth review** of its UI/UX by a human.`
     : `**Phase ${phase.id}: ${phase.title}** is implemented but not yet closed — go through its UI/UX with a human **before you close it in \`done\`**.`;
 
-  const bodyBlock = reportBody?.trim()
-    ? `\n# Implementation report\n${reportBody.trim()}\n`
-    : '';
+  // Strip stale `## Adversarial findings` / `## Verify findings` sections left in
+  // older reports so repeated reviews don't read prior verdicts as the impl log.
+  const cleanBody = reportBody ? stripFindingsSections(reportBody) : '';
+  const bodyBlock = cleanBody ? `\n# Implementation report\n${cleanBody}\n` : '';
 
   let verifyBlock: string;
   if (verify.length > 0) {
@@ -513,8 +516,10 @@ export function buildAdversarialSessionPrompt(input: AdversarialSessionInput): s
     : `**Phase ${phase.id}: ${phase.title}** is implemented but not yet closed — red-team the code it produced **before \`done\` closes it**.`;
 
   // Inline the report's free text when we have it; otherwise lean on the git diff.
-  const bodyBlock = reportBody?.trim()
-    ? `\n# Implementation report\n${reportBody.trim()}\n`
+  // Strip stale findings sections first so a re-run doesn't stack prior verdicts.
+  const cleanBody = reportBody ? stripFindingsSections(reportBody) : '';
+  const bodyBlock = cleanBody
+    ? `\n# Implementation report\n${cleanBody}\n`
     : `\n# Implementation report\nThere is no usable implementation report for this phase — work from the \`git diff\` and the phase goal/steps below, and note that in your findings.\n`;
 
   const stepsBlock =

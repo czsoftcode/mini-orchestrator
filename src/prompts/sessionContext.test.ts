@@ -220,6 +220,18 @@ describe('buildDoneSessionPrompt', () => {
     expect(p).toContain('Všechno se povedlo.');
   });
 
+  it('strips stale findings sections from the embedded report body', () => {
+    const p = buildDoneSessionPrompt({
+      phase,
+      reportExists: true,
+      reportBody: 'Real notes.\n\n## Adversarial findings\n- 5-1 stale verdict\n',
+      verify: [],
+    });
+    expect(p).toContain('Real notes.');
+    expect(p).not.toContain('Adversarial findings');
+    expect(p).not.toContain('5-1 stale verdict');
+  });
+
   it('instruuje aktualizovat CHANGELOG.md (Unreleased) před mini done --apply', () => {
     const p = buildDoneSessionPrompt({ phase, reportExists: true, verify: [] });
     expect(p).toContain('CHANGELOG.md');
@@ -425,6 +437,18 @@ describe('buildVerifySessionPrompt', () => {
     });
     expect(p).toContain('Notes for the human.');
   });
+
+  it('strips stale findings sections from the embedded report body', () => {
+    const p = buildVerifySessionPrompt({
+      phase,
+      phaseDone: true,
+      verify: [],
+      reportBody: 'Notes for the human.\n\n## Verify findings\n- 5-2 stale verdict\n',
+    });
+    expect(p).toContain('Notes for the human.');
+    expect(p).not.toContain('Verify findings');
+    expect(p).not.toContain('5-2 stale verdict');
+  });
 });
 
 describe('buildAdversarialSessionPrompt', () => {
@@ -505,6 +529,28 @@ describe('buildAdversarialSessionPrompt', () => {
     });
     expect(p).toContain('Parse input');
     expect(p).toContain('Poznámky z implementace.');
+  });
+
+  it('strips stale findings sections so a re-run does not stack prior verdicts', () => {
+    const p = buildAdversarialSessionPrompt({
+      phase,
+      phaseDone: false,
+      reportBody: 'Implementation notes.\n\n## Adversarial findings\n- 5-1 stale verdict\n',
+    });
+    expect(p).toContain('Implementation notes.');
+    expect(p).not.toContain('Adversarial findings');
+    expect(p).not.toContain('5-1 stale verdict');
+  });
+
+  it('falls back to the git-diff line when the body is only a stale findings section', () => {
+    const p = buildAdversarialSessionPrompt({
+      phase,
+      phaseDone: false,
+      reportBody: '## Adversarial findings\n- 5-1 stale verdict\n',
+    });
+    // Nothing real survives the strip → behave as "no usable report".
+    expect(p).toContain('no usable implementation report');
+    expect(p).not.toContain('5-1 stale verdict');
   });
 });
 

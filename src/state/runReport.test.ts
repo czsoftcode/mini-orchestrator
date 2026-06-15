@@ -9,6 +9,7 @@ import {
   readRunReport,
   readRunReportSummary,
   runReportPath,
+  stripFindingsSections,
   summarizeRunReportText,
 } from './runReport.js';
 
@@ -682,5 +683,89 @@ steps: []
     const s = await readRunReportSummary(cwd, 3);
     expect(s?.verdict).toBe('blocked');
     expect(s?.unparseable).toBe(false);
+  });
+});
+
+describe('stripFindingsSections', () => {
+  it('removes a findings section in the middle, keeps surrounding text', () => {
+    const body = [
+      'Implementation notes.',
+      '',
+      '## Adversarial findings',
+      '- 5-1 something is wrong',
+      '',
+      '## Next steps',
+      'Carry on.',
+    ].join('\n');
+    const out = stripFindingsSections(body);
+    expect(out).toContain('Implementation notes.');
+    expect(out).toContain('## Next steps');
+    expect(out).toContain('Carry on.');
+    expect(out).not.toContain('Adversarial findings');
+    expect(out).not.toContain('5-1 something is wrong');
+  });
+
+  it('removes a findings section at the end of the body (nothing after it)', () => {
+    const body = ['Notes.', '', '## Verify findings', '- 5-2 looks off'].join('\n');
+    const out = stripFindingsSections(body);
+    expect(out).toBe('Notes.');
+  });
+
+  it('removes two consecutive findings sections', () => {
+    const body = [
+      'Lead.',
+      '',
+      '## Adversarial findings',
+      '- a',
+      '',
+      '## Verify findings',
+      '- b',
+    ].join('\n');
+    const out = stripFindingsSections(body);
+    expect(out).toBe('Lead.');
+  });
+
+  it('leaves a body without any findings section unchanged', () => {
+    const body = ['# Report', '', 'Some text.', '', '## Notes', 'More.'].join('\n');
+    expect(stripFindingsSections(body)).toBe(body);
+  });
+
+  it('stops a findings section at the next top-level (#) heading', () => {
+    const body = [
+      '## Adversarial findings',
+      '- gone',
+      '# Implementation report',
+      'kept',
+    ].join('\n');
+    const out = stripFindingsSections(body);
+    expect(out).not.toContain('gone');
+    expect(out).toContain('# Implementation report');
+    expect(out).toContain('kept');
+  });
+
+  it('returns an empty string for an empty or whitespace-only body', () => {
+    expect(stripFindingsSections('')).toBe('');
+    expect(stripFindingsSections('   \n\n  ')).toBe('');
+  });
+
+  it('handles CRLF line endings and a leading BOM', () => {
+    const body = '﻿Notes.\r\n\r\n## Verify findings\r\n- x\r\n';
+    expect(stripFindingsSections(body)).toBe('Notes.');
+  });
+
+  it('does NOT remove a same-named heading that is not exactly the findings title', () => {
+    const body = [
+      '## Adversarial findings and lessons',
+      'This is real prose, not a stale section.',
+    ].join('\n');
+    // The title differs from the exact 'adversarial findings', so it stays.
+    expect(stripFindingsSections(body)).toBe(body);
+  });
+
+  it('matches the heading case-insensitively', () => {
+    const body = ['## ADVERSARIAL FINDINGS', '- gone', '', '## Keep', 'kept'].join('\n');
+    const out = stripFindingsSections(body);
+    expect(out).not.toContain('gone');
+    expect(out).toContain('## Keep');
   });
 });

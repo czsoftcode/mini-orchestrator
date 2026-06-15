@@ -1,0 +1,39 @@
+{
+  "id": 177,
+  "title": "Strip stale findings from report body",
+  "goal": "Before embedding the run report's free text as '# Implementation report' in the done/verify/adversarial prompts, strip any existing '## Adversarial findings' / '## Verify findings' sections (up to the next heading of the same or higher level), so repeated reviews don't stack duplicated/recursive findings and the reviewer doesn't read prior verdicts as the implementation log — covered by tests for edge cases.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add stripFindingsSections helper",
+      "status": "done",
+      "detail": "In src/state/runReport.ts a pure function stripFindingsSections(body: string): string that removes '## Adversarial findings' and '## Verify findings' sections (case-insensitive heading match, CRLF/BOM normalized) from their heading up to the next heading of level ## or higher (#) or end of text; leaves other text and other ## sections intact; trims surplus blank lines."
+    },
+    {
+      "title": "Unit tests for stripFindingsSections edge cases",
+      "status": "done",
+      "detail": "Tests in src/state/runReport.test.ts: section mid-body, at end of file, two consecutive sections, no such section (body unchanged), section followed by a # heading, empty/whitespace body, CRLF variant; a same-named ## heading with non-findings content is NOT removed (exact title match)."
+    },
+    {
+      "title": "Apply helper at the three embed sites",
+      "status": "done",
+      "detail": "In src/prompts/sessionContext.ts run reportBody through stripFindingsSections before the '# Implementation report' bodyBlock in done/verify/adversarial; an empty result after stripping behaves as 'no report' (done/verify: empty block; adversarial: keep the git-diff fallback line)."
+    },
+    {
+      "title": "Prompt-level tests: stale sections don't reach the prompt",
+      "status": "done",
+      "detail": "Add tests in sessionContext.test.ts / context.test.ts that when reportBody contains '## Adversarial findings'/'## Verify findings' the resulting prompt no longer contains them but keeps legitimate surrounding report text; cover all three builders."
+    },
+    {
+      "title": "Verify build, typecheck and tests pass",
+      "status": "done",
+      "detail": "npm run build, typecheck and the full test suite green; no prompt snapshot regression."
+    }
+  ],
+  "startedAt": "2026-06-15T10:16:04.088Z",
+  "completedAt": "2026-06-15T10:24:44.046Z",
+  "autoCommit": {
+    "preSha": "82e5841aa424d6d4751aa9e7fddbe7cb9e5f5d50",
+    "subject": "Phase 177: Strip stale findings from report body"
+  }
+}

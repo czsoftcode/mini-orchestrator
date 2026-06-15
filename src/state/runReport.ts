@@ -101,6 +101,58 @@ export async function runReportExists(cwd: string, phaseId: number): Promise<boo
 }
 
 /**
+ * Doslovné nadpisy sekcí, které do reportu vepsaly starší verze workflow (nebo
+ * `do`, když findings ještě mířily do reportu). Dnes nálezy žijí v
+ * `.mini/findings/`, takže tyhle sekce v těle reportu nemají co dělat — když je
+ * tam přesto najdeme, je to historický zbytek, ne implementační log.
+ *
+ * Match je doslovný na titulek (case-insensitive), žádné fuzzy hádání — jiná
+ * `## ` sekce se stejně znějícím, ale jiným textem se nesmí omylem smazat.
+ */
+const STALE_FINDINGS_HEADINGS: readonly string[] = ['adversarial findings', 'verify findings'];
+
+/**
+ * Odstraní z volného textu reportu zastaralé sekce nálezů
+ * (`## Adversarial findings`, `## Verify findings`) — od jejich nadpisu až po
+ * další nadpis úrovně `##` nebo vyšší (`#`), případně do konce textu.
+ *
+ * Proč: tělo reportu se vkládá jako `# Implementation report` do promptů
+ * `done`/`verify`/`adversarial`. Když v něm zůstanou staré sekce nálezů,
+ * recenzent je čte jako součást implementačního logu a opakované review je
+ * vrší — rekurzivně a duplicitně. Tahle funkce je čistě defenzivní: na čistém
+ * těle (které dnes findings neobsahuje) nedělá nic.
+ *
+ * Ostatní text i jiné `##` sekce zůstávají beze změny. Vstup normalizujeme
+ * (BOM, CRLF), výstup ořízneme o přebytečné okolní prázdné řádky.
+ */
+export function stripFindingsSections(body: string): string {
+  const normalized = body.replace(/^﻿/, '').replace(/\r\n/g, '\n');
+  const lines = normalized.split('\n');
+  const out: string[] = [];
+  let skipping = false;
+
+  for (const line of lines) {
+    const heading = /^(#{1,6})[ \t]+(.*?)[ \t]*$/.exec(line);
+    if (heading) {
+      const level = heading[1]!.length;
+      const title = heading[2]!.toLowerCase();
+      if (level === 2 && STALE_FINDINGS_HEADINGS.includes(title)) {
+        // Začátek zastaralé sekce — od teď přeskakuj až do dalšího nadpisu.
+        skipping = true;
+        continue;
+      }
+      if (skipping && level <= 2) {
+        // Nadpis úrovně ## nebo vyšší (#) ukončuje přeskakovanou sekci.
+        skipping = false;
+      }
+    }
+    if (!skipping) out.push(line);
+  }
+
+  return out.join('\n').trim();
+}
+
+/**
  * Chyba parseru reportu. Vyhozená vždy, když report nelze bezpečně použít
  * k posunu stavu (chybí YAML, neplatná hodnota, neznámý/chybějící krok…).
  * Caller (`done({ auto })`) ji zachytí a spadne do interaktivního fallbacku.

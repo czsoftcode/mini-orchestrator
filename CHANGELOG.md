@@ -30,6 +30,14 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Fixed
 
+- **Repeated reviews no longer stack stale findings (backlog item 2).** The run
+  report's free text is embedded as `# Implementation report` into the
+  `done`/`verify`/`adversarial` prompts. If an older report still carried a
+  `## Adversarial findings` or `## Verify findings` section, the reviewer read
+  those prior verdicts as part of the implementation log and a re-run kept
+  re-stacking them. Those sections are now stripped (exact-title match, up to the
+  next `##`-or-higher heading) before embedding; a body that is *only* a stale
+  section falls back to the git-diff path in `adversarial`.
 - **Corrupt phase file no longer silently loses its detail (blocker 167-1).** The
   phase-detail loader used to treat an unreadable `.mini/phases/phase-NNN.json`
   (truncated, half-written, or left with git merge-conflict markers) exactly like
