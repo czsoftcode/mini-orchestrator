@@ -8,6 +8,12 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Changed
 
+- **CI actions bumped to their current majors.** `.github/workflows/ci.yml` now
+  uses `actions/checkout@v5` and `actions/setup-node@v5` (was `@v4`). The old
+  majors ran on Node 20, which GitHub forces to Node 24 from 2026-06-16 (removed
+  2026-09-16); the bump keeps CI running without the deprecation warnings. The
+  Node test matrix (`20, 22`) is unchanged.
+
 - **`adversarial-project` now reminds you to run a separate security pass (backlog
   item 5).** The correctness red-team used to mention the built-in `/security-review`
   only in passing, so the security pass silently never ran unless you remembered it.

@@ -912,6 +912,11 @@
       "id": 182,
       "title": "Stabilize status tests under color",
       "status": "done"
+    },
+    {
+      "id": 183,
+      "title": "Bump CI actions to v5",
+      "status": "done"
     }
   ],
   "models": {

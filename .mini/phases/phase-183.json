@@ -1,0 +1,32 @@
+{
+  "id": 183,
+  "title": "Bump CI actions to v5",
+  "goal": "Update actions/checkout and actions/setup-node from @v4 to @v5 in .github/workflows/ci.yml so CI stops running on the soon-removed Node 20 and the deprecation warnings disappear.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Bump checkout + setup-node to @v5",
+      "status": "done",
+      "detail": "In .github/workflows/ci.yml change actions/checkout@v4 -> @v5 and actions/setup-node@v4 -> @v5. Leave the Node matrix (20, 22) unchanged — that is runtime, not action versions."
+    },
+    {
+      "title": "Confirm no stale @v4 action refs remain",
+      "status": "done",
+      "detail": "grep -rn '@v4' .github/ returns nothing; YAML stays syntactically valid (no broken indentation)."
+    },
+    {
+      "title": "Verify local build still green",
+      "status": "done",
+      "detail": "npm run typecheck, npm test and npm run build pass locally — the action bump does not change pipeline behavior, but confirm the workflow steps still hold."
+    }
+  ],
+  "startedAt": "2026-06-15T18:10:33.292Z",
+  "resolvedVerify": [
+    "CI run is actually green on GitHub with the new action majors"
+  ],
+  "completedAt": "2026-06-15T18:13:31.081Z",
+  "autoCommit": {
+    "preSha": "57bdfc97e60ffe5264cdeb174ade2f506a72ac31",
+    "subject": "Phase 183: Bump CI actions to v5"
+  }
+}
