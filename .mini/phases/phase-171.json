@@ -1,0 +1,39 @@
+{
+  "id": 171,
+  "title": "/mini:security slash command",
+  "goal": "Add an idempotent /mini:security slash command — a 'security' entry in COMMAND_DEFS plus a 'mini context security' route that reuses the existing security-review context builder and range target — mirroring /mini:adversarial-project, so the security review can be launched inline from a Claude Code session.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Security context builder (resolve + build)",
+      "status": "done",
+      "detail": "In securityReviewContext.ts add exported buildSecurityContext(cwd, input) combining resolveSecurityTarget + buildSecurityReviewContext, returning string|null (null on range/no-phase error, reason already logged; mirrors buildProjectAdversarialContext). Refactor CLI security() to reuse it so resolve+build is not duplicated."
+    },
+    {
+      "title": "Route security in mini context",
+      "status": "done",
+      "detail": "Add 'security' to CONTEXT_COMMANDS and an else-if branch in context() calling the new builder with range. Update the context command description to note range flags apply to security too. Verifiable: mini context security prints a prompt for the last phase; invalid range exits 1 with empty stdout."
+    },
+    {
+      "title": "security entry in COMMAND_DEFS + usage hint",
+      "status": "done",
+      "detail": "New CommandDef mirroring adversarial-project: name security, argumentHint, body running 'mini context security $ARGUMENTS' with independence note and the no-flags=last-phase note. Add /mini:security to the usage hint in install-commands.ts. Verifiable: renderCommandMd produces a valid .md."
+    },
+    {
+      "title": "Tests",
+      "status": "done",
+      "detail": "Add context.test.ts tests for security routing (prompt to stdout; range error -> exit 1, empty stdout) modeled on the adversarial-project tests. Cover security presence in COMMAND_DEFS / render snapshot in commands.test.ts. Cover the builder null path."
+    },
+    {
+      "title": "Build + run",
+      "status": "done",
+      "detail": "typecheck + full test suite green; manually verify mini context security (default last phase and --from-phase/--to-phase). Confirm doctor expectedCommands (COMMAND_DEFS.length) still matches."
+    }
+  ],
+  "startedAt": "2026-06-15T08:04:15.313Z",
+  "completedAt": "2026-06-15T08:28:40.260Z",
+  "autoCommit": {
+    "preSha": "06f54f441807ccd63ad65fb178d763ca2be4464e",
+    "subject": "Phase 171: /mini:security slash command"
+  }
+}

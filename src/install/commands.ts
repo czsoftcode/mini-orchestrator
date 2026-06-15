@@ -127,6 +127,23 @@ The user ran the command with arguments: \`$ARGUMENTS\`. They select the range o
 Run in Bash \`mini context adversarial-project $ARGUMENTS\` and follow the printed instructions **exactly** — it prints the red-team prompt for the selected range (the independent-reviewer role, the areas to attack, where to look for the combined diff, and how to record the findings). If the range is invalid the command exits non-zero with a clear message — relay it and stop. Change the state in \`.mini/\` only with \`mini ... --apply\` commands; this step only records findings, it never edits \`.mini/state.json\` by hand.`,
   },
   {
+    name: 'security',
+    description: 'mini — independent security review of a phase or range',
+    argumentHint: '[--from-phase N --to-phase M | --from <ref> --to <ref>]',
+    body: `This is the **security** step of the mini workflow, run directly in Claude Code. An independent reviewer audits the code produced — by default the **last completed phase**, or a **range** when range flags are given — for security weaknesses (injection, auth/authz, secrets, path traversal, unsafe deserialization, SSRF, etc.) and writes the findings into a standalone Markdown report at \`.mini/security/<range>.md\`. It is **report-only**: it never edits code, never moves any phase state, and does **not** file into \`mini findings\` (security stays a separate output by design).
+
+> **Independence note — read this first.** Run as a slash command, the review happens **inline in this very session**, so the "reviewer" shares the context and the blind spots of whoever wrote the code under review. On top of that, the scoped tool set that the terminal \`mini security\` enforces (read-only tools + a \`Write\` confined to \`.mini/security/\`) does **not** apply inline — here the review runs with this session's permissions. So the slash command is a convenience, not an isolated audit. For a genuinely independent, scoped review, prefer one of:
+> - run \`mini security\` in a **terminal** — it spawns a **fresh** Claude session (clean context) with the scoped tool set, or
+> - \`/clear\` this session first, and only then run \`/mini:security\`.
+
+The user ran the command with arguments: \`$ARGUMENTS\`. They select what to review and are passed straight through to \`mini context security\`:
+- **no flags** — review the **last completed (\`done\`) phase**,
+- **\`--from-phase N --to-phase M\`** — range given by phase numbers, or
+- **\`--from <ref> --to <ref>\`** — range given by git refs (you cannot mix the two forms).
+
+Run in Bash \`mini context security $ARGUMENTS\` and follow the printed instructions **exactly** — it prints the security-review prompt for the selected target (the reviewer role, the threat model to attack, where to look for the diff, and the report path to write to). If the range is invalid the command exits non-zero with a clear message — relay it and stop. Change the state in \`.mini/\` only with \`mini ... --apply\` commands; this step only writes the security report, it never edits \`.mini/state.json\` by hand.`,
+  },
+  {
     name: 'status',
     description: 'mini — overview of the project phases (read-only)',
     body: `This is the **status** step of the mini workflow, run directly in Claude Code.

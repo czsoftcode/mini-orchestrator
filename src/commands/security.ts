@@ -3,8 +3,7 @@ import type { RangeInput } from '../range.js';
 import { exists } from '../state/store.js';
 import { ask } from '../ui/ask.js';
 import { log } from '../ui/log.js';
-import { buildSecurityReviewContext } from './securityReviewContext.js';
-import { resolveSecurityTarget } from './securityTarget.js';
+import { buildSecurityContext } from './securityReviewContext.js';
 import type { StepOutcome } from './types.js';
 
 // The security review is a **report-only** pass, like `adversarial-project`, but
@@ -39,10 +38,11 @@ const SECURITY_ALLOWED_TOOLS = [
  * counterpart of the future `/mini:security` slash command; a fresh Claude
  * session gives the reviewer independence from whoever wrote the code.
  *
- * {@link resolveSecurityTarget} picks the range and the report path (or logs and
- * returns `null` on a range/no-phase error); {@link buildSecurityReviewContext}
- * assembles the first message and embeds the report path. When either returns
- * `null` the reason was already logged, so this exits cleanly without a session.
+ * {@link buildSecurityContext} picks the range + report path and assembles the
+ * first message (or logs and returns `null` on a range/no-phase error), the same
+ * resolve+build path the `mini context security` slash route uses. When it
+ * returns `null` the reason was already logged, so this exits cleanly without a
+ * session.
  */
 export async function security(input: RangeInput): Promise<StepOutcome> {
   const cwd = process.cwd();
@@ -53,17 +53,12 @@ export async function security(input: RangeInput): Promise<StepOutcome> {
     return { ok: false, reason: 'no-project' };
   }
 
-  const target = await resolveSecurityTarget(cwd, input);
-  if (target === null) {
-    // resolveSecurityTarget already logged the reason (range / no-phase error).
+  const ctx = await buildSecurityContext(cwd, input);
+  if (ctx === null) {
+    // buildSecurityContext already logged the reason (range / no-phase error).
     return { ok: false, reason: 'range-error' };
   }
-
-  const prompt = await buildSecurityReviewContext(cwd, target.input, target.outputPath);
-  if (prompt === null) {
-    // buildSecurityReviewContext already logged the reason (range error).
-    return { ok: false, reason: 'range-error' };
-  }
+  const { prompt, outputPath } = ctx;
 
   console.log();
   log.title('This is what I will send to Claude Code as the first message:');
@@ -104,7 +99,7 @@ export async function security(input: RangeInput): Promise<StepOutcome> {
     log.warn(`Claude session ended with code ${exitCode}.`);
   }
 
-  log.hint(`Next: read the report at ${target.outputPath}.`);
+  log.hint(`Next: read the report at ${outputPath}.`);
   return { ok: true };
 }
 

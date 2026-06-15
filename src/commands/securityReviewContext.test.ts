@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildSecurityReviewContext } from './securityReviewContext.js';
-import { savePhase, writeProject } from '../state/store.js';
-import type { Phase } from '../state/types.js';
+import { buildSecurityContext, buildSecurityReviewContext } from './securityReviewContext.js';
+import { save, savePhase, writeProject } from '../state/store.js';
+import type { Phase, ProjectState } from '../state/types.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -126,5 +126,48 @@ describe('buildSecurityReviewContext', () => {
     const out = await buildSecurityReviewContext(cwd, { fromPhase: 1, toPhase: 1 }, OUT);
     expect(out).not.toBeNull();
     expect(out).toContain('no .mini/project.md found');
+  });
+});
+
+function stateOf(phases: Phase[]): ProjectState {
+  return { version: 2, createdAt: '2026-01-01T00:00:00.000Z', currentPhaseId: null, phases };
+}
+
+describe('buildSecurityContext (resolve + build)', () => {
+  let cwd: string;
+  let errSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'mini-secctx-'));
+    await initRepo(cwd);
+    errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('default (no flags) resolves the last done phase and returns its prompt + phase-<id>.md path', async () => {
+    const pre1 = await commit(cwd, 'a.txt');
+    await commit(cwd, 'b.txt'); // HEAD = phase 1's commit
+    await writeProject('# Demo\n\n## What I am building\nA thing.', cwd);
+    await save(stateOf([{ id: 1, title: 'First phase', status: 'done', autoCommit: { preSha: pre1, subject: 'Phase 1' } }]), cwd);
+
+    const ctx = await buildSecurityContext(cwd, {});
+    expect(ctx).not.toBeNull();
+    expect(ctx?.outputPath).toBe(join('.mini', 'security', 'phase-1.md'));
+    expect(ctx?.prompt).toContain('git diff');
+    expect(ctx?.prompt).toContain(join('.mini', 'security', 'phase-1.md'));
+  });
+
+  it('returns null (reason logged) when there is no completed phase to review', async () => {
+    await commit(cwd, 'a.txt');
+    await writeProject('# Demo', cwd);
+    await save(stateOf([{ id: 1, title: 'P1', status: 'doing' }]), cwd);
+
+    const ctx = await buildSecurityContext(cwd, {});
+    expect(ctx).toBeNull();
+    expect(errSpy).toHaveBeenCalled();
   });
 });

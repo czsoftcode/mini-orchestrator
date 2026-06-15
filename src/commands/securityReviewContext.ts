@@ -3,6 +3,7 @@ import { type RangeInput, resolveRange } from '../range.js';
 import { readProject } from '../state/store.js';
 import { log } from '../ui/log.js';
 import { resolveRangePhases } from './adversarialProjectContext.js';
+import { resolveSecurityTarget } from './securityTarget.js';
 
 /**
  * Reads `.mini/project.md`, tolerating its absence: a security review is still
@@ -56,4 +57,34 @@ export async function buildSecurityReviewContext(
     phases,
     outputPath,
   });
+}
+
+/** The assembled security prompt plus the report path it tells the reviewer to write. */
+export interface SecurityContext {
+  prompt: string;
+  /** Where the reviewer must write its report, e.g. `.mini/security/phase-12.md`. */
+  outputPath: string;
+}
+
+/**
+ * End-to-end security context for a `RangeInput`: resolves the review target (the
+ * range + the `.mini/security/<range>.md` report path) via
+ * {@link resolveSecurityTarget}, then builds the prompt via
+ * {@link buildSecurityReviewContext}. Returns `null` (reason already logged) on a
+ * range / no-completed-phase error, mirroring `buildProjectAdversarialContext`.
+ *
+ * This is the single resolve+build path shared by the terminal `mini security`
+ * command (which needs `outputPath` for its closing hint) and the
+ * `mini context security` slash route (which uses only `prompt`), so the two
+ * can't drift.
+ */
+export async function buildSecurityContext(
+  cwd: string,
+  input: RangeInput,
+): Promise<SecurityContext | null> {
+  const target = await resolveSecurityTarget(cwd, input);
+  if (target === null) return null;
+  const prompt = await buildSecurityReviewContext(cwd, target.input, target.outputPath);
+  if (prompt === null) return null;
+  return { prompt, outputPath: target.outputPath };
 }

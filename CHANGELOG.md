@@ -8,6 +8,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`/mini:security` slash command.** `install-commands` now generates the
+  `/mini:security` command idempotently. Its body forwards the range flags
+  straight to `mini context security $ARGUMENTS` (no flags = the last completed
+  phase; `--from-phase`/`--to-phase` or `--from`/`--to` for a range) and carries
+  the same independence warning as the adversarial commands. It adds one extra
+  caveat: the scoped tool set the terminal `mini security` enforces does **not**
+  apply to an inline slash run, which uses the current session's permissions — so
+  the slash command is a convenience, not an isolated audit (prefer a terminal
+  `mini security` run, or `/clear` first).
+
 - **`mini security` command.** Opens a fresh Claude Code session for an
   independent **security review**. With no flags it reviews the last completed
   phase (from its pre-commit SHA to `HEAD`); `--from-phase`/`--to-phase` or

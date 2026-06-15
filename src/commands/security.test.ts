@@ -22,14 +22,15 @@ vi.mock('../claude/work.js', () => ({
   workWithClaude: (...args: unknown[]) => workWithClaudeMock(...args),
 }));
 
-// The prompt builder is exercised by securityReviewContext.test.ts /
-// sessionContext.test.ts; here we mock it to isolate the command's wiring (which
-// outputPath it threads in, null → no session) from prompt assembly. The real
-// resolveSecurityTarget runs, so the command→resolver→builder path is exercised
-// end to end.
-const buildContextMock = vi.fn((..._args: unknown[]) => Promise.resolve<string | null>('SEC PROMPT'));
+// The resolve+build path (resolveSecurityTarget → buildSecurityReviewContext) is
+// exercised by securityTarget.test.ts and securityReviewContext.test.ts; here we
+// mock buildSecurityContext to isolate the command's wiring (confirm flow, scoped
+// tools, null → no session) from range resolution and prompt assembly.
+type Ctx = { prompt: string; outputPath: string } | null;
+const SEC_CTX: Ctx = { prompt: 'SEC PROMPT', outputPath: join('.mini', 'security', 'phase-2.md') };
+const buildContextMock = vi.fn((..._args: unknown[]) => Promise.resolve<Ctx>(SEC_CTX));
 vi.mock('./securityReviewContext.js', () => ({
-  buildSecurityReviewContext: (...args: unknown[]) => buildContextMock(...args),
+  buildSecurityContext: (...args: unknown[]) => buildContextMock(...args),
 }));
 
 const { security, SECURITY_ALLOWED_TOOLS } = await import('./security.js');
@@ -73,7 +74,7 @@ describe('security command', () => {
     askMock.mockReset();
     askMock.mockResolvedValue({ confirm: true });
     buildContextMock.mockReset();
-    buildContextMock.mockResolvedValue('SEC PROMPT');
+    buildContextMock.mockResolvedValue(SEC_CTX);
   });
 
   afterEach(async () => {
@@ -89,22 +90,18 @@ describe('security command', () => {
     expect(workWithClaudeMock).not.toHaveBeenCalled();
   });
 
-  it('default (no flags) reviews the last done phase into phase-<id>.md with the scoped tool set', async () => {
+  it('default (no flags) threads the input through and starts a session with the scoped tool set', async () => {
     const c1 = await commit(cwd, 'a');
-    const c2 = await commit(cwd, 'b');
-    const head = await commit(cwd, 'c');
+    await commit(cwd, 'b');
     await writeProject('# Project', cwd);
-    await save(stateOf([donePhase(1, c1), donePhase(2, c2)]), cwd);
+    await save(stateOf([donePhase(1, c1)]), cwd);
 
     const r = await security({});
 
     expect(r.ok).toBe(true);
-    // Builder gets the last done phase's range (preSha..HEAD) and the phase-N.md path.
-    expect(buildContextMock).toHaveBeenCalledWith(
-      cwd,
-      { from: c2, to: head },
-      join('.mini', 'security', 'phase-2.md'),
-    );
+    // The command passes the RangeInput straight to the resolve+build path; the
+    // range/outputPath derivation itself is covered by securityTarget.test.ts.
+    expect(buildContextMock).toHaveBeenCalledWith(cwd, {});
     expect(workWithClaudeMock).toHaveBeenCalledTimes(1);
     const [prompt, opts] = workWithClaudeMock.mock.calls[0]! as [string, { allowedTools?: string[] }];
     expect(prompt).toBe('SEC PROMPT');
@@ -112,40 +109,21 @@ describe('security command', () => {
     expect(opts.allowedTools).not.toContain('Edit');
   });
 
-  it('phase flags review the range into range-<A>-<B>.md', async () => {
+  it('phase flags are passed through to the resolve+build path', async () => {
     const c1 = await commit(cwd, 'a');
-    const c2 = await commit(cwd, 'b');
-    await commit(cwd, 'c');
+    await commit(cwd, 'b');
     await writeProject('# Project', cwd);
-    await save(stateOf([donePhase(1, c1), donePhase(2, c2)]), cwd);
+    await save(stateOf([donePhase(1, c1)]), cwd);
 
     const r = await security({ fromPhase: 1, toPhase: 2 });
 
     expect(r.ok).toBe(true);
-    expect(buildContextMock).toHaveBeenCalledWith(
-      cwd,
-      { fromPhase: 1, toPhase: 2 },
-      join('.mini', 'security', 'range-1-2.md'),
-    );
+    expect(buildContextMock).toHaveBeenCalledWith(cwd, { fromPhase: 1, toPhase: 2 });
     expect(workWithClaudeMock).toHaveBeenCalledTimes(1);
   });
 
-  it('does not start a session when the target cannot be resolved (no done phase)', async () => {
-    await commit(cwd, 'a');
-    await writeProject('# Project', cwd);
-    await save(stateOf([{ id: 1, title: 'P1', status: 'doing' }]), cwd);
-
-    const r = await security({});
-
-    expect(r.ok).toBe(false);
-    expect((r as { reason: string }).reason).toBe('range-error');
-    expect(buildContextMock).not.toHaveBeenCalled();
-    expect(workWithClaudeMock).not.toHaveBeenCalled();
-  });
-
-  it('does not start a session when the builder returns null', async () => {
+  it('does not start a session when the context cannot be built (null)', async () => {
     const c1 = await commit(cwd, 'a');
-    await commit(cwd, 'b');
     await writeProject('# Project', cwd);
     await save(stateOf([donePhase(1, c1)]), cwd);
     buildContextMock.mockResolvedValueOnce(null);

@@ -57,6 +57,7 @@ describe('isContextCommand', () => {
       'verify',
       'adversarial',
       'adversarial-project',
+      'security',
     ]);
     expect(isContextCommand('plan')).toBe(true);
     expect(isContextCommand('project')).toBe(true);
@@ -64,6 +65,7 @@ describe('isContextCommand', () => {
     expect(isContextCommand('verify')).toBe(true);
     expect(isContextCommand('adversarial')).toBe(true);
     expect(isContextCommand('adversarial-project')).toBe(true);
+    expect(isContextCommand('security')).toBe(true);
     expect(isContextCommand('auto')).toBe(false);
   });
 });
@@ -495,6 +497,90 @@ describe('context adversarial-project', () => {
     await commit(cwd, 'a.txt');
     await setupProject([{ id: 1, title: 'First phase', goal: 'g', status: 'done' }], null);
     await context('adversarial-project', [], { fromPhase: 1, to: 'HEAD' });
+    expect(process.exitCode).toBe(1);
+    expect(out).toBe('');
+    expect(errSpy).toHaveBeenCalled();
+  });
+});
+
+describe('context security', () => {
+  // Like adversarial-project, the security route resolves real SHAs, so it needs
+  // a git repo and a phase carrying autoCommit.preSha. console.error is silenced
+  // so the range-error path doesn't bleed into the log.
+  async function initRepo(dir: string): Promise<void> {
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: dir });
+    await execFileAsync('git', ['config', 'user.email', 'mini-test@example.com'], { cwd: dir });
+    await execFileAsync('git', ['config', 'user.name', 'Mini Test'], { cwd: dir });
+    await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: dir });
+  }
+
+  async function commit(dir: string, name: string): Promise<string> {
+    await writeFile(join(dir, name), `${name}\n`);
+    await execFileAsync('git', ['add', '-A'], { cwd: dir });
+    await execFileAsync('git', ['commit', '-m', name], { cwd: dir });
+    const { stdout } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: dir });
+    return stdout.trim();
+  }
+
+  let errSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    errSpy.mockRestore();
+  });
+
+  it('no flags → reviews the last done phase, printing the builder prompt verbatim', async () => {
+    await initRepo(cwd);
+    const pre1 = await commit(cwd, 'a.txt'); // state before phase 1
+    await commit(cwd, 'b.txt'); // phase 1's work = HEAD
+    await setupProject(
+      [{ id: 1, title: 'First phase', goal: 'g', status: 'done', autoCommit: { preSha: pre1, subject: 'Phase 1' } }],
+      null,
+    );
+
+    const { buildSecurityContext } = await import('./securityReviewContext.js');
+    const expected = await buildSecurityContext(cwd, {});
+
+    await context('security', [], {});
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('Threat model');
+    expect(out).toContain(join('.mini', 'security', 'phase-1.md'));
+    const normalized = expected?.prompt.endsWith('\n') ? expected.prompt : `${expected?.prompt}\n`;
+    expect(out).toBe(normalized);
+  });
+
+  it('valid --from-phase/--to-phase prints a prompt for the range', async () => {
+    await initRepo(cwd);
+    const pre1 = await commit(cwd, 'a.txt');
+    await commit(cwd, 'b.txt');
+    await setupProject(
+      [{ id: 1, title: 'First phase', goal: 'g', status: 'done', autoCommit: { preSha: pre1, subject: 'Phase 1' } }],
+      null,
+    );
+
+    await context('security', [], { fromPhase: 1, toPhase: 1 });
+    expect(process.exitCode).toBeUndefined();
+    expect(out).toContain('1. First phase');
+    expect(out).toContain(join('.mini', 'security', 'range-1-1.md'));
+  });
+
+  it('no completed phase → exit code 1, no prompt on stdout, reason on stderr', async () => {
+    await initRepo(cwd);
+    await commit(cwd, 'a.txt');
+    await setupProject([{ id: 1, title: 'First phase', goal: 'g', status: 'doing' }], 1);
+    await context('security', [], {});
+    expect(process.exitCode).toBe(1);
+    expect(out).toBe('');
+    expect(errSpy).toHaveBeenCalled();
+  });
+
+  it('mixing phase and ref flags → rejected, exit code 1, nothing on stdout', async () => {
+    await initRepo(cwd);
+    await commit(cwd, 'a.txt');
+    await setupProject([{ id: 1, title: 'First phase', goal: 'g', status: 'done' }], null);
+    await context('security', [], { fromPhase: 1, to: 'HEAD' });
     expect(process.exitCode).toBe(1);
     expect(out).toBe('');
     expect(errSpy).toHaveBeenCalled();

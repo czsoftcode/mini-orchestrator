@@ -20,11 +20,12 @@ import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
 import { buildAdversarialContext } from './adversarialContext.js';
 import { buildProjectAdversarialContext } from './adversarialProjectContext.js';
+import { buildSecurityContext } from './securityReviewContext.js';
 import { buildVerifyContext, readReportVerify } from './verifyContext.js';
 import type { RangeInput } from '../range.js';
 
 /** Sub-commands for which `mini context` can print a session prompt. */
-export const CONTEXT_COMMANDS = ['next', 'project', 'discuss', 'plan', 'do', 'done', 'decision', 'verify', 'adversarial', 'adversarial-project'] as const;
+export const CONTEXT_COMMANDS = ['next', 'project', 'discuss', 'plan', 'do', 'done', 'decision', 'verify', 'adversarial', 'adversarial-project', 'security'] as const;
 export type ContextCommand = (typeof CONTEXT_COMMANDS)[number];
 
 export function isContextCommand(value: string): value is ContextCommand {
@@ -85,6 +86,15 @@ export async function context(
     // non-zero exit with nothing on stdout (so the slash command never feeds an
     // empty prompt to Claude).
     prompt = await buildProjectAdversarialContext(cwd, range);
+  } else if (cmd === 'security') {
+    // Same resolve+build path as the terminal `mini security` (via
+    // buildSecurityContext): it resolves the range + report path and assembles
+    // the prompt, logging and returning null on a range / no-completed-phase
+    // error. We keep only the prompt — the report path is embedded in it; the
+    // `prompt === null` path below turns the error into a clean non-zero exit
+    // with nothing on stdout.
+    const ctx = await buildSecurityContext(cwd, range);
+    prompt = ctx === null ? null : ctx.prompt;
   } else {
     prompt = await buildPhaseContext(cmd, projectMd, header, cwd);
   }
@@ -145,7 +155,10 @@ async function buildNextContext(
 
 /** Shared part for discuss/plan/do/done: they require an existing current phase. */
 async function buildPhaseContext(
-  cmd: Exclude<ContextCommand, 'next' | 'project' | 'verify' | 'adversarial' | 'adversarial-project'>,
+  cmd: Exclude<
+    ContextCommand,
+    'next' | 'project' | 'verify' | 'adversarial' | 'adversarial-project' | 'security'
+  >,
   projectMd: string,
   header: StateHeader,
   cwd: string,

@@ -852,6 +852,11 @@
       "id": 170,
       "title": "Standalone mini security command",
       "status": "done"
+    },
+    {
+      "id": 171,
+      "title": "/mini:security slash command",
+      "status": "done"
     }
   ],
   "models": {

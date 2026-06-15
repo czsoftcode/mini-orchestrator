@@ -36,6 +36,7 @@ describe('installCommands', () => {
       'next.md',
       'plan.md',
       'project.md',
+      'security.md',
       'status.md',
       'todo.md',
       'undo.md',

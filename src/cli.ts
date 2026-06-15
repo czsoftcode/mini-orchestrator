@@ -550,11 +550,11 @@ program
 
 program
   .command('context <cmd> [args...]')
-  .description('Prints the current session prompt for the given step (next|project|discuss|plan|do|done|decision|verify|adversarial|adversarial-project) to stdout. Serves the native /mini: slash commands in Claude Code. The range flags (--from-phase/--to-phase, --from/--to) apply only to the adversarial-project sub-command.')
-  .option('--from-phase <n>', 'adversarial-project range start as a phase number (use together with --to-phase).', parsePhaseNumber)
-  .option('--to-phase <n>', 'adversarial-project range end as a phase number (use together with --from-phase).', parsePhaseNumber)
-  .option('--from <ref>', 'adversarial-project range start as a git ref (use together with --to; cannot mix with phase flags).')
-  .option('--to <ref>', 'adversarial-project range end as a git ref (use together with --from; cannot mix with phase flags).')
+  .description('Prints the current session prompt for the given step (next|project|discuss|plan|do|done|decision|verify|adversarial|adversarial-project|security) to stdout. Serves the native /mini: slash commands in Claude Code. The range flags (--from-phase/--to-phase, --from/--to) apply to the adversarial-project and security sub-commands; security with no flags reviews the last completed phase.')
+  .option('--from-phase <n>', 'adversarial-project/security range start as a phase number (use together with --to-phase).', parsePhaseNumber)
+  .option('--to-phase <n>', 'adversarial-project/security range end as a phase number (use together with --from-phase).', parsePhaseNumber)
+  .option('--from <ref>', 'adversarial-project/security range start as a git ref (use together with --to; cannot mix with phase flags).')
+  .option('--to <ref>', 'adversarial-project/security range end as a git ref (use together with --from; cannot mix with phase flags).')
   .action(
     async (
       cmd: string,

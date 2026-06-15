@@ -48,3 +48,26 @@ describe('adversarial slash command', () => {
     expect(md).toContain('does **not** move the phase state');
   });
 });
+
+describe('security slash command', () => {
+  it('is registered in COMMAND_DEFS with a range argument hint', () => {
+    const def = COMMAND_DEFS.find((d) => d.name === 'security');
+    expect(def).toBeDefined();
+    expect(def?.argumentHint).toContain('--from-phase');
+  });
+
+  it('runs mini context security, passes $ARGUMENTS, and warns the inline review is unscoped', () => {
+    const md = bodyOf('security');
+    expect(md).toContain('mini context security $ARGUMENTS');
+    // The independence caveat must be explicit, with both escape hatches.
+    expect(md).toContain('inline in this very session');
+    expect(md).toContain('mini security');
+    expect(md).toContain('/clear');
+    // The inline path does not enforce the scoped tool set — say so.
+    expect(md).toContain('does **not** apply inline');
+    // No-flags default = last completed phase.
+    expect(md).toContain('last completed');
+    // Security is a separate output, not the findings store.
+    expect(md).toContain('does **not** file into');
+  });
+});
