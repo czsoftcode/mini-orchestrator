@@ -80,6 +80,15 @@ All notable changes to this project are recorded here. The format is based on
   a real stale section containing a fenced heading line ended early and leaked its
   tail. Fenced blocks are now honored — headings inside a fence are treated as
   literal text.
+- **`mini doctor` no longer crashes on a corrupt phase file (finding 178-3).**
+  `doctor` is the tool you run to find out *why* a project is broken, yet its
+  full-state read was the one unguarded read in a function where every sibling
+  read is wrapped — so a single unreadable `.mini/phases/phase-NNN.json`
+  (truncated or carrying git merge-conflict markers) made `CorruptPhaseError`
+  abort the whole diagnostic. The read is now caught and rendered as a `fail`
+  "Phases" check naming the file (the phase-hygiene checks that need full state
+  are suppressed); any non-corrupt error is still re-thrown so genuine bugs stay
+  loud.
 
 ## [1.22.0] - 2026-06-15
 

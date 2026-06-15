@@ -38,7 +38,7 @@ stripFindingsSections() (phase 177) scans line-by-line for ATX headings with no 
 
 Impact is bounded: only the rendered prompt is affected, the on-disk report is untouched, so it is not persistent data loss. But the reviewer/done flow silently sees a truncated implementation report. runReport.test.ts covers exact-title, case, CRLF/BOM, end-of-body and stop-at-#, but has no fenced-code-block case. Fix: track fence state and ignore headings while inside a fence.
 
-## 178-3 · should-know · open
+## 178-3 · should-know · resolved
 **Where:** src/state/store.ts:202-216 + src/commands/doctor.ts:319
 **Reviewed-at:** 0c27cc6c5aa7889af8fae83a06f56c28a41b1d64
 **Source:** adversarial

@@ -6,6 +6,7 @@ import { COMMAND_DEFS, COMMANDS_DIR } from '../install/commands.js';
 import { DECISIONS_DIR } from '../state/decisionStore.js';
 import { RUN_DIR } from '../state/runReport.js';
 import {
+  CorruptPhaseError,
   SCHEMA_VERSION,
   exists,
   load,
@@ -41,6 +42,13 @@ export interface DoctorInput {
   expectedSchema: number;
   hasProjectMd: boolean;
   hasChangelog: boolean;
+  /**
+   * Path of a phase file that is present but unreadable (truncated, half-written
+   * or carrying git merge-conflict markers), or `null` when full state loaded
+   * cleanly. When set, the phase-hygiene checks (orphaned/stale) are suppressed
+   * because they need the full state that failed to load.
+   */
+  corruptPhaseFile: string | null;
   /**
    * Ids of phases stuck in `doing` with no open work left (orphaned) — should be
    * closed via `mini done`. Empty when the project is healthy or has no phases.
@@ -91,8 +99,20 @@ export function buildDiagnostics(input: DoctorInput): DoctorCheck[] {
     checks.push({ label: 'Project', status: 'ok', detail: `state schema v${input.schemaVersion}` });
   }
 
-  // Phase hygiene — only meaningful for an existing project.
-  if (input.projectExists) {
+  // A corrupt phase file means the full state never loaded, so the hygiene
+  // checks below can't run. Report the corruption itself as a failed check
+  // rather than letting the bad file crash the whole diagnostic.
+  if (input.corruptPhaseFile !== null) {
+    checks.push({
+      label: 'Phases',
+      status: 'fail',
+      detail: `unreadable phase file ${input.corruptPhaseFile}`,
+      hint: 'Fix or remove the file (e.g. resolve git merge-conflict markers), then re-run',
+    });
+  }
+
+  // Phase hygiene — only meaningful for an existing project with loadable state.
+  if (input.projectExists && input.corruptPhaseFile === null) {
     // Orphaned `doing` phases: stuck in "doing" with no open work left.
     if (input.orphanedDoingPhases.length > 0) {
       const ids = input.orphanedDoingPhases.join(', ');
@@ -312,16 +332,26 @@ export async function doctor(): Promise<void> {
   ]);
 
   // Phase-level hygiene needs the full state (steps live in per-phase files).
+  // A single corrupt phase file makes `load` throw `CorruptPhaseError`; doctor
+  // is the very tool you run to find out why a project is broken, so we catch it
+  // and surface it as a failed check instead of aborting the whole diagnostic.
+  // Any other error is a genuine bug — re-throw it so it stays loud.
   let orphanedDoingPhases: number[] = [];
   let staleRunReports: string[] = [];
   let staleDecisions: string[] = [];
+  let corruptPhaseFile: string | null = null;
   if (projectExists) {
-    const state = await load(cwd);
-    orphanedDoingPhases = state.phases
-      .filter((p) => isOrphanedDoing(p, state.phases))
-      .map((p) => p.id);
-    staleRunReports = findStaleRunReports(runDirFiles, state.phases);
-    staleDecisions = findStaleDecisions(decisionDirFiles, state.phases);
+    try {
+      const state = await load(cwd);
+      orphanedDoingPhases = state.phases
+        .filter((p) => isOrphanedDoing(p, state.phases))
+        .map((p) => p.id);
+      staleRunReports = findStaleRunReports(runDirFiles, state.phases);
+      staleDecisions = findStaleDecisions(decisionDirFiles, state.phases);
+    } catch (err) {
+      if (!(err instanceof CorruptPhaseError)) throw err;
+      corruptPhaseFile = err.filePath;
+    }
   }
 
   const checks = buildDiagnostics({
@@ -330,6 +360,7 @@ export async function doctor(): Promise<void> {
     expectedSchema: SCHEMA_VERSION,
     hasProjectMd,
     hasChangelog,
+    corruptPhaseFile,
     orphanedDoingPhases,
     staleRunReports,
     staleDecisions,

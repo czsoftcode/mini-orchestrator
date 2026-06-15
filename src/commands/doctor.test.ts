@@ -1,11 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   type DoctorInput,
   buildDiagnostics,
+  doctor,
   findStaleDecisions,
   findStaleRunReports,
 } from './doctor.js';
-import type { Phase } from '../state/types.js';
+import { phasePath, save, writeProject } from '../state/store.js';
+import type { Phase, ProjectState } from '../state/types.js';
 
 const HEALTHY: DoctorInput = {
   projectExists: true,
@@ -13,6 +18,7 @@ const HEALTHY: DoctorInput = {
   expectedSchema: 2,
   hasProjectMd: true,
   hasChangelog: true,
+  corruptPhaseFile: null,
   orphanedDoingPhases: [],
   staleRunReports: [],
   staleDecisions: [],
@@ -97,11 +103,89 @@ describe('buildDiagnostics', () => {
     expect(c.hint).toContain('.mini/decisions/');
   });
 
+  it('fails and names the file when a phase file is corrupt', () => {
+    const c = find({ ...HEALTHY, corruptPhaseFile: '.mini/phases/phase-007.json' }, 'Phases');
+    expect(c.status).toBe('fail');
+    expect(c.detail).toContain('.mini/phases/phase-007.json');
+    expect(c.hint).toBeTruthy();
+  });
+
+  it('suppresses the stale/orphaned checks when a phase file is corrupt', () => {
+    // The hygiene checks need the full state that failed to load, so they must
+    // not run — only the single "Phases" failure should be reported.
+    const checks = buildDiagnostics({
+      ...HEALTHY,
+      corruptPhaseFile: '.mini/phases/phase-007.json',
+      orphanedDoingPhases: [7],
+      staleRunReports: ['phase-009.md'],
+      staleDecisions: ['phase-009.md'],
+    });
+    const phaseChecks = checks.filter((c) => c.label === 'Phases');
+    expect(phaseChecks).toHaveLength(1);
+    expect(phaseChecks[0]!.status).toBe('fail');
+    expect(checks.find((c) => c.label === 'Run reports')).toBeUndefined();
+    expect(checks.find((c) => c.label === 'Decisions')).toBeUndefined();
+  });
+
   it('omits the phase-hygiene checks when there is no project', () => {
     const checks = buildDiagnostics({ ...HEALTHY, projectExists: false });
     expect(checks.find((c) => c.label === 'Phases')).toBeUndefined();
     expect(checks.find((c) => c.label === 'Run reports')).toBeUndefined();
     expect(checks.find((c) => c.label === 'Decisions')).toBeUndefined();
+  });
+});
+
+describe('doctor() — corrupt phase file', () => {
+  let cwd: string;
+  let prevCwd: string;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  function stateWithPhase(): ProjectState {
+    return {
+      version: 2,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      currentPhaseId: 7,
+      phases: [
+        {
+          id: 7,
+          title: 'Phase',
+          goal: 'do something',
+          status: 'doing',
+          steps: [{ title: 'step 1', status: 'todo' }],
+        },
+      ],
+    };
+  }
+
+  beforeEach(async () => {
+    prevCwd = process.cwd();
+    cwd = await mkdtemp(join(tmpdir(), 'mini-doctor-'));
+    process.chdir(cwd);
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    logSpy.mockRestore();
+    process.chdir(prevCwd);
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('reports the corruption instead of crashing', async () => {
+    await writeProject('# Project', cwd);
+    await save(stateWithPhase(), cwd);
+    // Simulate an unresolved git merge conflict in a phase file — a realistic
+    // state the project explicitly resolves via git.
+    await writeFile(
+      phasePath(cwd, 7),
+      '<<<<<<< HEAD\n{"id":7}\n=======\n{"id":7,"title":"x"}\n>>>>>>> branch\n',
+      'utf-8',
+    );
+
+    await expect(doctor()).resolves.toBeUndefined();
+
+    const out = logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join('\n');
+    expect(out).toContain('phase-007.json');
+    expect(out).toContain('unreadable');
   });
 });
 

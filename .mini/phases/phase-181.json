@@ -1,0 +1,40 @@
+{
+  "id": 181,
+  "title": "Doctor survives corrupt phase files",
+  "goal": "mini doctor catches CorruptPhaseError from load() and reports it as a separate diagnostic finding (with the corrupt file path) instead of crashing, with a test for a corrupt phase file",
+  "status": "done",
+  "fromFinding": "178-3",
+  "steps": [
+    {
+      "title": "Catch CorruptPhaseError around doctor's load",
+      "status": "done",
+      "detail": "Wrap await load(cwd) at doctor.ts:319 in try/catch; on CorruptPhaseError capture its filePath, skip phase-hygiene checks needing full state (orphaned/stale), continue without aborting. Re-throw any non-corrupt error so genuine bugs stay loud."
+    },
+    {
+      "title": "Render corruption as a failed check",
+      "status": "done",
+      "detail": "Add corruptPhaseFile: string | null to DoctorInput; buildDiagnostics emits a fail 'Phases' check naming the file with a fix hint when set. Keep it pure (no I/O)."
+    },
+    {
+      "title": "Unit-test the corrupt-phase diagnostic",
+      "status": "done",
+      "detail": "Test buildDiagnostics returns a fail check with the path when corruptPhaseFile is set, and that stale/orphaned checks are suppressed in that case."
+    },
+    {
+      "title": "Integration test: doctor survives corruption",
+      "status": "done",
+      "detail": "With a project whose .mini/phases/phase-N.json is unparseable, doctor() completes without throwing and reports the corruption instead of crashing."
+    },
+    {
+      "title": "Verify build, typecheck and tests pass",
+      "status": "done",
+      "detail": "npm run build, typecheck and the test suite all green."
+    }
+  ],
+  "startedAt": "2026-06-15T11:54:47.035Z",
+  "completedAt": "2026-06-15T12:11:23.263Z",
+  "autoCommit": {
+    "preSha": "052ed8945d5696ed015e50172f6e8e5876083ec3",
+    "subject": "Phase 181: Doctor survives corrupt phase files"
+  }
+}

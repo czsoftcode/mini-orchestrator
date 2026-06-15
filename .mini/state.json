@@ -902,6 +902,11 @@
       "id": 180,
       "title": "Fence-aware findings section stripping",
       "status": "done"
+    },
+    {
+      "id": 181,
+      "title": "Doctor survives corrupt phase files",
+      "status": "done"
     }
   ],
   "models": {
