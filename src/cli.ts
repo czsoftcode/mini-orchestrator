@@ -320,6 +320,23 @@ program
   });
 
 program
+  .command('security')
+  .description('Opens a fresh Claude Code session for an independent *security review*. With no flags it reviews the last completed phase; --from-phase/--to-phase or --from/--to review a range. Report only — the reviewer writes a Markdown report to .mini/security/<range>.md and never edits code.')
+  .option('--from-phase <n>', 'Range start as a phase number (use together with --to-phase).', parsePhaseNumber)
+  .option('--to-phase <n>', 'Range end as a phase number (use together with --from-phase).', parsePhaseNumber)
+  .option('--from <ref>', 'Range start as a git ref (use together with --to; cannot mix with phase flags).')
+  .option('--to <ref>', 'Range end as a git ref (use together with --from; cannot mix with phase flags).')
+  .action(async (opts: { fromPhase?: number; toPhase?: number; from?: string; to?: string }) => {
+    const { security } = await import('./commands/security.js');
+    await security({
+      fromPhase: opts.fromPhase,
+      toPhase: opts.toPhase,
+      from: opts.from,
+      to: opts.to,
+    });
+  });
+
+program
   .command('undo')
   .description('Reverts the last state change by one step.')
   .option('--dry-run', 'Preview only — print what would be reverted and exit, without prompting or changing anything. For /mini:undo.')

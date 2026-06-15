@@ -847,6 +847,11 @@
       "id": 169,
       "title": "Security review context builder",
       "status": "done"
+    },
+    {
+      "id": 170,
+      "title": "Standalone mini security command",
+      "status": "done"
     }
   ],
   "models": {

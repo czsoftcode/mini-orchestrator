@@ -8,6 +8,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Added
 
+- **`mini security` command.** Opens a fresh Claude Code session for an
+  independent **security review**. With no flags it reviews the last completed
+  phase (from its pre-commit SHA to `HEAD`); `--from-phase`/`--to-phase` or
+  `--from`/`--to` review a range. It runs report-only with read + read-only-git
+  tools and a single write scoped to `Write(.mini/security/**)` (no `Edit`, no
+  findings-store write) — the reviewer writes a durable Markdown report to
+  `.mini/security/<range>.md` itself. Report paths: `phase-<id>.md` for the
+  default, `range-<A>-<B>.md` for a phase range, `range-<short>-<short>.md` for a
+  git-ref range.
+
 - **Docs for the adversarial review commands.** Added reference pages for both
   `mini adversarial` / `/mini:adversarial` and `mini adversarial-project` /
   `/mini:adversarial-project` under `docs/interactive/` and

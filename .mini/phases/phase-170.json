@@ -1,0 +1,42 @@
+{
+  "id": 170,
+  "title": "Standalone mini security command",
+  "goal": "Add a 'mini security' command that opens an interactive review session built by buildSecurityReviewContext over the last phase (default when no range flags are given) or a range (--from-phase/--to-phase, --from/--to), derives the .mini/security/<range>.md output path from the range, and runs with a scoped tool set — mirroring adversarialProject.ts. Open decision for discuss: how the reviewer is permitted to write the .md report (a Write tool scoped to .mini/security/ vs a scoped CLI write like 'mini findings add'); the latter would mean revising the phase-169 prompt. Verify Claude Code permission scoping via Context7 rather than guessing, and confirm the single-last-phase default passes through the genesis fallback for a first phase without preSha.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Resolve security target: range input + output path",
+      "status": "done",
+      "detail": "Helper resolveSecurityTarget(cwd, input) -> { input: RangeInput, outputPath } | null. No flags: pick last 'done' phase from header, return {fromPhase:id,toPhase:id} and .mini/security/phase-<N>.md (error if no done phase). Phase flags -> range-<A>-<B>.md. Ref flags -> resolve each ref to a short SHA -> range-<shortFrom>-<shortTo>.md (error on invalid ref). Genesis fallback stays in resolveRange. Unit tests cover all 3 modes + no-done-phase + invalid ref."
+    },
+    {
+      "title": "mini security command + scoped tool set",
+      "status": "done",
+      "detail": "src/commands/security.ts mirrors adversarialProject.ts: no-project guard, call resolveSecurityTarget, buildSecurityReviewContext(cwd, input, outputPath), print prompt, ask confirm, run workWithClaude with SECURITY_ALLOWED_TOOLS (Read/Grep/Glob/LS, read-only git diff/log/show, Write(.mini/security/**) instead of mini findings add), status line + hint pointing at the report path. Comment documents that without --permission-mode a write outside the dir prompts, not a hard block."
+    },
+    {
+      "title": "Pinning test for SECURITY_ALLOWED_TOOLS",
+      "status": "done",
+      "detail": "Standalone test fixing the exact tool set (like adversarial-project) so drift fails independently; asserts Write(.mini/security/**) present and mini findings add / Edit absent."
+    },
+    {
+      "title": "Register mini security in CLI",
+      "status": "done",
+      "detail": "cli.ts .command('security') with --from-phase/--to-phase/--from/--to (same parsers as adversarial-project), report-only description noting it writes .mini/security/<range>.md, dynamic import dispatching to security({...})."
+    },
+    {
+      "title": "Command behavior test",
+      "status": "done",
+      "detail": "Following adversarialProject.test.ts (mock ask, workWithClaude, builder): assert security() passes SECURITY_ALLOWED_TOOLS to workWithClaude, builder gets the right outputPath (default -> phase-N.md, phase mode -> range-A-B.md), null builder result starts no session, and confirm:false starts no session."
+    }
+  ],
+  "startedAt": "2026-06-15T07:12:43.628Z",
+  "resolvedVerify": [
+    "Live Claude permission scoping of Write(.mini/security/**)"
+  ],
+  "completedAt": "2026-06-15T07:30:30.027Z",
+  "autoCommit": {
+    "preSha": "ae4c3c9f5e06f74fdeed5e3d03414425a656a18f",
+    "subject": "Phase 170: Standalone mini security command"
+  }
+}
