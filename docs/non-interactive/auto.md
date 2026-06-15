@@ -82,6 +82,10 @@ history after a phase is finalized.
 
 ## Notes
 
+- Because the session runs in `acceptEdits`, don't run `mini auto` unattended on
+  a repo you didn't author or haven't reviewed — its git-shared `.mini/` is fed
+  into the agent's prompt and can carry injected instructions. See
+  [Security & the trust boundary](../security.md).
 - Auto stops on its own at: the configured phase limit, a finished project, a
   blocker it cannot get around, or a cooperative stop signal.
 - A running auto can be halted gracefully with [`mini stop`](stop.md) from

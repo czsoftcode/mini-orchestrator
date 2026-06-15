@@ -1,0 +1,37 @@
+{
+  "id": 173,
+  "title": "Document agent-trust boundary in docs",
+  "goal": "Add a short Security section (README + docs) documenting the SEC-1 trust boundary: a git-shared/cloned .mini/ is untrusted input because its content is fed into the agent's prompts, so avoid running 'mini auto' unattended (acceptEdits) on a repo you didn't author or haven't reviewed, with the human 'done' checkpoint named as the main safety net.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "New docs/security.md trust-boundary guide",
+      "status": "done",
+      "detail": "Standalone page: threat model (mini feeds git-shared .mini/ content — project.md, phase goals, discuss/run reports — into the agent's prompts), the SEC-1 risk (cloned/pulled repo with poisoned .mini/ is a prompt-injection vector when running 'mini auto' in acceptEdits), concrete mitigations (don't run 'mini auto' unattended on un-reviewed repos; treat untrusted .mini/ as untrusted input), and that the human 'done' checkpoint is the main safety net. Cites .mini/security/range-1-25.md (SEC-1)."
+    },
+    {
+      "title": "Short Security note in README",
+      "status": "done",
+      "detail": "One short paragraph under a new ## Security heading (placed near 'What gets sent to Claude'), stating the trust boundary in 2–3 sentences and linking to docs/security.md. Keeps README slim per phases 131–146."
+    },
+    {
+      "title": "Cross-link from docs index, FAQ and auto",
+      "status": "done",
+      "detail": "Add docs/security.md to the 'Concepts & guides' list in docs/README.md; add a one-line pointer where acceptEdits/unattended runs are already discussed (docs/faq.md and/or docs/non-interactive/auto.md) so the warning is reachable from the auto docs."
+    },
+    {
+      "title": "Accuracy + link verification",
+      "status": "done",
+      "detail": "Verify every claim against the code paths in the SEC-1 finding (acceptEdits flow, prompt assembly from .mini/), confirm all new relative links resolve, and check no inline styles/scripts were introduced."
+    }
+  ],
+  "startedAt": "2026-06-15T09:02:46.520Z",
+  "resolvedVerify": [
+    "Read the README Security paragraph and docs/security.md for tone/clarity"
+  ],
+  "completedAt": "2026-06-15T09:15:10.523Z",
+  "autoCommit": {
+    "preSha": "fd43f5f712f6670a2b50771f4a80a040d8aa525a",
+    "subject": "Phase 173: Document agent-trust boundary in docs"
+  }
+}

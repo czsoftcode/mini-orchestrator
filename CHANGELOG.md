@@ -6,6 +6,18 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **Security & trust-boundary docs.** New [`docs/security.md`](docs/security.md)
+  documents the agent-trust boundary (finding SEC-1): mini feeds git-shared
+  `.mini/` content into the agent's prompts, so a cloned/pulled repo with a
+  poisoned `.mini/` is a prompt-injection vector when running `mini auto`
+  (`acceptEdits`). It records the mitigations — read an untrusted `.mini/` before
+  running, don't run `mini auto` unattended on un-reviewed repos, and the human
+  `done` checkpoint as the main safety net. README gained a short `## Security`
+  section linking to it, and the warning is cross-linked from `docs/README.md` and
+  the [`mini auto`](docs/non-interactive/auto.md) notes.
+
 ## [1.22.0] - 2026-06-15
 
 ### Added

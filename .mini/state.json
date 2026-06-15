@@ -862,6 +862,11 @@
       "id": 172,
       "title": "Document the security command",
       "status": "done"
+    },
+    {
+      "id": 173,
+      "title": "Document agent-trust boundary in docs",
+      "status": "done"
     }
   ],
   "models": {

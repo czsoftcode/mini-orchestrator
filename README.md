@@ -260,6 +260,10 @@ mini stays frugal with context: `mini do` sends only **roughly 600–1000 tokens
 
 mini can also build a **machine-readable map** of the project (`mini map`) — a lightweight index plus per-file nodes with line anchors — so Claude navigates to the right lines instead of reading whole files. See [`mini map`](docs/non-interactive/map.md).
 
+## Security
+
+Because mini feeds your **git-shared `.mini/`** content (project vision, phase goals, reports) into the agent's prompts, a cloned or pulled repo with a poisoned `.mini/` is a prompt-injection vector against whoever runs `mini auto` on it — that mode runs Claude in `acceptEdits`, where Edit/Write don't ask. Don't run `mini auto` unattended on a repo you didn't author or haven't reviewed; the human `done` checkpoint is the main safety net. Full note: [`docs/security.md`](docs/security.md).
+
 ## Import from GSD
 
 mini started as a lighter-weight alternative to [GSD](https://github.com/gsd-build/get-shit-done) — minimal state instead of a pile of regenerated markdown files. Already have a GSD project in `.planning/`? Bring over its phase skeleton with `mini import-gsd` (leaves the `.planning/` files untouched). Details: [`mini import-gsd`](docs/non-interactive/import-gsd.md).

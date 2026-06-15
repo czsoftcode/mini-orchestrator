@@ -93,4 +93,5 @@ Not command pages — background on how mini stores state and behaves:
 
 - [Files in the project](files.md) — what each file under `.mini/` is for.
 - [What gets sent to Claude](context.md) — the per-step context budget and cost line.
+- [Security & the trust boundary](security.md) — why a shared `.mini/` is untrusted input under `mini auto`.
 - [FAQ](faq.md) — version bump, undo, memory and other common questions.
