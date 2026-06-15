@@ -1,0 +1,40 @@
+{
+  "id": 179,
+  "title": "Allow project finding source in CLI",
+  "goal": "Add 'project' to the --source choices and help text of the 'mini findings' command so an adversarial-project finding can be recorded exactly as the prompt instructs, with a test covering --source project.",
+  "status": "done",
+  "fromFinding": "178-1",
+  "steps": [
+    {
+      "title": "Derive --source choices from FINDING_SOURCES",
+      "status": "done",
+      "detail": "In src/cli.ts:403 replace hardcoded ['adversarial','verify'] with [...FINDING_SOURCES] (import from findingsStore) so the CLI cannot drift from the data model again."
+    },
+    {
+      "title": "List project in findings help + option text",
+      "status": "done",
+      "detail": "Update the command description at cli.ts:391 and the --source option description at cli.ts:402 to read adversarial | verify | project (default stays adversarial)."
+    },
+    {
+      "title": "Test: findingsAdd records project source",
+      "status": "done",
+      "detail": "In src/commands/findings.test.ts add a case mirroring the verify test — findingsAdd({..., source: 'project'}) stores and reads back source === 'project'."
+    },
+    {
+      "title": "Test: choices stay in sync with FINDING_SOURCES",
+      "status": "done",
+      "detail": "Assert FINDING_SOURCES contains 'project' as a guard against future removal from the data model; add a comment explaining choices derive from it."
+    },
+    {
+      "title": "Verify build, typecheck and tests pass",
+      "status": "done",
+      "detail": "npm run build + typecheck + full test suite green."
+    }
+  ],
+  "startedAt": "2026-06-15T11:27:24.704Z",
+  "completedAt": "2026-06-15T11:35:39.590Z",
+  "autoCommit": {
+    "preSha": "0c27cc6c5aa7889af8fae83a06f56c28a41b1d64",
+    "subject": "Phase 179: Allow project finding source in CLI"
+  }
+}

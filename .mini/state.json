@@ -892,6 +892,11 @@
       "id": 178,
       "title": "Visible security reminder in adversarial-project",
       "status": "done"
+    },
+    {
+      "id": 179,
+      "title": "Allow project finding source in CLI",
+      "status": "done"
     }
   ],
   "models": {

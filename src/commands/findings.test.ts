@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { headSha } from '../git.js';
 import { save, writeProject } from '../state/store.js';
-import { readPhaseFindings } from '../state/findingsStore.js';
+import { FINDING_SOURCES, readPhaseFindings } from '../state/findingsStore.js';
 import type { ProjectState } from '../state/types.js';
 import { findingsAdd, findingsList } from './findings.js';
 
@@ -69,6 +69,13 @@ describe('mini findings', () => {
   function output(): string {
     return logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join('\n');
   }
+
+  // The CLI's --source choices derive from FINDING_SOURCES (cli.ts) so the two
+  // cannot drift apart again. Removing 'project' here would silently re-break the
+  // adversarial-project workflow, so guard the data model directly.
+  it("FINDING_SOURCES includes 'project' (CLI --source choices derive from it)", () => {
+    expect(FINDING_SOURCES).toContain('project');
+  });
 
   describe('add', () => {
     it('warns and does nothing when there is no project', async () => {
@@ -136,6 +143,17 @@ describe('mini findings', () => {
       const r = await findingsAdd({ severity: 'should-know', title: 'ux issue', source: 'verify' });
       expect(r.ok).toBe(true);
       expect((await readPhaseFindings(cwd, 5))[0]?.source).toBe('verify');
+    });
+
+    it('records an explicit project source', async () => {
+      // Regression guard for the adversarial-project blocker: the prompt instructs
+      // `mini findings add --source project`, so this origin must round-trip.
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      const r = await findingsAdd({ severity: 'should-know', title: 'range issue', source: 'project' });
+      expect(r.ok).toBe(true);
+      expect((await readPhaseFindings(cwd, 5))[0]?.source).toBe('project');
     });
 
     it('rejects an invalid source', async () => {

@@ -64,6 +64,13 @@ All notable changes to this project are recorded here. The format is based on
   but `mini findings list` was missing from the command's allowed tools — in a
   terminal session that triggered a permission prompt and the dedup silently didn't
   run. Added `Bash(mini findings list:*)` to the `adversarial-project` tool set.
+- **`mini findings add --source project` is now accepted (blocker 178-1).** The
+  `adversarial-project` reviewer prompt instructs you to record each finding with
+  `--source project`, but the CLI's `--source` choices only allowed
+  `adversarial | verify`, so the command was rejected before reaching the store —
+  the whole project-range review was unrecordable and reviewers had to mislabel
+  findings as `adversarial`. The `--source` choices now derive from
+  `FINDING_SOURCES`, so the CLI can no longer drift from the data model.
 
 ## [1.22.0] - 2026-06-15
 

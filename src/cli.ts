@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { Command, InvalidArgumentError, Option } from 'commander';
 import { readPackageVersion } from './version.js';
+// --source choices derive from FINDING_SOURCES so the CLI cannot drift from the
+// data model (a past blocker: the enum gained 'project' but the CLI choices were
+// never updated, making the adversarial-project workflow unrecordable).
+import { FINDING_SOURCES } from './state/findingsStore.js';
 
 const program = new Command();
 
@@ -388,7 +392,7 @@ program
 program
   .command('findings [action]')
   .description(
-    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify (default adversarial). "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
+    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify | project (default adversarial). "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
   )
   .addOption(
     new Option(
@@ -399,8 +403,8 @@ program
   .addOption(
     new Option(
       '--source <step>',
-      'Which review step found it (for add): adversarial | verify. Defaults to adversarial.',
-    ).choices(['adversarial', 'verify']),
+      'Which review step found it (for add): adversarial | verify | project. Defaults to adversarial.',
+    ).choices([...FINDING_SOURCES]),
   )
   .option('--title <text>', 'Short headline of the finding (for add).')
   .option('--where <loc>', 'Optional location file:line (for add).')
