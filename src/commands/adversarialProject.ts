@@ -21,6 +21,7 @@ const ADVERSARIAL_PROJECT_ALLOWED_TOOLS = [
   'Bash(git diff:*)',
   'Bash(git log:*)',
   'Bash(git show:*)',
+  'Bash(mini findings list:*)',
   'Bash(mini findings add:*)',
 ];
 

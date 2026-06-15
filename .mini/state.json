@@ -872,6 +872,11 @@
       "id": 174,
       "title": "Guard path traversal in graph rebuild",
       "status": "done"
+    },
+    {
+      "id": 175,
+      "title": "Allow findings list in adversarial-project",
+      "status": "done"
     }
   ],
   "models": {

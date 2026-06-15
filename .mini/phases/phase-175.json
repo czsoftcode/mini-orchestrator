@@ -1,0 +1,29 @@
+{
+  "id": 175,
+  "title": "Allow findings list in adversarial-project",
+  "goal": "Add 'Bash(mini findings list:*)' to ADVERSARIAL_PROJECT_ALLOWED_TOOLS in src/commands/adversarialProject.ts so the prompt-instructed dedup step (mini findings list) in the reviewer session does not trigger a permission prompt, and update the pinning test of allowed tools.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add findings list to allowed tools",
+      "status": "done",
+      "detail": "In src/commands/adversarialProject.ts add 'Bash(mini findings list:*)' to ADVERSARIAL_PROJECT_ALLOWED_TOOLS, before 'mini findings add' (read-only step before the write). Top comment stays valid: list is read-only, add is still the only write."
+    },
+    {
+      "title": "Update allowed-tools pinning test",
+      "status": "done",
+      "detail": "In src/commands/adversarialProject.test.ts add 'Bash(mini findings list:*)' to the expected toEqual array (lines 98-107) so it matches the new set; keep not.toContain('Edit')."
+    },
+    {
+      "title": "Verify build, typecheck and tests pass",
+      "status": "done",
+      "detail": "Run build, typecheck and tests; confirm adversarialProject.test.ts is green and no other snapshot/pinning test of the tool set broke."
+    }
+  ],
+  "startedAt": "2026-06-15T09:36:42.418Z",
+  "completedAt": "2026-06-15T09:43:26.805Z",
+  "autoCommit": {
+    "preSha": "c6ea0f2b9474d5362e484b28f746b91ca6309729",
+    "subject": "Phase 175: Allow findings list in adversarial-project"
+  }
+}

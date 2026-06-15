@@ -28,6 +28,14 @@ All notable changes to this project are recorded here. The format is based on
   nodes outside the project tree — matching the check the incremental update path
   already had.
 
+### Fixed
+
+- **`adversarial-project` dedup step is now permitted.** The reviewer prompt tells
+  the agent to run `mini findings list` first so the same issue isn't filed twice,
+  but `mini findings list` was missing from the command's allowed tools — in a
+  terminal session that triggered a permission prompt and the dedup silently didn't
+  run. Added `Bash(mini findings list:*)` to the `adversarial-project` tool set.
+
 ## [1.22.0] - 2026-06-15
 
 ### Added
