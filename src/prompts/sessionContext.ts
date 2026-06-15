@@ -682,8 +682,8 @@ nothing, list **concretely** what you checked and how.
 
 # Security is out of scope here
 Do **not** attempt a security audit in this review — that is a separate, dedicated
-pass. If you want one, run \`/security-review\`. Note it in the chat; don't file
-security findings from here.
+pass with its own report (\`mini security\`). Don't run it from here and don't file
+security findings from here; just note in the chat that it still needs to happen.
 
 # Record the findings
 Record **each** finding by calling the CLI — it owns the store, the format and the
@@ -701,6 +701,13 @@ When you are done, print a single **status line** to the human — exactly one o
 \`**adversarial-project: pass**\` (you reviewed it and found nothing worth recording),
 \`**adversarial-project: findings**\` (you recorded findings — say how many) or
 \`**adversarial-project: blocked**\` (you couldn't complete the review — say why).
+
+# Reminder — security is still a separate pass
+This review covered **correctness only**. A security audit has **not** run. Remind
+the human (don't run it yourself): once this phase is **done and committed**, run
+\`mini security\` in a **separate terminal** so it reviews the finished, committed
+range with a clean context and writes its own report. Leave this as a reminder — do
+not start it from here and do not file security findings into \`mini findings\`.
 
 # Project
 ${projectMd.trim()}

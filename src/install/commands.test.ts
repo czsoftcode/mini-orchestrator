@@ -49,6 +49,20 @@ describe('adversarial slash command', () => {
   });
 });
 
+describe('adversarial-project slash command', () => {
+  it('is registered in COMMAND_DEFS', () => {
+    expect(COMMAND_DEFS.some((d) => d.name === 'adversarial-project')).toBe(true);
+  });
+
+  it('reminds the human that security is a separate `mini security` pass', () => {
+    const md = bodyOf('adversarial-project');
+    expect(md).toContain('not** a security audit');
+    expect(md).toContain('mini security');
+    expect(md).toContain('separate terminal');
+    expect(md).toContain('done and committed');
+  });
+});
+
 describe('security slash command', () => {
   it('is registered in COMMAND_DEFS with a range argument hint', () => {
     const def = COMMAND_DEFS.find((d) => d.name === 'security');

@@ -1,0 +1,44 @@
+{
+  "id": 178,
+  "title": "Visible security reminder in adversarial-project",
+  "goal": "Add an explicit, reminder-only line at the end of the adversarial-project flow (closing status block in the prompt and/or the slash-command body) telling the human to run a separate security pass — it never auto-runs and never files security findings into mini.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add reminder to prompt closing block",
+      "status": "done",
+      "detail": "In src/prompts/sessionContext.ts add one visible, reminder-only line to the adversarial-project closing status block (~L700-704): security is a separate pass — after this phase is done and committed, run 'mini security' in a separate terminal so it reviews the finished, committed range with clean context. Never auto-run, no security findings filed here."
+    },
+    {
+      "title": "Align stale in-body security reference",
+      "status": "done",
+      "detail": "In the same function update the 'Security is out of scope here' section so it points to the project's own 'mini security' (terminal, post-done) instead of the built-in /security-review."
+    },
+    {
+      "title": "Add reminder to slash-command body",
+      "status": "done",
+      "detail": "In src/install/commands.ts (adversarial-project body, ~L117-127) add a matching reminder that security runs separately via 'mini security' in another terminal after done."
+    },
+    {
+      "title": "Update prompt tests",
+      "status": "done",
+      "detail": "In src/prompts/sessionContext.test.ts update the L601-604 test and assert the post-done 'mini security' reminder appears in the closing status block."
+    },
+    {
+      "title": "Add slash-command body test",
+      "status": "done",
+      "detail": "In src/install/commands.test.ts assert the adversarial-project body mentions the separate 'mini security' pass."
+    },
+    {
+      "title": "Verify build, typecheck and tests pass",
+      "status": "done",
+      "detail": "npm run build, typecheck and the full test suite all green."
+    }
+  ],
+  "startedAt": "2026-06-15T10:45:30.879Z",
+  "completedAt": "2026-06-15T10:53:10.931Z",
+  "autoCommit": {
+    "preSha": "c9741794a9bc97879d49d34446cb5e6a34260505",
+    "subject": "Phase 178: Visible security reminder in adversarial-project"
+  }
+}

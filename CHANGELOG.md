@@ -6,6 +6,18 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- **`adversarial-project` now reminds you to run a separate security pass (backlog
+  item 5).** The correctness red-team used to mention the built-in `/security-review`
+  only in passing, so the security pass silently never ran unless you remembered it.
+  The prompt now closes with an explicit, reminder-only block — once the phase is
+  **done and committed**, run `mini security` in a **separate terminal** (clean
+  context, its own report) — and the in-prompt "Security is out of scope" note plus
+  the `/mini:adversarial-project` slash command point at the project's own
+  `mini security` pass instead of `/security-review`. It stays a reminder: nothing is
+  auto-run and no security findings are filed into `mini findings`.
+
 ### Added
 
 - **Security & trust-boundary docs.** New [`docs/security.md`](docs/security.md)

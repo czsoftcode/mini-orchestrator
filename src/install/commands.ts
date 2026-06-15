@@ -124,7 +124,9 @@ The user ran the command with arguments: \`$ARGUMENTS\`. They select the range o
 - **\`--from-phase N --to-phase M\`** — range given by phase numbers, or
 - **\`--from <ref> --to <ref>\`** — range given by git refs (you cannot mix the two forms).
 
-Run in Bash \`mini context adversarial-project $ARGUMENTS\` and follow the printed instructions **exactly** — it prints the red-team prompt for the selected range (the independent-reviewer role, the areas to attack, where to look for the combined diff, and how to record the findings). If the range is invalid the command exits non-zero with a clear message — relay it and stop. Change the state in \`.mini/\` only with \`mini ... --apply\` commands; this step only records findings, it never edits \`.mini/state.json\` by hand.`,
+Run in Bash \`mini context adversarial-project $ARGUMENTS\` and follow the printed instructions **exactly** — it prints the red-team prompt for the selected range (the independent-reviewer role, the areas to attack, where to look for the combined diff, and how to record the findings). If the range is invalid the command exits non-zero with a clear message — relay it and stop. Change the state in \`.mini/\` only with \`mini ... --apply\` commands; this step only records findings, it never edits \`.mini/state.json\` by hand.
+
+This review is **correctness only** — it is **not** a security audit. Don't run security from here; once the phase is **done and committed**, remind the human to run \`mini security\` in a **separate terminal** as its own independent pass (clean context, its own report).`,
   },
   {
     name: 'security',

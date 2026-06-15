@@ -598,10 +598,19 @@ describe('buildProjectAdversarialSessionPrompt', () => {
     expect(p).toContain('do **not** re-file');
   });
 
-  it('delegates security to /security-review instead of auditing here', () => {
+  it('delegates security to the separate `mini security` pass instead of auditing here', () => {
     const p = buildProjectAdversarialSessionPrompt(input);
     expect(p).toContain('Security is out of scope');
-    expect(p).toContain('/security-review');
+    expect(p).toContain('mini security');
+    expect(p).not.toContain('/security-review');
+  });
+
+  it('closes with a reminder to run the post-done `mini security` pass in a separate terminal', () => {
+    const p = buildProjectAdversarialSessionPrompt(input);
+    expect(p).toContain('security is still a separate pass');
+    expect(p).toContain('done and committed');
+    expect(p).toContain('separate terminal');
+    expect(p).toContain('mini security');
   });
 
   it('records findings via `mini findings add --source project`', () => {

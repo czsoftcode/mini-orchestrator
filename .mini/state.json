@@ -887,6 +887,11 @@
       "id": 177,
       "title": "Strip stale findings from report body",
       "status": "done"
+    },
+    {
+      "id": 178,
+      "title": "Visible security reminder in adversarial-project",
+      "status": "done"
     }
   ],
   "models": {
