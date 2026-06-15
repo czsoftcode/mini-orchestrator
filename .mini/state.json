@@ -907,6 +907,11 @@
       "id": 181,
       "title": "Doctor survives corrupt phase files",
       "status": "done"
+    },
+    {
+      "id": 182,
+      "title": "Stabilize status tests under color",
+      "status": "done"
     }
   ],
   "models": {

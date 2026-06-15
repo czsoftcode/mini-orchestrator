@@ -1,0 +1,34 @@
+{
+  "id": 182,
+  "title": "Stabilize status tests under color",
+  "goal": "Disable ANSI colors globally in the vitest test setup (e.g. via NO_COLOR before picocolors loads) so npm test is deterministic regardless of the ambient CI env var, fixing the two status.test.ts assertions that break on GitHub Actions where picocolors auto-enables color.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add NO_COLOR to vitest.config.ts test.env",
+      "status": "done",
+      "detail": "Set test: { env: { NO_COLOR: '1' } } in vitest.config.ts with a short comment explaining that GitHub Actions CI=true makes picocolors enable ANSI, which splits literal substrings in status assertions."
+    },
+    {
+      "title": "Verify the fix under simulated CI",
+      "status": "done",
+      "detail": "Run CI=1 npm test; confirm the two previously failing status.test.ts tests pass and the whole suite is green, proving test.env is applied before picocolors evaluates color support at import time."
+    },
+    {
+      "title": "Fallback to setupFiles only if test.env is too late",
+      "status": "skipped",
+      "detail": "If step 2 still shows the tests red (env applied after picocolors import), add a setupFiles entry that sets process.env.NO_COLOR before module imports, and re-run. Skip entirely if step 2 already passes."
+    },
+    {
+      "title": "Confirm no regressions: statusline + plain run + build",
+      "status": "done",
+      "detail": "Verify src/statusline/render.test.ts (hardcoded ANSI) stays green under CI=1 NO_COLOR=1, that plain npm test (no CI env) is still green, and that npm run typecheck and npm run build pass."
+    }
+  ],
+  "startedAt": "2026-06-15T17:54:20.325Z",
+  "completedAt": "2026-06-15T17:58:05.440Z",
+  "autoCommit": {
+    "preSha": "581c5522145bb1c3d1935762addba6a250ce649b",
+    "subject": "Phase 182: Stabilize status tests under color"
+  }
+}

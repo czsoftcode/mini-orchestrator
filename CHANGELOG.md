@@ -42,6 +42,13 @@ All notable changes to this project are recorded here. The format is based on
 
 ### Fixed
 
+- **CI no longer fails `npm test` because of ambient color detection.** GitHub
+  Actions sets `CI=true`, which picocolors treats as "color supported" and enables
+  ANSI escapes even without a TTY. Two `status` assertions matched literal
+  substrings like `2. Title`, but `pc.bold` inserts escape codes inside the title,
+  so the substring no longer matched — green locally (no `CI`), red on CI. The
+  vitest config now forces `NO_COLOR=1` for the whole test run, making output
+  deterministic regardless of the ambient environment.
 - **Repeated reviews no longer stack stale findings (backlog item 2).** The run
   report's free text is embedded as `# Implementation report` into the
   `done`/`verify`/`adversarial` prompts. If an older report still carried a
