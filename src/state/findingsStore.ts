@@ -72,6 +72,13 @@ export interface Finding {
   status: FindingStatus;
   /** Which review step recorded it; defaults to `adversarial` for older files with no `**Source:**` line. */
   source: FindingSource;
+  /**
+   * The raw `**Source:**` token when it is **not** a known {@link FindingSource}
+   * (e.g. a `security` value written by a future mini version). Preserved verbatim
+   * so a forward-incompat source round-trips on disk instead of being silently
+   * rewritten to the `adversarial` default; consumers display `rawSource ?? source`.
+   */
+  rawSource?: string;
   /** Optional location (`file:line`). */
   where?: string;
   /**
@@ -93,6 +100,12 @@ export interface Finding {
   title: string;
   /** Optional longer body — what breaks and how. */
   body?: string;
+  /**
+   * Optional note recording **why** the finding was closed, set by
+   * `mini findings resolve --reason`. Cleared on reopen (a reopened finding has no
+   * closing reason). Absent on findings closed without a reason.
+   */
+  reason?: string;
 }
 
 /** Input to {@link addFinding} — everything except the id/status, which mini owns. */
@@ -129,6 +142,8 @@ const REVIEWED_AT_RE = /^\*\*Reviewed-at:\*\*\s+(.*)$/;
 const SOURCE_RE = /^\*\*Source:\*\*\s+(.*)$/;
 /** Matches the optional `**Range:** …` metadata line (the reviewed phase range). */
 const RANGE_RE = /^\*\*Range:\*\*\s+(.*)$/;
+/** Matches the optional `**Reason:** …` line — why a finding was resolved. */
+const REASON_RE = /^\*\*Reason:\*\*\s+(.*)$/;
 /** Is the severity one of the three accepted values? */
 export function isFindingSeverity(value: string): value is FindingSeverity {
   return (FINDING_SEVERITIES as readonly string[]).includes(value);
@@ -188,9 +203,11 @@ export function parseFindings(md: string): Finding[] {
           source: parsed.source ?? DEFAULT_FINDING_SOURCE,
           title: parsed.title,
         };
+        if (parsed.rawSource) finding.rawSource = parsed.rawSource;
         if (parsed.where) finding.where = parsed.where;
         if (parsed.reviewedAt) finding.reviewedAt = parsed.reviewedAt;
         if (parsed.range) finding.range = parsed.range;
+        if (parsed.reason) finding.reason = parsed.reason;
         if (parsed.body) finding.body = parsed.body;
         out.push(finding);
       }
@@ -236,7 +253,9 @@ function parseEntryBody(lines: string[]): {
   where?: string;
   reviewedAt?: string;
   source?: FindingSource;
+  rawSource?: string;
   range?: string;
+  reason?: string;
   title?: string;
   body?: string;
 } {
@@ -250,7 +269,10 @@ function parseEntryBody(lines: string[]): {
   let where: string | undefined;
   let reviewedAt: string | undefined;
   let source: FindingSource | undefined;
+  let rawSource: string | undefined;
+  let sourceSeen = false;
   let range: string | undefined;
+  let reason: string | undefined;
 
   // Consume the metadata block: any of the four lines, in any order, each only
   // the first time it appears. Stops at the first line that is not metadata (or
@@ -270,14 +292,23 @@ function parseEntryBody(lines: string[]): {
       continue;
     }
     const s = SOURCE_RE.exec(line);
-    if (s && source === undefined) {
+    if (s && !sourceSeen) {
+      sourceSeen = true;
       const value = (s[1] as string).trim();
+      // Known source → typed field; an unknown but non-empty value is kept raw so
+      // it round-trips on disk instead of being downgraded to the default (160-2).
       if (isFindingSource(value)) source = value;
+      else if (value) rawSource = value;
       continue;
     }
     const g = RANGE_RE.exec(line);
     if (g && range === undefined) {
       range = (g[1] as string).trim();
+      continue;
+    }
+    const rs = REASON_RE.exec(line);
+    if (rs && reason === undefined) {
+      reason = (rs[1] as string).trim();
       continue;
     }
     break;
@@ -287,12 +318,16 @@ function parseEntryBody(lines: string[]): {
     where?: string;
     reviewedAt?: string;
     source?: FindingSource;
+    rawSource?: string;
     range?: string;
+    reason?: string;
   } = {};
   if (where) meta.where = where;
   if (reviewedAt) meta.reviewedAt = reviewedAt;
   if (source) meta.source = source;
+  if (rawSource) meta.rawSource = rawSource;
   if (range) meta.range = range;
+  if (reason) meta.reason = reason;
 
   if (i >= lines.length) return meta;
   const title = (lines[i] as string).trim();
@@ -303,7 +338,9 @@ function parseEntryBody(lines: string[]): {
     where?: string;
     reviewedAt?: string;
     source?: FindingSource;
+    rawSource?: string;
     range?: string;
+    reason?: string;
     title?: string;
     body?: string;
   } = {
@@ -320,7 +357,10 @@ export function serializeFindings(findings: Finding[]): string {
     const out = [`## ${f.id} · ${f.severity} · ${f.status}`];
     if (f.where?.trim()) out.push(`**Where:** ${f.where.trim()}`);
     if (f.reviewedAt?.trim()) out.push(`**Reviewed-at:** ${f.reviewedAt.trim()}`);
-    out.push(`**Source:** ${f.source}`);
+    // An unknown source token is written back verbatim so a forward-incompat value
+    // (e.g. a future `security`) survives instead of being downgraded (160-2).
+    out.push(`**Source:** ${f.rawSource?.trim() || f.source}`);
+    if (f.reason?.trim()) out.push(`**Reason:** ${f.reason.trim()}`);
     if (f.range?.trim()) out.push(`**Range:** ${f.range.trim()}`);
     out.push(f.title.trim());
     if (f.body?.trim()) out.push('', f.body.trim());
@@ -370,6 +410,7 @@ async function setFindingStatus(
   cwd: string,
   id: string,
   status: FindingStatus,
+  reason?: string,
 ): Promise<boolean> {
   const phaseId = phaseIdFromFindingId(id);
   if (phaseId === null) return false;
@@ -377,6 +418,15 @@ async function setFindingStatus(
   const target = findings.find((f) => f.id === id);
   if (!target || target.status === status) return false;
   target.status = status;
+  if (status === 'resolved') {
+    // Record why it was closed when a reason is given; otherwise leave whatever
+    // was there (auto-close via `mini done` passes none and must not clobber it).
+    const trimmed = reason?.trim();
+    if (trimmed) target.reason = trimmed;
+  } else {
+    // Reopen: a reopened finding has no closing reason — drop it (incl. `mini undo`).
+    delete target.reason;
+  }
   try {
     await writeFile(findingsPath(cwd, phaseId), serializeFindings(findings), 'utf8');
   } catch {
@@ -387,11 +437,14 @@ async function setFindingStatus(
 
 /**
  * Marks a finding as `resolved` (e.g. when the fix phase linked to it closes).
- * No-op when the finding is missing, malformed or already resolved. Returns
- * whether the file changed. See {@link setFindingStatus}.
+ * No-op when the finding is missing, malformed or already resolved. An optional
+ * `reason` records **why** it was closed (stored as the `**Reason:**` line); it is
+ * only applied on the open→resolved flip, so resolving an already-resolved finding
+ * does not overwrite an earlier reason. Returns whether the file changed. See
+ * {@link setFindingStatus}.
  */
-export function resolveFinding(cwd: string, id: string): Promise<boolean> {
-  return setFindingStatus(cwd, id, 'resolved');
+export function resolveFinding(cwd: string, id: string, reason?: string): Promise<boolean> {
+  return setFindingStatus(cwd, id, 'resolved', reason);
 }
 
 /**

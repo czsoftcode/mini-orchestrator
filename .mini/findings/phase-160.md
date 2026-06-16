@@ -12,7 +12,7 @@ Verify findings mislabeled as 'adversarial' in linked-finding block
 
 This phase makes verify-sourced findings first-class and linkable via 'mini next --from-finding <id>' (the next prompt now offers it for open review findings of either source). But renderLinkedFindingBlock hardcodes '# Linked adversarial finding' and 'fix the adversarial finding below' in both the detail and the missing branch, and LinkedFindingDetail does not even carry 'source'. So when discuss/plan render a linked VERIFY finding, the planner is told to treat 'the adversarial finding' as the primary source — a factual mislabel this phase introduces. Before 160 only adversarial findings existed, so it was accurate; now it is wrong. Fix: thread source into LinkedFindingDetail and make the heading/body source-aware. The report disclosed this as out-of-scope, but it is a real user-visible inaccuracy caused by 160, not pre-existing.
 
-## 160-2 · nit · open
+## 160-2 · nit · resolved
 **Where:** src/state/findingsStore.ts:246-253,285
 **Reviewed-at:** fa39151ab46bba530fb7c2f4fd31f955233e2b0c
 **Source:** adversarial

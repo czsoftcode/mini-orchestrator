@@ -236,23 +236,31 @@ async function findingsSetStatus(
 
 /**
  * `mini findings resolve <id...>` — marks one or more findings as resolved,
- * independent of any phase link. Idempotent on an already-resolved id.
+ * independent of any phase link. Idempotent on an already-resolved id. An optional
+ * `reason` records why they were closed and is applied to every id in the batch
+ * (only on the open→resolved flip; an already-resolved id keeps its earlier reason).
  */
-export function findingsResolve(ids: string[]): Promise<StepOutcome> {
-  return findingsSetStatus(ids, 'resolved', resolveFinding);
+export function findingsResolve(ids: string[], reason?: string): Promise<StepOutcome> {
+  return findingsSetStatus(ids, 'resolved', (cwd, id) => resolveFinding(cwd, id, reason));
 }
 
 /**
  * `mini findings reopen <id...>` — flips one or more resolved findings back to
- * open. Idempotent on an already-open id.
+ * open. Idempotent on an already-open id. `--reason` is rejected: a reopened
+ * finding has no closing reason, so passing one is a usage error, not a silent
+ * no-op.
  */
-export function findingsReopen(ids: string[]): Promise<StepOutcome> {
+export function findingsReopen(ids: string[], reason?: string): Promise<StepOutcome> {
+  if (reason !== undefined) {
+    log.error('--reason applies only to "resolve", not "reopen".');
+    return Promise.resolve({ ok: false, reason: 'reason-not-allowed' });
+  }
   return findingsSetStatus(ids, 'open', reopenFinding);
 }
 
 /** One line per finding: `id [severity] <source> (status) where @sha {range} — title`. */
 function renderFinding(f: Finding, showStatus: boolean): string {
-  const parts = [f.id, `[${f.severity}]`, f.source];
+  const parts = [f.id, `[${f.severity}]`, f.rawSource ?? f.source];
   if (showStatus) parts.push(`(${f.status})`);
   if (f.where) parts.push(f.where);
   // Short baseline SHA, so a reader can tell which code state the review started

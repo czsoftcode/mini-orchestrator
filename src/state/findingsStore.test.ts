@@ -170,14 +170,33 @@ describe('parse ↔ serialize round-trip', () => {
     expect(parseFindings(md)[0]?.source).toBe('adversarial');
   });
 
-  it('ignores an unknown **Source:** value and falls back to the default', () => {
-    const md = '## 9-1 · nit · open\n**Source:** audit\nA title\n';
+  it('preserves an unknown **Source:** value verbatim (160-2)', () => {
+    // A value a future mini version might write (e.g. `security`). The typed
+    // `source` still falls back to the default for logic, but the raw token is
+    // kept so it round-trips on disk instead of being downgraded.
+    const md = '## 9-1 · nit · open\n**Source:** security\nA title\n';
     const parsed = parseFindings(md);
-    // The unknown source line is consumed (not mistaken for the title) and the
-    // source falls back to the default.
     expect(parsed).toEqual([
-      { id: '9-1', phaseId: 9, severity: 'nit', status: 'open', source: 'adversarial', title: 'A title' },
+      {
+        id: '9-1',
+        phaseId: 9,
+        severity: 'nit',
+        status: 'open',
+        source: 'adversarial',
+        rawSource: 'security',
+        title: 'A title',
+      },
     ]);
+    // The crux of 160-2: a re-serialize must NOT rewrite `security` → `adversarial`.
+    const round = serializeFindings(parsed);
+    expect(round).toContain('**Source:** security');
+    expect(round).not.toContain('**Source:** adversarial');
+    expect(parseFindings(round)).toEqual(parsed);
+  });
+
+  it('does not set rawSource for a known **Source:** value', () => {
+    const md = '## 9-1 · nit · open\n**Source:** verify\nA title\n';
+    expect(parseFindings(md)[0]).not.toHaveProperty('rawSource');
   });
 
   it('preserves origin phase and index order across several entries', () => {
@@ -267,6 +286,50 @@ describe('parse ↔ serialize round-trip', () => {
         body: 'The body.',
       },
     ]);
+  });
+
+  it('round-trips a finding with a **Reason:** line (after Source, before title)', () => {
+    const findings: Finding[] = [
+      {
+        id: '155-1',
+        phaseId: 155,
+        severity: 'nit',
+        status: 'resolved',
+        source: 'adversarial',
+        title: 'A dismissed nit',
+        reason: 'wont fix — by design',
+      },
+    ];
+    const md = serializeFindings(findings);
+    expect(md).toMatch(/\*\*Source:\*\* adversarial\n\*\*Reason:\*\* wont fix — by design\nA dismissed nit/);
+    expect(parseFindings(md)).toEqual(findings);
+  });
+
+  it('parses a **Reason:** line regardless of order', () => {
+    const md =
+      '## 5-1 · nit · resolved\n' +
+      '**Reason:** closed by 190\n**Where:** src/x.ts:9\n**Source:** verify\n' +
+      'The actual title\n';
+    expect(parseFindings(md)).toEqual([
+      {
+        id: '5-1',
+        phaseId: 5,
+        severity: 'nit',
+        status: 'resolved',
+        source: 'verify',
+        where: 'src/x.ts:9',
+        reason: 'closed by 190',
+        title: 'The actual title',
+      },
+    ]);
+  });
+
+  it('omits the **Reason:** line when there is no reason (old files round-trip)', () => {
+    const md = serializeFindings([
+      { id: '9-1', phaseId: 9, severity: 'nit', status: 'resolved', source: 'adversarial', title: 'No reason' },
+    ]);
+    expect(md).not.toContain('Reason');
+    expect(parseFindings(md)[0]).not.toHaveProperty('reason');
   });
 
   it('treats a repeated metadata line as the title (each field consumed once)', () => {
@@ -582,6 +645,36 @@ describe('resolveFinding / reopenFinding — status flip', () => {
     await resolveFinding(cwd, '155-1');
     // already resolved
     expect(await resolveFinding(cwd, '155-1')).toBe(false);
+  });
+
+  it('records a --reason on the open → resolved flip', async () => {
+    await addFinding(cwd, 155, { severity: 'nit', title: 'first' });
+    expect(await resolveFinding(cwd, '155-1', 'fixed in phase 190')).toBe(true);
+    expect((await findFindingById(cwd, '155-1'))?.reason).toBe('fixed in phase 190');
+    // The reason round-trips through the file as a **Reason:** line.
+    expect(await readFile(findingsPath(cwd, 155), 'utf8')).toContain('**Reason:** fixed in phase 190');
+  });
+
+  it('clears the reason when a resolved finding is reopened', async () => {
+    await addFinding(cwd, 155, { severity: 'nit', title: 'first' });
+    await resolveFinding(cwd, '155-1', 'closed for now');
+    expect(await reopenFinding(cwd, '155-1')).toBe(true);
+    expect((await findFindingById(cwd, '155-1'))).not.toHaveProperty('reason');
+    expect(await readFile(findingsPath(cwd, 155), 'utf8')).not.toContain('**Reason:**');
+  });
+
+  it('does not overwrite an existing reason when resolving an already-resolved finding', async () => {
+    await addFinding(cwd, 155, { severity: 'nit', title: 'first' });
+    await resolveFinding(cwd, '155-1', 'first reason');
+    // Already resolved → no-op; the second reason must not clobber the first.
+    expect(await resolveFinding(cwd, '155-1', 'second reason')).toBe(false);
+    expect((await findFindingById(cwd, '155-1'))?.reason).toBe('first reason');
+  });
+
+  it('resolving without a reason leaves the reason absent', async () => {
+    await addFinding(cwd, 155, { severity: 'nit', title: 'first' });
+    expect(await resolveFinding(cwd, '155-1')).toBe(true);
+    expect(await findFindingById(cwd, '155-1')).not.toHaveProperty('reason');
   });
 
   it('is a no-op (no throw) for an id not present in an existing file', async () => {

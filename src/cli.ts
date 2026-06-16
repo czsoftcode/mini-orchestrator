@@ -392,7 +392,7 @@ program
 program
   .command('findings [action] [ids...]')
   .description(
-    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--range <from-to>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify | project (default adversarial); --range records the phase range a range review covered. "mini findings list [--all]" lists open findings across phases (--all includes resolved). "mini findings resolve <id...>" closes one or more findings manually (e.g. 160-1 160-2); "mini findings reopen <id...>" flips them back to open — both idempotent on a finding already in that state.',
+    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--range <from-to>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify | project (default adversarial); --range records the phase range a range review covered. "mini findings list [--all]" lists open findings across phases (--all includes resolved). "mini findings resolve <id...> [--reason <why>]" closes one or more findings manually (e.g. 160-1 160-2), optionally recording why; "mini findings reopen <id...>" flips them back to open (and clears any reason) — both idempotent on a finding already in that state.',
   )
   .addOption(
     new Option(
@@ -414,6 +414,10 @@ program
   )
   .option('--body <text>', 'Optional longer body — what breaks and how (for add).')
   .option('--all', 'For list: include resolved findings, not just the open ones.')
+  .option(
+    '--reason <text>',
+    'For resolve: why the finding was closed — recorded on every id in the batch. Not valid for reopen.',
+  )
   .action(
     async (
       action: string | undefined,
@@ -426,6 +430,7 @@ program
         range?: string;
         body?: string;
         all?: boolean;
+        reason?: string;
       },
     ) => {
       switch ((action ?? 'list').toLowerCase()) {
@@ -449,13 +454,13 @@ program
         }
         case 'resolve': {
           const { findingsResolve } = await import('./commands/findings.js');
-          const r = await findingsResolve(ids ?? []);
+          const r = await findingsResolve(ids ?? [], opts.reason);
           if (!r.ok) process.exit(1);
           return;
         }
         case 'reopen': {
           const { findingsReopen } = await import('./commands/findings.js');
-          const r = await findingsReopen(ids ?? []);
+          const r = await findingsReopen(ids ?? [], opts.reason);
           if (!r.ok) process.exit(1);
           return;
         }

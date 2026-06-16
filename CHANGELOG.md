@@ -6,6 +6,16 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+
+- **An unrecognised finding `**Source:**` value is no longer silently downgraded
+  and overwritten.** A `**Source:**` token outside the known set (e.g. a `security`
+  value written by a future mini version) used to be read as the `adversarial`
+  default and then *permanently rewritten* to `adversarial` on the next write
+  (resolve / reopen / add) — silent forward-incompat data loss. The original token
+  is now preserved verbatim on disk and shown as-is in `mini findings list`, while
+  internal logic still treats an unknown source as the default.
+
 ### Changed
 
 - **CI actions bumped to their current majors.** `.github/workflows/ci.yml` now
@@ -33,8 +43,15 @@ All notable changes to this project are recorded here. The format is based on
   or more findings (`mini findings resolve 160-1 160-2`) and are idempotent — an id
   already in the target state is a benign no-op, not an error, while an unknown or
   malformed id is reported and makes the call exit non-zero without stopping the
-  rest of the batch. (Recording *why* a finding was closed via `--reason`, and
-  wiring closing into the `do`/`done` lifecycle, are tracked as follow-ups.)
+  rest of the batch. (Wiring finding closing into the `do`/`done` lifecycle is
+  tracked as a follow-up.)
+
+- **Record *why* a finding was closed: `mini findings resolve <id...> --reason
+  "<why>"`.** The optional reason is stored as a `**Reason:**` line on every id in
+  the batch and shown in the entry. It is applied only on the open→resolved flip, so
+  resolving an already-resolved finding never overwrites an earlier reason. Reopening
+  a finding clears the reason (a reopened finding has no closing reason), and passing
+  `--reason` to `reopen` is rejected as a usage error rather than silently ignored.
 
 - **Security & trust-boundary docs.** New [`docs/security.md`](docs/security.md)
   documents the agent-trust boundary (finding SEC-1): mini feeds git-shared

@@ -19,7 +19,8 @@ mini findings list            # open findings across all phases
 mini findings list --all      # include resolved ones too
 
 mini findings resolve <id...> # close one or more findings (e.g. 160-1 160-2)
-mini findings reopen  <id...> # flip them back to open
+mini findings resolve <id...> --reason "<why>"  # …and record why it was closed
+mini findings reopen  <id...> # flip them back to open (clears any reason)
 ```
 
 ## Description
@@ -42,11 +43,16 @@ still open.
   location, title). `--all` includes resolved ones. An empty or missing store
   prints a friendly note and never errors.
 - **`resolve <id...>`** closes one or more findings manually — for a finding a
-  multi-fix phase addressed, or a `nit` you decide to dismiss. **`reopen <id...>`**
-  flips resolved findings back to `open`. Both take several ids, report one line
-  per id, and are **idempotent**: an id already in the target state is a benign
-  no-op, not an error. An unknown or malformed id is reported and makes the call
-  exit non-zero, but the other ids in the batch are still processed.
+  multi-fix phase addressed, or a `nit` you decide to dismiss. `--reason "<why>"`
+  records the reason on **every** id in the batch (stored as a `**Reason:**` line);
+  it is applied only on the open→resolved flip, so resolving an already-resolved id
+  does **not** overwrite an earlier reason. **`reopen <id...>`** flips resolved
+  findings back to `open` and **clears** any reason (a reopened finding has no
+  closing reason); passing `--reason` to `reopen` is a usage error. Both take
+  several ids, report one line per id, and are **idempotent**: an id already in the
+  target state is a benign no-op, not an error. An unknown or malformed id is
+  reported and makes the call exit non-zero, but the other ids in the batch are
+  still processed.
 
 Findings live in `.mini/findings/phase-{id}.md`, one file per origin phase, each
 holding one or more entries:
@@ -62,10 +68,13 @@ The parser returns undefined and the caller crashes two layers up.
 ```
 
 The `## <id> · <severity> · <status>` header line is the machine-readable
-contract — don't hand-edit it. The optional `**Where:**`, `**Reviewed-at:**` and
-`**Source:**` lines sit directly under it; each may be absent (older files predate
-`**Reviewed-at:**`/`**Source:**`, and reviews outside git omit the SHA). A missing
-`**Source:**` defaults to `adversarial`.
+contract — don't hand-edit it. The optional `**Where:**`, `**Reviewed-at:**`,
+`**Source:**`, `**Range:**` and `**Reason:**` lines sit directly under it in any
+order; each may be absent (older files predate `**Reviewed-at:**`/`**Source:**`,
+and reviews outside git omit the SHA). A missing `**Source:**` defaults to
+`adversarial`; a `**Source:**` whose value mini does not recognise (e.g. one a newer
+mini version wrote) is **preserved verbatim**, not rewritten to the default.
+`**Reason:**` is set by `resolve --reason` and removed on `reopen`.
 
 ## Options
 
@@ -77,6 +86,7 @@ contract — don't hand-edit it. The optional `**Where:**`, `**Reviewed-at:**` a
 | `--where <loc>` | `add` | Optional location, `file:line`. |
 | `--body <text>` | `add` | Optional longer body — what breaks and how. |
 | `--all` | `list` | Include resolved findings, not just the open ones. |
+| `--reason <text>` | `resolve` | Why the finding was closed — recorded on every id in the batch. Rejected for `reopen`. |
 
 `resolve` and `reopen` take finding ids as positional arguments (one or more),
 not flags: `mini findings resolve 160-1 160-2`.
@@ -92,7 +102,7 @@ $ mini findings list
 Open findings
   155-1 [should-know] adversarial src/parser.ts:42 @1a2b3c4 — Null cascades
 
-$ mini findings resolve 155-1
+$ mini findings resolve 155-1 --reason "fixed in phase 190"
 [ok] Finding 155-1 resolved.
 
 $ mini findings resolve 155-1        # idempotent — already in that state
@@ -127,9 +137,9 @@ $ mini findings reopen 155-9         # unknown id → reported, exit 1
   `--from-finding <id>` reaches [`mini done`](done.md), that linked finding is
   flipped to `resolved` (and `mini undo` reopens it). Manually: `mini findings
   resolve <id...>` for anything the automatic link doesn't cover — a finding a
-  multi-fix phase addressed, or a `nit` you dismiss. `resolve` does **not** record
-  *why* it was closed; a resolution `--reason` and a `doctor` orphan-check are
-  planned follow-ups.
+  multi-fix phase addressed, or a `nit` you dismiss. Pass `--reason "<why>"` to
+  record why it was closed (a `doctor` orphan-check for decisions remains a planned
+  follow-up).
 
 ## Related
 

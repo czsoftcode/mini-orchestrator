@@ -927,6 +927,11 @@
       "id": 185,
       "title": "Manually close individual findings",
       "status": "done"
+    },
+    {
+      "id": 186,
+      "title": "Robust finding source and resolve reason",
+      "status": "done"
     }
   ],
   "models": {

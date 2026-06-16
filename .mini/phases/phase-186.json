@@ -1,0 +1,35 @@
+{
+  "id": 186,
+  "title": "Robust finding source and resolve reason",
+  "goal": "Preserve an unknown **Source:** value verbatim instead of downgrading it to adversarial (160-2), and add an optional --reason to 'mini findings resolve' to record why a finding was closed.",
+  "status": "done",
+  "fromFinding": "160-2",
+  "steps": [
+    {
+      "title": "Preserve & display unknown source (160-2)",
+      "status": "done",
+      "detail": "Add rawSource?: string to Finding. parseEntryBody captures the raw **Source:** token; parseFindings sets rawSource only when the value is not a known source. serializeFindings emits f.rawSource ?? f.source; renderFinding shows rawSource ?? source. Unit tests: read->serialize->reopen keeps **Source:** security byte-identical on disk and shows it verbatim in list."
+    },
+    {
+      "title": "Add reason field with round-trip",
+      "status": "done",
+      "detail": "Add optional reason?: string to Finding + REASON_RE; parseEntryBody consumes a **Reason:** line order-independently (not swallowed into the title), serializeFindings emits it in a fixed slot (after **Source:**). Tests: reason round-trips, mixed-order metadata, old files without the line round-trip unchanged."
+    },
+    {
+      "title": "Thread reason into resolve, clear on reopen",
+      "status": "done",
+      "detail": "resolveFinding(cwd, id, reason?) sets the reason via setFindingStatus when flipping to resolved; reopenFinding clears it. mini done auto-close and mini undo paths pass no reason and stay unchanged. Tests: resolve stores reason, reopen drops it, already-resolved + reason is a no-op (reason not overwritten)."
+    },
+    {
+      "title": "Wire --reason CLI flag + reject on reopen",
+      "status": "done",
+      "detail": "Add --reason <text> to the findings command; findingsResolve binds it into the flip closure (one reason applies to the whole id batch, existing per-id reporting/exit code preserved); mini findings reopen --reason returns an error, not a silent ignore. Update command help + docs/. Tests: resolve --reason happy path, reopen --reason rejected, multi-id batch with one reason."
+    }
+  ],
+  "startedAt": "2026-06-16T11:23:14.152Z",
+  "completedAt": "2026-06-16T11:35:55.938Z",
+  "autoCommit": {
+    "preSha": "1360d3f39b815fa56d3372be1b4858fdfd99b914",
+    "subject": "Phase 186: Robust finding source and resolve reason"
+  }
+}

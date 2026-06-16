@@ -401,5 +401,45 @@ describe('mini findings', () => {
       expect(out).toContain('No such finding: 5-99');
       expect(out).toContain(`Finding ${b} resolved.`);
     });
+
+    it('records a --reason on resolve', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      const id = await seedFinding();
+
+      const r = await findingsResolve([id], 'fixed in phase 190');
+      expect(r).toEqual({ ok: true });
+      expect(await readPhaseFindings(cwd, 5)).toEqual([
+        expect.objectContaining({ id, status: 'resolved', reason: 'fixed in phase 190' }),
+      ]);
+    });
+
+    it('applies one --reason to every id in the batch', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      const a = await seedFinding('first');
+      const b = await seedFinding('second');
+
+      const r = await findingsResolve([a, b], 'batch close');
+      expect(r).toEqual({ ok: true });
+      const stored = await readPhaseFindings(cwd, 5);
+      expect(stored.find((f) => f.id === a)?.reason).toBe('batch close');
+      expect(stored.find((f) => f.id === b)?.reason).toBe('batch close');
+    });
+
+    it('rejects --reason on reopen as a usage error', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      const id = await seedFinding();
+      await findingsResolve([id], 'closed for now');
+      logSpy.mockClear();
+      errSpy.mockClear();
+
+      const r = await findingsReopen([id], 'changed my mind');
+      expect(r).toEqual({ ok: false, reason: 'reason-not-allowed' });
+      expect(output()).toContain('--reason applies only to "resolve"');
+      // The finding stays resolved — the rejected call must not flip it.
+      expect(statusOf(await readPhaseFindings(cwd, 5), id)).toBe('resolved');
+    });
   });
 });
