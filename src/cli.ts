@@ -390,9 +390,9 @@ program
   });
 
 program
-  .command('findings [action]')
+  .command('findings [action] [ids...]')
   .description(
-    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--range <from-to>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify | project (default adversarial); --range records the phase range a range review covered. "mini findings list [--all]" lists open findings across phases (--all includes resolved).',
+    'Review findings store (.mini/findings/). "mini findings add --severity <s> --title <t> [--source <src>] [--where <w>] [--range <from-to>] [--body <b>]" records a finding about the phase under review (the adversarial/verify review steps call this instead of editing the run report); --source is adversarial | verify | project (default adversarial); --range records the phase range a range review covered. "mini findings list [--all]" lists open findings across phases (--all includes resolved). "mini findings resolve <id...>" closes one or more findings manually (e.g. 160-1 160-2); "mini findings reopen <id...>" flips them back to open — both idempotent on a finding already in that state.',
   )
   .addOption(
     new Option(
@@ -417,6 +417,7 @@ program
   .action(
     async (
       action: string | undefined,
+      ids: string[],
       opts: {
         severity?: string;
         source?: string;
@@ -446,8 +447,20 @@ program
           await findingsList({ all: opts.all });
           return;
         }
+        case 'resolve': {
+          const { findingsResolve } = await import('./commands/findings.js');
+          const r = await findingsResolve(ids ?? []);
+          if (!r.ok) process.exit(1);
+          return;
+        }
+        case 'reopen': {
+          const { findingsReopen } = await import('./commands/findings.js');
+          const r = await findingsReopen(ids ?? []);
+          if (!r.ok) process.exit(1);
+          return;
+        }
         default:
-          console.error(`Unknown action "${action}". Use: add | list.`);
+          console.error(`Unknown action "${action}". Use: add | list | resolve | reopen.`);
           process.exit(1);
       }
     },

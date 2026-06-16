@@ -17,6 +17,9 @@ mini findings add --severity <blocker|should-know|nit> --title "<headline>" \
 
 mini findings list            # open findings across all phases
 mini findings list --all      # include resolved ones too
+
+mini findings resolve <id...> # close one or more findings (e.g. 160-1 160-2)
+mini findings reopen  <id...> # flip them back to open
 ```
 
 ## Description
@@ -38,6 +41,12 @@ still open.
 - **`list`** prints the open findings across all phases (id, severity, source,
   location, title). `--all` includes resolved ones. An empty or missing store
   prints a friendly note and never errors.
+- **`resolve <id...>`** closes one or more findings manually — for a finding a
+  multi-fix phase addressed, or a `nit` you decide to dismiss. **`reopen <id...>`**
+  flips resolved findings back to `open`. Both take several ids, report one line
+  per id, and are **idempotent**: an id already in the target state is a benign
+  no-op, not an error. An unknown or malformed id is reported and makes the call
+  exit non-zero, but the other ids in the batch are still processed.
 
 Findings live in `.mini/findings/phase-{id}.md`, one file per origin phase, each
 holding one or more entries:
@@ -69,6 +78,9 @@ contract — don't hand-edit it. The optional `**Where:**`, `**Reviewed-at:**` a
 | `--body <text>` | `add` | Optional longer body — what breaks and how. |
 | `--all` | `list` | Include resolved findings, not just the open ones. |
 
+`resolve` and `reopen` take finding ids as positional arguments (one or more),
+not flags: `mini findings resolve 160-1 160-2`.
+
 ## Examples
 
 ```bash
@@ -79,6 +91,15 @@ $ mini findings add --severity should-know --title "Null cascades" \
 $ mini findings list
 Open findings
   155-1 [should-know] adversarial src/parser.ts:42 @1a2b3c4 — Null cascades
+
+$ mini findings resolve 155-1
+[ok] Finding 155-1 resolved.
+
+$ mini findings resolve 155-1        # idempotent — already in that state
+Finding 155-1 is already resolved.
+
+$ mini findings reopen 155-9         # unknown id → reported, exit 1
+[x] No such finding: 155-9
 ```
 
 ## Notes
@@ -102,9 +123,13 @@ Open findings
   the finding (it stays open until the fix is done and verified). That link lets
   [`mini discuss`](discuss.md) and [`mini plan`](plan.md) read the finding's full
   detail in any later session.
-- Flipping a finding to `resolved` and a `doctor` orphan-check are planned
-  follow-ups; today the store records, lists, feeds `next`, and feeds the linked
-  finding into `discuss`/`plan`.
+- **A finding gets resolved two ways.** Automatically: when a phase saved with
+  `--from-finding <id>` reaches [`mini done`](done.md), that linked finding is
+  flipped to `resolved` (and `mini undo` reopens it). Manually: `mini findings
+  resolve <id...>` for anything the automatic link doesn't cover — a finding a
+  multi-fix phase addressed, or a `nit` you dismiss. `resolve` does **not** record
+  *why* it was closed; a resolution `--reason` and a `doctor` orphan-check are
+  planned follow-ups.
 
 ## Related
 

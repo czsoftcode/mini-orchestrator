@@ -6,9 +6,9 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { headSha } from '../git.js';
 import { save, writeProject } from '../state/store.js';
-import { FINDING_SOURCES, readPhaseFindings } from '../state/findingsStore.js';
+import { type Finding, FINDING_SOURCES, readPhaseFindings } from '../state/findingsStore.js';
 import type { ProjectState } from '../state/types.js';
-import { findingsAdd, findingsList } from './findings.js';
+import { findingsAdd, findingsList, findingsReopen, findingsResolve } from './findings.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -51,13 +51,14 @@ describe('mini findings', () => {
   let cwd: string;
   let prevCwd: string;
   let logSpy: ReturnType<typeof vi.spyOn>;
+  let errSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     prevCwd = process.cwd();
     cwd = await mkdtemp(join(tmpdir(), 'mini-findings-cmd-'));
     process.chdir(cwd);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(async () => {
@@ -67,7 +68,11 @@ describe('mini findings', () => {
   });
 
   function output(): string {
-    return logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join('\n');
+    // Both streams: log.info/success/warn write to console.log, log.error to
+    // console.error — a finding-not-found line lands on the latter.
+    return [...logSpy.mock.calls, ...errSpy.mock.calls]
+      .map((c: unknown[]) => String(c[0]))
+      .join('\n');
   }
 
   // The CLI's --source choices derive from FINDING_SOURCES (cli.ts) so the two
@@ -283,6 +288,118 @@ describe('mini findings', () => {
       expect(out).toContain(`@${sha.slice(0, 7)}`);
       // The full 40-char hash must not clutter the line.
       expect(out).not.toContain(sha);
+    });
+  });
+
+  describe('resolve / reopen', () => {
+    /** Records one open finding against the current phase and returns its id. */
+    async function seedFinding(title = 'seed'): Promise<string> {
+      await findingsAdd({ severity: 'nit', title });
+      const stored = await readPhaseFindings(cwd, 5);
+      const id = stored[stored.length - 1]?.id;
+      if (!id) throw new Error('expected a finding id after seeding');
+      return id;
+    }
+
+    function statusOf(stored: Finding[], id: string): string | undefined {
+      return stored.find((f) => f.id === id)?.status;
+    }
+
+    it('warns and does nothing when there is no project', async () => {
+      const r = await findingsResolve(['5-1']);
+      expect(r).toEqual({ ok: false, reason: 'no-project' });
+    });
+
+    it('errors when no id is given', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      expect(await findingsResolve([])).toEqual({ ok: false, reason: 'no-id' });
+      // Whitespace-only ids are stripped, so they count as "none given" too.
+      expect(await findingsReopen(['  '])).toEqual({ ok: false, reason: 'no-id' });
+    });
+
+    it('flips an open finding to resolved and confirms', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      const id = await seedFinding();
+      logSpy.mockClear();
+
+      const r = await findingsResolve([id]);
+      expect(r).toEqual({ ok: true });
+      expect(statusOf(await readPhaseFindings(cwd, 5), id)).toBe('resolved');
+      expect(output()).toContain(`Finding ${id} resolved.`);
+    });
+
+    it('flips a resolved finding back to open and confirms', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      const id = await seedFinding();
+      await findingsResolve([id]);
+      logSpy.mockClear();
+
+      const r = await findingsReopen([id]);
+      expect(r).toEqual({ ok: true });
+      expect(statusOf(await readPhaseFindings(cwd, 5), id)).toBe('open');
+      expect(output()).toContain(`Finding ${id} reopened.`);
+    });
+
+    it('is an idempotent no-op (still ok) when already in the target state', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      const id = await seedFinding();
+      await findingsResolve([id]);
+      logSpy.mockClear();
+
+      // Resolving an already-resolved finding: benign info, not an error.
+      expect(await findingsResolve([id])).toEqual({ ok: true });
+      expect(output()).toContain(`Finding ${id} is already resolved.`);
+
+      // Reopening an already-open finding (the freshly seeded one is open) is the
+      // same benign no-op on the reopen side.
+      const open = await seedFinding('still open');
+      logSpy.mockClear();
+      expect(await findingsReopen([open])).toEqual({ ok: true });
+      expect(output()).toContain(`Finding ${open} is already open.`);
+    });
+
+    it('reports an unknown id and exits non-zero', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      const r = await findingsResolve(['5-9']);
+      expect(r).toEqual({ ok: false, reason: 'not-found' });
+      expect(output()).toContain('No such finding: 5-9');
+    });
+
+    it('reports a malformed id (no -n suffix) without crashing', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+
+      const r = await findingsResolve(['155']);
+      expect(r).toEqual({ ok: false, reason: 'not-found' });
+      expect(output()).toContain('No such finding: 155');
+    });
+
+    it('processes every id in a mixed batch and fails the exit code', async () => {
+      await writeProject('# Project', cwd);
+      await save(stateWithCurrentPhase(), cwd);
+      const a = await seedFinding('first'); // 5-1
+      const b = await seedFinding('second'); // 5-2
+      logSpy.mockClear();
+
+      // One valid, one unknown — the valid one must still flip, the call fails.
+      const r = await findingsResolve([a, '5-99', b]);
+      expect(r).toEqual({ ok: false, reason: 'not-found' });
+
+      const stored = await readPhaseFindings(cwd, 5);
+      expect(statusOf(stored, a)).toBe('resolved');
+      expect(statusOf(stored, b)).toBe('resolved');
+
+      const out = output();
+      expect(out).toContain(`Finding ${a} resolved.`);
+      expect(out).toContain('No such finding: 5-99');
+      expect(out).toContain(`Finding ${b} resolved.`);
     });
   });
 });

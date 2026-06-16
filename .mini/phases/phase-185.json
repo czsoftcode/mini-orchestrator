@@ -1,0 +1,34 @@
+{
+  "id": 185,
+  "title": "Manually close individual findings",
+  "goal": "Add 'mini findings resolve <id>' and 'mini findings reopen <id>' CLI subcommands that wrap the existing resolveFinding/reopenFinding store functions, so any single finding can be closed or reopened independently of a phase link.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add findingsResolve/findingsReopen command",
+      "status": "done",
+      "detail": "New functions in src/commands/findings.ts taking an id list + target status. No-project guard like findingsAdd. For each id: pre-check via findFindingById; emit a distinct line — resolved/reopened, already resolved/open (benign), or no such finding (error). Return StepOutcome ok:false if any id missing/malformed; already-in-state counts as success."
+    },
+    {
+      "title": "Wire resolve/reopen into the CLI",
+      "status": "done",
+      "detail": "In src/cli.ts change findings [action] to also capture variadic ids ([ids...]), add resolve/reopen switch cases dispatching to the new functions, process.exit(1) on !ok, and update the unknown-action error to add | list | resolve | reopen."
+    },
+    {
+      "title": "Update findings command help + docs",
+      "status": "done",
+      "detail": "Extend the command .description() string in cli.ts and docs/non-interactive/findings.md to document resolve <id...> / reopen <id...> (manual close/reopen, multiple ids, idempotent on already-closed)."
+    },
+    {
+      "title": "Tests for resolve/reopen",
+      "status": "done",
+      "detail": "Cover happy flip (open->resolved, resolved->open), already-in-target no-op message, unknown id, malformed id (no -n suffix), mixed batch sets failing exit code while still processing every id, and the no-project guard."
+    }
+  ],
+  "startedAt": "2026-06-16T08:58:01.724Z",
+  "completedAt": "2026-06-16T09:43:06.108Z",
+  "autoCommit": {
+    "preSha": "27db80fe973c2acf0af8a30a8ef57250d8a1a6ae",
+    "subject": "Phase 185: Manually close individual findings"
+  }
+}

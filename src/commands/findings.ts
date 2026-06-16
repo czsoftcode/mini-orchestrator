@@ -2,13 +2,17 @@ import {
   type Finding,
   type FindingSeverity,
   type FindingSource,
+  type FindingStatus,
   FINDING_SEVERITIES,
   FINDING_SOURCES,
   addFinding,
+  findFindingById,
   findingsPath,
   isFindingSeverity,
   isFindingSource,
   listFindings,
+  reopenFinding,
+  resolveFinding,
 } from '../state/findingsStore.js';
 import { headSha, isGitRepo } from '../git.js';
 import { exists, loadHeader } from '../state/store.js';
@@ -164,6 +168,86 @@ export async function findingsList(opts: FindingsListOptions): Promise<StepOutco
     log.info(renderFinding(f, !!opts.all));
   }
   return { ok: true };
+}
+
+/**
+ * Shared core of `mini findings resolve`/`reopen`. Flips one or more findings to
+ * `target` and prints a distinct line per id, because the store functions return
+ * a bare boolean that conflates "no such finding" with "already in that status" —
+ * useless for a human-facing command. So each id is looked up first:
+ *
+ * - id not present (or malformed, e.g. `155` without the `-n` suffix) → an error
+ *   line; the batch's exit code becomes non-zero,
+ * - finding already in `target` → a benign info line (idempotent, still success),
+ * - otherwise → flip via `flip` and confirm.
+ *
+ * Every id is processed even when an earlier one failed (no stop-on-first-bad),
+ * so a mixed batch reports every result. Returns `ok: false` only when at least
+ * one id was not found / malformed.
+ */
+async function findingsSetStatus(
+  ids: string[],
+  target: FindingStatus,
+  flip: (cwd: string, id: string) => Promise<boolean>,
+): Promise<StepOutcome> {
+  const cwd = process.cwd();
+
+  if (!(await exists(cwd))) {
+    log.warn('No project in this directory.');
+    log.hint('Start with: mini init');
+    return { ok: false, reason: 'no-project' };
+  }
+
+  const cleaned = ids.map((id) => id.trim()).filter((id) => id.length > 0);
+  if (cleaned.length === 0) {
+    log.error('Provide at least one finding id, e.g. mini findings resolve 160-1.');
+    return { ok: false, reason: 'no-id' };
+  }
+
+  // Past-tense verb for the confirmation and the "already" wording, derived from
+  // the target so the two wrappers share one message set.
+  const done = target === 'resolved' ? 'resolved' : 'reopened';
+  const already = target === 'resolved' ? 'already resolved' : 'already open';
+
+  let anyMissing = false;
+  for (const id of cleaned) {
+    const finding = await findFindingById(cwd, id);
+    if (!finding) {
+      log.error(`No such finding: ${id}`);
+      anyMissing = true;
+      continue;
+    }
+    if (finding.status === target) {
+      log.info(`Finding ${id} is ${already}.`);
+      continue;
+    }
+    // The pre-check above already ruled out the no-op cases, so a `false` here
+    // means the write itself failed — surface it rather than swallowing it.
+    if (await flip(cwd, id)) {
+      log.success(`Finding ${id} ${done}.`);
+    } else {
+      log.error(`Could not update finding ${id} (write failed).`);
+      anyMissing = true;
+    }
+  }
+
+  return anyMissing ? { ok: false, reason: 'not-found' } : { ok: true };
+}
+
+/**
+ * `mini findings resolve <id...>` — marks one or more findings as resolved,
+ * independent of any phase link. Idempotent on an already-resolved id.
+ */
+export function findingsResolve(ids: string[]): Promise<StepOutcome> {
+  return findingsSetStatus(ids, 'resolved', resolveFinding);
+}
+
+/**
+ * `mini findings reopen <id...>` — flips one or more resolved findings back to
+ * open. Idempotent on an already-open id.
+ */
+export function findingsReopen(ids: string[]): Promise<StepOutcome> {
+  return findingsSetStatus(ids, 'open', reopenFinding);
 }
 
 /** One line per finding: `id [severity] <source> (status) where @sha {range} — title`. */

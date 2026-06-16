@@ -922,6 +922,11 @@
       "id": 184,
       "title": "Record review range on findings",
       "status": "done"
+    },
+    {
+      "id": 185,
+      "title": "Manually close individual findings",
+      "status": "done"
     }
   ],
   "models": {
