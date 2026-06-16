@@ -14,7 +14,7 @@ import { LAST_MEMORY_FILE } from '../prompts/writeMemory.js';
 import { readDiscussNotes } from '../state/discussNotes.js';
 import { runReportExists } from '../state/runReport.js';
 import { findFindingById, listFindings } from '../state/findingsStore.js';
-import { exists, loadHeader, loadPhase, readProject } from '../state/store.js';
+import { exists, loadFullState, loadHeader, loadPhase, readProject } from '../state/store.js';
 import { readTodos } from '../state/todoStore.js';
 import type { Phase, ProjectState, StateHeader } from '../state/types.js';
 import { log } from '../ui/log.js';
@@ -238,13 +238,47 @@ async function loadLinkedFinding(
 }
 
 async function buildDoneContext(phase: Phase, cwd: string): Promise<string> {
+  // Open findings offered for closing at the checkpoint (besides the linked one).
+  // Defaults to open-only; a missing findings dir yields an empty list.
+  const openFindings = (await listFindings(cwd)).map((f) => {
+    const out: { id: string; severity: string; source: string; where?: string; title: string } = {
+      id: f.id,
+      severity: f.severity,
+      source: f.source,
+      title: f.title,
+    };
+    if (f.where) out.where = f.where;
+    return out;
+  });
+
+  // Finding ids already owned by some phase's `fromFinding` (any phase) — those
+  // belong to that fix-phase and must not be offered for closing at this
+  // checkpoint. Loading the full state is fine here: `done` runs once, interactively.
+  const fullState = await loadFullState(cwd);
+  const linkedFindingIds = fullState.phases
+    .map((p) => p.fromFinding)
+    .filter((id): id is string => typeof id === 'string' && id.length > 0);
+
   const reportExists = await runReportExists(cwd, phase.id);
   if (!reportExists) {
-    return buildDoneSessionPrompt({ phase, reportExists: false, verify: [] });
+    return buildDoneSessionPrompt({
+      phase,
+      reportExists: false,
+      verify: [],
+      openFindings,
+      linkedFindingIds,
+    });
   }
 
   const { verify, body } = await readReportVerify(phase, cwd);
-  return buildDoneSessionPrompt({ phase, reportExists: true, reportBody: body, verify });
+  return buildDoneSessionPrompt({
+    phase,
+    reportExists: true,
+    reportBody: body,
+    verify,
+    openFindings,
+    linkedFindingIds,
+  });
 }
 
 async function readLastMemoryIfExists(cwd: string): Promise<string | undefined> {

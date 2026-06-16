@@ -142,18 +142,19 @@ function findRevertedAutoCommit(
 /**
  * Finding ids whose phase reverts from `done` (current) to a non-done status in
  * `prev`. Those are the findings a `done` finalization had resolved and undo must
- * reopen. Only phases present in BOTH states count — a phase missing in `prev`
- * (e.g. undo of a `next` that added a phase) never resolved a finding, so its
- * `fromFinding` must not be reopened.
+ * reopen: the phase's linked `fromFinding` plus any extras closed at the `done`
+ * checkpoint (`resolvedFindings`, from `mini done --apply --resolve-finding`).
+ * Only phases present in BOTH states count — a phase missing in `prev` (e.g. undo
+ * of a `next` that added a phase) never resolved a finding, so nothing is reopened.
  */
 function findingsToReopen(current: ProjectState, prev: ProjectState): string[] {
   const ids: string[] = [];
   for (const cp of current.phases) {
-    if (cp.status !== 'done' || !cp.fromFinding) continue;
+    if (cp.status !== 'done') continue;
     const pp = prev.phases.find((x) => x.id === cp.id);
-    if (pp && pp.status !== 'done') {
-      ids.push(cp.fromFinding);
-    }
+    if (!pp || pp.status === 'done') continue;
+    if (cp.fromFinding) ids.push(cp.fromFinding);
+    if (cp.resolvedFindings) ids.push(...cp.resolvedFindings);
   }
   return ids;
 }

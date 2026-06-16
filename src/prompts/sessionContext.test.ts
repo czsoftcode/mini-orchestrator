@@ -232,6 +232,74 @@ describe('buildDoneSessionPrompt', () => {
     expect(p).not.toContain('5-1 stale verdict');
   });
 
+  it('lists open findings as --resolve-finding candidates at the checkpoint', () => {
+    const p = buildDoneSessionPrompt({
+      phase,
+      reportExists: true,
+      verify: [],
+      openFindings: [
+        { id: '167-7', severity: 'should-know', source: 'adversarial', where: 'src/git.ts:18', title: 'git hangs' },
+      ],
+    });
+    expect(p).toContain('Open review findings');
+    expect(p).toContain('--resolve-finding');
+    expect(p).toContain('167-7');
+    expect(p).toContain('git hangs');
+    // It must be explicit that closing is opt-in and undo reopens it.
+    expect(p).toContain('mini undo');
+  });
+
+  it('omits the phase\'s own linked fromFinding from the offered list', () => {
+    const linked: Phase = { ...phase, fromFinding: '160-1' };
+    const p = buildDoneSessionPrompt({
+      phase: linked,
+      reportExists: true,
+      verify: [],
+      openFindings: [
+        { id: '160-1', severity: 'should-know', source: 'adversarial', title: 'the linked one' },
+        { id: '167-7', severity: 'nit', source: 'adversarial', title: 'an unrelated one' },
+      ],
+    });
+    // The linked finding auto-closes, so it is not re-offered here.
+    expect(p).not.toContain('160-1');
+    expect(p).toContain('167-7');
+  });
+
+  it('no findings block when there are no open findings', () => {
+    const p = buildDoneSessionPrompt({ phase, reportExists: true, verify: [], openFindings: [] });
+    expect(p).not.toContain('Open review findings');
+  });
+
+  it('omits findings raised against the current phase (origin == this phase)', () => {
+    // phase.id === 3 → 3-1 is a finding about THIS phase, not fixed by it.
+    const p = buildDoneSessionPrompt({
+      phase,
+      reportExists: true,
+      verify: [],
+      openFindings: [
+        { id: '3-1', severity: 'should-know', source: 'adversarial', title: 'against this phase' },
+        { id: '167-7', severity: 'nit', source: 'adversarial', title: 'unrelated' },
+      ],
+    });
+    expect(p).not.toContain('3-1');
+    expect(p).toContain('167-7');
+  });
+
+  it('omits findings already linked as another phase\'s fromFinding', () => {
+    const p = buildDoneSessionPrompt({
+      phase,
+      reportExists: true,
+      verify: [],
+      openFindings: [
+        { id: '160-1', severity: 'should-know', source: 'adversarial', title: 'owned by another phase' },
+        { id: '167-7', severity: 'nit', source: 'adversarial', title: 'free to close' },
+      ],
+      linkedFindingIds: ['160-1'],
+    });
+    expect(p).not.toContain('160-1');
+    expect(p).toContain('167-7');
+  });
+
   it('instruuje aktualizovat CHANGELOG.md (Unreleased) před mini done --apply', () => {
     const p = buildDoneSessionPrompt({ phase, reportExists: true, verify: [] });
     expect(p).toContain('CHANGELOG.md');

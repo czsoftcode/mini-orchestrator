@@ -1660,6 +1660,102 @@ steps:
     const loaded = await load(cwd);
     expect(loaded.phases.find((p) => p.id === 200)?.status).toBe('done');
   });
+
+  it('closes extra findings from --resolve-finding and records them on the phase', async () => {
+    const a = await addFinding(cwd, 167, { severity: 'should-know', title: 'finding A' });
+    const b = await addFinding(cwd, 167, { severity: 'nit', title: 'finding B' });
+    await setupFixPhase(undefined);
+
+    const r = await applyDone(cwd, { resolveFindings: [a.id, b.id] });
+
+    expect(r.ok).toBe(true);
+    expect((await findFindingById(cwd, a.id))?.status).toBe('resolved');
+    expect((await findFindingById(cwd, b.id))?.status).toBe('resolved');
+    const phase = (await load(cwd)).phases.find((p) => p.id === 200);
+    expect(phase?.resolvedFindings).toEqual([a.id, b.id]);
+  });
+
+  it('does not duplicate the linked fromFinding into resolvedFindings', async () => {
+    const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'orig finding' });
+    await setupFixPhase(id);
+
+    // Pass the linked id again via --resolve-finding: it is closed once (as the
+    // linked finding) and must not reappear in resolvedFindings.
+    const r = await applyDone(cwd, { resolveFindings: [id] });
+
+    expect(r.ok).toBe(true);
+    expect((await findFindingById(cwd, id))?.status).toBe('resolved');
+    const phase = (await load(cwd)).phases.find((p) => p.id === 200);
+    expect(phase?.resolvedFindings).toBeUndefined();
+  });
+
+  it('skips a missing/already-resolved extra id without recording it', async () => {
+    const a = await addFinding(cwd, 167, { severity: 'should-know', title: 'finding A' });
+    await setupFixPhase(undefined);
+
+    // One real id + one that does not exist: only the real one is recorded.
+    const r = await applyDone(cwd, { resolveFindings: ['999-9', a.id] });
+
+    expect(r.ok).toBe(true);
+    expect((await findFindingById(cwd, a.id))?.status).toBe('resolved');
+    const phase = (await load(cwd)).phases.find((p) => p.id === 200);
+    expect(phase?.resolvedFindings).toEqual([a.id]);
+  });
+
+  it('does not close extra findings when the phase fails to finalize', async () => {
+    const a = await addFinding(cwd, 167, { severity: 'should-know', title: 'finding A' });
+    // A phase with an unfinished step: applyDone returns before finalize, so
+    // --resolve-finding must be a no-op (the finding stays open).
+    const phase: Phase = {
+      id: 200,
+      title: 'Fix the finding',
+      status: 'doing',
+      steps: [{ title: 'step 1', status: 'doing' }],
+    };
+    await save(makeState([phase], 200), cwd);
+    await writeRunReport(
+      cwd,
+      200,
+      `---
+phase: 200
+verdict: partial
+steps:
+  - title: "step 1"
+    status: todo
+---
+`,
+    );
+
+    const r = await applyDone(cwd, { resolveFindings: [a.id] });
+
+    expect(r.ok).toBe(true);
+    expect((await findFindingById(cwd, a.id))?.status).toBe('open');
+    expect((await load(cwd)).phases.find((p) => p.id === 200)?.status).not.toBe('done');
+  });
+
+  it('dedupes a repeated extra id within one invocation', async () => {
+    const a = await addFinding(cwd, 167, { severity: 'should-know', title: 'finding A' });
+    await setupFixPhase(undefined);
+
+    const r = await applyDone(cwd, { resolveFindings: [a.id, a.id] });
+
+    expect(r.ok).toBe(true);
+    const phase = (await load(cwd)).phases.find((p) => p.id === 200);
+    expect(phase?.resolvedFindings).toEqual([a.id]);
+  });
+
+  it('trims extra ids and drops blank ones', async () => {
+    const a = await addFinding(cwd, 167, { severity: 'should-know', title: 'finding A' });
+    await setupFixPhase(undefined);
+
+    // Whitespace-padded duplicate of a.id + a blank id: collapses to one, no blank.
+    const r = await applyDone(cwd, { resolveFindings: [`  ${a.id}  `, '   '] });
+
+    expect(r.ok).toBe(true);
+    expect((await findFindingById(cwd, a.id))?.status).toBe('resolved');
+    const phase = (await load(cwd)).phases.find((p) => p.id === 200);
+    expect(phase?.resolvedFindings).toEqual([a.id]);
+  });
 });
 
 describe('CHANGELOG stamp on release', () => {

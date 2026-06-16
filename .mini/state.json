@@ -932,6 +932,11 @@
       "id": 186,
       "title": "Robust finding source and resolve reason",
       "status": "done"
+    },
+    {
+      "id": 187,
+      "title": "Close extra findings at done",
+      "status": "done"
     }
   ],
   "models": {

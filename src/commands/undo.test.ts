@@ -279,6 +279,53 @@ describe('undo()', () => {
     expect((await findFindingById(cwd, id))?.status).toBe('open');
   });
 
+  it('reopens extra resolvedFindings (closed at the done checkpoint) on revert', async () => {
+    const a = await addFinding(cwd, 167, { severity: 'should-know', title: 'A' });
+    const b = await addFinding(cwd, 167, { severity: 'nit', title: 'B' });
+    await resolveFinding(cwd, a.id);
+    await resolveFinding(cwd, b.id);
+    // current: a phase that closed two extra findings at its done checkpoint.
+    await save(
+      makeState([{ id: 200, title: 'Fix', status: 'planned', resolvedFindings: [a.id, b.id] }], 200),
+      cwd,
+    );
+    await save(
+      makeState([{ id: 200, title: 'Fix', status: 'done', resolvedFindings: [a.id, b.id] }], null),
+      cwd,
+    );
+
+    await undo({ yes: true });
+
+    expect((await findFindingById(cwd, a.id))?.status).toBe('open');
+    expect((await findFindingById(cwd, b.id))?.status).toBe('open');
+  });
+
+  it('reopens both fromFinding and resolvedFindings when a phase has both', async () => {
+    const linked = await addFinding(cwd, 155, { severity: 'blocker', title: 'linked' });
+    const extra = await addFinding(cwd, 167, { severity: 'nit', title: 'extra' });
+    await resolveFinding(cwd, linked.id);
+    await resolveFinding(cwd, extra.id);
+    await save(
+      makeState(
+        [{ id: 200, title: 'Fix', status: 'planned', fromFinding: linked.id, resolvedFindings: [extra.id] }],
+        200,
+      ),
+      cwd,
+    );
+    await save(
+      makeState(
+        [{ id: 200, title: 'Fix', status: 'done', fromFinding: linked.id, resolvedFindings: [extra.id] }],
+        null,
+      ),
+      cwd,
+    );
+
+    await undo({ yes: true });
+
+    expect((await findFindingById(cwd, linked.id))?.status).toBe('open');
+    expect((await findFindingById(cwd, extra.id))?.status).toBe('open');
+  });
+
   it('does not reopen the finding when the phase stays done in prev', async () => {
     const { id } = await addFinding(cwd, 155, { severity: 'blocker', title: 'orig' });
     await resolveFinding(cwd, id);

@@ -257,6 +257,33 @@ async function finalizePhaseSideEffects(
       log.dim(`Finding ${phase.fromFinding} resolved.`);
     }
   }
+  // Extra findings the human chose to close at this `done` checkpoint
+  // (`--resolve-finding <id>`), beyond the linked `fromFinding`. We dedupe (and
+  // drop the linked id — already handled above), then record only the ids this
+  // run actually flipped open→resolved. That recorded set is what `mini undo`
+  // reopens, so an already-resolved or missing id (resolveFinding → false) is a
+  // tolerant no-op and is deliberately NOT recorded — undo must not reopen a
+  // finding this phase didn't close. Done before the commit so the rewritten
+  // findings file lands in it.
+  const extra = finalizeOpts.resolveFindings;
+  if (extra && extra.length > 0) {
+    // Normalize before deduping/resolving so `" 167-7"` and `"167-7"` collapse to
+    // one entry and blank/whitespace ids drop out instead of becoming silent
+    // no-ops. The linked `fromFinding` (also trimmed) seeds `seen` so it is not
+    // recorded twice.
+    const seen = new Set<string>(phase.fromFinding ? [phase.fromFinding.trim()] : []);
+    const recorded: string[] = [];
+    for (const raw of extra) {
+      const id = raw.trim();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      if (await resolveFinding(cwd, id)) {
+        recorded.push(id);
+        log.dim(`Finding ${id} resolved.`);
+      }
+    }
+    if (recorded.length > 0) phase.resolvedFindings = recorded;
+  }
   await writePhaseMemory(phase, state, cwd, { hasAutoCommit: phase.autoCommit !== undefined });
   await regenerateGraph(cwd);
   await save(state, cwd);
@@ -632,7 +659,11 @@ export async function applyAutoReport(
   log.success(`Phase ${phase.id} (${phase.title}) done.`);
   const nextPhase = advanceToNextPhase(state);
   logNextPhase(nextPhase);
-  await finalizePhaseSideEffects(phase, state, cwd, { bump: applyOpts.bump, push: applyOpts.push });
+  await finalizePhaseSideEffects(phase, state, cwd, {
+    bump: applyOpts.bump,
+    push: applyOpts.push,
+    resolveFindings: applyOpts.resolveFindings,
+  });
   await save(state, cwd);
   return {
     handled: true,
@@ -914,16 +945,31 @@ export async function applyDone(
     return { ok: false, reason: 'phase-done' };
   }
 
+  const requestedExtra = (opts.resolveFindings ?? []).length > 0;
   const applied = await applyAutoReport(phase, state, cwd, opts);
   if (!applied.handled) {
     log.error(`Report for phase ${phase.id} is missing or broken — I can't advance the state non-interactively.`);
     log.hint('First run `/mini:do` (it writes the report), or advance the state manually via `mini done`.');
+    warnResolveFindingsDropped(requestedExtra);
     return { ok: false, reason: 'no-report' };
   }
-  // The phase really closed (not just verify-needs-human etc.) → offer to clear
-  // the context. `/clear` must be typed by a human, we only remind them.
-  if (applied.outcome.ok && applied.outcome.phaseAdvanced) {
+  // `--resolve-finding` only takes effect inside `finalizePhaseSideEffects`, which
+  // runs *after* the phase is confirmed done. Every path that returns earlier
+  // (pending verify items, unfinished steps, non-`done` verdict) silently skips
+  // it — so when the phase did not finalize, say loudly that the findings were
+  // NOT closed, lest the user believe they were.
+  const finalized = applied.outcome.ok && applied.outcome.phaseAdvanced === true;
+  if (finalized) {
     log.hint('Done. To clear the Claude Code context before the next phase, consider `/clear`.');
+  } else {
+    warnResolveFindingsDropped(requestedExtra);
   }
   return applied.outcome;
+}
+
+/** Loud note that `--resolve-finding` had no effect (phase did not finalize). */
+function warnResolveFindingsDropped(requested: boolean): void {
+  if (requested) {
+    log.warn('--resolve-finding ignored: the phase did not finalize, so no finding was closed.');
+  }
 }

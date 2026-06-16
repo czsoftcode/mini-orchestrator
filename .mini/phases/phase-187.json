@@ -1,0 +1,47 @@
+{
+  "id": 187,
+  "title": "Close extra findings at done",
+  "goal": "At the mini done checkpoint, surface open findings as candidates and let the user close additional ones via a repeatable --resolve-finding <id> flag, recording them on the phase so mini undo reopens them symmetrically.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Add resolvedFindings field to Phase",
+      "status": "done",
+      "detail": "In src/state/types.ts add optional resolvedFindings?: string[] to interface Phase — ids of findings closed at the done checkpoint beyond fromFinding. Compiles (tsc) clean; an old state.json without the field loads (field undefined)."
+    },
+    {
+      "title": "Resolve & record extra findings in finalize",
+      "status": "done",
+      "detail": "In finalizePhaseSideEffects (done.ts), after closing fromFinding, close each requested id via resolveFinding, dedupe against fromFinding, tolerate missing/already-resolved (no-op). Write successfully closed ids to phase.resolvedFindings BEFORE the commit so the rewritten findings file lands in it. Covered by a test."
+    },
+    {
+      "title": "Thread option + CLI flag --resolve-finding",
+      "status": "done",
+      "detail": "ApplyReportOptions.resolveFindings?: string[]; applyDone passes it into finalize. In cli.ts add a repeatable --resolve-finding <id> (commander collector) to the done command. mini done --apply --resolve-finding 167-7 --resolve-finding 167-8 works."
+    },
+    {
+      "title": "Undo reopens recorded extra findings",
+      "status": "done",
+      "detail": "Extend findingsToReopen (undo.ts) to return cp.resolvedFindings in addition to cp.fromFinding for phases reverting from done. mini undo after a done with extra findings reopens them all. Covered by a test (resolve -> undo -> finding open again)."
+    },
+    {
+      "title": "Surface open findings at done checkpoint",
+      "status": "done",
+      "detail": "buildDoneContext/buildDoneSessionPrompt (context.ts, sessionContext.ts) list open findings (excluding the already-linked fromFinding) as candidates and instruct that, once the user confirms one is fixed, --resolve-finding <id> is appended to mini done --apply. A prompt/snapshot test shows the list."
+    },
+    {
+      "title": "Tests for the full path",
+      "status": "done",
+      "detail": "Tests: finalize closes + records ids, dedup vs fromFinding (no duplicate), a missing id is a tolerant no-op and is not recorded, undo reopens all extras, the prompt lists candidates. All green."
+    }
+  ],
+  "startedAt": "2026-06-16T12:42:43.425Z",
+  "resolvedVerify": [
+    "Run an end-to-end checkpoint in a real session"
+  ],
+  "completedAt": "2026-06-16T14:02:03.998Z",
+  "autoCommit": {
+    "preSha": "9e231507c6cb18f1e089d80b3245b50bdfeaf75c",
+    "subject": "Phase 187: Close extra findings at done"
+  }
+}

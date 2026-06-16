@@ -329,6 +329,29 @@ export interface DoneSessionInput {
   reportBody?: string;
   /** Body k ručnímu ověření z reportu — Claude je probere s uživatelem. */
   verify: { title: string; detail?: string }[];
+  /**
+   * Open review findings (adversarial + verify) offered for closing at this
+   * checkpoint. Several classes are filtered out (see `buildDoneSessionPrompt`):
+   * the phase's own linked `fromFinding`, findings raised *against* this phase
+   * (origin == this phase — not fixed *by* it), and findings already owned by
+   * another phase's `fromFinding`. Empty/absent → no block.
+   */
+  openFindings?: OpenFinding[];
+  /**
+   * Finding ids already linked as some phase's `fromFinding` across the project
+   * (any phase, including this one). Such findings belong to that fix-phase and
+   * must not be offered for closing here — closing one would make that phase's
+   * own `done` a no-op and break undo symmetry. Absent → none linked.
+   */
+  linkedFindingIds?: string[];
+}
+
+/**
+ * Origin phase id encoded in a finding id (`{phaseId}-{n}` → phaseId). Returns
+ * `NaN` for an unparseable id, which never equals a real phase id.
+ */
+function findingOriginPhase(id: string): number {
+  return Number.parseInt(id.split('-')[0] ?? '', 10);
 }
 
 /**
@@ -375,12 +398,49 @@ mini done --apply
 \`\`\``;
   }
 
+  // Open review findings to offer for closing at this checkpoint. Closing one is
+  // opt-in and needs an explicit human OK ("yes, this phase fixed 167-7"); never
+  // assume. We drop three classes that must NOT be offered:
+  //   1. the phase's own linked `fromFinding` — it auto-closes on `mini done`;
+  //   2. findings raised *against* this phase (origin == this phase) — by
+  //      definition not fixed *by* it, so offering them invites closing a real
+  //      open issue;
+  //   3. findings already owned by another phase's `fromFinding` — closing one
+  //      here would make that fix-phase's own `done` a no-op and break undo
+  //      symmetry (its reopen vs. this phase's `resolvedFindings`).
+  const linked = new Set(input.linkedFindingIds ?? []);
+  const findings = (input.openFindings ?? [])
+    .map((f) => ({
+      id: f.id.trim(),
+      severity: f.severity.trim(),
+      source: f.source.trim(),
+      where: f.where?.trim(),
+      title: f.title.trim(),
+    }))
+    .filter(
+      (f) =>
+        f.id &&
+        f.title &&
+        f.id !== phase.fromFinding &&
+        !linked.has(f.id) &&
+        findingOriginPhase(f.id) !== phase.id,
+    );
+  const findingsBlock =
+    findings.length > 0
+      ? `\n# Open review findings\nThese review findings are still open. **Only if** the user confirms this phase also fixed one, close it at this checkpoint — append \`--resolve-finding <id>\` to \`mini done --apply\` (repeatable). Do not assume; ask, and leave unrelated findings open. \`mini undo\` reopens whatever you close here.\n${findings
+          .map(
+            (f) =>
+              `- ${f.id} · ${f.severity} · ${f.source}${f.where ? ` · ${f.where}` : ''} — ${f.title}`,
+          )
+          .join('\n')}\n`
+      : '';
+
   return `You are in a Claude Code session — the **done** step of the mini workflow.
 Phase **${phase.id}: ${phase.title}** is finished from an implementation standpoint.
 
 # Your task
 Human verification: briefly summarize for the user what was done (see the report below) and let them confirm that it works.
-${bodyBlock}${verifyBlock}
+${bodyBlock}${verifyBlock}${findingsBlock}
 # CHANGELOG
 Still **before** \`mini done --apply\`, record what the phase delivered into \`CHANGELOG.md\`
 (keepachangelog 1.1.0 format) — the phase commit then picks it up automatically:

@@ -56,6 +56,15 @@ export interface Phase {
    */
   fromFinding?: string;
   /**
+   * Ids of review findings closed at this phase's `done` checkpoint *beyond* the
+   * linked `fromFinding` (e.g. findings the phase incidentally fixed), recorded
+   * via `mini done --apply --resolve-finding <id>`. Kept on the phase so `mini
+   * undo` can reopen them symmetrically — the findings store lives outside
+   * `state.json`, so `restorePrev` can't reach it. Excludes `fromFinding` (that
+   * one is reopened from its own field). Absent on phases that closed no extras.
+   */
+  resolvedFindings?: string[];
+  /**
    * Doslovné názvy bodů k ručnímu ověření (`verify` z reportu), které člověk
    * při verifikaci už vyřešil jako `pass`/`skip`. Slouží k tomu, aby opakovaný
    * `mini done` nad neměnícím se reportem znovu nenabízel už odbavené body —

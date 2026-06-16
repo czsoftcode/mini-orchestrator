@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-06-16
+
 ### Fixed
 
 - **An unrecognised finding `**Source:**` value is no longer silently downgraded
@@ -35,6 +37,18 @@ All notable changes to this project are recorded here. The format is based on
   auto-run and no security findings are filed into `mini findings`.
 
 ### Added
+
+- **Close extra findings at the `done` checkpoint: `mini done --apply
+  --resolve-finding <id>` (repeatable).** Until now a phase's `done` only closed
+  its single linked `--from-finding`. You can now also close other open review
+  findings the phase incidentally fixed — each one is recorded on the phase so
+  `mini undo` reopens it symmetrically. The `/mini:done` prompt surfaces the open
+  findings as candidates, but closing is opt-in and human-gated: it offers only
+  findings this phase could plausibly have fixed (it hides findings raised
+  *against* the current phase and those already owned by another fix-phase), and
+  closes nothing unless you confirm. Used without `--apply`, or on a `done` that
+  doesn't finalize (pending verify, unfinished steps), the flag is now a loud
+  no-op instead of a silent one.
 
 - **Close findings by hand: `mini findings resolve <id...>` / `reopen <id...>`.**
   Until now a finding was only ever closed automatically, when a whole phase saved

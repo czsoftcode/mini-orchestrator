@@ -41,6 +41,11 @@ function collectFile(value: string, previous: string[]): string[] {
   return [...previous, value];
 }
 
+/** Collector for the repeatable `--resolve-finding` option of the `done` command. */
+function collectFinding(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
+
 /**
  * Extracts the edited file path from the hook JSON on stdin (PostToolUse Edit/Write).
  * The payload has the shape `{ tool_input: { file_path: "…" } }`. Anything unreadable
@@ -213,7 +218,13 @@ program
     ).choices(['none', 'patch', 'minor', 'major']),
   )
   .option('--push', 'After committing the phase, push to the remote (git push). Requires --bump patch | minor | major.')
-  .action(async (opts: { apply?: boolean; acceptVerify?: boolean; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean }) => {
+  .option(
+    '--resolve-finding <id>',
+    'With --apply: also close open review finding <id> (e.g. 167-7) at this checkpoint, beyond the phase\'s linked finding. Repeatable. mini undo reopens it.',
+    collectFinding,
+    [],
+  )
+  .action(async (opts: { apply?: boolean; acceptVerify?: boolean; bump?: 'patch' | 'minor' | 'major' | 'none'; push?: boolean; resolveFinding?: string[] }) => {
     ensurePushHasBump(opts.bump, opts.push);
     if (opts.apply) {
       const { applyDone } = await import('./commands/done.js');
@@ -221,9 +232,15 @@ program
         acceptVerify: opts.acceptVerify,
         bump: opts.bump,
         push: opts.push,
+        resolveFindings: opts.resolveFinding,
       });
       if (!r.ok) process.exit(1);
       return;
+    }
+    // `--resolve-finding` is wired only through `applyDone` (the --apply path).
+    // Without --apply it would be silently swallowed, so say so explicitly.
+    if (opts.resolveFinding && opts.resolveFinding.length > 0) {
+      console.error('--resolve-finding requires --apply; ignored. No finding was closed.');
     }
     const { done } = await import('./commands/done.js');
     await done({ bump: opts.bump, push: opts.push });

@@ -19,4 +19,12 @@ export interface FinalizeOptions {
   /** Úroveň navýšení verze (default `none` — nenavyšovat). */
   bump?: BumpChoice;
   push?: boolean;
+  /**
+   * Ids of open review findings to close at the `done` checkpoint *beyond* the
+   * phase's linked `fromFinding` — from `mini done --apply --resolve-finding
+   * <id>`. Each that this run actually flips open→resolved is recorded on
+   * `phase.resolvedFindings` so `mini undo` reopens it. Missing/already-resolved
+   * ids are tolerant no-ops and are not recorded.
+   */
+  resolveFindings?: string[];
 }
