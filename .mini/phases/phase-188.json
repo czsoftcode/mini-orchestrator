@@ -1,0 +1,39 @@
+{
+  "id": 188,
+  "title": "Replace dynamic RegExp at flagged sites",
+  "goal": "Remove the four detect-non-literal-regexp findings by rewriting next.ts to a static per-label regex and converting the phpMapper heredoc-close and projectVersion TOML-header lookups from dynamic RegExp to manual string scanning, keeping the parser tests green.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Static per-label regex in matchField",
+      "status": "done",
+      "detail": "In next.ts replace new RegExp(`...${label}...`) with two precomputed constants (TITLE, GOAL) selected by label; parser behaviour unchanged."
+    },
+    {
+      "title": "Manual heredoc-close scan in phpMapper",
+      "status": "done",
+      "detail": "In phpMapper.ts replace new RegExp(`\\\\n[ \\\\t]*${tag}\\\\b`) with a manual scan of rest for the closing-tag line (newline, optional spaces/tabs, tag, word boundary), no regex."
+    },
+    {
+      "title": "Manual TOML-header scan in projectVersion",
+      "status": "done",
+      "detail": "In projectVersion.ts replace headerRe = new RegExp((^|\\\\n)[section]...) with manual lookup of the [section] line (file start or after newline), returning bodyStart as today."
+    },
+    {
+      "title": "Parser tests stay green",
+      "status": "done",
+      "detail": "Run existing parser tests (next, php mapper, projectVersion); add tests for edge cases of manual scanning - heredoc without closing tag (runs to EOF), last TOML section without a following header."
+    },
+    {
+      "title": "No dynamic RegExp remains at sites",
+      "status": "done",
+      "detail": "Verify with ripgrep that the three sites no longer call new RegExp( with a variable; confirm none of the original four findings remain."
+    }
+  ],
+  "startedAt": "2026-06-19T02:11:07.243Z",
+  "completedAt": "2026-06-19T02:23:29.165Z",
+  "autoCommit": {
+    "preSha": "0f5fb28f82fac6381ad35966582c0e4fe638fa3f",
+    "subject": "Phase 188: Replace dynamic RegExp at flagged sites"
+  }
+}

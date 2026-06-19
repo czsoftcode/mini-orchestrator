@@ -65,8 +65,29 @@ export async function bumpProjectVersion(
   );
 }
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/**
+ * Finds the body start of a TOML `[section]` header by scanning manually
+ * instead of building a dynamic `RegExp` from the section name. Mirrors the old
+ * `/(^|\n)\[SECTION\][^\n]*\n/` pattern: the header must sit at the start of the
+ * file or right after a newline, and the line must end with a newline (a header
+ * with no trailing newline never matched, and has no body anyway). Returns the
+ * offset just past the header line's newline, or `null` when not found.
+ */
+function findTomlSectionBody(raw: string, section: string): number | null {
+  const needle = `[${section}]`;
+  let from = 0;
+  for (;;) {
+    const idx = raw.indexOf(needle, from);
+    if (idx === -1) return null;
+    const atLineStart = idx === 0 || raw[idx - 1] === '\n';
+    if (atLineStart) {
+      // First newline after `]`; everything up to it is non-newline by
+      // construction, matching `[^\n]*\n`.
+      const nl = raw.indexOf('\n', idx + needle.length);
+      if (nl !== -1) return nl + 1;
+    }
+    from = idx + 1;
+  }
 }
 
 /**
@@ -114,11 +135,9 @@ async function bumpTomlVersion(
   if (raw === null) return null;
 
   for (const section of sections) {
-    const headerRe = new RegExp(`(^|\\n)\\[${escapeRegExp(section)}\\][^\\n]*\\n`);
-    const hm = headerRe.exec(raw);
-    if (!hm) continue;
+    const bodyStart = findTomlSectionBody(raw, section);
+    if (bodyStart === null) continue;
 
-    const bodyStart = hm.index + hm[0].length;
     const rest = raw.slice(bodyStart);
     const nextHeaderRel = rest.search(/\n[ \t]*\[[^\]]+\]/);
     const bodyEnd = nextHeaderRel === -1 ? raw.length : bodyStart + nextHeaderRel;

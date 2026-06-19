@@ -8,15 +8,15 @@ import type {
 } from './types.js';
 
 /**
- * Regex-based PHP mapper. Smaže komentáře a stringy (nahrazením mezerami stejné
- * délky, aby pozice/řádky zůstaly stabilní pro brace-counting), pak v očištěném
- * textu hledá top-level `use`, `class`, `interface`, `trait` a `function` plus
- * veřejné metody uvnitř tříd.
+ * Regex-based PHP mapper. Strips comments and strings (replacing them with
+ * spaces of equal length so positions/lines stay stable for brace-counting),
+ * then searches the cleaned text for top-level `use`, `class`, `interface`,
+ * `trait` and `function` plus public methods inside classes.
  *
- * Konzervativní záměrně: raději symbol vynecháme, než abychom ho falešně
- * vyzobli z komentáře, heredocu nebo `function () use ($x)` closure. Žádný
- * pokus o jmenné prostory s blokovou formou (`namespace Foo { ... }`) — top
- * level se počítá jako brace-depth 0.
+ * Deliberately conservative: we'd rather drop a symbol than falsely pick one
+ * out of a comment, heredoc or a `function () use ($x)` closure. No attempt at
+ * block-form namespaces (`namespace Foo { ... }`) — top level is counted as
+ * brace-depth 0.
  */
 export function mapPhpFile(content: string, relPath: string): FileGraph {
   const stripped = stripPhpCommentsAndStrings(content);
@@ -27,6 +27,38 @@ export function mapPhpFile(content: string, relPath: string): FileGraph {
     exports,
     imports,
   };
+}
+
+function isPhpWordChar(ch: string | undefined): boolean {
+  return (
+    ch !== undefined &&
+    ((ch >= 'A' && ch <= 'Z') ||
+      (ch >= 'a' && ch <= 'z') ||
+      (ch >= '0' && ch <= '9') ||
+      ch === '_')
+  );
+}
+
+/**
+ * Finds the closing line of a heredoc/nowdoc by scanning manually instead of
+ * building a dynamic `RegExp` from the (constrained) tag. Mirrors the old
+ * `/\n[ \t]*TAG\b/` pattern: a newline, optional spaces/tabs, the exact tag,
+ * then a word boundary. Returns the offset in `rest` just past the tag, or
+ * `null` when the tag never closes (heredoc runs to EOF).
+ */
+function findHeredocClose(rest: string, tag: string): number | null {
+  if (tag === '') return null;
+  for (let k = 0; k < rest.length; k++) {
+    if (rest[k] !== '\n') continue;
+    let j = k + 1;
+    while (j < rest.length && (rest[j] === ' ' || rest[j] === '\t')) j++;
+    if (!rest.startsWith(tag, j)) continue;
+    // `\b` after the tag: the next char must be a non-word char (or EOF).
+    if (!isPhpWordChar(rest[j + tag.length])) {
+      return j + tag.length;
+    }
+  }
+  return null;
 }
 
 function stripPhpCommentsAndStrings(content: string): string {
@@ -69,12 +101,11 @@ function stripPhpCommentsAndStrings(content: string): string {
     if (c === '<' && content.slice(i, i + 3) === '<<<') {
       const m = /^<<<(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[ \t]*\r?\n/.exec(content.slice(i));
       if (m) {
-        const tag = m[2];
+        const tag = m[2] ?? '';
         const startBody = i + m[0].length;
-        const closeRegex = new RegExp(`\\n[ \\t]*${tag}\\b`);
         const rest = content.slice(startBody);
-        const endMatch = closeRegex.exec(rest);
-        const stop = endMatch ? startBody + endMatch.index + endMatch[0].length : n;
+        const closeEnd = findHeredocClose(rest, tag);
+        const stop = closeEnd === null ? n : startBody + closeEnd;
         for (let j = i; j < stop; j++) out.push(content[j] === '\n' ? '\n' : ' ');
         i = stop;
         continue;

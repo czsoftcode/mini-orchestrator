@@ -171,4 +171,42 @@ function real(): void {}
     expect(out.exports).toEqual([]);
     expect(out.imports).toEqual([]);
   });
+
+  it('unclosed heredoc swallows everything to EOF', () => {
+    // No closing EOT tag: the heredoc body must run to the end of file, so the
+    // declarations below it stay hidden instead of leaking as real symbols.
+    const out = mapPhpFile(
+      `<?php
+$x = <<<EOT
+class Inside {}
+function fakeInside(): void {}
+use Hidden\\Ns;
+class StillInside {}
+`,
+      'src/unclosed.php',
+    );
+    const exportNames = out.exports.map((e) => e.name);
+    expect(exportNames).not.toContain('Inside');
+    expect(exportNames).not.toContain('fakeInside');
+    expect(exportNames).not.toContain('StillInside');
+    expect(out.imports.map((i) => i.source)).not.toContain('Hidden\\Ns');
+  });
+
+  it('closing tag only counts at line start with a word boundary', () => {
+    // `NOTEOT` and an indented-but-prefixed token must NOT close the heredoc;
+    // only the bare `EOT` at the start of a line does. The class after the real
+    // close is a genuine top-level symbol.
+    const out = mapPhpFile(
+      `<?php
+$x = <<<EOT
+NOTEOT line
+  EOTISH still inside
+EOT;
+class AfterClose {}
+`,
+      'src/close.php',
+    );
+    const exportNames = out.exports.map((e) => e.name);
+    expect(exportNames).toContain('AfterClose');
+  });
 });

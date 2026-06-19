@@ -146,6 +146,39 @@ describe('bumpProjectVersion', () => {
     });
   });
 
+  describe('TOML header scanning (manual)', () => {
+    it('bumps the last section even with no trailing newline', async () => {
+      // [package] is the final section and the file has no final newline; the
+      // manual scan must still find the body and bump the version line.
+      await write('Cargo.toml', '[deps]\nx = "1"\n[package]\nname = "x"\nversion = "1.0.0"');
+
+      const r = await bumpProjectVersion(cwd, 'patch');
+
+      expect(r).toEqual({ from: '1.0.0', to: '1.0.1', source: 'Cargo.toml' });
+      expect(await read('Cargo.toml')).toContain('version = "1.0.1"');
+    });
+
+    it('ignores a [package]-looking token that is not at line start', async () => {
+      // The bracketed text inside a value must not be mistaken for a header.
+      await write(
+        'Cargo.toml',
+        '[workspace]\nnote = "see [package] below"\n\n[package]\nversion = "2.0.0"\n',
+      );
+
+      const r = await bumpProjectVersion(cwd, 'minor');
+
+      expect(r).toEqual({ from: '2.0.0', to: '2.1.0', source: 'Cargo.toml' });
+    });
+
+    it('matches a dotted section name literally ([tool.poetry])', async () => {
+      await write('pyproject.toml', '[tool.poetry]\nname = "x"\nversion = "0.1.0"\n');
+
+      const r = await bumpProjectVersion(cwd, 'patch');
+
+      expect(r).toEqual({ from: '0.1.0', to: '0.1.1', source: 'pyproject.toml' });
+    });
+  });
+
   describe('priority between manifests', () => {
     it('picks package.json over Cargo.toml when both exist', async () => {
       await write('package.json', '{\n  "version": "1.0.0"\n}\n');

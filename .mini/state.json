@@ -937,6 +937,11 @@
       "id": 187,
       "title": "Close extra findings at done",
       "status": "done"
+    },
+    {
+      "id": 188,
+      "title": "Replace dynamic RegExp at flagged sites",
+      "status": "done"
     }
   ],
   "models": {

@@ -333,9 +333,13 @@ export function parseSuggestion(text: string): ParsedSuggestion | null {
  *
  * Returns `null` when the marker is missing or the value is empty after cleanup.
  */
+const FIELD_RE: Record<'TITLE' | 'GOAL', RegExp> = {
+  TITLE: /^[ \t>*#-]*TITLE[ \t]*:[ \t]*(.*)$/im,
+  GOAL: /^[ \t>*#-]*GOAL[ \t]*:[ \t]*(.*)$/im,
+};
+
 function matchField(text: string, label: 'TITLE' | 'GOAL'): string | null {
-  const re = new RegExp(`^[ \\t>*#-]*${label}[ \\t]*:[ \\t]*(.*)$`, 'im');
-  const m = text.match(re);
+  const m = text.match(FIELD_RE[label]);
   if (!m) {
     return null;
   }
