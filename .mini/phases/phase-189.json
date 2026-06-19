@@ -1,0 +1,34 @@
+{
+  "id": 189,
+  "title": "Patch dev-tooling supply-chain findings",
+  "goal": "Bump the transitive dev dependencies (esbuild to 0.28.1, vite to 8.0.16, vitest to 4.1.9, tsx) via lockfile update or package.json overrides so the four Semgrep supply-chain findings clear, while keeping npm test green and npm audit clean.",
+  "status": "done",
+  "steps": [
+    {
+      "title": "Bump pinned versions in package-lock.json",
+      "status": "done",
+      "detail": "Run npm update vite esbuild vitest tsx (or npm audit fix); confirm npm ls shows vite >=8.0.16, esbuild >=0.28.1, vitest >=4.1.9, tsx >=4.22.4. No overrides block added to package.json (ranges already allow it)."
+    },
+    {
+      "title": "npm audit reports 0 vulnerabilities",
+      "status": "done",
+      "detail": "After the bump, npm audit exits clean — no esbuild/vite/launch-editor advisories left."
+    },
+    {
+      "title": "Confirm all four Semgrep deps are off vulnerable versions",
+      "status": "done",
+      "detail": "esbuild no longer 0.28.0 (covers GHSA-g7r4-m6w7-qqqr and GHSA-gv7w-rqvm-qjhr), vite no longer 8.0.14 (CVE-2026-53571), launch-editor not present or patched (CVE-2026-53632) — checked via npm ls."
+    },
+    {
+      "title": "npm test and npm run build stay green",
+      "status": "done",
+      "detail": "Full vitest suite passes on the bumped runner and esbuild builds dist/ without errors — confirms the dev-tooling bump did not break test/build."
+    }
+  ],
+  "startedAt": "2026-06-19T02:32:36.090Z",
+  "completedAt": "2026-06-19T02:37:24.127Z",
+  "autoCommit": {
+    "preSha": "13024d7b5083316566b67a4544d4dcd569f93275",
+    "subject": "Phase 189: Patch dev-tooling supply-chain findings"
+  }
+}

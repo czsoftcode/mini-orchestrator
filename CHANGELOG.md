@@ -6,6 +6,17 @@ All notable changes to this project are recorded here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+
+- **Dev-tooling supply-chain advisories cleared.** Bumped the transitive
+  dev-only dependencies in `package-lock.json` — esbuild `0.28.0 → 0.28.1`
+  (GHSA-g7r4-m6w7-qqqr, GHSA-gv7w-rqvm-qjhr), vite `8.0.14 → 8.0.16`
+  (CVE-2026-53571), vitest `4.1.7 → 4.1.9`, tsx `4.22.3 → 4.22.4`. `npm audit`
+  is back to 0 vulnerabilities. No `overrides` were needed (every parent range
+  already allowed the patched versions) and `package.json` is unchanged. These
+  packages are test/build tooling and never ship in the published npm package,
+  so end users were not exposed — this is dashboard/hygiene cleanup.
+
 ## [1.24.0] - 2026-06-16
 
 ### Fixed

@@ -942,6 +942,11 @@
       "id": 188,
       "title": "Replace dynamic RegExp at flagged sites",
       "status": "done"
+    },
+    {
+      "id": 189,
+      "title": "Patch dev-tooling supply-chain findings",
+      "status": "done"
     }
   ],
   "models": {
